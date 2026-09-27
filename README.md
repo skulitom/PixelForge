@@ -61,6 +61,20 @@ Open **http://127.0.0.1:4173** and choose **Begin adventure** or **Watch it play
 
 [Demo details and controls](demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md) · [PixelForge art-quality roadmap](docs/reports/pixelforge-art-quality-roadmap.md)
 
+## Tidewatch: a top-down showcase
+
+**Tidewatch** is a second, independent demo: a small top-down adventure in which a lighthouse keeper relights the lamp before night falls. It exercises parts of PixelForge that Emberfall did not: 47-tile blob autotiles composed from quarter symbols, palette-cycled surf, a four-facing character compiled from pose parts with sword markers driving the hitbox, a pixel font, and night lighting composited from aligned normal/emissive passes. 29 recipes, 527 frames.
+
+```sh
+npm run play:tidewatch
+```
+
+Open **http://127.0.0.1:4180**.
+
+![Tidewatch at night: the relit lighthouse sweeps its beam over the sea](showcase/tidewatch/screens/night.png)
+
+[Showcase details](showcase/tidewatch/README.md) · [Findings report: bugs and missing features](docs/reports/tidewatch-showcase-report.md)
+
 ## For agents
 
 Use PixelForge to create or revise pixel sprites, tiles, icons, effects and short animations from editable JSON. Choose the **CLI** when you have shell access or the **Model Context Protocol (MCP) server** when your client supports tools. Both use the same renderer and work locally.

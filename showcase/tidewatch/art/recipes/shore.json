@@ -1,0 +1,8702 @@
+{
+  "version": 1,
+  "name": "shore",
+  "width": 16,
+  "height": 16,
+  "palette": {
+    "s": "#f7e7b8",
+    "S": "#ebcb8f",
+    "d": "#cfa56b",
+    "D": "#9c7650",
+    "w": "#effcff",
+    "!": "#ff00f1",
+    "@": "#ff00f2",
+    "$": "#ff00f3",
+    "tint1": "#97e3e388",
+    "tint2": "#97e3e366",
+    "tint3": "#97e3e344",
+    "foam-soft": "#effcffaa"
+  },
+  "symbols": {
+    "q-tl-o": [
+      "........",
+      "......$$",
+      "....$$@@",
+      "...$@@!!",
+      "..$@!!!d",
+      ".$@!!ddd",
+      ".$@!ddsS",
+      ".$@!dsSS"
+    ],
+    "q-tr-h": [
+      "........",
+      "$$$$$$$$",
+      "@@@@@@@@",
+      "!!!!!!!!",
+      "dddd!!dd",
+      "sssdddds",
+      "SSSSssdS",
+      "SSSSSSSS"
+    ],
+    "q-bl-v": [
+      ".$@!dsSS",
+      ".$@!DdSS",
+      ".$@!!dsS",
+      "..$@!dsS",
+      ".$@!!dsS",
+      ".$@!ddSS",
+      ".$@!dsSS",
+      ".$@!dsSS"
+    ],
+    "q-br-f": [
+      "SSSSSSSS",
+      "SSdSSSSS",
+      "SSSSSSSS",
+      "SSSSSsSS",
+      "SSSSSSSS",
+      "SSSSSSSS",
+      "SsSSSSSS",
+      "SSSSSSSS"
+    ],
+    "q-tl-h": [
+      "........",
+      "$$$..$$$",
+      "@@@$$@@@",
+      "!!!@@!!!",
+      "dd!!!!dd",
+      "sdd!!dds",
+      "SsddddSS",
+      "SSSssSSS"
+    ],
+    "q-tr-o": [
+      "........",
+      "$$......",
+      "@@$$....",
+      "!!@@$...",
+      "d!!!@$..",
+      "ddd!!@$.",
+      "Ssdd!@$.",
+      "SSSd!@$."
+    ],
+    "q-bl-f": [
+      "SSSSSSSS",
+      "SSSSSSSS",
+      "SSSSsSSS",
+      "SSSSSdSS",
+      "SSSSSSSS",
+      "SdSSSSSS",
+      "SSSSSSSS",
+      "SSSSSSSS"
+    ],
+    "q-br-v": [
+      "SSSd!@$.",
+      "SSdd!@$.",
+      "SSSd!@$.",
+      "SSdD!@$.",
+      "SSd!!@$.",
+      "SSd!!@$.",
+      "Ssdd!@$.",
+      "SSSd!@$."
+    ],
+    "q-tl-v": [
+      ".$@!dsSS",
+      ".$@!dsSS",
+      ".$@!DdSS",
+      ".$@!!dsS",
+      ".$@!!dss",
+      ".$@!ddSS",
+      ".$@!dsSS",
+      ".$@!dsSS"
+    ],
+    "q-tr-f": [
+      "SSSSSSSS",
+      "SSSsSSSS",
+      "SSSSdSSS",
+      "SSSSSSSS",
+      "SSSSSSSS",
+      "dSSSSSSS",
+      "SSSSSSdS",
+      "SSSSSSSS"
+    ],
+    "q-bl-o": [
+      ".$@!dsSS",
+      ".$@!DddS",
+      ".$@!!DDd",
+      "..$@!!!D",
+      "...$@@!!",
+      "....$$@@",
+      "......$$",
+      "........"
+    ],
+    "q-br-h": [
+      "SSSSSSSS",
+      "SSdddSSS",
+      "ddDDDddd",
+      "DD!!!DDD",
+      "!!!@!!!!",
+      "@@@$@@@@",
+      "$$$.$$$$",
+      "........"
+    ],
+    "q-tl-f": [
+      "SSSSSSSS",
+      "SSSSSSSS",
+      "SSSdSSSS",
+      "SSSSSSSS",
+      "SSSSSSSs",
+      "SSSSSSSS",
+      "SsSSSSSS",
+      "SSSSSSSS"
+    ],
+    "q-tr-v": [
+      "SSdD!@$.",
+      "SSd!!@$.",
+      "SSd!@$..",
+      "SSd!!@$.",
+      "SSdd!@$.",
+      "dSSd!@$.",
+      "SSSd!@$.",
+      "SSSd!@$."
+    ],
+    "q-bl-h": [
+      "SSSSSSSS",
+      "SSSddSSS",
+      "dddDDddd",
+      "DDD!!DDD",
+      "!!!!!!!!",
+      "@@@@@@@@",
+      "$$$$$$$$",
+      "........"
+    ],
+    "q-br-o": [
+      "SSSd!@$.",
+      "SddD!@$.",
+      "dDD!!@$.",
+      "D!!!@$..",
+      "!!@@$...",
+      "@@$$....",
+      "$$......",
+      "........"
+    ],
+    "q-br-i": [
+      "SSSSSSSS",
+      "SSdSSSSS",
+      "SSSSSSSd",
+      "SSSSSddD",
+      "SSSSdDD!",
+      "SSSSd!!!",
+      "SsSdD!@@",
+      "SSSd!!@$"
+    ],
+    "q-bl-i": [
+      "SSSSSSSS",
+      "SSSSSSSS",
+      "dSSSsSSS",
+      "DddSSdSS",
+      "!DDdSSSS",
+      "!!!dsSSS",
+      "@@!DdSSS",
+      "$@!!dsSS"
+    ],
+    "q-tr-i": [
+      "SSSd!!@$",
+      "SSSdd!@@",
+      "SSSSd!!!",
+      "SSSSddd!",
+      "SSSSSsdd",
+      "dSSSSSSs",
+      "SSSSSSdS",
+      "SSSSSSSS"
+    ],
+    "q-tl-i": [
+      "$@!!dsSS",
+      "@@!ddSSS",
+      "!!!dsSSS",
+      "!dddSSSS",
+      "ddsSSSSs",
+      "sSSSSSSS",
+      "SsSSSSSS",
+      "SSSSSSSS"
+    ]
+  },
+  "frames": [
+    {
+      "name": "shore-0-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-0-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-0-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-0-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-1-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-1-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-1-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-1-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-4-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-4-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-4-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-4-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-5-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-5-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-5-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-5-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-7-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-7-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-7-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-7-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-o",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-16-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-16-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-16-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-16-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-17-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-17-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-17-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-17-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-20-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-20-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-20-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-20-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-21-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-21-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-21-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-21-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-23-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-23-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-23-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-23-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-28-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-28-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-28-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-28-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-o",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-29-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-29-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-29-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-29-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-31-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-31-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-31-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-31-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-v",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-v",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-64-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-64-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-64-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-64-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-65-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-65-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-65-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-65-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-68-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-68-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-68-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-68-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-69-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-69-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-69-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-69-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-71-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-71-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-71-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-71-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-80-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-80-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-80-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-80-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-81-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-81-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-81-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-81-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-84-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-84-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-84-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-84-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-85-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-85-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-85-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-85-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-87-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-87-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-87-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-87-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-92-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-92-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-92-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-92-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-93-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-93-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-93-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-93-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-95-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-95-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-95-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-95-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-112-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-112-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-112-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-112-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-o",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-113-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-113-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-113-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-113-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-116-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-116-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-116-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-116-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-117-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-117-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-117-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-117-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-119-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-119-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-119-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-119-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-124-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-124-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-124-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-124-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-h",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-h",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-125-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-125-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-125-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-125-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-127-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-127-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-127-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-127-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-i",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-193-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-193-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-193-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-193-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-o",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-197-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-197-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-197-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-197-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-199-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-199-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-199-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-199-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-h",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-h",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-209-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-209-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-209-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-209-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-213-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-213-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-213-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-213-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-215-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-215-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-215-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-215-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-221-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-221-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-221-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-221-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-223-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-223-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-223-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-223-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-i",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-241-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-241-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-241-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-241-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-v",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-v",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-245-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-245-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-245-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-245-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-247-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-247-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-247-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-247-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-i",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-253-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-253-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-253-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-253-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-i",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-255-0",
+      "duration": 240,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "foam-soft"
+        }
+      ]
+    },
+    {
+      "name": "shore-255-1",
+      "duration": 200,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "tint1"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-255-2",
+      "duration": 260,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "w"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    },
+    {
+      "name": "shore-255-3",
+      "duration": 340,
+      "ops": [
+        {
+          "op": "stamp",
+          "symbol": "q-tl-f",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-tr-f",
+          "x": 8,
+          "y": 0
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-bl-f",
+          "x": 0,
+          "y": 8
+        },
+        {
+          "op": "stamp",
+          "symbol": "q-br-f",
+          "x": 8,
+          "y": 8
+        },
+        {
+          "op": "replace",
+          "from": "!",
+          "to": "foam-soft"
+        },
+        {
+          "op": "replace",
+          "from": "@",
+          "to": "tint2"
+        },
+        {
+          "op": "replace",
+          "from": "$",
+          "to": "tint3"
+        }
+      ]
+    }
+  ],
+  "animations": {
+    "interior": {
+      "frames": [
+        "shore-255-0"
+      ]
+    },
+    "foam": {
+      "frames": [
+        "shore-0-0",
+        "shore-0-1",
+        "shore-0-2",
+        "shore-0-3"
+      ]
+    }
+  },
+  "sheet": {
+    "columns": 16
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "name": "rocks",
+  "width": 32,
+  "height": 32,
+  "palette": {
+    "k": "#1b1528",
+    "r": "#f0ece2",
+    "R": "#c9c2b4",
+    "t": "#9a918c",
+    "T": "#6b6478",
+    "y": "#463f5a",
+    "_": "#1b152866"
+  },
+  "frames": [
+    {
+      "name": "boulder-a",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "..........kkkkkkkk..............",
+            "........kkRrrrrRRRkk............",
+            ".......kRrrrrRRRRRRtk...........",
+            "......kRrrrRRRRRRRRttk..........",
+            ".....kRrrRRRRRRRRRRtttkk........",
+            "....kRrRRRRRRRRRRRRttttRkk......",
+            "...kRRRRRRRRRRRRRttttTttRRk.....",
+            "...kRRRRRRRRRRRRtttttTttRRRk....",
+            "..kRRRRRRRRRRttttttttTtttRRtk...",
+            "..kRRRRRRRtttttttttTTTttttttk...",
+            "..ktRRRRtttttttttTTyTTtttttTTk..",
+            ".kttttttttttttttTTyyTTTtttTTTk..",
+            ".kttTtttttttttTTTyTTTTTTTTTTTk..",
+            ".ktTTTtttttTTTTTyTTTTTTTTTTyyk..",
+            ".kTTTTTTTTTTTTTTyTTTTTTTTyyyyk..",
+            "..kTTTTTTTTTTTTyyTTTTTTyyyyyk...",
+            "..kyTTTTTTTTTTTyyyyyyyyyyyyk....",
+            "...kyyyTTTTTyyyyyyyyyyyykk......",
+            "....kkyyyyyyyyyyyyyykkkk........",
+            "..____kkkkkkkkkkkkkk______......",
+            "...______________________.......",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "boulder-b",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "...........kkkkkk...............",
+            ".........kkRrrrRRk..kkkk........",
+            "........kRrrrRRRRtkkRrRRkk......",
+            ".......kRrrRRRRRttkRRRRRttk.....",
+            "......kRrRRRRRRtttkRRRRtttTk....",
+            "......kRRRRRRRttttkRRRtttTTk....",
+            ".....kRRRRRRtttttTkRtttttTTTk...",
+            ".....ktRRRRtttttTTykttttTTTyk...",
+            ".....kttttttttTTTykTTTTTTyyk....",
+            ".....kTttttttTTTTyykTTTTyyyk....",
+            "......kTTTTTTTTTyyyykyyyyyk.....",
+            "......kyTTTTTTyyyyyykyyyykk.....",
+            ".......kkyyyyyyyyykkkkkkk.......",
+            ".....__kkkkkkkkkkk________......",
+            "......__________________........",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................",
+            "................................"
+          ]
+        }
+      ]
+    }
+  ]
+}

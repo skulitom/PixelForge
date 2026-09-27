@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "name": "dock",
+  "width": 16,
+  "height": 16,
+  "palette": {
+    "k": "#1b1528",
+    "w": "#effcff",
+    "W": "#97e3e3",
+    "o": "#f0b87c",
+    "O": "#c9844f",
+    "u": "#975a3a",
+    "U": "#663b2e",
+    "v": "#727d98"
+  },
+  "frames": [
+    {
+      "name": "deck-l",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "kUoooooooooooooo",
+            "kUOOOOOOOOOOOOOO",
+            "kvOOOOuOOOOOOOuO",
+            "kUuuuuuuuuuuuuuu",
+            "kUoooooooooooooo",
+            "kUOOOOOOOuOOOOOO",
+            "kvOOOuOOOOOOOOOO",
+            "kUuuuuuuuuuuuuuu",
+            "kUoooooooooooooo",
+            "kUOOOOOOOOOOOuOO",
+            "kvOOOOOOuOOOOOOO",
+            "kUuuuuuuuuuuuuuu",
+            "kUoooooooooooooo",
+            "kUOOuOOOOOOOOOOO",
+            "kvOOOOOOOOOOuOOO",
+            "kUuuuuuuuuuuuuuu"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "deck-r",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "OOOOOOOOOOOOOOuk",
+            "OOOOOOOOOOOOOOuk",
+            "OuOOOOOOOuOOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "OOOOOOOOOOOOOOuk",
+            "OOOOOOuOOOOOOOuk",
+            "OOOOOOOOOOuOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "OOOOOOOOOOOOOOuk",
+            "OOuOOOOOOOOOOOuk",
+            "OOOOOOOuOOOOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "OOOOOOOOOOOOOOuk",
+            "OOOOOOOOOOOuOOuk",
+            "OOOuOOOOOOOOOOvk",
+            "uuuuuuuuuuuuuuuk"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "end-l",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "kUoooooooooooooo",
+            "kUOOOOOOOOOOOOOO",
+            "kvOOOOuOOOOOOOuO",
+            "kUuuuuuuuuuuuuuu",
+            "kUoooooooooooooo",
+            "kUOOOOOOOuOOOOOO",
+            "kvOOOuOOOOOOOOOO",
+            "kUuuuuuuuuuuuuuu",
+            "kUoooooooooooooo",
+            "kUOOOOOOOOOOOuOO",
+            "kvOOOOOOuOOOOOOO",
+            "kUuuuuuuuuuuuuuu",
+            "kUuuuuuuuuuuuuuu",
+            "kkUUUUUUUUUUUUUU",
+            ".kkkkkkkkkkkkkkk",
+            "................"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "end-r",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "OOOOOOOOOOOOOOuk",
+            "OOOOOOOOOOOOOOuk",
+            "OuOOOOOOOuOOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "OOOOOOOOOOOOOOuk",
+            "OOOOOOuOOOOOOOuk",
+            "OOOOOOOOOOuOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "OOOOOOOOOOOOOOuk",
+            "OOuOOOOOOOOOOOuk",
+            "OOOOOOOuOOOOOOvk",
+            "uuuuuuuuuuuuuuuk",
+            "uuuuuuuuuuuuuuUk",
+            "UUUUUUUUUUUUUUkk",
+            "kkkkkkkkkkkkkkk.",
+            "................"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "posts-l",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            ".kUuk...........",
+            ".kUuk...........",
+            ".kUuk...........",
+            ".kUuk...........",
+            "wkUukw..........",
+            ".WWWW...........",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "posts-r",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 0,
+          "y": 0,
+          "rows": [
+            "...........kuUk.",
+            "...........kuUk.",
+            "...........kuUk.",
+            "...........kuUk.",
+            "..........wkuUkw",
+            "...........WWWW.",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................"
+          ]
+        }
+      ]
+    }
+  ],
+  "sheet": {
+    "columns": 6
+  }
+}

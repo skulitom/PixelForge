@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "name": "ui",
+  "width": 12,
+  "height": 10,
+  "palette": {
+    "1": "#ff806a",
+    "2": "#de4444",
+    "3": "#962d42",
+    "k": "#1b1528",
+    "K": "#2e2440",
+    "L": "#4a3a5e",
+    "w": "#effcff",
+    "W": "#97e3e3",
+    "c": "#4cb8d0",
+    "C": "#3288c0",
+    "n": "#2a61a6",
+    "e": "#fff3a3",
+    "x": "#fffcea",
+    "X": "#ffe46e",
+    "i": "#ffa243",
+    "I": "#e3532f"
+  },
+  "frames": [
+    {
+      "name": "heart-full",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            ".kkk.kkk..",
+            "k1x1k122k.",
+            "k1112222k.",
+            "k1122223k.",
+            ".k12223k..",
+            "..k223k...",
+            "...k3k....",
+            "....k....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "heart-half",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            ".kkk.kkk..",
+            "k1x1kKKLk.",
+            "k112kKKLk.",
+            "k122kKLLk.",
+            ".k12kLLk..",
+            "..k2kLk...",
+            "...kkk....",
+            "....k....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "heart-empty",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            ".kkk.kkk..",
+            "kKKLkKKLk.",
+            "kKKKKKLLk.",
+            "kKKKKLLLk.",
+            ".kKKLLLk..",
+            "..kKLLk...",
+            "...kLk....",
+            "....k....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "glass",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            "...kk.....",
+            "..kwWk....",
+            ".kwWcck...",
+            "kWWccCnk..",
+            ".kcCCnk...",
+            "..kCnk....",
+            "...kk....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            ".kkk......",
+            "kXeXk.....",
+            "kX.Xkkkkk.",
+            "kXiXXXiik.",
+            ".kkk.kXk..",
+            ".....kkk.."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "flint",
+      "ops": [
+        {
+          "op": "grid",
+          "x": 1,
+          "y": 1,
+          "rows": [
+            "..kk......",
+            ".kxek.....",
+            "kxXXik....",
+            "keXiIk....",
+            ".kiIk.....",
+            "..kk......"
+          ]
+        }
+      ]
+    }
+  ]
+}
