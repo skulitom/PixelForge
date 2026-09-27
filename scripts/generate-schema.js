@@ -17,7 +17,7 @@ const schema = {
     palette: { type: 'object', maxProperties: 256, additionalProperties: { type: 'string', pattern: '^(transparent|#([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8}))$' } },
     background: color, symbols: { type: 'object', propertyNames: id, additionalProperties: ref('rows') },
     frames: { ...array(ref('frame'), 256), minItems: 1 },
-    animations: { type: 'object', minProperties: 1, propertyNames: id, additionalProperties: object({ frames: { ...array(id, 1024), minItems: 1 }, direction: { enum: ['forward', 'reverse', 'pingpong'] }, loop: bool }, ['frames']) },
+    animations: { type: 'object', minProperties: 1, maxProperties: 65527, description: 'ZIP32 bundle budget: animation count + frame count + 7 support files must not exceed 65,535.', propertyNames: id, additionalProperties: object({ frames: { ...array(id, 1024), minItems: 1 }, direction: { enum: ['forward', 'reverse', 'pingpong'] }, loop: bool }, ['frames']) },
     sheet: object({ columns: int(1, 256), padding: int(0, 16), scale: int(1, 16) })
   }, ['version', 'name', 'width', 'height', 'frames']),
   $defs: {
@@ -39,3 +39,30 @@ const schema = {
   }
 };
 await writeFile(new URL('../schema.json', import.meta.url), JSON.stringify(schema, null, 2) + '\n');
+
+// Sidecar formats evolve independently; compiled sprite recipes remain version 1.
+const point = { ...array(int(-4096, 4096), 2), minItems: 2 };
+const poses = {
+  $schema: schema.$schema, title: 'PixelForge authored poses',
+  ...object({ format: { const: 'pixelforge-poses' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), palette: schema.properties.palette,
+    parts: { type: 'object', maxProperties: 256, propertyNames: id, additionalProperties: object({ rows: ref('rows'), anchor: point, points: { type: 'object', propertyNames: id, additionalProperties: point } }, ['rows']) },
+    poses: { ...array(object({ name: id, duration: int(1, 60000), origin: point,
+      parts: array(object({ name: id, part: id, at: point, attach: object({ part: id, point: id }, ['part', 'point']) }, ['name', 'part']), 64),
+      markers: array(object({ name: id, part: id, point: id }, ['name', 'part', 'point']), 64)
+    }, ['name', 'parts']), 256), minItems: 1 }, animations: schema.properties.animations, sheet: schema.properties.sheet
+  }, ['format', 'version', 'name', 'width', 'height', 'parts', 'poses']), $defs: schema.$defs
+};
+const recipeSchema = { ...schema }; delete recipeSchema.$schema; delete recipeSchema.$defs; delete recipeSchema.title;
+const scene = {
+  $schema: schema.$schema, title: 'PixelForge scene review',
+  ...object({ format: { const: 'pixelforge-scene' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), background: color, duration: int(1, 60000),
+    assets: { type: 'object', maxProperties: 64, additionalProperties: { oneOf: [ref('recipe'), object({ recipe: ref('recipe'), normal: ref('recipe'), emissive: ref('recipe') }, ['recipe'])] } },
+    instances: array(object({ name: { type: 'string' }, asset: { type: 'string' }, at: point, anchor: point, scale: int(1, 16), frame: id, animation: id,
+      repeat: { ...array(int(1, 32), 2), minItems: 2 }, step: point,
+      trajectory: { ...array(object({ time: int(0, 60000), at: point }, ['time', 'at']), 256), minItems: 2 },
+      sequence: array(object({ time: int(0, 59999), frame: id, animation: id }, ['time']), 64)
+    }, ['asset', 'at']), 256),
+    lighting: object({ ambient: { type: 'number', minimum: 0, maximum: 1 }, bands: int(2, 16), lights: array(object({ at: point, height: int(1, 256), radius: int(1, 512), color }, ['at']), 8) })
+  }, ['format', 'version', 'name', 'width', 'height', 'assets', 'instances']), $defs: { ...schema.$defs, recipe: recipeSchema }
+};
+for (const [file, value] of [['poses.schema.json', poses], ['scene.schema.json', scene]]) await writeFile(new URL(`../${file}`, import.meta.url), JSON.stringify(value, null, 2) + '\n');

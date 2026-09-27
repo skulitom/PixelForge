@@ -10,8 +10,8 @@
   "license": "MIT",
   "engines": { "node": ">=20" },
   "bin": { "pixelforge": "./bin/pixelforge.js" },
-  "exports": { ".": "./src/index.js", "./core": "./src/core.js", "./runtime": "./src/runtime.js" },
-  "files": ["bin", "src", "studio", "examples", "schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
+  "exports": { ".": "./src/index.js", "./core": "./src/core.js", "./runtime": "./src/runtime.js", "./authoring": "./src/authoring.js", "./scene": "./src/scene.js" },
+  "files": ["bin", "src", "studio", "examples", "schema.json", "poses.schema.json", "scene.schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
   "scripts": {
     "test": "node --test",
     "start": "node bin/pixelforge.js preview",
@@ -19,6 +19,9 @@
     "play": "node scripts/serve-emberfall.mjs",
     "art:emberfall": "node scripts/build-emberfall.mjs --force",
     "stress:emberfall": "node scripts/stress-emberfall.mjs",
+    "art:quality": "node scripts/build-quality-lab.mjs",
+    "check:quality": "node scripts/build-quality-lab.mjs --check",
+    "review:quality": "node bin/pixelforge.js preview examples/quality/hollow.scene.json",
     "mcp": "node bin/pixelforge.js mcp"
   }
 }

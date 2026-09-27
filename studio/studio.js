@@ -1,11 +1,12 @@
-import { renderProject, buildAtlas, parseColor } from '/core.js';
+import { renderProject, buildAtlas, parseColor, reviewPixels, onionPixels, animationPosition, animationNeighbors } from '/core.js';
 
 const $ = id => document.getElementById(id);
 const source = $('source'), canvas = $('canvas'), context = canvas.getContext('2d');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let project, spec, atlas, frameImages = [], selected = 0, playing = !reducedMotion, mode = 'animation';
+let position = 0;
 let elapsed = 0, lastTime = 0, zoom = 12, dirty = false, valid = false, compileTimer, toastTimer, loadVersion = 0;
-const examples = [{ file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }];
+const examples = [{ file: 'quality/skink', title: 'Lantern skink', type: 'Authored poses · 12 frames' }, { file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }];
 const title = name => name.replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
 function imageCanvas(data, width, height) {
   const c = document.createElement('canvas'); c.width = width; c.height = height;
@@ -27,21 +28,45 @@ function render() {
   const width = isSheet ? atlas.width : project.width, height = isSheet ? atlas.height : project.height;
   canvas.width = width; canvas.height = height;
   context.imageSmoothingEnabled = false;
-  if (!isSheet && $('onion').getAttribute('aria-pressed') === 'true' && selected > 0) { context.globalAlpha = .25; context.drawImage(frameImages[selected - 1], 0, 0); context.globalAlpha = 1; }
-  context.drawImage(isSheet ? atlas.image : frameImages[selected], 0, 0);
+  const animation = project.animations[$('animation').value];
+  const pixels = isSheet ? atlas.data : $('onion').getAttribute('aria-pressed') === 'true' ? onionPixels(project, animation, position) : project.frames[selected].data;
+  context.putImageData(new ImageData(new Uint8ClampedArray(reviewPixels(pixels, $('review-view').value)), width, height), 0, 0);
+  const native = $('native-canvas'); native.width = project.width; native.height = project.height;
+  native.getContext('2d').drawImage(frameImages[selected], 0, 0);
   const fit = Math.max(1, Math.floor(($('artboard').clientWidth - 48) / width));
   const displayScale = isSheet ? Math.min(zoom, fit) : zoom;
   canvas.style.width = `${width * displayScale}px`; canvas.style.height = `${height * displayScale}px`;
   $('canvas-wrap').style.setProperty('--pixel-size', `${displayScale}px`);
   $('canvas-wrap').classList.toggle('grid', $('grid').getAttribute('aria-pressed') === 'true');
-  $('frame-counter').textContent = `${String(selected + 1).padStart(2, '0')} / ${String(project.frames.length).padStart(2, '0')}`;
+  $('frame-counter').textContent = `${String(position + 1).padStart(2, '0')} / ${String(animation.frames.length).padStart(2, '0')}`;
+  const neighbors = animationNeighbors(animation, position);
+  $('onion').title = `Previous (pink): ${neighbors.previous === null ? 'none' : project.frames[animation.frames[neighbors.previous]].name}; next (cyan): ${neighbors.next === null ? 'none' : project.frames[animation.frames[neighbors.next]].name}`;
   $('canvas').setAttribute('aria-label', isSheet ? `${project.name} sprite sheet` : `${project.name}, frame ${project.frames[selected].name}`);
-  document.querySelectorAll('.frame').forEach((button, i) => { button.classList.toggle('active', i === selected); button.setAttribute('aria-pressed', String(i === selected)); });
+  document.querySelectorAll('.frame').forEach((button, i) => { button.classList.toggle('active', i === position); button.setAttribute('aria-pressed', String(i === position)); });
 }
 function animationChanged() {
   elapsed = 0;
   const animation = project.animations[$('animation').value];
+  position = 0;
   selected = animation.frames[0];
+  $('frame-count').textContent = `${animation.frames.length} playback entries · ${project.frames.length} source poses`;
+  $('timeline').replaceChildren(...animation.frames.map((index, sequencePosition) => {
+    const frame = project.frames[index];
+    const button = document.createElement('button'); button.className = 'frame'; button.title = `${frame.name} · ${frame.duration}ms`; button.setAttribute('aria-label', `Select position ${sequencePosition + 1}: ${frame.name}`);
+    const block = document.createElement('div'); block.className = 'frame-image';
+    const number = document.createElement('span'); number.className = 'number'; number.textContent = String(sequencePosition + 1).padStart(2, '0');
+    block.append(thumbnail(frameImages[index], ''), number);
+    const caption = document.createElement('small');
+    const label = document.createElement('span'); label.textContent = frame.name;
+    const time = document.createElement('span'); time.textContent = `${frame.duration}ms`; caption.append(label, time);
+    button.append(block, caption);
+    button.addEventListener('click', () => {
+      selected = index; position = sequencePosition; playing = false;
+      elapsed = animation.frames.slice(0, position).reduce((sum, i) => sum + project.frames[i].duration, 0);
+      playState(); setMode('animation'); render();
+    });
+    return button;
+  }));
   $('timing').textContent = `${(animation.duration / 1000).toFixed(2)}s ${animation.loop ? 'loop' : 'once'}`;
   render();
 }
@@ -60,18 +85,6 @@ function compile() {
     const oldAnimation = $('animation').value;
     $('animation').replaceChildren(...Object.keys(project.animations).map(key => { const option = document.createElement('option'); option.value = key; option.textContent = title(key); return option; }));
     if (project.animations[oldAnimation]) $('animation').value = oldAnimation;
-    $('timeline').replaceChildren(...project.frames.map((frame, index) => {
-      const button = document.createElement('button'); button.className = 'frame'; button.title = `${frame.name} · ${frame.duration}ms`; button.setAttribute('aria-label', `Select frame ${frame.name}`);
-      const block = document.createElement('div'); block.className = 'frame-image';
-      const number = document.createElement('span'); number.className = 'number'; number.textContent = String(index + 1).padStart(2, '0');
-      block.append(thumbnail(frameImages[index], ''), number);
-      const caption = document.createElement('small');
-      const label = document.createElement('span'); label.textContent = frame.name;
-      const time = document.createElement('span'); time.textContent = `${frame.duration}ms`; caption.append(label, time);
-      button.append(block, caption);
-      button.addEventListener('click', () => { selected = index; playing = false; elapsed = 0; playState(); setMode('animation'); render(); });
-      return button;
-    }));
     $('color-count').textContent = `${Object.keys(project.palette).length} colors`;
     $('palette').replaceChildren(...Object.entries(project.palette).map(([key, value]) => {
       const button = document.createElement('button'); button.className = 'swatch'; button.style.background = value;
@@ -115,9 +128,10 @@ source.addEventListener('input', () => { dirty = true; valid = false; $('export'
 source.addEventListener('keydown', event => {
   if (event.key === 'Tab') { event.preventDefault(); const start = source.selectionStart; source.setRangeText('  ', start, source.selectionEnd, 'end'); source.dispatchEvent(new Event('input')); }
 });
-$('play').addEventListener('click', () => { if (!project) return; playing = !playing; if (playing) { elapsed = 0; setMode('animation'); } playState(); });
+$('play').addEventListener('click', () => { if (!project) return; playing = !playing; if (playing) { if (elapsed >= project.animations[$('animation').value].duration) elapsed = 0; setMode('animation'); } playState(); });
 $('animation').addEventListener('change', animationChanged);
 $('zoom').addEventListener('change', () => { zoom = Number($('zoom').value); render(); });
+$('review-view').addEventListener('change', render);
 for (const id of ['grid', 'onion']) $(id).addEventListener('click', () => { $(id).setAttribute('aria-pressed', String($(id).getAttribute('aria-pressed') !== 'true')); render(); });
 $('animation-view').addEventListener('click', () => setMode('animation'));
 $('sheet-view').addEventListener('click', () => setMode('sheet'));
@@ -156,11 +170,9 @@ function tick(time) {
   const delta = lastTime ? time - lastTime : 0; lastTime = time;
   if (project && playing && mode === 'animation' && !document.hidden) {
     const a = project.animations[$('animation').value]; elapsed += delta * Number($('speed').value);
-    let cursor = a.loop ? elapsed % a.duration : Math.min(elapsed, a.duration);
-    let next = a.frames.at(-1);
-    for (const i of a.frames) { if (cursor < project.frames[i].duration) { next = i; break; } cursor -= project.frames[i].duration; }
+    const nextPosition = animationPosition(project, a, elapsed), next = a.frames[nextPosition];
     if (!a.loop && elapsed >= a.duration) { playing = false; playState(); }
-    if (selected !== next) { selected = next; render(); }
+    if (position !== nextPosition) { selected = next; position = nextPosition; render(); }
   }
   requestAnimationFrame(tick);
 }

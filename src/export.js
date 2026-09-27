@@ -24,10 +24,11 @@ export function generateCSS(project, atlas) {
   return lines.join('\n') + '\n';
 }
 export async function createBundle(spec) {
-  const project = renderProject(spec), atlas = buildAtlas(project);
+  const project = renderProject(spec);
   const { width, height, sheet, frames, name } = project;
   const animationPixels = Object.values(project.animations).reduce((sum, a) => sum + a.frames.length * width * height * sheet.scale ** 2, 0);
   if (animationPixels > 67108864) throw new PixelError('project.animations', 'export exceeds 67,108,864 animation pixels; shorten sequences or reduce scale');
+  const atlas = buildAtlas(project);
   const files = new Map();
   files.set(`${name}.png`, encodePNG(atlas.data, atlas.width, atlas.height));
   files.set(`${name}.atlas.json`, Buffer.from(json(atlas.metadata)));
@@ -48,6 +49,17 @@ function previewHTML(project) {
 
 // Store-mode ZIP keeps the already-compressed PNGs intact and needs no dependency.
 export function createZip(files) {
+  if (!(files instanceof Map)) throw new PixelError('zip', 'expected a Map of filenames to byte buffers');
+  if (files.size > 65535) throw new PixelError('zip', 'ZIP32 supports at most 65,535 entries; split the bundle into smaller archives');
+  // Reject before checksumming or allocating any archive buffers.
+  let localSize = 0, directorySize = 0;
+  for (const [filename, data] of files) {
+    if (typeof filename !== 'string' || !(data instanceof Uint8Array)) throw new PixelError('zip', 'entries require string filenames and byte buffers');
+    const length = Buffer.byteLength(filename);
+    if (!length || length > 65535) throw new PixelError('zip', 'filenames must contain 1–65,535 UTF-8 bytes');
+    localSize += 30 + length + data.length; directorySize += 46 + length;
+    if (localSize + directorySize + 22 > 0xffffffff) throw new PixelError('zip', 'archive exceeds the ZIP32 byte budget; split the bundle');
+  }
   const local = [], central = [];
   let offset = 0;
   for (const [filename, data] of files) {

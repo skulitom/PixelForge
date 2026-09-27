@@ -1,0 +1,27 @@
+{
+  "format": "pixelforge-overlay",
+  "version": 1,
+  "base": "83f1b25fa423d878be75a84ef489bdcd17f1f27ee6a2c380be5941db18adf939",
+  "selections": {
+    "tip": {
+      "space": "canvas",
+      "x": 14,
+      "y": 2,
+      "w": 3,
+      "h": 3
+    }
+  },
+  "changes": [
+    {
+      "grid": "frames[still]",
+      "selection": "tip",
+      "value": {
+        "rows": [
+          "..h",
+          "..h",
+          ".hg"
+        ]
+      }
+    }
+  ]
+}

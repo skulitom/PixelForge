@@ -2,7 +2,9 @@
 
 Date: 2026-09-27. Toolkit baseline: `092b457` (0.1.0). Tested locally on Windows x64, Node v24.19.0, AMD Ryzen 9 7950X3D. Browser QA used headless Chromium 145.0.7632.6 with a 1440×1080 viewport and a separate 390×844 mobile viewport.
 
-**Outcome:** PixelForge successfully produced the complete playable Emberfall corpus: nine recipes, 220 frames and 44 named animations. Two toolkit bugs were reproduced, plus one preview/export workflow limitation. Toolkit source is unchanged so these findings remain reproducible. The demo is local only; deployment and publishing were deferred at the user's request. This file is the filed in-repository report; no remote issue was created.
+**Historical outcome at the baseline:** PixelForge successfully produced the complete playable Emberfall corpus: nine recipes, 220 frames and 44 named animations. Two toolkit bugs were reproduced, plus one preview/export workflow limitation. The reproductions below describe that original behavior. The demo is local only; deployment and publishing were deferred at the user's request. No remote issue was created.
+
+**Resolution update, 27 September 2026:** PF-EF-001, PF-EF-002 and PF-EF-003 are fixed with regression tests. The updated stress harness requires all three corrections to pass and writes each run to a unique folder. It still validates nine recipes, 220 frames and 44 animations; its verification run reports 15 checks and zero findings. [Implementation evidence](../reports/quality-implementation-evidence.json) and the [art workflow](../art-workflow.md) distinguish reliability checks from artistic acceptance.
 
 ## Verified results
 
@@ -38,7 +40,9 @@ This measures the demo's custom Canvas atlas renderer on one desktop, not PixelF
 
 ## PF-EF-001 — P2: valid recipe overflows the ZIP32 entry count
 
-**Status:** confirmed, open. **Area:** `src/export.js` (`createBundle`, `createZip`), studio ZIP export.
+**Status:** fixed. **Area:** `src/export.js` (`createBundle`, `createZip`), studio ZIP export.
+
+The renderer now preflights animation count + frame count + 7 support files against 65,535 before drawing. Schema and documentation describe the budget. `createZip` independently preflights count, filename byte lengths and total ZIP32 bytes before CRC/buffer work. Tests and Python's independent ZIP reader verify 65,535 entries; 65,536 fails with `PixelError`.
 
 A 1×1 recipe with one frame and 65,528 animations passes validation and the animation-pixel budget. Its compact request is 1,692,748 bytes, below the studio's 2 MiB request cap. `createBundle` completes, producing 65,536 files. `createZip` then fails when writing the ZIP32 16-bit entry count:
 
@@ -73,7 +77,9 @@ createZip(bundle.files);       // RangeError
 
 ## PF-EF-003 — P3: stamp symbol accepts an array instead of a string
 
-**Status:** confirmed, open. **Area:** `src/core.js`, `drawOps` stamp lookup; schema/runtime consistency.
+**Status:** fixed. **Area:** `src/core.js`, `drawOps` stamp lookup; schema/runtime consistency.
+
+Stamp lookup now requires a string before accessing the symbol map. Arrays, numbers, objects and booleans fail at the exact `.symbol` path; valid strings retain their existing behavior. Operation names also reject array coercion.
 
 ```js
 import { renderProject } from './src/core.js';
@@ -95,7 +101,9 @@ console.log([...result.frames[0].data]); // [255, 255, 255, 255]
 
 ## PF-EF-002 — workflow limitation: an optional preview blocks a valid MCP export
 
-**Status:** reproduced; resource-limit/UX observation, distinguished from the two bugs above.
+**Status:** resolved. The original report was a resource-limit/UX observation, distinguished from the two bugs above.
+
+`pixel_render` now bounds its preview with evenly spaced samples including endpoints, and reports original positions plus total/shown/omitted counts. The 1,024-entry reproduction exports completely while showing 256 cells and explicitly omitting 768 preview cells. A `playback` path points to the full animation preview. Core inspection still rejects unbounded oversized sheets; `maxCells` is an explicit sampling option for separate inspection.
 
 Create a 128×128 project with one frame `p` and animation `hold` containing `Array(1024).fill('p')`. This meets the 1,024-reference limit and uses 16,777,216 animation pixels, below the 67,108,864 export budget. `createBundle(recipe)` succeeds.
 
@@ -110,7 +118,7 @@ The 4096-pixel inspection guard works as documented. The workflow problem is tha
 
 **Suggested improvement:** export the valid bundle and provide a sampled/paginated preview with explicit omitted-count metadata, or make the diagnostic recommend the available workaround.
 
-**Workaround:** omit `animation` from `pixel_render` (the one-frame default preview fits), then call `pixel_inspect` separately with a smaller frame selection or region. No core fix was made during this demo task.
+**Historical workaround:** omit `animation` from `pixel_render`, then inspect a smaller selection separately. This is no longer necessary for successful export, though narrower inspections remain useful for detail omitted from samples.
 
 ## Reproduce the complete run
 

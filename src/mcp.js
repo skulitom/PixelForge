@@ -9,6 +9,9 @@ import { createBundle, writeBundle } from './export.js';
 const versions = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 const textContent = value => ({ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value) });
 const imageContent = ({ data, width, height }) => ({ type: 'image', mimeType: 'image/png', data: encodePNG(data, width, height).toString('base64') });
+function viewSummary({ sheet: { data, ...sheet }, nativeSheet, grids, legend, ...view }) {
+  return { ...view, sheet, ...(nativeSheet && { nativeSheet: { ...nativeSheet, data: undefined } }) };
+}
 // Rulers let an agent read grid coordinates without counting characters.
 function gridText({ region, legend, grids }) {
   const label = String(region.y + region.h - 1).length, xs = Array.from({ length: region.w }, (_, i) => region.x + i);
@@ -27,12 +30,18 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
   const coordinate = (minimum, maximum) => ({ type: 'integer', minimum, maximum });
   const inspectInput = { ...projectInput, properties: {
     ...source,
+    layers: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 64, description: 'Isolate named layers, preserving inheritance/transforms/visibility. Omits frame ops, background and final canvas corrections, which do not belong to a named layer.' },
+    reference: { type: 'string', description: 'Saved revision to compare against at the same origin. Adds a before/after image and changed-pixel report.' },
     frames: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1024, description: 'Frame names to show, in this order. Default: every frame.' },
     animation: { type: 'string', description: 'Show one animation in playback order instead of frames.' },
     region: { type: 'object', properties: { x: coordinate(0, 255), y: coordinate(0, 255), w: coordinate(1, 256), h: coordinate(1, 256) }, required: ['x', 'y', 'w', 'h'], additionalProperties: false, description: 'Crop every frame to this canvas rectangle. Smaller regions are shown larger.' },
     grid: { type: 'boolean', description: 'Also return each frame as palette-key text rows with x/y rulers. At most 16,384 pixels in total.' },
     scale: { type: 'integer', minimum: 1, maximum: 16, description: 'Contact sheet scale. Default: the largest that fits about 1024px.' },
-    background: { type: 'string', description: 'Cell background: checker (default), transparent, a palette name or a hex color.' }
+    background: { type: 'string', description: 'Cell background: checker (default), transparent, a palette name or a hex color.' },
+    view: { enum: ['color', 'silhouette', 'grayscale', 'onion'], description: 'Onion uses pink previous/cyan next poses in animation playback order; requires animation.' },
+    native: { type: 'boolean', description: 'Also return a native-size contact sheet beside the enlarged view.' },
+    diagnostics: { type: 'boolean', description: 'Advisory duplicate, empty, isolated-pixel, palette and loop-boundary evidence, plus original animation timing.' },
+    maxCells: { type: 'integer', minimum: 1, maximum: 256, description: 'Bound the preview with evenly spaced samples; returns omitted count and original positions. Does not alter exported animation.' }
   } };
   const patchInput = { ...projectInput, required: ['changes'], properties: {
     ...source,
@@ -41,6 +50,10 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
       insert: { type: 'string', description: 'List position to insert before; [-] appends.' },
       remove: { type: 'string', description: 'Object field or list item to delete.' },
       paint: { type: 'string', description: 'Frame path, such as frames[blink]. Replaces pixels in final canvas coordinates, after all layers, preserving source operations. Use transparent to erase.' },
+      grid: { type: 'string', description: 'Frame path. Value: {x,y,rows,erase?,mask?}. Dots/spaces preserve; explicit erase character clears; mask x selects and dot preserves.' },
+      move: { type: 'string', description: 'Frame path. Value: {x,y,w,h,dx,dy,mask?}. Moves exact pixels including corrections; erases selected source. Destination must fit.' },
+      recolor: { type: 'string', description: 'Frame path. Value: {x,y,w,h,from,to,mask?}. Replaces only matching selected colors.' },
+      scope: { enum: ['frame', 'inherited'], description: 'Canvas edits: inherited is default. frame preserves other poses by recording compensating canvas corrections, reported in edits.protected.' },
       value: { description: 'JSON value for set or insert; for paint, a list of {x, y, color} pixels inside the canvas (palette names or hex colors, exact RGBA replacement).' }
     }, additionalProperties: false } }
   } };
@@ -49,7 +62,7 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
     { name: 'pixel_validate', description: 'Validate a pixel project and return its revision id, dimensions, frame timing, animations, and clipping warnings. Saves an immutable recipe revision; no asset export.', inputSchema: projectInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
     { name: 'pixel_inspect', description: 'See a project without exporting assets. Returns one PNG contact sheet of every frame (or the chosen frames, or one animation in playback order), read left to right and top to bottom, with each cell\'s frame name and duration. With grid: true it also returns palette-key text grids with x/y rulers for exact pixel checks. Use region to zoom in. Saves an immutable recipe revision. Use this while iterating; call pixel_render to export.', inputSchema: inspectInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
     { name: 'pixel_patch', description: 'Change a recipe with targeted edits instead of resending it. Pass revision or project, plus changes applied in order: {"set": path, "value": v}, {"insert": path, "value": v}, {"remove": path}, or {"paint": "frames[blink]", "value": [{"x": 9, "y": 7, "color": "k"}]}. Paint replaces exact RGBA in canvas coordinates after all layers; transparent erases. Other paths look like frames[blink].layers[body].ops[2].x2, palette.k or animations.idle.frames[-]. The patch is atomic and the result must validate. Returns the new revision, edit details, every frame whose pixels changed (exact pixels for small changes), timing and animation changes, and a before/after PNG with one row per frame. Saves immutable base and result revisions; render the revision to export assets.', inputSchema: patchInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
-    { name: 'pixel_render', description: 'Render a project into PNG sprite sheet, atlas JSON, individual PNGs, APNG animations, CSS, and Canvas player. Writes a new unique folder inside the configured export directory and saves an immutable recipe revision. Returns paths and a PNG contact sheet preview of every frame with cell names, timing and layout. Optionally select an animation to preview in playback order.', inputSchema: renderInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } }
+    { name: 'pixel_render', description: 'Render a project into PNG sprite sheet, atlas JSON, individual PNGs, APNG animations, CSS, and Canvas player. Writes a new unique folder inside the configured export directory and saves an immutable recipe revision. Returns file paths, actual playback and a bounded contact sheet. Large previews report sample positions and omissions; all frames still export. Optionally select an animation.', inputSchema: renderInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } }
   ];
   const { remember, read } = createRevisionStore(directory);
   const recipeFrom = async (project, revision) => {
@@ -86,15 +99,24 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
       const { project: spec, revision, changes, ...options } = args;
       if (params.name === 'pixel_help') {
         const guide = await readFile(new URL('../docs/agent-guide.md', import.meta.url), 'utf8');
+        const workflow = await readFile(new URL('../docs/art-workflow.md', import.meta.url), 'utf8');
         const example = JSON.parse(await readFile(new URL('../examples/forest-spirit.json', import.meta.url), 'utf8'));
-        result({ content: [textContent(guide), textContent({ schema, example })] });
+        result({ content: [textContent(guide), textContent(workflow), textContent({ schema, example })] });
       } else if (params.name === 'pixel_validate') {
         const recipe = await recipeFrom(spec, revision), project = renderProject(recipe);
         result({ content: [textContent({ ok: true, revision: await remember(recipe), width: project.width, height: project.height, frames: project.frames.map(({ name, duration }) => ({ name, duration })), animations: project.animations, warnings: project.warnings })] });
       } else if (params.name === 'pixel_inspect') {
-        const recipe = await recipeFrom(spec, revision), project = renderProject(recipe), view = inspectProject(project, options), { data, ...sheet } = view.sheet;
-        const content = [textContent({ ok: true, revision: await remember(recipe), name: project.name, width: project.width, height: project.height, region: view.region, sheet, cells: view.cells, warnings: project.warnings }), imageContent(view.sheet)];
+        const { layers, reference, ...inspection } = options;
+        const recipe = await recipeFrom(spec, revision), project = renderProject(recipe, layers === undefined ? {} : { layers }), view = inspectProject(project, inspection);
+        const comparison = reference === undefined ? null : compareProjects(renderProject(await read(reference), layers === undefined ? {} : { layers }), project);
+        const content = [textContent({ ok: true, revision: await remember(recipe), name: project.name, width: project.width, height: project.height, ...viewSummary(view), warnings: project.warnings }), imageContent(view.sheet)];
+        if (view.nativeSheet) content.push(imageContent(view.nativeSheet));
         if (view.grids) content.push(textContent(gridText(view)));
+        if (reference !== undefined) {
+          const { image, ...report } = comparison;
+          content.push(textContent({ reference, comparison: report, ...(image && { comparisonImage: { region: image.region, frames: image.frames, omitted: image.omitted ?? 0 } }) }));
+          if (image) content.push(imageContent(image.sheet));
+        }
         result({ content });
       } else if (params.name === 'pixel_patch') {
         const base = await recipeFrom(spec, revision), before = renderProject(base), { recipe, edits } = patchRecipe(base, changes), after = renderProject(recipe);
@@ -102,12 +124,12 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
         const summary = { ok: true, revision: await remember(recipe), base: baseId, edits, ...report, ...(image && { image: { region: image.region, frames: image.frames, ...(image.omitted && { omitted: image.omitted }), scale: image.sheet.scale } }), warnings: after.warnings };
         result({ content: [textContent(summary), ...(image ? [imageContent(image.sheet)] : [])] });
       } else {
-        const recipe = await recipeFrom(spec, revision), bundle = await createBundle(recipe), view = inspectProject(bundle.project, options), { data, ...sheet } = view.sheet;
+        const recipe = await recipeFrom(spec, revision), bundle = await createBundle(recipe), view = inspectProject(bundle.project, { ...options, maxCells: 256 });
         const savedRevision = await remember(recipe);
         await mkdir(path.resolve(directory), { recursive: true });
         const out = await mkdtemp(path.join(path.resolve(directory), `${bundle.project.name}-`));
         const files = await writeBundle(bundle, out);
-        result({ content: [textContent({ ok: true, revision: savedRevision, directory: out, files, preview: { region: view.region, sheet, cells: view.cells }, warnings: bundle.project.warnings }), imageContent(view.sheet)] });
+        result({ content: [textContent({ ok: true, revision: savedRevision, directory: out, files, playback: path.join(out, 'preview.html'), preview: viewSummary(view), warnings: bundle.project.warnings }), imageContent(view.sheet)] });
       }
     } catch (cause) { result({ isError: true, content: [textContent({ error: cause.message, ...(cause.path ? { path: cause.path } : {}) })] }); }
   }

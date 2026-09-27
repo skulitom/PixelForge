@@ -1,6 +1,22 @@
 # Improving PixelForge's art quality
 
-27 September 2026 · Reviewed baseline: `a3f5b58` · Status: recommendations, not implemented features.
+27 September 2026 · Reviewed baseline: `a3f5b58` · Historical recommendations with implementation update below.
+
+## Implementation update
+
+The [Listening Hollow study](../art-quality-lab.md) and [art workflow reference](../art-workflow.md) now provide a concrete, editable implementation across the roadmap's foundations. Version-1 sprite rendering is preserved; poses and scenes use separate compiler/preview formats. Core and runtime remain dependency-free. The three Emberfall reliability findings are resolved with regressions.
+
+| Item | Implemented and demonstrated | Remaining acceptance work |
+| --- | --- | --- |
+| PF-AQ-01 | Revised skill and brief; original plant, shale, creature, material reaction and room; saved before/after recipes/images with candid review. | Independent randomized preference review, equal-budget repeated attempts and held-out briefs. No claim of Animal Well parity. |
+| PF-AQ-02 | Native/silhouette/grayscale views; layer isolation; saved-reference comparisons; bounded diagnostics/timing; pink/cyan onion skins follow expanded playback positions; actual playback route. | Contact-aware foot-slide diagnostics and richer review annotations. Advisory exemptions are documented, not machine-enforced taste rules. |
+| PF-AQ-03 | Regional grids/masks, move/recolor, explicit frame/inherited scope, named canvas selections and fingerprinted rebuild overlays. | Automatic conflict rebasing and part-following masks. Changed bases deliberately fail rather than guessing. |
+| PF-AQ-04 | Authored part definitions/replacements, local anchors/points, per-pose placements, attachments and expanded marker metadata; stride scene with an integer-sampled trajectory. | Broader motion review and transitions; optional editable in-between helpers. Metadata exports cues; the game dispatches them. |
+| PF-AQ-05 | Bounded scene manifest/viewer, native/value/density review, tile repeats/edge evidence, trajectories, state cues and persistent aftermath. | Shared style manifests, automatic palette-remap previews and larger environment studies. |
+| PF-AQ-06 | Lossless 8-bit RGB/RGBA PNG import with CRC/filter checks, provenance and optional unscaled atlas timing metadata. | Native Aseprite, additional PNG encodings and editor metadata adapters; pose anchors remain a separate sidecar. |
+| PF-AQ-07 | Aligned color/normal/emissive atlases, hand-authored lantern normals, movable banded lights, unlit fallback and separate CPU benchmark. | Material-mask pass, shadows, fluid/raymarching effects and broader environmental response. |
+
+[Verification evidence](quality-implementation-evidence.json) records functional/browser/independent-decoder checks. These prove specific technical properties, not aesthetic quality. The recommendations and acceptance criteria below remain the target; the initial narrow implementation is not blanket closure of all seven proposals.
 
 This report uses the local Emberfall demo to identify improvements to **PixelForge itself**. Animal Well is a quality reference for expressive pixel art, animation and environmental response. The objective is to help agents produce original work at a much higher standard, not reproduce another game's assets or build more Emberfall content.
 

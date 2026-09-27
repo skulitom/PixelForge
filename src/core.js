@@ -58,7 +58,18 @@ function readRows(rows, path, palette) {
   return { rows, width, height: rows.length };
 }
 
-export function renderProject(spec) {
+export function renderProject(spec, options = {}) {
+  object(options, 'render', ['layers']);
+  if (options.layers !== undefined) {
+    renderProject(spec); // Validate the complete recipe before hiding any drawing.
+    list(options.layers, 'render.layers', 64);
+    if (!options.layers.length) fail('render.layers', 'select at least one named layer');
+    const known = new Set(spec.frames.flatMap(f => (f.layers ?? []).map(l => l.name).filter(Boolean)));
+    for (const ref of options.layers) if (typeof ref !== 'string' || !known.has(ref)) fail('render.layers', `unknown layer ${JSON.stringify(ref)}`);
+    const isolated = structuredClone(spec); isolated.background = 'transparent';
+    for (const frame of isolated.frames) { delete frame.ops; delete frame.pixels; frame.layers = (frame.layers ?? []).filter(layer => options.layers.includes(layer.name)); }
+    return renderProject(isolated);
+  }
   object(spec, 'project', ['$schema', 'version', 'name', 'width', 'height', 'palette', 'background', 'symbols', 'frames', 'animations', 'sheet']);
   if (spec.version !== 1) fail('project.version', 'expected 1');
   const projectName = name(spec.name, 'project.name');
@@ -81,6 +92,9 @@ export function renderProject(spec) {
   list(spec.frames, 'project.frames', 256);
   if (!spec.frames.length) fail('project.frames', 'at least one frame is required');
   if (width * height * spec.frames.length > 4194304) fail('project.frames', 'total frame area exceeds 4,194,304 pixels');
+  object(spec.animations ?? {}, 'project.animations');
+  const animationCount = spec.animations === undefined ? 1 : Object.keys(spec.animations).length;
+  if (7 + spec.frames.length + animationCount > 65535) fail('project.animations', `bundle exceeds the ZIP32 limit of 65,535 files; at most ${65535 - 7 - spec.frames.length} animations fit alongside these frames and 7 support files`);
   let work = 0, operationCount = 0;
   const spend = amount => { work += amount; if (work > 67108864) fail('project', 'drawing work exceeds the 67-million-pixel budget; simplify repeated operations'); };
   const warnings = new Set();
@@ -98,7 +112,7 @@ export function renderProject(spec) {
         grid: ['x', 'y', 'rows', 'scale', 'flipX', 'flipY', 'rotate'],
         stamp: ['x', 'y', 'symbol', 'scale', 'flipX', 'flipY', 'rotate'], replace: ['from', 'to']
       };
-      if (!own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
+      if (typeof op.op !== 'string' || !own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
       object(op, p, ['op', ...fields[op.op]]);
       const x = integer(op.x ?? 0, `${p}.x`), y = integer(op.y ?? 0, `${p}.y`);
       const put = (px, py, c, erase = false) => {
@@ -127,6 +141,7 @@ export function renderProject(spec) {
         spend(Math.max(dx, -dy) + 1);
         while (true) { put(px, py, c); if (px === x2 && py === y2) break; const e = 2 * error; if (e >= dy) { error += dy; px += sx; } if (e <= dx) { error += dx; py += sy; } }
       } else if (op.op === 'grid' || op.op === 'stamp') {
+        if (op.op === 'stamp' && typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a symbol');
         const grid = op.op === 'grid' ? readRows(op.rows, `${p}.rows`, palette) : symbols[op.symbol];
         if (!grid) fail(`${p}.symbol`, `unknown symbol ${JSON.stringify(op.symbol)}`);
         const scale = integer(op.scale ?? 1, `${p}.scale`, 1, 16);
@@ -363,7 +378,7 @@ function drawSheet(sources, width, region, { scale, background = null, columns, 
 }
 
 export function inspectProject(project, options = {}) {
-  object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background']);
+  object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'view', 'native', 'diagnostics', 'maxCells']);
   const { width, height, frames } = project;
   if (options.frames !== undefined && options.animation !== undefined) fail('inspect', 'choose frames or animation, not both');
   let cells = frames.map((_, i) => i);
@@ -388,14 +403,124 @@ export function inspectProject(project, options = {}) {
   const grid = boolean(options.grid ?? false, 'inspect.grid');
   const scale = options.scale === undefined ? undefined : integer(options.scale, 'inspect.scale', 1, 16);
   const background = (options.background ?? 'checker') === 'checker' ? null : parseColor(options.background, project.palette, 'inspect.background');
+  const mode = options.view ?? 'color';
+  if (!['color', 'silhouette', 'grayscale', 'onion'].includes(mode)) fail('inspect.view', 'expected color, silhouette, grayscale or onion');
+  if (mode === 'onion' && options.animation === undefined) fail('inspect.view', 'onion requires an animation so neighbors have an unambiguous playback position');
+  const native = boolean(options.native ?? false, 'inspect.native'), diagnostics = boolean(options.diagnostics ?? false, 'inspect.diagnostics');
+  const total = cells.length;
+  let positions = cells.map((_, i) => i);
+  if (options.maxCells !== undefined) {
+    const requested = integer(options.maxCells, 'inspect.maxCells', 1, 256);
+    const count = Math.min(total, requested, Math.max(1, Math.floor(4094 / (Math.max(region.w, region.h) + 2)) ** 2));
+    if (count < total) positions = Array.from({ length: count }, (_, i) => count === 1 ? 0 : Math.floor(i * (total - 1) / (count - 1)));
+    cells = positions.map(i => cells[i]);
+  }
   const unique = [...new Set(cells)];
   if (grid && unique.length * region.w * region.h > 16384) fail('inspect.grid', `grids are limited to 16,384 pixels, not ${unique.length} × ${region.w}×${region.h}; select fewer frames or a smaller region`);
-  const view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(cells.map(i => frames[i].data), width, region, { scale, background }) };
+  const sources = cells.map((i, n) => mode === 'onion' ? onionPixels(project, project.animations[options.animation], positions[n]) : reviewPixels(frames[i].data, mode));
+  const view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(sources, width, region, { scale, background }) };
+  if (mode !== 'color') view.mode = mode;
+  if (total !== cells.length) view.sampling = { total, shown: cells.length, omitted: total - cells.length, positions, method: 'evenly spaced, including endpoints; durations are original, not playback timing' };
+  if (native) view.nativeSheet = drawSheet(sources, width, region, { scale: 1, background });
+  if (diagnostics) view.diagnostics = analyzeProject(project);
+  if (options.animation !== undefined && (diagnostics || mode === 'onion')) {
+    const a = project.animations[options.animation]; let start = 0;
+    view.timing = { animation: options.animation, duration: a.duration, loop: a.loop, entries: a.frames.map((index, position) => {
+      const entry = { position, frame: frames[index].name, start, duration: frames[index].duration, ...animationNeighbors(a, position) };
+      start += entry.duration; return entry;
+    }) };
+  }
   if (!grid) return view;
   const namer = colorNamer(project);
   view.grids = unique.map(index => ({ frame: frames[index].name, rows: readRegion(frames[index].data, width, region, namer) }));
   view.legend = namer.legend();
   return view;
+}
+
+// Positions refer to the expanded sequence, never the recipe's frame order.
+export function animationPosition(project, animation, time) {
+  let cursor = animation.loop ? ((time % animation.duration) + animation.duration) % animation.duration : Math.max(0, Math.min(time, animation.duration));
+  for (let position = 0; position < animation.frames.length; position++) {
+    const duration = project.frames[animation.frames[position]].duration;
+    if (cursor < duration) return position;
+    cursor -= duration;
+  }
+  return animation.frames.length - 1;
+}
+export function animationNeighbors(animation, position) {
+  integer(position, 'animation.position', 0, animation.frames.length - 1);
+  const count = animation.frames.length;
+  return { previous: position > 0 ? position - 1 : animation.loop ? count - 1 : null, next: position + 1 < count ? position + 1 : animation.loop ? 0 : null };
+}
+export function reviewPixels(data, mode = 'color') {
+  if (mode === 'color') return data;
+  if (!['silhouette', 'grayscale'].includes(mode)) fail('view', 'expected color, silhouette or grayscale');
+  const result = new Uint8ClampedArray(data.length);
+  for (let at = 0; at < data.length; at += 4) {
+    if (!data[at + 3]) continue;
+    const value = mode === 'silhouette' ? 240 : Math.round(.2126 * data[at] + .7152 * data[at + 1] + .0722 * data[at + 2]);
+    result.set([value, value, value, mode === 'silhouette' ? 255 : data[at + 3]], at);
+  }
+  return result;
+}
+export function onionPixels(project, animation, position) {
+  const result = new Uint8ClampedArray(project.width * project.height * 4);
+  const neighbors = animationNeighbors(animation, position);
+  for (const [neighbor, color] of [[neighbors.previous, [240, 83, 120, 100]], [neighbors.next, [65, 201, 240, 100]]]) {
+    if (neighbor === null) continue;
+    const data = project.frames[animation.frames[neighbor]].data;
+    for (let at = 0; at < data.length; at += 4) if (data[at + 3]) blend(result, at, color, data[at + 3] / 255);
+  }
+  const current = project.frames[animation.frames[position]].data;
+  for (let at = 0; at < current.length; at += 4) blend(result, at, current.subarray(at, at + 4));
+  return result;
+}
+
+// Advisory evidence, not an aesthetic score. Never changes artwork or invalidates holds/sparks.
+export function analyzeProject(project) {
+  const { width, height, frames } = project, findings = [], hashes = new Map();
+  const known = new Set(Object.values(project.palette).map(color => colorId(parseColor(color), 0)));
+  const stats = frames.map(frame => {
+    const colors = new Set(), outside = new Set(), isolated = [], unlisted = [];
+    let visible = 0, isolatedCount = 0, hash = 2166136261;
+    for (let at = 0; at < frame.data.length; at += 4) {
+      const id = frame.data[at + 3] ? colorId(frame.data, at) : 0;
+      hash = Math.imul(hash ^ id, 16777619) >>> 0;
+      if (!id) continue;
+      visible++; colors.add(id);
+      const x = at / 4 % width, y = Math.floor(at / 4 / width);
+      if (!known.has(id) && !outside.has(id)) { outside.add(id); if (unlisted.length < 32) unlisted.push({ x, y, color: toHex(frame.data.subarray(at, at + 4)) }); }
+      let neighbor = false;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if ((dx || dy) && x + dx >= 0 && x + dx < width && y + dy >= 0 && y + dy < height && frame.data[((y + dy) * width + x + dx) * 4 + 3]) neighbor = true;
+      }
+      if (!neighbor) { isolatedCount++; if (isolated.length < 32) isolated.push({ x, y }); }
+    }
+    const peers = hashes.get(hash) ?? [];
+    const same = peers.find(other => frame.data.every((value, i) => value === other.data[i] || (!frame.data[i - i % 4 + 3] && !other.data[i - i % 4 + 3])));
+    if (same) findings.push({ code: 'duplicate', frame: frame.name, sameAs: same.name, note: 'Repeated poses and holds are valid; compare action intent.' });
+    peers.push(frame); hashes.set(hash, peers);
+    if (!visible) findings.push({ code: 'empty', frame: frame.name, note: 'An empty effect/transition frame may be intentional.' });
+    if (isolatedCount) findings.push({ code: 'isolated', frame: frame.name, count: isolatedCount, coordinates: isolated, omitted: isolatedCount - isolated.length, note: 'No visible 8-connected neighbor. Exempt intentional sparks, stars and detached accents.' });
+    if (outside.size) findings.push({ code: 'palette', frame: frame.name, count: outside.size, coordinates: unlisted, omitted: outside.size - unlisted.length, note: 'Colors outside the declared palette; literal colors and alpha blends may be intentional.' });
+    return { frame: frame.name, visible, colors: colors.size };
+  });
+  const difference = (a, b) => {
+    let pixels = 0, left = width, top = height, right = -1, bottom = -1;
+    for (let at = 0; at < a.length; at += 4) if (colorId(a, at) !== colorId(b, at) && (a[at + 3] || b[at + 3])) {
+      pixels++; const x = at / 4 % width, y = Math.floor(at / 4 / width);
+      left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+    }
+    return { pixels, ...(pixels && { box: { x: left, y: top, w: right - left + 1, h: bottom - top + 1 } }) };
+  };
+  const animations = Object.entries(project.animations).map(([name, a]) => {
+    const deltas = a.frames.slice(1).map((index, i) => difference(frames[a.frames[i]].data, frames[index].data).pixels);
+    const nonzero = deltas.filter(n => n).sort((a, b) => a - b), median = nonzero[Math.floor(nonzero.length / 2)] ?? 0;
+    const boundary = difference(frames[a.frames.at(-1)].data, frames[a.frames[0]].data);
+    if (a.loop && boundary.pixels > Math.max(4, median * 3)) findings.push({ code: 'loop-jump', animation: name, from: frames[a.frames.at(-1)].name, to: frames[a.frames[0]].name, ...boundary, note: 'Loop boundary changes over three times the median nonzero adjacent change. Intentional cuts are exempt.' });
+    return { animation: name, duration: a.duration, entries: a.frames.length, repeatedAdjacent: deltas.filter(n => !n).length, boundary };
+  });
+  return { advisory: true, frames: stats, animations, findings };
 }
 
 // Compares two rendered revisions, matching frames by name, so a patch can report every visible effect.

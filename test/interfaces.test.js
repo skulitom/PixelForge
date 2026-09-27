@@ -105,6 +105,9 @@ test('MCP revisions let pixel_patch edit, compare and export without resending t
   const saved = JSON.parse(await readFile(rendered.files.find(file => file.endsWith('.pixel.json')), 'utf8'));
   assert.deepEqual([rendered.revision, saved.frames[0].ops[0].x], [report.revision, 10]);
   assert.equal(JSON.parse((await call('pixel_inspect', { revision: base })).content[0].text).revision, base);
+  const review = await call('pixel_inspect', { revision: report.revision, reference: base, native: true, view: 'silhouette', diagnostics: true });
+  assert.ok(!review.isError); assert.equal(review.content.filter(c => c.type === 'image').length, 3);
+  assert.deepEqual(JSON.parse(review.content.find(c => c.type === 'text' && c.text.includes('comparison')).text).comparison.frames.changed.map(f => f.frame), ['a']);
   assert.equal((await failure('pixel_patch', { revision: 'missing', changes: [{ remove: 'frames[b]' }] })).path, 'revision');
   assert.equal((await failure('pixel_validate', { project: strip, revision: base })).path, 'arguments');
   assert.equal((await failure('pixel_patch', { revision: base, changes: [{ set: 'frames[a].duration', value: 0 }] })).path, 'project.frames[0].duration');
@@ -166,6 +169,17 @@ test('CLI patch previews by default and writes only the requested recipe and ima
   assert.match(JSON.parse(run('--out', path.join(dir, 'next.txt')).stderr).error, /\.json/);
   const both = spawnSync(process.execPath, ['bin/pixelforge.js', 'patch', '-', '--changes', '-'], { cwd: root, input: '[]', encoding: 'utf8' });
   assert.match(JSON.parse(both.stderr).error, /stdin/);
+});
+test('MCP exports a maximum-length animation with a bounded, explicit sampled preview', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-long-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const project = { ...tiny, width: 128, height: 128, animations: { hold: { frames: Array(1024).fill('idle') } } };
+  const [result] = runMCP(dir, [['pixel_render', { project, animation: 'hold' }]]);
+  assert.ok(!result.isError, JSON.stringify(result));
+  const info = JSON.parse(result.content[0].text);
+  assert.equal(info.preview.sampling.omitted, 768); assert.equal(info.preview.sampling.positions.at(-1), 1023);
+  const atlas = JSON.parse(await readFile(info.files.find(file => file.endsWith('.atlas.json')), 'utf8'));
+  assert.equal(atlas.animations.hold.frames.length, 1024); await access(info.playback);
 });
 test('CLI inspect prints cells and grids, and writes a PNG only when asked', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-inspect-'));

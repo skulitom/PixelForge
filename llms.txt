@@ -10,6 +10,8 @@ Requires Node.js 20 or newer. No build step, dependency installation, API key or
 - [Pixel art skill](https://raw.githubusercontent.com/skulitom/PixelForge/main/skills/pixel-art/SKILL.md): A reusable workflow for authoring, inspecting and revising artwork.
 - [Authoring reference](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/agent-guide.md): Recipe fields, operations, frame inheritance, layers, inspection and resource limits.
 - [JSON Schema](https://raw.githubusercontent.com/skulitom/PixelForge/main/schema.json): Machine-readable recipe structure; the renderer also validates references and resource limits.
+- [Art workflow and sidecars](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/art-workflow.md): Quality checkpoints, native/silhouette/grayscale/onion inspection, regional edits, overlays, poses, scenes, PNG interchange and material passes.
+- [Original quality lab](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/art-quality-lab.md): Editable before/after study, candid self-review and remaining artistic limits.
 
 ## Workflow
 
@@ -19,7 +21,9 @@ MCP: run node /absolute/path/to/PixelForge/bin/pixelforge.js mcp --out /absolute
 
 Canvas corrections: add { "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] } to patch changes. Painting updates final frame.pixels overrides in canvas coordinates after all layers, retaining editable operations. Palette names and hex set exact RGBA; transparent erases. Corrections propagate to inherited frames and appear in the comparison report.
 
-Preserve editable source recipes. Existing CLI outputs are protected unless --force is explicitly selected. Coordinates are integer pixels; all exports are deterministic. The preview studio listens on loopback only. Image generation models, image import, GIF export and native Aseprite files are outside the current scope.
+Preserve editable source recipes. Existing CLI outputs are protected unless --force is explicitly selected. Coordinates are integer pixels; all exports are deterministic. The preview studio listens on loopback only. Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported. Image generation models, GIF export, automatic quantization and native Aseprite files are outside the current scope.
+
+Quality review: inspect supports --view color|silhouette|grayscale|onion, --native, --diagnostics, --layers, --reference and --max-cells. MCP uses view/native/diagnostics/layers/reference/maxCells. pixel_render samples oversized previews explicitly without shortening exported animations. Regional patch verbs: grid (dots preserve, explicit erase clears), move and recolor, optional x/dot masks; scope frame preserves other poses with reported compensating corrections. The default is inherited propagation. Compile authored .poses.json files with compile; inspect small rooms with preview room.scene.json; export them with scene. New sidecar formats have poses.schema.json and scene.schema.json. Read the art workflow before using advanced formats.
 
 ## Complete recipes
 

@@ -7,7 +7,8 @@ import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import {renderProject,inspectProject,patchRecipe,compareProjects,createBundle,createZip} from '../src/index.js';
-const root=fileURLToPath(new URL('../',import.meta.url)),out=path.join(root,'output','emberfall','stress');await mkdir(out,{recursive:true});
+const root=fileURLToPath(new URL('../',import.meta.url)),stressRoot=path.join(root,'output','emberfall','stress');await mkdir(stressRoot,{recursive:true});
+const out=await mkdtemp(path.join(stressRoot,'run-'));
 const report={date:new Date().toISOString(),node:process.version,platform:`${process.platform} ${process.arch}`,baseline:'092b457',assets:[],checks:[],findings:[]};
 const hash=buffer=>createHash('sha256').update(buffer).digest('hex');
 for(const name of (await readdir(path.join(root,'demo','recipes'))).filter(n=>n.endsWith('.json'))){
@@ -50,16 +51,16 @@ const [inspected,rendered]=mcp([['pixel_inspect',{revision,animation:'idle',grid
 // the animation-pixel budget, but MCP render's mandatory preview refuses the request.
 const long={...tiny,name:'long-preview',width:128,height:128,animations:{hold:{frames:Array(1024).fill('p')}}};
 await createBundle(long);const [longResult]=mcp([['pixel_render',{project:long,animation:'hold'}]]);
-if(longResult.isError)report.findings.push({id:'PF-EF-002',kind:'workflow limit',title:'Optional animation preview prevents an otherwise valid MCP export',error:JSON.parse(longResult.content[0].text).error,workaround:'Omit animation in pixel_render; inspect a shorter frames selection separately.'});
+assert.ok(!longResult.isError,JSON.stringify(longResult));
+const longInfo=JSON.parse(longResult.content[0].text);assert.equal(longInfo.preview.sampling.omitted,768);assert.equal(longInfo.preview.sampling.positions.at(-1),1023);report.checks.push('PF-EF-002 fixed: full 1,024-entry animation exports; preview reports 256 samples and 768 omissions.');
 
 // ZIP32 has a 65,535-entry limit. This input is smaller than the studio's 2 MiB cap.
 const zipRecipe={...tiny,name:'zip-limit',animations:Object.fromEntries(Array.from({length:65528},(_,i)=>[`a${i}`,{frames:['p']}]))};
-start=performance.now();const zipBundle=await createBundle(zipRecipe);let zipError;
-try{createZip(zipBundle.files);}catch(error){zipError=`${error.name}: ${error.message}`;}
-if(zipError)report.findings.push({id:'PF-EF-001',kind:'bug',title:'Valid recipe overflows ZIP32 entry count after full export work',inputBytes:Buffer.byteLength(JSON.stringify(zipRecipe)),animationCount:65528,files:zipBundle.files.size,elapsedMs:+(performance.now()-start).toFixed(2),error:zipError});
+start=performance.now();await assert.rejects(createBundle(zipRecipe),error=>error.name==='PixelError'&&/65,535/.test(error.message));
+report.checks.push(`PF-EF-001 fixed: rejected before bundle allocation in ${(performance.now()-start).toFixed(2)} ms.`);
 
 // Symbol reference typing differs from the published JSON Schema.
 const badStamp={...tiny,symbols:{dot:['x']},palette:{x:'#fff'},frames:[{name:'p',ops:[{op:'stamp',symbol:['dot']}]}]};
-try{const p=renderProject(badStamp);if(p.frames[0].data[3]===255)report.findings.push({id:'PF-EF-003',kind:'bug',title:'Array-valued stamp symbol is accepted through property-key coercion',actual:'symbol: ["dot"] renders successfully',expected:'PixelError at project.frames[0].ops[0].symbol; schema requires a string.'});}catch{}
+assert.throws(()=>renderProject(badStamp),error=>error.name==='PixelError'&&error.path==='project.frames[0].ops[0].symbol');report.checks.push('PF-EF-003 fixed: array symbol rejected at its exact field path.');
 report.summary={recipes:report.assets.length,frames:report.assets.reduce((n,a)=>n+a.frames,0),animations:report.assets.reduce((n,a)=>n+a.animations,0),checks:report.checks.length,findings:report.findings.length,cpu:os.cpus()[0]?.model};
 await writeFile(path.join(out,'results.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));

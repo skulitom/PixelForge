@@ -2,6 +2,8 @@
 
 Create a small, editable JSON recipe; validate it; render it; inspect the PNG preview; revise the source. Use compact palette grids for silhouettes, symbols for repeated objects and inherited frames for small pose changes. The renderer is deterministic. It does not use an image model.
 
+For visual quality decisions, regional corrections, pose compilation, scenes, material passes and PNG interchange, follow the [art workflow](art-workflow.md) and [original quality lab](art-quality-lab.md). These are supported extensions around version-1 recipes, not permission prompts or aesthetic guarantees.
+
 ## Project
 
 Required: `version: 1`, `name`, `width`, `height`, `frames`.
@@ -13,6 +15,7 @@ Required: `version: 1`, `name`, `width`, `height`, `frames`.
 - `symbols`: map names to equal-width string arrays. A symbol is a reusable palette grid.
 - `frames`: 1–256 frames. At most 4,194,304 total source pixels.
 - `animations`: map names to `{frames: [frame names], direction?, loop?}`. Omit for a default animation using all frames. `direction` is `forward` (default), `reverse` or `pingpong`. Pingpong excludes repeated endpoints: a,b,c becomes a,b,c,b. `loop` defaults to true; false plays once and holds the last frame.
+  ZIP32 bundles require animation count + frame count + 7 support files ≤ 65,535. Validation rejects overflow before rasterizing frames; at most 65,527 animations fit with one frame. Each input sequence has at most 1,024 references before pingpong expansion.
 - `sheet`: `{columns, padding, scale}`. Defaults: up to 8 columns, 0 padding, scale 1. Padding surrounds **each** cell on every side, so the distance between adjacent contents is twice the padding. Padding and dimensions are multiplied by the integer scale. Scale 1–16; columns 1–256; padding 0–16. Atlas area must be at most 16,777,216 pixels.
 
 Use `node bin/pixelforge.js schema` for the complete JSON Schema. Unknown fields are errors so misspelled instructions do not disappear silently. Omit optional fields to use defaults; null is not accepted.
@@ -55,6 +58,9 @@ Look at every frame before exporting. Inspection renders its images in memory; t
 - **Palette-key grids** (`grid: true`, CLI `--grid`): each distinct selected frame read back in the recipe's grid format. A pixel whose exact RGBA matches a single-character palette key shows that key; `.` is fully transparent. Any other color, whether a multi-character palette name, a literal hex color or a semi-transparent blend, gets a legend symbol: a digit, letter or punctuation mark that is not a palette key. Symbols belong to the recipe, not the request: multi-character palette names come first, in palette order, then other colors in the order frames use them. Every readback of the same recipe therefore agrees, and each response lists only the symbols it uses. `?` counts any colors left once the symbols run out. Grids are limited to 16,384 pixels in total. MCP prints them with x/y rulers; the CLI returns JSON `rows` that start at the region's top-left corner.
 - **Region** (`region: {x, y, w, h}`, CLI `--region x,y,w,h`): crops every cell and grid to a canvas rectangle. Smaller regions are shown larger, so you can compare a face across a blink or read the pixels around a joint without printing the whole canvas.
 
+- **Art review**: `view: "silhouette"|"grayscale"|"onion"` (default `color`), `native: true`, `diagnostics: true`, and `maxCells: 1..256`. Onion requires an animation and shows pink previous/cyan next neighbors by playback position. Native adds a second 1× image. Diagnostics are advisory and include timing evidence; sampled previews report original positions and omissions. Exact grids always use source colors. CLI flags: `--view`, `--native`, `--diagnostics`, `--max-cells`.
+- **Isolation/comparison**: `layers: ["body"]` isolates named layers (excluding unassigned canvas ops/corrections), and `reference: "revision-id"` compares to a saved recipe. CLI: `--layers body` and `--reference previous.json`. See the [detailed semantics](art-workflow.md#inspection-options).
+
 ## Patching
 
 Change a recipe with small edits instead of rewriting it. Over MCP, send the full recipe once: every successful response from `pixel_validate`, `pixel_inspect`, `pixel_patch` and `pixel_render` includes a `revision` id, and those tools accept `revision` in place of `project`. Revisions are immutable recipe snapshots saved in `<MCP --out directory>/.revisions/`, including edits that have never been exported. Restart with the same output directory to keep using earlier ids as undo points. Use an absolute `--out` path so changing the working directory does not change the store. Older ids can also be recovered from recipes in existing render folders under that directory. Unknown or damaged revisions produce an error; stored snapshots are never silently replaced. Snapshots are retained until you explicitly remove their files; keep the output directory backed up. The CLI patches files instead.
@@ -67,6 +73,11 @@ Change a recipe with small edits instead of rewriting it. Over MCP, send the ful
 | `{"insert": path, "value": v}` | Insert into a list before the selected item; `[-]` appends |
 | `{"remove": path}` | Delete an object field or list item |
 | `{"paint": "frames[blink]", "value": [{"x": 9, "y": 7, "color": "k"}]}` | Set exact pixels in final canvas coordinates after all layers; `transparent` erases |
+| `{"grid": "frames[blink]", "value": {"x": 9, "y": 7, "rows": [".kk", "~k."], "erase": "~"}}` | Compact correction; dots/spaces preserve, explicit erase clears |
+| `{"move": "frames[blink]", "value": {"x": 9, "y": 7, "w": 3, "h": 2, "dx": 1, "dy": 0}}` | Move selected RGBA, clearing source; overlapping moves retain corrections |
+| `{"recolor": "frames[blink]", "value": {"x": 9, "y": 7, "w": 3, "h": 2, "from": "k", "to": "g"}}` | Recolor exact matches in a region |
+
+Regional actions accept an optional matching `mask` (`x` selects, `.` preserves). Canvas actions accept `scope: "frame"` or `"inherited"` (default); frame scope records compensating literal-color corrections on affected dependents and reports them. Named selections and guarded rebuilds use [overlay sidecars](art-workflow.md#rebuild-safe-overlays).
 
 Paths use the same form as error paths, with an optional `project.` prefix: `frames[3].duration`, `palette.k`, `symbols.mossling[9]`, `sheet.padding`. In a list, `[name]` selects the item whose `name`, or string value, matches, and `[-]` is the end: `frames[blink].layers[body].ops[2].x2`, `animations.idle.frames[-]`. Quote unusual keys: `palette["dark.green"]`. Intermediate fields must exist, except that an insert can create the list it inserts into; `set` may add the final object field. Frame `ops` draw before the frame's layers. Use `paint` to correct the visible result directly; use `set` or `insert` inside layer `ops` when changing how that layer is drawn.
 
@@ -100,3 +111,5 @@ Exports include a TexturePacker-style RGBA atlas, named sequences, exact duratio
 For grid-based game engines, prefer padding 0. For atlas importers, use the exact frame rectangles. Atlas animations list **expanded playback order** (including reverse/pingpong) and a loop flag.
 
 At most 20,000 operations and 67,108,864 estimated drawing pixels are accepted. Animation exports across all sequences are also limited to 67,108,864 scaled pixels. CLI/MCP transport errors and render errors provide actionable paths; don't suppress them.
+
+Large `pixel_render` previews are automatically sampled to stay inside inspection bounds; all animation frames are still exported. The response explicitly includes `preview.sampling` and a `playback` HTML path when rendering. Use `pixel_inspect` with a narrower selection for omitted detail. Contact sheets are static, even when arranged in playback order.

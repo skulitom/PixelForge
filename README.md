@@ -14,6 +14,18 @@ Zero runtime dependencies. No build step, API key, image model, network service 
 
 [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
 
+## Art quality workflow
+
+The [original Listening Hollow study](docs/art-quality-lab.md) demonstrates silhouette/value/native-size review, animation-aware onion skins, masked regional corrections, authored parts and attachments, guarded rebuild overlays, a small scene, PNG interchange and aligned normal/emissive passes. See the [format and workflow guide](docs/art-workflow.md) for the supported boundaries. This is a self-reviewed improvement study; it does not claim Animal Well parity.
+
+![The Listening Hollow, an original PixelForge art study](docs/images/quality/hollow.png)
+
+```sh
+npm run review:quality
+node bin/pixelforge.js preview examples/quality/skink.json
+node bin/pixelforge.js inspect examples/quality/skink.json --animation run --view onion --native --diagnostics
+```
+
 ## Start
 
 ```sh
@@ -101,7 +113,7 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 | `name.pixel.json` | Editable source recipe |
 | `preview.html` | Standalone preview you can open directly in a browser |
 
-APNG files use the `.png` extension intentionally. GIF, Aseprite files and image import/quantization are outside this first version. Sources are JSON; this is an agent authoring tool with a preview studio, not a mouse-driven paint editor.
+APNG files use the `.png` extension intentionally. Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
 ## Connect an agent through MCP
 
@@ -135,9 +147,11 @@ The five tools are:
 
 - **`pixel_help`**: authoring guide, full schema and a complete sample.
 - **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets.
-- **`pixel_inspect`**: return a contact sheet PNG of every frame, or one animation in playback order, and save its recipe revision. With `grid: true`, it also returns palette-key text grids with x/y rulers; `region` zooms in.
+- **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
 - **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus output paths. Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
+
+`pixel_patch` also supports compact `grid`, masked `move` and regional `recolor`, with explicit `frame` or `inherited` scope. Large `pixel_render` previews are sampled with total/shown/omitted metadata instead of blocking a valid export; exported animations remain complete. Pose compilation, scene export, guarded overlays and PNG import are available through the CLI/JavaScript API, then compiled sprite recipes use the same five MCP tools.
 
 Send a recipe once. Each successful recipe-tool response includes a `revision` id that the other tools accept in place of `project`, so later calls, including patches, need not resend the recipe. Validate, inspect, patch and render save immutable snapshots in `<MCP --out directory>/.revisions/`; they survive restarts when you use the same directory, even before an asset export. Prefer an absolute `--out` path. Earlier revisions remain undo points. Older rendered revisions can be recovered from saved bundle recipes. Render also saves the recipe beside the assets.
 

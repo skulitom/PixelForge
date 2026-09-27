@@ -31,7 +31,7 @@ test('patch errors name the change that failed', () => {
     [{ set: 'frames[-]', value: {} }, /can only end an insert path/], [{ insert: 'palette.q', value: '#fff' }, /insert needs a list position/],
     [{ remove: 'frames[0].nope' }, /nothing to remove at frames\[0\]\.nope/], [{ set: 'frames[0].duration.x', value: 1 }, /frames\[0\]\.duration is 100/],
     [{ set: 'frames[a]].x', value: 1 }, /cannot read/], [{ set: 'frames[a].duration' }, /changes\[0\]\.value: set needs a value/],
-    [{ remove: 'palette.k', value: 1 }, /remove takes no value/], [{ set: 'x', insert: 'y', value: 1 }, /exactly one of set, insert, remove or paint/],
+    [{ remove: 'palette.k', value: 1 }, /remove takes no value/], [{ set: 'x', insert: 'y', value: 1 }, /exactly one of set, insert, remove/],
     [{ set: 'palette.k', value: null }, /null is not supported/], [{ set: 'palette.k', value: '#fff', why: 1 }, /changes\[0\]\.why: unknown field/]
   ]) assert.throws(() => patchRecipe(recipe(), [change]), message);
   assert.throws(() => patchRecipe(recipe(), []), /changes: expected a list/);
