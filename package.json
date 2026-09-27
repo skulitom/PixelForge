@@ -16,6 +16,9 @@
     "test": "node --test",
     "start": "node bin/pixelforge.js preview",
     "demo": "node bin/pixelforge.js render examples/forest-spirit.json --out output/forest-spirit",
+    "play": "node scripts/serve-emberfall.mjs",
+    "art:emberfall": "node scripts/build-emberfall.mjs --force",
+    "stress:emberfall": "node scripts/stress-emberfall.mjs",
     "mcp": "node bin/pixelforge.js mcp"
   }
 }

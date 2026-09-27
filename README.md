@@ -35,6 +35,20 @@ node bin/pixelforge.js render hero.pixel.json --out output/hero
 
 `inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
 
+## Play the local Emberfall demo
+
+**Emberfall** is an original fantasy action platformer built to exercise PixelForge: 220 frames, 44 named animations, nine editable recipes, three elemental spells, reactive scenery, enemies and a boss. Its animation workshop exposes the recipes, contact sheets and complete export bundles.
+
+```sh
+npm run play
+```
+
+Open **http://127.0.0.1:4173** and choose **Begin adventure** or **Watch it play**. The game runs entirely in the browser with no runtime dependencies. It is currently a local preview; hosting is intentionally deferred.
+
+![Emberfall's moonlit forest and spell effects](demo/preview.png)
+
+[Demo details and controls](demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md)
+
 ## For agents
 
 Use PixelForge to create or revise pixel sprites, tiles, icons, effects and short animations from editable JSON. Choose the **CLI** when you have shell access or the **Model Context Protocol (MCP) server** when your client supports tools. Both use the same renderer and work locally.
