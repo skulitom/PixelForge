@@ -39,19 +39,103 @@
       "additionalProperties": {
         "oneOf": [
           {
-            "$ref": "#/$defs/recipe"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/recipe"
+              },
+              {
+                "type": "string",
+                "description": "Recipe file, resolved by the CLI relative to the scene or inside the MCP root."
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "revision": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{12}$"
+                  }
+                },
+                "required": [
+                  "revision"
+                ],
+                "additionalProperties": false
+              }
+            ]
           },
           {
             "type": "object",
             "properties": {
               "recipe": {
-                "$ref": "#/$defs/recipe"
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/recipe"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Recipe file, resolved by the CLI relative to the scene or inside the MCP root."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "revision": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{12}$"
+                      }
+                    },
+                    "required": [
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
               },
               "normal": {
-                "$ref": "#/$defs/recipe"
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/recipe"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Recipe file, resolved by the CLI relative to the scene or inside the MCP root."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "revision": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{12}$"
+                      }
+                    },
+                    "required": [
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
               },
               "emissive": {
-                "$ref": "#/$defs/recipe"
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/recipe"
+                  },
+                  {
+                    "type": "string",
+                    "description": "Recipe file, resolved by the CLI relative to the scene or inside the MCP root."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "revision": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{12}$"
+                      }
+                    },
+                    "required": [
+                      "revision"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
               }
             },
             "required": [
@@ -81,7 +165,8 @@
               "maximum": 4096
             },
             "maxItems": 2,
-            "minItems": 2
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
           },
           "anchor": {
             "type": "array",
@@ -91,7 +176,8 @@
               "maximum": 4096
             },
             "maxItems": 2,
-            "minItems": 2
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
           },
           "scale": {
             "type": "integer",
@@ -126,7 +212,8 @@
               "maximum": 4096
             },
             "maxItems": 2,
-            "minItems": 2
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
           },
           "trajectory": {
             "type": "array",
@@ -146,7 +233,8 @@
                     "maximum": 4096
                   },
                   "maxItems": 2,
-                  "minItems": 2
+                  "minItems": 2,
+                  "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
                 }
               },
               "required": [
@@ -185,6 +273,100 @@
               "additionalProperties": false
             },
             "maxItems": 64
+          },
+          "tilemap": {
+            "type": "object",
+            "properties": {
+              "tile": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -4096,
+                  "maximum": 4096
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "maxItems": 256,
+                "minItems": 1
+              },
+              "legend": {
+                "type": "object",
+                "propertyNames": {
+                  "minLength": 1,
+                  "maxLength": 1
+                },
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "Frame name."
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "frame": {
+                          "type": "string"
+                        },
+                        "frames": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 64
+                        },
+                        "animation": {
+                          "type": "string"
+                        },
+                        "animations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "maxItems": 64
+                        },
+                        "autotile": {
+                          "enum": [
+                            "blob",
+                            "cardinal"
+                          ],
+                          "description": "Substitute {mask} in the names with the 47-value blob or 16-value cardinal neighbour mask."
+                        },
+                        "match": {
+                          "type": "string",
+                          "description": "Characters counted as the same terrain; default: this character."
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null",
+                      "description": "Context cell: never drawn, but other entries can match it (for example terrain just outside a reviewed window of a larger map)."
+                    }
+                  ]
+                }
+              },
+              "outside": {
+                "enum": [
+                  "empty",
+                  "match"
+                ]
+              }
+            },
+            "required": [
+              "rows",
+              "legend"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -208,6 +390,13 @@
           "minimum": 2,
           "maximum": 16
         },
+        "scope": {
+          "enum": [
+            "passes",
+            "all"
+          ],
+          "description": "passes (default) lights only assets with normal/emissive passes; all also lights plain assets as flat surfaces."
+        },
         "lights": {
           "type": "array",
           "items": {
@@ -221,7 +410,8 @@
                   "maximum": 4096
                 },
                 "maxItems": 2,
-                "minItems": 2
+                "minItems": 2,
+                "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
               },
               "height": {
                 "type": "integer",
@@ -301,11 +491,56 @@
           "maxItems": 2,
           "minItems": 2
         },
+        "wrap": {
+          "type": "boolean",
+          "description": "Translation wraps around the canvas instead of clipping (scrolling tiles)."
+        },
         "flipX": {
           "type": "boolean"
         },
         "flipY": {
           "type": "boolean"
+        },
+        "palette": {
+          "type": "object",
+          "maxProperties": 256,
+          "additionalProperties": {
+            "type": "string",
+            "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+          },
+          "description": "Recolor project palette keys for this frame only (palette cycling). Keys must exist in the project palette."
+        },
+        "anchor": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -4096,
+            "maximum": 4096
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+        },
+        "points": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+            "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+          },
+          "description": "Named frame positions (hands, hit points, glyph advance), exported in the atlas in exported pixels."
         },
         "ops": {
           "type": "array",
@@ -669,6 +904,18 @@
                 180,
                 270
               ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
             }
           },
           "required": [
@@ -716,6 +963,18 @@
                 180,
                 270
               ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
             }
           },
           "required": [
@@ -723,6 +982,123 @@
             "symbol"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "copy"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "symbol": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "sx": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "sy": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "rotate": {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "from"
+              ]
+            },
+            {
+              "required": [
+                "symbol"
+              ]
+            }
+          ],
+          "description": "Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA)."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "outline"
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "diagonal": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "color"
+          ],
+          "additionalProperties": false,
+          "description": "Draw a 1px outline around every visible pixel in this buffer (frame or layer); diagonal also fills corners."
         }
       ]
     },
@@ -752,7 +1128,13 @@
         },
         "palette": {
           "type": "object",
-          "maxProperties": 256,
+          "maxProperties": 257,
+          "properties": {
+            "$ref": {
+              "type": "string",
+              "description": "Shared palette file, resolved by the CLI and MCP relative to this recipe. Local entries add to or override it."
+            }
+          },
           "additionalProperties": {
             "type": "string",
             "pattern": "^(transparent|#([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8}))$"
@@ -772,6 +1154,17 @@
           "additionalProperties": {
             "$ref": "#/$defs/rows"
           }
+        },
+        "anchor": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -4096,
+            "maximum": 4096
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "description": "Default pivot for every frame, exported to the atlas as anchor (exported pixels) and pivot (anchor / source size)."
         },
         "frames": {
           "type": "array",
@@ -838,6 +1231,10 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 16
+            },
+            "trim": {
+              "type": "boolean",
+              "description": "Pack each frame by its visible bounds; the atlas reports trimmed rectangles with spriteSourceSize. Ignores columns."
             }
           },
           "required": [],

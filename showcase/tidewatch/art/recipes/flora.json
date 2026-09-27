@@ -4,17 +4,7 @@
   "width": 48,
   "height": 64,
   "palette": {
-    "k": "#1b1528",
-    "G": "#1a4034",
-    "g": "#2a6b45",
-    "h": "#4a9a4a",
-    "j": "#7fbd4f",
-    "l": "#c4df6a",
-    "o": "#f0b87c",
-    "O": "#c9844f",
-    "u": "#975a3a",
-    "U": "#663b2e",
-    "_": "#1b152866"
+    "$ref": "../palette.json"
   },
   "symbols": {
     "frond-r": [
@@ -143,45 +133,6 @@
       "..GGGGGGGG..",
       "....GGGG...."
     ],
-    "leafA-o": [
-      "....GGGGGG....",
-      "..GGGGGGGGGG..",
-      ".GGGGGGGGGGGG.",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      ".GGGGGGGGGGGG.",
-      "..GGGGGGGGGG..",
-      "....GGGGGG...."
-    ],
-    "leafB-o": [
-      "....GGGGGG....",
-      "..GGGGGGGGGG..",
-      ".GGGGGGGGGGGG.",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      ".GGGGGGGGGGGG.",
-      "..GGGGGGGGGG..",
-      "....GGGGGG...."
-    ],
-    "leafC-o": [
-      "....GGGGGG....",
-      "..GGGGGGGGGG..",
-      ".GGGGGGGGGGGG.",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      "GGGGGGGGGGGGGG",
-      ".GGGGGGGGGGGG.",
-      "..GGGGGGGGGG..",
-      "....GGGGGG...."
-    ],
     "oak-trunk": [
       "...kUOouk...",
       "...kUOuuk...",
@@ -202,6 +153,10 @@
     {
       "name": "palm-0",
       "duration": 520,
+      "anchor": [
+        22,
+        61
+      ],
       "ops": [
         {
           "op": "ellipse",
@@ -284,6 +239,10 @@
     {
       "name": "palm-1",
       "duration": 420,
+      "anchor": [
+        22,
+        61
+      ],
       "ops": [
         {
           "op": "ellipse",
@@ -366,6 +325,10 @@
     {
       "name": "palm-2",
       "duration": 520,
+      "anchor": [
+        22,
+        61
+      ],
       "ops": [
         {
           "op": "ellipse",
@@ -448,6 +411,10 @@
     {
       "name": "oak-0",
       "duration": 900,
+      "anchor": [
+        23,
+        55
+      ],
       "ops": [
         {
           "op": "ellipse",
@@ -466,126 +433,7 @@
       ],
       "layers": [
         {
-          "name": "canopy-outline",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 4,
-              "y": 24
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 14,
-              "y": 19
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 25,
-              "y": 19
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 33,
-              "y": 24
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 9,
-              "y": 32
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 21,
-              "y": 34
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafC-o",
-              "x": 30,
-              "y": 32
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 1,
-              "y": 18
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 10,
-              "y": 13
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 21,
-              "y": 12
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 31,
-              "y": 17
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 6,
-              "y": 27
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 17,
-              "y": 26
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafB-o",
-              "x": 28,
-              "y": 26
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafA-o",
-              "x": 7,
-              "y": 9
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafA-o",
-              "x": 18,
-              "y": 7
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafA-o",
-              "x": 27,
-              "y": 11
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafA-o",
-              "x": 12,
-              "y": 18
-            },
-            {
-              "op": "stamp",
-              "symbol": "leafA-o",
-              "x": 23,
-              "y": 19
-            }
-          ]
-        },
-        {
-          "name": "canopy-leafC",
+          "name": "canopy",
           "ops": [
             {
               "op": "stamp",
@@ -628,12 +476,7 @@
               "symbol": "leafC",
               "x": 31,
               "y": 33
-            }
-          ]
-        },
-        {
-          "name": "canopy-leafB",
-          "ops": [
+            },
             {
               "op": "stamp",
               "symbol": "leafB",
@@ -675,12 +518,7 @@
               "symbol": "leafB",
               "x": 29,
               "y": 27
-            }
-          ]
-        },
-        {
-          "name": "canopy-leafA",
-          "ops": [
+            },
             {
               "op": "stamp",
               "symbol": "leafA",
@@ -710,6 +548,11 @@
               "symbol": "leafA",
               "x": 24,
               "y": 20
+            },
+            {
+              "op": "outline",
+              "color": "G",
+              "diagonal": true
             }
           ]
         }
@@ -732,6 +575,7 @@
     }
   },
   "sheet": {
-    "columns": 4
+    "columns": 4,
+    "trim": true
   }
 }

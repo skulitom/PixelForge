@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createBundle, createZip } from './export.js';
-import { renderProject } from './core.js';
+import { renderProject, MAX_REQUEST_BYTES } from './core.js';
 import { prepareScene } from './scene.js';
 
 const routes = new Map([
@@ -10,6 +10,7 @@ const routes = new Map([
   ['/studio.js', ['../studio/studio.js', 'text/javascript; charset=utf-8']],
   ['/core.js', ['./core.js', 'text/javascript; charset=utf-8']],
   ['/authoring.js', ['./authoring.js', 'text/javascript; charset=utf-8']],
+  ['/autotile.js', ['./autotile.js', 'text/javascript; charset=utf-8']],
   ['/scene.js', ['./scene.js', 'text/javascript; charset=utf-8']],
   ['/scene-player.js', ['../studio/scene-player.js', 'text/javascript; charset=utf-8']],
   ['/scene.css', ['../studio/scene.css', 'text/css; charset=utf-8']],
@@ -32,7 +33,7 @@ export async function startStudio({ port = 4747, project, quiet = false } = {}) 
         let size = 0; const chunks = [];
         for await (const data of req) {
           size += data.length;
-          if (size > 2097152) { reply(413, 'text/plain', 'Project exceeds 2 MiB'); return; }
+          if (size > MAX_REQUEST_BYTES) { reply(413, 'text/plain', `Project exceeds ${MAX_REQUEST_BYTES} bytes`); return; }
           chunks.push(data);
         }
         const bundle = await createBundle(JSON.parse(Buffer.concat(chunks).toString('utf8')));

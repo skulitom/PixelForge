@@ -2,6 +2,10 @@
   "version": 1,
   "width": 64,
   "height": 64,
+  "anchor": [
+    32,
+    59
+  ],
   "animations": {
     "day": {
       "frames": [
@@ -19,8 +23,7 @@
   },
   "name": "cottage-emissive",
   "palette": {
-    "X": "#ffe46e",
-    "i": "#ffa243"
+    "$ref": "../palette.json"
   },
   "frames": [
     {

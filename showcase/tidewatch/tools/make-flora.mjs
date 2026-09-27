@@ -1,5 +1,5 @@
 // One-time scaffold for trees (48x64). art/recipes/flora.json is the authoritative, editable source afterwards.
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const S = {};
 S['frond-r'] = [
   '.GGGG.............',
@@ -60,19 +60,11 @@ S['palm-trunk'] = trunk.map(r => r.padEnd(14, '.'));
 S['leafA'] = ['....jjjj....', '..jjllljjh..', '.jjllllljhh.', 'jjllllljjhhg', 'jjjlljjjhhgg', 'hjjjjjjhhggg', '.hhjjhhhggg.', '..gghhhggg..', '....gggg....'];
 S['leafB'] = ['....hhhh....', '..hhjjjhhg..', '.hjjjjjhhgg.', 'hjjjjjhhhggg', 'hhjjjhhhgggg', 'ghhhhhhggggG', '.gghhhgggGG.', '..GgggggGG..', '....GGGG....'];
 S['leafC'] = ['....gggg....', '..gghhhggG..', '.ghhhhhggGG.', 'ghhhhhgggGGG', 'gghhhgggGGGG', 'GgggggGGGGGG', '.GGgggGGGGG.', '..GGGGGGGG..', '....GGGG....'];
-// PixelForge has no outline operation: derive a 1px-dilated silhouette symbol for each cluster instead.
-for (const key of ['leafA', 'leafB', 'leafC']) {
-  const rows = S[key], h = rows.length + 2, w = rows[0].length + 2;
-  S[`${key}-o`] = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => {
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const c = rows[y - 1 + dy]?.[x - 1 + dx]; if (c && c !== '.') return 'G'; }
-    return '.';
-  }).join(''));
-}
 S['oak-trunk'] = [
   '...kUOouk...', '...kUOuuk...', '...kUOouk...', '...kUoOuk...', '...kUOouk...', '...kUOuuk...',
   '...kUOouk...', '...kUoOuk...', '..kkUOuuUk..', '..kUOOuuUkk.', '.kUuOuuUuUk.', 'kUukkUukkuUk', '.kk..kk..kk.'
 ];
-const palm = (variant) => ({ name: `palm-${variant}`, duration: [520, 420, 520][variant], ops: [
+const palm = (variant) => ({ name: `palm-${variant}`, duration: [520, 420, 520][variant], anchor: [22, 61], ops: [
   { op: 'ellipse', x: 11, y: 58, w: 24, h: 6, color: '_' },
   { op: 'stamp', symbol: 'palm-trunk', x: 16, y: 27 }
 ], layers: [
@@ -95,14 +87,17 @@ const clusters = {
   leafB: [[2, 15], [11, 10], [22, 9], [32, 14], [7, 24], [18, 23], [29, 23]],
   leafA: [[8, 6], [19, 4], [28, 8], [13, 15], [24, 16]]
 };
-const oak = variant => ({ name: `oak-${variant}`, duration: 900, ops: [
+// The canopy clusters share one layer so a single `outline` op traces their union's silhouette.
+const oak = variant => ({ name: `oak-${variant}`, duration: 900, anchor: [23, 55], ops: [
   { op: 'ellipse', x: 8, y: 55, w: 32, h: 8, color: '_' },
   { op: 'stamp', symbol: 'oak-trunk', x: 18, y: 43 }
 ], layers: [
-  { name: 'canopy-outline', ops: Object.entries(clusters).flatMap(([key, list]) => list.map(([x, y]) => ({ op: 'stamp', symbol: `${key}-o`, x: x - 1, y: y + 3 }))) },
-  ...Object.entries(clusters).map(([key, list]) => ({ name: `canopy-${key}`, ops: list.map(([x, y]) => ({ op: 'stamp', symbol: key, x, y: y + 4 })) }))
+  { name: 'canopy', ops: [
+    ...Object.entries(clusters).flatMap(([key, list]) => list.map(([x, y]) => ({ op: 'stamp', symbol: key, x, y: y + 4 }))),
+    { op: 'outline', color: 'G', diagonal: true }
+  ] }
 ] });
 const frames = [palm(0), palm(1), palm(2), oak(0)];
 const animations = { palm: { frames: ['palm-0', 'palm-1', 'palm-0', 'palm-2'] }, oak: { frames: ['oak-0'] } };
-writeJSON('art/recipes/flora.json', { version: 1, name: 'flora', width: 48, height: 64, palette: paletteFor(Object.values(S), ['_']), symbols: S, frames, animations, sheet: { columns: 4 } }, { force: process.argv.includes('--force') });
+writeJSON('art/recipes/flora.json', { version: 1, name: 'flora', width: 48, height: 64, palette: linkedPalette(), symbols: S, frames, animations, sheet: { columns: 4, trim: true } }, { force: process.argv.includes('--force') });
 console.log('flora frames', frames.length);

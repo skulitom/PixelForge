@@ -4,38 +4,12 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "1": "#ff806a",
-    "4": "#e5adf7",
-    "7": "#ffffff",
-    "k": "#1b1528",
-    "K": "#2e2440",
-    "G": "#1a4034",
-    "g": "#2a6b45",
-    "h": "#4a9a4a",
-    "j": "#7fbd4f",
-    "l": "#c4df6a",
-    "r": "#f0ece2",
-    "R": "#c9c2b4",
-    "t": "#9a918c",
-    "T": "#6b6478",
-    "y": "#463f5a",
-    "o": "#f0b87c",
-    "O": "#c9844f",
-    "u": "#975a3a",
-    "U": "#663b2e",
-    "p": "#ffe2c6",
-    "P": "#f4b28e",
-    "q": "#cf7e69",
-    "a": "#f28f4a",
-    "e": "#fff3a3",
-    "m": "#f7f9ff",
-    "M": "#b7c2d6",
-    "v": "#727d98",
-    "X": "#ffe46e",
-    "i": "#ffa243",
-    "I": "#e3532f",
-    "_": "#1b152866"
+    "$ref": "../palette.json"
   },
+  "anchor": [
+    8,
+    12
+  ],
   "frames": [
     {
       "name": "bush",
@@ -67,6 +41,10 @@
     },
     {
       "name": "bush-cut",
+      "anchor": [
+        8,
+        13
+      ],
       "ops": [
         {
           "op": "grid",
@@ -95,6 +73,10 @@
     },
     {
       "name": "grass-a",
+      "anchor": [
+        8,
+        13
+      ],
       "ops": [
         {
           "op": "grid",
@@ -124,6 +106,10 @@
     },
     {
       "name": "grass-b",
+      "anchor": [
+        8,
+        13
+      ],
       "ops": [
         {
           "op": "grid",
@@ -153,6 +139,10 @@
     },
     {
       "name": "grass-cut",
+      "anchor": [
+        8,
+        13
+      ],
       "ops": [
         {
           "op": "grid",
@@ -181,6 +171,10 @@
     },
     {
       "name": "flower-red",
+      "anchor": [
+        8,
+        11
+      ],
       "ops": [
         {
           "op": "grid",
@@ -209,6 +203,10 @@
     },
     {
       "name": "flower-violet",
+      "anchor": [
+        8,
+        11
+      ],
       "ops": [
         {
           "op": "grid",
@@ -237,6 +235,10 @@
     },
     {
       "name": "flower-white",
+      "anchor": [
+        8,
+        11
+      ],
       "ops": [
         {
           "op": "grid",
@@ -377,6 +379,10 @@
     },
     {
       "name": "pot",
+      "anchor": [
+        8,
+        13
+      ],
       "ops": [
         {
           "op": "grid",
@@ -502,6 +508,7 @@
     }
   },
   "sheet": {
-    "columns": 8
+    "columns": 8,
+    "trim": true
   }
 }

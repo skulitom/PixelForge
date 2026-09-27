@@ -4,11 +4,17 @@
   "width": 6,
   "height": 9,
   "palette": {
-    "7": "#ffffff"
+    "$ref": "../palette.json"
   },
   "frames": [
     {
       "name": "n0",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -30,6 +36,12 @@
     },
     {
       "name": "n1",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -51,6 +63,12 @@
     },
     {
       "name": "n2",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -72,6 +90,12 @@
     },
     {
       "name": "n3",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -93,6 +117,12 @@
     },
     {
       "name": "n4",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -114,6 +144,12 @@
     },
     {
       "name": "n5",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -135,6 +171,12 @@
     },
     {
       "name": "n6",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -156,6 +198,12 @@
     },
     {
       "name": "n7",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -177,6 +225,12 @@
     },
     {
       "name": "n8",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -198,6 +252,12 @@
     },
     {
       "name": "n9",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -219,6 +279,12 @@
     },
     {
       "name": "uA",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -240,6 +306,12 @@
     },
     {
       "name": "uB",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -261,6 +333,12 @@
     },
     {
       "name": "uC",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -282,6 +360,12 @@
     },
     {
       "name": "uD",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -303,6 +387,12 @@
     },
     {
       "name": "uE",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -324,6 +414,12 @@
     },
     {
       "name": "uF",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -345,6 +441,12 @@
     },
     {
       "name": "uG",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -366,6 +468,12 @@
     },
     {
       "name": "uH",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -387,6 +495,12 @@
     },
     {
       "name": "uI",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -408,6 +522,12 @@
     },
     {
       "name": "uJ",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -429,6 +549,12 @@
     },
     {
       "name": "uK",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -450,6 +576,12 @@
     },
     {
       "name": "uL",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -471,6 +603,12 @@
     },
     {
       "name": "uM",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -492,6 +630,12 @@
     },
     {
       "name": "uN",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -513,6 +657,12 @@
     },
     {
       "name": "uO",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -534,6 +684,12 @@
     },
     {
       "name": "uP",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -555,6 +711,12 @@
     },
     {
       "name": "uQ",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -576,6 +738,12 @@
     },
     {
       "name": "uR",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -597,6 +765,12 @@
     },
     {
       "name": "uS",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -618,6 +792,12 @@
     },
     {
       "name": "uT",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -639,6 +819,12 @@
     },
     {
       "name": "uU",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -660,6 +846,12 @@
     },
     {
       "name": "uV",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -681,6 +873,12 @@
     },
     {
       "name": "uW",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -702,6 +900,12 @@
     },
     {
       "name": "uX",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -723,6 +927,12 @@
     },
     {
       "name": "uY",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -744,6 +954,12 @@
     },
     {
       "name": "uZ",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -765,6 +981,12 @@
     },
     {
       "name": "la",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -786,6 +1008,12 @@
     },
     {
       "name": "lb",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -807,6 +1035,12 @@
     },
     {
       "name": "lc",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -828,6 +1062,12 @@
     },
     {
       "name": "ld",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -849,6 +1089,12 @@
     },
     {
       "name": "le",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -870,6 +1116,12 @@
     },
     {
       "name": "lf",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -891,6 +1143,12 @@
     },
     {
       "name": "lg",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -912,6 +1170,12 @@
     },
     {
       "name": "lh",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -933,6 +1197,12 @@
     },
     {
       "name": "li",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -954,6 +1224,12 @@
     },
     {
       "name": "lj",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -975,6 +1251,12 @@
     },
     {
       "name": "lk",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -996,6 +1278,12 @@
     },
     {
       "name": "ll",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1017,6 +1305,12 @@
     },
     {
       "name": "lm",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1038,6 +1332,12 @@
     },
     {
       "name": "ln",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1059,6 +1359,12 @@
     },
     {
       "name": "lo",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1080,6 +1386,12 @@
     },
     {
       "name": "lp",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1101,6 +1413,12 @@
     },
     {
       "name": "lq",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1122,6 +1440,12 @@
     },
     {
       "name": "lr",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1143,6 +1467,12 @@
     },
     {
       "name": "ls",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1164,6 +1494,12 @@
     },
     {
       "name": "lt",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1185,6 +1521,12 @@
     },
     {
       "name": "lu",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1206,6 +1548,12 @@
     },
     {
       "name": "lv",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1227,6 +1575,12 @@
     },
     {
       "name": "lw",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1248,6 +1602,12 @@
     },
     {
       "name": "lx",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1269,6 +1629,12 @@
     },
     {
       "name": "ly",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1290,6 +1656,12 @@
     },
     {
       "name": "lz",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1311,6 +1683,12 @@
     },
     {
       "name": "period",
+      "points": {
+        "advance": [
+          2,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1332,6 +1710,12 @@
     },
     {
       "name": "comma",
+      "points": {
+        "advance": [
+          3,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1353,6 +1737,12 @@
     },
     {
       "name": "excl",
+      "points": {
+        "advance": [
+          2,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1374,6 +1764,12 @@
     },
     {
       "name": "quest",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1395,6 +1791,12 @@
     },
     {
       "name": "apos",
+      "points": {
+        "advance": [
+          2,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1416,6 +1818,12 @@
     },
     {
       "name": "dash",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1437,6 +1845,12 @@
     },
     {
       "name": "colon",
+      "points": {
+        "advance": [
+          2,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1458,6 +1872,12 @@
     },
     {
       "name": "semi",
+      "points": {
+        "advance": [
+          3,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1479,6 +1899,12 @@
     },
     {
       "name": "lparen",
+      "points": {
+        "advance": [
+          3,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1500,6 +1926,12 @@
     },
     {
       "name": "rparen",
+      "points": {
+        "advance": [
+          3,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1521,6 +1953,12 @@
     },
     {
       "name": "slash",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1542,6 +1980,12 @@
     },
     {
       "name": "quote",
+      "points": {
+        "advance": [
+          4,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1563,6 +2007,12 @@
     },
     {
       "name": "plus",
+      "points": {
+        "advance": [
+          5,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",
@@ -1584,6 +2034,12 @@
     },
     {
       "name": "star",
+      "points": {
+        "advance": [
+          6,
+          0
+        ]
+      },
       "ops": [
         {
           "op": "grid",

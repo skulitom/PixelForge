@@ -7889,6 +7889,16 @@
         {
           "name": "idle",
           "duration": 880,
+          "anchor": [
+            14,
+            15
+          ],
+          "points": {
+            "pose": [
+              10,
+              18
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -7950,6 +7960,16 @@
         {
           "name": "blink",
           "duration": 100,
+          "anchor": [
+            14,
+            15
+          ],
+          "points": {
+            "pose": [
+              10,
+              18
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8011,6 +8031,16 @@
         {
           "name": "contact-a",
           "duration": 90,
+          "anchor": [
+            14,
+            15
+          ],
+          "points": {
+            "foot-contact": [
+              17,
+              18
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8072,6 +8102,16 @@
         {
           "name": "down-a",
           "duration": 80,
+          "anchor": [
+            14,
+            16
+          ],
+          "points": {
+            "pose": [
+              15,
+              19
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8133,6 +8173,16 @@
         {
           "name": "passing-a",
           "duration": 80,
+          "anchor": [
+            14,
+            14
+          ],
+          "points": {
+            "pose": [
+              9,
+              17
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8194,6 +8244,16 @@
         {
           "name": "contact-b",
           "duration": 90,
+          "anchor": [
+            14,
+            15
+          ],
+          "points": {
+            "foot-contact": [
+              15,
+              18
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8255,6 +8315,16 @@
         {
           "name": "down-b",
           "duration": 80,
+          "anchor": [
+            14,
+            16
+          ],
+          "points": {
+            "pose": [
+              15,
+              19
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8316,6 +8386,16 @@
         {
           "name": "passing-b",
           "duration": 80,
+          "anchor": [
+            14,
+            14
+          ],
+          "points": {
+            "pose": [
+              14,
+              17
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8377,6 +8457,16 @@
         {
           "name": "gather",
           "duration": 220,
+          "anchor": [
+            14,
+            16
+          ],
+          "points": {
+            "pose": [
+              15,
+              19
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8438,6 +8528,16 @@
         {
           "name": "release",
           "duration": 80,
+          "anchor": [
+            14,
+            14
+          ],
+          "points": {
+            "spell-release": [
+              22,
+              10
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8499,6 +8599,16 @@
         {
           "name": "recoil",
           "duration": 120,
+          "anchor": [
+            14,
+            16
+          ],
+          "points": {
+            "pose": [
+              15,
+              19
+            ]
+          },
           "layers": [
             {
               "name": "tail",
@@ -8560,6 +8670,16 @@
         {
           "name": "recover",
           "duration": 180,
+          "anchor": [
+            14,
+            15
+          ],
+          "points": {
+            "pose": [
+              10,
+              18
+            ]
+          },
           "layers": [
             {
               "name": "tail",

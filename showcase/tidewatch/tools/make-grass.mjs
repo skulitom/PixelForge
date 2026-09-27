@@ -1,7 +1,7 @@
-// One-time scaffold: hand-drawn turf masks -> shaded 8x8 quarters -> 47 blob tiles of grass over sand (transparent outside).
-// After generation, art/recipes/grass.json is the authoritative, editable source.
-import { paletteFor, writeJSON } from './common.mjs';
-import { blobMasks, quadrantsFor } from './autotile.mjs';
+// One-time scaffold: hand-drawn turf masks -> a shaded pixelforge-autotile template of grass over sand (transparent
+// outside). art/terrain/grass.autotile.json is the authoritative, editable source; `pixelforge autotile` compiles it
+// into art/recipes/grass.json (47 blob tiles).
+import { linkedPalette, writeJSON } from './common.mjs';
 
 // Turf inset 3px with 1px recessions placed away from quarter boundaries.
 const island = [
@@ -47,22 +47,11 @@ function shade(mask, outside) {
 }
 const crop = (rows, x, y) => rows.slice(y, y + 8).map(row => row.slice(x, x + 8));
 const shadedIsland = shade(island, false), shadedLake = shade(lake, true);
-const symbols = {};
-const islandQuarters = {
-  'tl-o': [0, 0], 'tr-h': [8, 0], 'bl-v': [0, 8], 'br-f': [8, 8],
-  'tl-h': [16, 0], 'tr-o': [24, 0], 'bl-f': [16, 8], 'br-v': [24, 8],
-  'tl-v': [0, 16], 'tr-f': [8, 16], 'bl-o': [0, 24], 'br-h': [8, 24],
-  'tl-f': [16, 16], 'tr-v': [24, 16], 'bl-h': [16, 24], 'br-o': [24, 24]
-};
-for (const [key, [x, y]] of Object.entries(islandQuarters)) symbols[`q-${key}`] = crop(shadedIsland, x, y);
-for (const [key, [x, y]] of Object.entries({ 'br-i': [8, 8], 'bl-i': [32, 8], 'tr-i': [8, 32], 'tl-i': [32, 32] })) symbols[`q-${key}`] = crop(shadedLake, x, y);
-const frames = blobMasks().map(mask => {
-  const q = quadrantsFor(mask);
-  return { name: `grass-${mask}`, ops: [
-    { op: 'stamp', symbol: `q-tl-${q.tl}`, x: 0, y: 0 }, { op: 'stamp', symbol: `q-tr-${q.tr}`, x: 8, y: 0 },
-    { op: 'stamp', symbol: `q-bl-${q.bl}`, x: 0, y: 8 }, { op: 'stamp', symbol: `q-br-${q.br}`, x: 8, y: 8 }
-  ] };
-});
-const palette = paletteFor(symbols);
-writeJSON('art/recipes/grass.json', { version: 1, name: 'grass', width: 16, height: 16, palette, symbols, frames, animations: { tiles: { frames: frames.map(f => f.name) } }, sheet: { columns: 16 } }, { force: process.argv.includes('--force') });
-console.log('pieces', Object.keys(symbols).length, 'frames', frames.length, 'palette', Object.keys(palette).join(''));
+// Template, two tiles wide and three tall: [lone-patch preview][inner corners] over the 2x2 turf island itself.
+const template = Array.from({ length: 48 }, () => Array(32).fill('.'));
+const paste = (rows, x0, y0) => rows.forEach((row, y) => [...row].forEach((c, x) => { template[y0 + y][x0 + x] = c; }));
+for (const [x, y] of [[0, 0], [24, 0], [0, 24], [24, 24]]) paste(crop(shadedIsland, x, y), x ? 8 : 0, y ? 8 : 0);
+paste(crop(shadedLake, 32, 32), 16, 0); paste(crop(shadedLake, 8, 32), 24, 0); paste(crop(shadedLake, 32, 8), 16, 8); paste(crop(shadedLake, 8, 8), 24, 8);
+paste(shadedIsland, 0, 16);
+writeJSON('art/terrain/grass.autotile.json', { format: 'pixelforge-autotile', version: 1, name: 'grass', tile: 16, mode: 'blob', palette: linkedPalette(), template: template.map(row => row.join('')), frame: 'grass-{mask}', sheet: { columns: 16 } }, { force: process.argv.includes('--force') });
+console.log('template', template[0].length, 'x', template.length);

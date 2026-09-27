@@ -31,7 +31,7 @@ These are authoring decisions, not user permission gates. Passing validation, in
 
 ## Inspection options
 
-The CLI and MCP `pixel_inspect` support `view: color|silhouette|grayscale|onion`, `native`, `diagnostics`, and `maxCells` in addition to existing frame/animation/region/grid options. CLI spellings are `--view`, `--native`, `--diagnostics`, `--max-cells`. Silhouette uses one opaque light tone for every visible pixel, including translucent ones. Grayscale uses weighted RGB luma and retains alpha. Neither modifies source pixels; grids always report original pixels.
+The CLI and MCP `pixel_inspect` support `view: color|silhouette|grayscale|onion|tile`, `native`, `diagnostics`, and `maxCells` in addition to existing frame/animation/region/grid options. CLI spellings are `--view`, `--native`, `--diagnostics`, `--max-cells`. Silhouette uses one opaque light tone for every visible pixel, including translucent ones. Grayscale uses weighted RGB luma and retains alpha. Tile repeats each frame 3×3 and reports seam evidence (see [Scene and tile review](#scene-and-tile-review)); it repeats whole frames, so it takes no region. None modifies source pixels; grids always report original pixels.
 
 With `--out review.png --native`, the CLI also writes `review.native.png`, checking both paths before writing. MCP returns an additional native-size PNG. Sampled sheets explicitly report total/shown/omitted and original sequence positions. Their cell durations are original holds, **not** a playable retiming of the sampled sequence. `pixel_render` automatically bounds large previews to at most 256 cells (fewer for large canvases), still exports every animation entry, and returns `playback` pointing to its HTML preview.
 
@@ -68,7 +68,7 @@ node bin/pixelforge.js patch rebuilt-base.json --changes corrections.json --out 
 
 `regions.json` maps names to `{space:"canvas",x,y,w,h,mask?}`. A grid/move/recolor change can reference one with `selection:"fern-tip"`; its value supplies action-specific fields. `createOverlay` and `applyOverlay` offer the same JavaScript API.
 
-An overlay carries a SHA-256 fingerprint of the whole base, canonicalized by object-key order but preserving array order. Rebuilding the same base reproduces the correction. **Any changed base is a conflict**, including unrelated edits. This conservative first version does not guess that an old coordinate still identifies the same feature. Inspect the new base and create a new overlay; no partial correction is applied. Keep the generator, overlay and resulting recipe, and identify which file is authoritative. The quality lab demonstrates this with its fern correction.
+An overlay carries a SHA-256 fingerprint of the whole base, canonicalized by object-key order but preserving array order. Rebuilding the same base reproduces the correction. Overlays made only of canvas changes (`paint`, `grid`, `move`, `recolor`) also record per-frame evidence: a fingerprint of every frame they target and of every frame inheriting from those, the frame each change addresses, and the palette colors the changes paint with. When the base changed elsewhere (another frame's duration, a new animation, a different pose), the overlay still applies and reports `rebased: true`. **Any change to a frame it touches, to the frame a path addresses, or to a palette color it uses is a conflict**, and nothing is applied. Overlays with structural `set`/`insert`/`remove` edits keep the whole-recipe rule. The tool never guesses that an old coordinate still identifies the same feature; after a conflict, inspect the new base and create a new overlay. Keep the generator, overlay and resulting recipe, and identify which file is authoritative. The quality lab demonstrates this with its fern correction.
 
 ## Authored poses, attachments and cues
 
@@ -89,7 +89,9 @@ Use a `pixelforge-poses` version-1 sidecar, described by [poses.schema.json](../
 }
 ```
 
-`parts` define palette grids, local anchors and local named points. Each pose's `origin` is a source-canvas point (often the ground anchor). Instances draw in listed back-to-front order. Without `attach`, `at` offsets the instance's anchor from the pose origin. With `attach`, it offsets the anchor from a named point on an **earlier** instance. Definition points use the part grid's upper-left origin. A pose can use a different part definition under the same instance name, such as an open versus curled hand. No rotation, smoothing or automatic in-betweens are imposed.
+`parts` define palette grids, local anchors and local named points. Each pose's `origin` is a source-canvas point (often the ground anchor). Instances draw in listed back-to-front order. Without `attach`, `at` offsets the instance's anchor from the pose origin. With `attach`, it offsets the anchor from a named point on an **earlier** instance. Definition points use the part grid's upper-left origin. A pose can use a different part definition under the same instance name, such as an open versus curled hand. An instance with `"flipX": true` mirrors its grid, anchor and points inside the part. A pose written as `{ "name": "walk-l-1", "mirror": "walk-r-1" }` reflects an earlier pose around its origin column (pixel column c becomes 2 × originX − c), including parts, points and markers, and inherits its duration; it takes no parts, markers or origin of its own. No rotation, smoothing or automatic in-betweens are imposed.
+
+Compiled recipes carry each pose origin as the frame anchor (one recipe-level `anchor` when every pose shares it), and each marker's position as a named frame point, so the atlas alone tells a game where the feet, hand or blade tip are. Marker names are unique within a pose.
 
 ```sh
 node bin/pixelforge.js compile actor.poses.json --out actor.json --metadata actor.meta.json
@@ -100,16 +102,49 @@ The metadata exports each pose origin, resolved part anchors/points, markers, an
 
 ## Scene and tile review
 
-Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to inlined recipes or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame` or `animation`. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at}]` starts at time 0, linearly interpolates between authored positions and rounds to whole pixels; it holds the last position. This is an explicit preview path, not inferred movement or physics.
+Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to recipes (inline or file references) or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame`, `animation` or a `tilemap`. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at}]` starts at time 0, linearly interpolates between authored positions and rounds to whole pixels; it holds the last position. This is an explicit preview path, not inferred movement or physics.
 
 ```sh
 node bin/pixelforge.js preview examples/quality/hollow.scene.json
 node bin/pixelforge.js scene examples/quality/hollow.scene.json --out output/room-review
 ```
 
-The scene viewer offers playback, scrubbing, native size, grayscale, a pixel-density overlay, lighting controls and scene-settings download. Changes are in memory until downloaded. The export includes `scene.json`, lit/unlit stills, a browser viewer, aligned color/material atlases, and `alignment.json`. Serve its folder over HTTP for module loading, or use `preview` with the original manifest. Large rooms should be composed in a game: this review format is bounded to 256×256, 64 assets, 256 placement declarations, 1,024 expanded draws, 4,194,304 combined source-pass pixels, and 4,194,304 drawn pixels per view. It does not load arbitrary paths or run a world state machine.
+The scene viewer offers playback, scrubbing, native size, grayscale, a pixel-density overlay, lighting controls (pick any light and move it) and scene-settings download. Changes are in memory until downloaded. The export includes `scene.json`, lit/unlit stills, a browser viewer, aligned color/material atlases, and `alignment.json`. Serve its folder over HTTP for module loading, or use `preview` with the original manifest. Large rooms should be composed in a game: this review format is bounded to 256×256, 64 assets, 256 placement declarations, 4,096 expanded draws, 4,194,304 combined source-pass pixels, and 4,194,304 drawn pixels per view. Clipping warnings name the placements that overhang. It does not run a world state machine.
 
-`inspectTile(renderProject(recipe), frameName)` returns a 3×3 repeated RGBA image and the coordinates where opposite edges differ. Edge mismatches are evidence to inspect, not proof that a tile is defective. Distinguish spatial variants from animations by selecting explicit frames in scene placements. Fractional scales are rejected; larger integer source pixels are highlighted for review. There is no automated style/palette harmonization, ground-speed solver or general scene editor.
+Assets can be inlined, or referenced so the manifest stays small: `"assets": { "lamp": "../recipes/lamp.json", "tower": { "recipe": "tower.json", "normal": "tower-normal.json" } }`. The CLI (`scene`, `preview`) resolves those files relative to the manifest, and their own palette references relative to each recipe; the MCP `pixel_scene` tool resolves them inside its root and also accepts `{"revision": id}`. The exported `scene.json` is the resolved, self-contained manifest.
+
+A **tilemap** placement draws a whole character map as one declaration:
+
+```json
+{ "name": "ground", "asset": "shore", "at": [0, 0], "tilemap": {
+  "rows": ["~~..", "~...", "~~.."],
+  "legend": {
+    "~": { "frames": ["water-a0", "water-b0"] },
+    ".": { "animation": "shore-{mask}", "autotile": "blob", "match": ".g" }
+  }
+} }
+```
+
+`tile` defaults to the asset size. A legend entry names one `frame` or `animation`, or lists `frames`/`animations` variants that are picked deterministically by cell position, so repeated terrain does not tile visibly. With `autotile: "blob"` or `"cardinal"`, `{mask}` in the names becomes the cell's neighbour mask, computed from neighbours whose characters are in `match` (default: the same character). Neighbours outside the map count as empty unless `outside: "match"`. A legend entry set to `null` marks context cells: they are never drawn but count for other entries' `match`, so a review window cut from a larger map can carry a one-tile ring of the surrounding terrain (placed at a negative `at`) and its edge tiles still see their real neighbours. Every referenced name is checked when the scene is prepared; errors name the cell, e.g. `tilemap.rows[2][5]`. Masks and quarter pieces are the same ones the autotile compiler uses.
+
+`inspectTile(renderProject(recipe), frameName)` and `inspect --view tile` return a 3×3 repeat plus advisory seam evidence per axis. `doubledRows` (left/right wrap) and `doubledColumns` (top/bottom wrap) list lines where both opposite edges carry the same color that differs from its inner neighbours, which doubles into a 2px seam. `wrapSteps` counts large value steps across the wrap, compared with `interiorMaxSteps`, the busiest interior boundary. `suspicious` is true when a quarter or more of the lines double, or the wrap has more large steps than any interior boundary (a gradient or texture that does not continue). A stroke that merely touches one edge is not flagged. This is evidence to inspect, not proof that a tile is defective. Distinguish spatial variants from animations by selecting explicit frames in scene placements. Fractional scales are rejected; larger integer source pixels are highlighted for review. There is no automated style/palette harmonization, ground-speed solver or general scene editor.
+
+## Autotile templates
+
+A `pixelforge-autotile` source ([autotile.schema.json](../autotile.schema.json)) turns one small drawing into a complete terrain set. The template is two tiles wide and three tall:
+
+```text
+[ unused preview ][ inner corners  ]   each quadrant of the inner-corner tile is that quadrant's inner-corner piece
+[   2×2-tile island (outer corners, edges and fill)   ]
+```
+
+Draw it like a tiny island in the sea: the island's four corner quadrants are outer corners, the quadrants between them are edges, and its center is fill, all consistent at quadrant boundaries. `mode: "blob"` (default) builds the 47-tile set from eight neighbours (N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128; a diagonal counts only when both adjacent sides match). `mode: "cardinal"` builds 16 tiles from four neighbours (N=1, E=2, S=4, W=8) without inner corners. `frame` names each tile with `{mask}`. Optional `variants` (up to 16, each with a `name`, `duration` and frame `palette`) multiply the set for palette-cycled animation (surf, glowing lava), with `{variant}` in the frame name and an optional per-mask `animation`.
+
+```sh
+node bin/pixelforge.js autotile shore.autotile.json --out shore.json
+```
+
+Every compiled frame is four `copy` operations from the `template` symbol, so editing the template in the compiled recipe updates the whole set. Use the same masks in a scene `tilemap` legend (`"autotile": "blob"`) or in a game.
 
 ## Lossless raster return path
 
@@ -117,10 +152,10 @@ The scene viewer offers playback, scrubbing, native size, grayscale, a pixel-den
 node bin/pixelforge.js import corrected.png --name refined --atlas optional.atlas.json --out refined.json --metadata import.provenance.json
 ```
 
-Supported PNGs are non-interlaced 8-bit RGB/RGBA with standard filters and checked chunk CRCs, at most 32 MiB compressed, 4096 per side and 16,777,216 pixels. APNG, indexed/grayscale PNG, `tRNS`, interlace and unsupported critical chunks fail clearly. No quantization, resizing, alpha modification or color-profile conversion is performed. Channel values, including RGB under alpha zero, are preserved. A single image must fit the sprite limits. Optional PixelForge/TexturePacker-style metadata requires `meta.scale:1`, equal-size untrimmed/unrotated rectangles, and supported frame counts/source-area limits; durations and expanded named sequences/loop flags survive. Inputs with at most 80 visible colors return as compact palette grids; richer inputs use exact final `pixels`. Hidden RGB under alpha zero is preserved with explicit corrections. Neither representation claims to reconstruct the original drawing operations. Keep pose anchors/cues in their separately saved metadata; this import does not reconstruct them. Native Aseprite interchange is still future work.
+Supported PNGs are non-interlaced 8-bit RGB/RGBA with standard filters and checked chunk CRCs, at most 32 MiB compressed, 4096 per side and 16,777,216 pixels. APNG, indexed/grayscale PNG, `tRNS`, interlace and unsupported critical chunks fail clearly. No quantization, resizing, alpha modification or color-profile conversion is performed. Channel values, including RGB under alpha zero, are preserved. A single image must fit the sprite limits. Optional PixelForge/TexturePacker-style metadata requires `meta.scale:1`, equal-size untrimmed/unrotated rectangles, and supported frame counts/source-area limits; durations and expanded named sequences/loop flags survive. Inputs with at most 256 visible colors (the palette limit) return as compact palette grids, using ASCII keys first and then single-code-unit Latin letters; richer inputs use exact final `pixels`. Hidden RGB under alpha zero is preserved with explicit corrections. Neither representation claims to reconstruct the original drawing operations. Keep pose anchors/cues in their separately saved metadata; this import does not reconstruct them. Native Aseprite interchange is still future work.
 
 ## Aligned material passes
 
 Scene assets may provide manually authored normal and emissive recipes. They must share color dimensions, frame names/order, durations, animations and atlas layout. Each exported asset directory has `color.png`, optional `normal.png`/`emissive.png`, and one common atlas JSON. `alignment.json` maps asset ids to those files. Normal RGB encodes XYZ from −1 to +1: +X right, +Y down, +Z toward the viewer. Normals are renormalized for preview; their color channels are never palette-quantized.
 
-`lighting:{ambient,bands,lights:[{at,height,radius,color}]}` supplies at most eight bounded preview lights. Diffuse intensity is banded deliberately; emission remains aligned to the current pose. Assets without passes keep their authored colors, and disabling lighting gives the ordinary color fallback. This is a CPU material review, not a physically complete lighting model: no shadow propagation, fluid simulation, bloom, raymarching or material-mask pass is implemented. Measure preview cost separately from sprite-player performance before expanding it.
+`lighting:{ambient,bands,scope,lights:[{at,height,radius,color}]}` supplies at most eight bounded preview lights. Each light's diffuse brightness is banded deliberately into `bands` steps and then tinted by its color, so a colored light keeps one hue per ring; ambient light is not banded. Emission remains aligned to the current pose. With the default `scope: "passes"`, assets without passes keep their authored colors. `scope: "all"` lights them too, as flat surfaces facing the viewer, so a night scene darkens the terrain and props instead of only the assets with normal maps. Disabling lighting gives the ordinary color fallback. Aligned passes are exported on a uniform grid even when the color recipe trims its own atlas. This is a CPU material review, not a physically complete lighting model: no shadow propagation, fluid simulation, bloom, raymarching or material-mask pass is implemented. Measure preview cost separately from sprite-player performance before expanding it.

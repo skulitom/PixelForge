@@ -2,6 +2,9 @@
 export class PixelError extends Error {
   constructor(path, message) { super(`${path}: ${message}`); this.name = 'PixelError'; this.path = path; }
 }
+// Largest JSON request accepted by the MCP server and the studio export endpoint. It exceeds the largest single
+// frame the format allows (a 256x256 frame of explicit pixel corrections serializes to about 2.5 MB).
+export const MAX_REQUEST_BYTES = 16 * 1024 * 1024;
 const fail = (path, message) => { throw new PixelError(path, message); };
 const own = (obj, key) => Object.hasOwn(obj, key);
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -25,6 +28,10 @@ function name(value, path) {
   if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(value)) fail(path, 'reserved filename; choose a portable name');
   return value;
 }
+function point(value, path) {
+  if (!Array.isArray(value) || value.length !== 2) fail(path, 'expected [x, y]');
+  return [integer(value[0], `${path}[0]`), integer(value[1], `${path}[1]`)];
+}
 export function parseColor(value, palette = {}, path = 'color') {
   if (typeof value !== 'string') fail(path, 'expected a palette name or hex color');
   if (own(palette, value)) value = palette[value];
@@ -47,16 +54,19 @@ function blend(data, i, color, opacity = 1) {
 function readRows(rows, path, palette) {
   list(rows, path, 256);
   if (!rows.length) fail(path, 'grid must contain at least one row');
-  if (typeof rows[0] !== 'string' || rows[0].length < 1 || rows[0].length > 256) fail(`${path}[0]`, 'row must contain 1–256 ASCII characters');
+  if (typeof rows[0] !== 'string' || rows[0].length < 1 || rows[0].length > 256) fail(`${path}[0]`, 'row must contain 1–256 characters');
   const width = rows[0].length;
   rows.forEach((row, y) => {
     if (typeof row !== 'string' || row.length !== width) fail(`${path}[${y}]`, `all rows must be ${width} characters wide`);
     for (const char of row) if (char !== '.' && char !== ' ') {
+      // Rows are indexed by UTF-16 code unit, so an astral character (emoji) would split in two.
+      if (char.length !== 1) fail(`${path}[${y}]`, `grid characters must be single UTF-16 code units, not ${JSON.stringify(char)}`);
       if (!own(palette, char)) fail(`${path}[${y}]`, `unknown palette character ${JSON.stringify(char)}`);
     }
   });
   return { rows, width, height: rows.length };
 }
+const round6 = value => Math.round(value * 1e6) / 1e6;
 
 export function renderProject(spec, options = {}) {
   object(options, 'render', ['layers']);
@@ -70,19 +80,23 @@ export function renderProject(spec, options = {}) {
     for (const frame of isolated.frames) { delete frame.ops; delete frame.pixels; frame.layers = (frame.layers ?? []).filter(layer => options.layers.includes(layer.name)); }
     return renderProject(isolated);
   }
-  object(spec, 'project', ['$schema', 'version', 'name', 'width', 'height', 'palette', 'background', 'symbols', 'frames', 'animations', 'sheet']);
+  object(spec, 'project', ['$schema', 'version', 'name', 'width', 'height', 'palette', 'background', 'symbols', 'frames', 'animations', 'sheet', 'anchor']);
   if (spec.version !== 1) fail('project.version', 'expected 1');
   const projectName = name(spec.name, 'project.name');
   const width = integer(spec.width, 'project.width', 1, 256), height = integer(spec.height, 'project.height', 1, 256);
   const palette = spec.palette ?? {};
   object(palette, 'project.palette');
+  if (own(palette, '$ref')) fail('project.palette.$ref', 'palette files are resolved by the CLI, MCP or resolveRecipe(); inline the palette to render here');
   if (Object.keys(palette).length > 256) fail('project.palette', 'at most 256 colors are allowed');
   for (const [key, value] of Object.entries(palette)) {
     if (!key || key.length > 64 || key === '.' || key === ' ' || key === 'transparent') fail(`project.palette.${key}`, 'invalid or reserved palette name');
     parseColor(value, {}, `project.palette.${key}`);
   }
-  const color = (value, path) => parseColor(value, palette, path);
-  const background = color(spec.background ?? 'transparent', 'project.background');
+  // Frames may recolor palette keys for their own drawing; everything else resolves against the project palette.
+  let activePalette = palette;
+  const color = (value, path) => parseColor(value, activePalette, path);
+  const background = parseColor(spec.background ?? 'transparent', palette, 'project.background');
+  const projectAnchor = spec.anchor === undefined ? null : point(spec.anchor, 'project.anchor');
   const symbols = Object.create(null);
   object(spec.symbols ?? {}, 'project.symbols');
   for (const [key, rows] of Object.entries(spec.symbols ?? {})) {
@@ -97,7 +111,9 @@ export function renderProject(spec, options = {}) {
   if (7 + spec.frames.length + animationCount > 65535) fail('project.animations', `bundle exceeds the ZIP32 limit of 65,535 files; at most ${65535 - 7 - spec.frames.length} animations fit alongside these frames and 7 support files`);
   let work = 0, operationCount = 0;
   const spend = amount => { work += amount; if (work > 67108864) fail('project', 'drawing work exceeds the 67-million-pixel budget; simplify repeated operations'); };
-  const warnings = new Set();
+  // Clipping is counted per source location so an agent can find the operation that overhangs.
+  const clipped = new Map();
+  const clip = (path, pixels = 1) => clipped.set(path, (clipped.get(path) ?? 0) + pixels);
   const rendered = new Map(), frameNames = new Set();
   function drawOps(data, ops, path) {
     list(ops, path);
@@ -105,20 +121,56 @@ export function renderProject(spec, options = {}) {
       if (++operationCount > 20000) fail(path, 'project exceeds 20,000 drawing operations');
       const op = ops[index], p = `${path}[${index}]`;
       object(op, p);
+      const transform = ['scale', 'flipX', 'flipY', 'rotate'];
       const fields = {
         pixel: ['x', 'y', 'color'], rect: ['x', 'y', 'w', 'h', 'color', 'filled'],
         ellipse: ['x', 'y', 'w', 'h', 'color', 'filled'], line: ['x', 'y', 'x2', 'y2', 'color'],
         clear: ['x', 'y', 'w', 'h'], fill: ['x', 'y', 'color'],
-        grid: ['x', 'y', 'rows', 'scale', 'flipX', 'flipY', 'rotate'],
-        stamp: ['x', 'y', 'symbol', 'scale', 'flipX', 'flipY', 'rotate'], replace: ['from', 'to']
+        grid: ['x', 'y', 'rows', ...transform, 'remap'],
+        stamp: ['x', 'y', 'symbol', ...transform, 'remap'], replace: ['from', 'to'],
+        copy: ['x', 'y', 'from', 'symbol', 'sx', 'sy', 'w', 'h', ...transform, 'remap'],
+        outline: ['color', 'diagonal']
       };
       if (typeof op.op !== 'string' || !own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
       object(op, p, ['op', ...fields[op.op]]);
       const x = integer(op.x ?? 0, `${p}.x`), y = integer(op.y ?? 0, `${p}.y`);
       const put = (px, py, c, erase = false) => {
-        if (px < 0 || py < 0 || px >= width || py >= height) { warnings.add('Some drawing falls outside the canvas and is clipped.'); return; }
+        if (px < 0 || py < 0 || px >= width || py >= height) { clip(p); return; }
         const at = (py * width + px) * 4;
         if (erase) data.fill(0, at, at + 4); else blend(data, at, c);
+      };
+      // Palette characters, optionally remapped to other palette keys or colors for this operation only.
+      const paletteSampler = () => {
+        const remap = new Map(), cache = new Map();
+        if (op.remap !== undefined) {
+          object(op.remap, `${p}.remap`);
+          for (const [char, value] of Object.entries(op.remap)) {
+            if (char.length !== 1 || char === '.' || char === ' ') fail(`${p}.remap.${char}`, 'remap keys are single grid characters other than dot or space');
+            remap.set(char, color(value, `${p}.remap.${char}`));
+          }
+        }
+        return char => {
+          if (char === '.' || char === ' ') return null;
+          if (!cache.has(char)) cache.set(char, remap.get(char) ?? color(char, `${p}.rows`));
+          return cache.get(char);
+        };
+      };
+      // Draws a w x h source through flip, rotation and integer scale; flips happen before rotation.
+      const drawCells = (w, h, sample) => {
+        const scale = integer(op.scale ?? 1, `${p}.scale`, 1, 16);
+        const flipX = boolean(op.flipX ?? false, `${p}.flipX`), flipY = boolean(op.flipY ?? false, `${p}.flipY`);
+        const rotate = integer(op.rotate ?? 0, `${p}.rotate`, 0, 270);
+        if (rotate % 90) fail(`${p}.rotate`, 'expected 0, 90, 180 or 270 degrees clockwise');
+        spend(w * h * scale * scale);
+        for (let gy = 0; gy < h; gy++) for (let gx = 0; gx < w; gx++) {
+          const c = sample(gx, gy);
+          if (!c) continue;
+          let px = flipX ? w - 1 - gx : gx, py = flipY ? h - 1 - gy : gy;
+          if (rotate === 90) [px, py] = [h - 1 - py, px];
+          else if (rotate === 180) [px, py] = [w - 1 - px, h - 1 - py];
+          else if (rotate === 270) [px, py] = [py, w - 1 - px];
+          for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) put(x + px * scale + sx, y + py * scale + sy, c);
+        }
       };
       if (op.op === 'pixel') { spend(1); put(x, y, color(op.color, `${p}.color`)); }
       else if (['rect', 'ellipse', 'clear'].includes(op.op)) {
@@ -144,20 +196,37 @@ export function renderProject(spec, options = {}) {
         if (op.op === 'stamp' && typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a symbol');
         const grid = op.op === 'grid' ? readRows(op.rows, `${p}.rows`, palette) : symbols[op.symbol];
         if (!grid) fail(`${p}.symbol`, `unknown symbol ${JSON.stringify(op.symbol)}`);
-        const scale = integer(op.scale ?? 1, `${p}.scale`, 1, 16);
-        const flipX = boolean(op.flipX ?? false, `${p}.flipX`), flipY = boolean(op.flipY ?? false, `${p}.flipY`);
-        const rotate = integer(op.rotate ?? 0, `${p}.rotate`, 0, 270);
-        if (rotate % 90) fail(`${p}.rotate`, 'expected 0, 90, 180 or 270 degrees clockwise');
-        spend(grid.width * grid.height * scale * scale);
-        for (let gy = 0; gy < grid.height; gy++) for (let gx = 0; gx < grid.width; gx++) {
-          const char = grid.rows[gy][gx];
-          if (char === '.' || char === ' ') continue;
-          let px = flipX ? grid.width - 1 - gx : gx, py = flipY ? grid.height - 1 - gy : gy;
-          if (rotate === 90) [px, py] = [grid.height - 1 - py, px];
-          else if (rotate === 180) [px, py] = [grid.width - 1 - px, grid.height - 1 - py];
-          else if (rotate === 270) [px, py] = [py, grid.width - 1 - px];
-          const c = color(char, `${p}.rows`);
-          for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) put(x + px * scale + sx, y + py * scale + sy, c);
+        const sample = paletteSampler();
+        drawCells(grid.width, grid.height, (gx, gy) => sample(grid.rows[gy][gx]));
+      } else if (op.op === 'copy') {
+        // Copies a rectangle of a symbol (palette characters) or of an earlier frame (exact RGBA).
+        if ((op.from === undefined) === (op.symbol === undefined)) fail(p, 'copy needs exactly one of from (an earlier frame) or symbol');
+        let sourceWidth, sourceHeight, read;
+        if (op.symbol !== undefined) {
+          if (typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a symbol');
+          const grid = symbols[op.symbol];
+          if (!grid) fail(`${p}.symbol`, `unknown symbol ${JSON.stringify(op.symbol)}`);
+          const sample = paletteSampler();
+          [sourceWidth, sourceHeight, read] = [grid.width, grid.height, (sx, sy) => sample(grid.rows[sy][sx])];
+        } else {
+          if (typeof op.from !== 'string' || !rendered.has(op.from)) fail(`${p}.from`, 'must name an earlier frame');
+          if (op.remap !== undefined) fail(`${p}.remap`, 'remap applies to palette characters; frame copies keep exact RGBA');
+          const source = rendered.get(op.from).data;
+          [sourceWidth, sourceHeight, read] = [width, height, (sx, sy) => { const at = (sy * width + sx) * 4; return source[at + 3] ? source.subarray(at, at + 4) : null; }];
+        }
+        const sx = integer(op.sx ?? 0, `${p}.sx`, 0, sourceWidth - 1), sy = integer(op.sy ?? 0, `${p}.sy`, 0, sourceHeight - 1);
+        const w = integer(op.w ?? sourceWidth - sx, `${p}.w`, 1, sourceWidth - sx), h = integer(op.h ?? sourceHeight - sy, `${p}.h`, 1, sourceHeight - sy);
+        drawCells(w, h, (gx, gy) => read(sx + gx, sy + gy));
+      } else if (op.op === 'outline') {
+        // Surrounds every visible pixel drawn so far in this buffer (frame or layer) with a 1px line.
+        const c = color(op.color, `${p}.color`), diagonal = boolean(op.diagonal ?? false, `${p}.diagonal`);
+        spend(width * height);
+        const solid = new Uint8Array(width * height);
+        for (let i = 0; i < solid.length; i++) solid[i] = data[i * 4 + 3] ? 1 : 0;
+        const around = diagonal ? [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]] : [[0, -1], [-1, 0], [1, 0], [0, 1]];
+        for (let py = 0; py < height; py++) for (let px = 0; px < width; px++) {
+          if (solid[py * width + px]) continue;
+          if (around.some(([dx, dy]) => { const nx = px + dx, ny = py + dy; return nx >= 0 && ny >= 0 && nx < width && ny < height && solid[ny * width + nx]; })) blend(data, (py * width + px) * 4, c);
         }
       } else if (op.op === 'replace') {
         const from = color(op.from, `${p}.from`), to = color(op.to, `${p}.to`);
@@ -183,11 +252,28 @@ export function renderProject(spec, options = {}) {
   }
   const frames = spec.frames.map((frame, index) => {
     const p = `project.frames[${index}]`;
-    object(frame, p, ['name', 'duration', 'from', 'translate', 'flipX', 'flipY', 'ops', 'layers', 'pixels']);
+    object(frame, p, ['name', 'duration', 'from', 'translate', 'wrap', 'flipX', 'flipY', 'palette', 'anchor', 'points', 'ops', 'layers', 'pixels']);
     const frameName = name(frame.name, `${p}.name`);
     if (frameNames.has(frameName.toLowerCase())) fail(`${p}.name`, `duplicate frame ${frameName}; names must also be unique ignoring case`);
     frameNames.add(frameName.toLowerCase());
     const duration = integer(frame.duration ?? 100, `${p}.duration`, 1, 60000);
+    let overrides = null;
+    if (frame.palette !== undefined) {
+      object(frame.palette, `${p}.palette`);
+      overrides = {};
+      for (const [key, value] of Object.entries(frame.palette)) {
+        if (!own(palette, key)) fail(`${p}.palette.${key}`, 'frame palettes recolor keys declared in the project palette');
+        overrides[key] = toHex(parseColor(value, palette, `${p}.palette.${key}`));
+      }
+    }
+    activePalette = overrides ? { ...palette, ...overrides } : palette;
+    const frameAnchor = frame.anchor === undefined ? projectAnchor : point(frame.anchor, `${p}.anchor`);
+    let points = null;
+    if (frame.points !== undefined) {
+      object(frame.points, `${p}.points`);
+      if (Object.keys(frame.points).length > 64) fail(`${p}.points`, 'at most 64 named points per frame');
+      points = Object.fromEntries(Object.entries(frame.points).map(([key, value]) => [name(key, `${p}.points.${key}`), point(value, `${p}.points.${key}`)]));
+    }
     let data = new Uint8ClampedArray(width * height * 4);
     if (frame.from !== undefined) {
       if (typeof frame.from !== 'string' || !rendered.has(frame.from)) fail(`${p}.from`, 'must name an earlier frame');
@@ -198,12 +284,14 @@ export function renderProject(spec, options = {}) {
     if (translate.length !== 2) fail(`${p}.translate`, 'expected [x, y]');
     const dx = integer(translate[0], `${p}.translate[0]`), dy = integer(translate[1], `${p}.translate[1]`);
     const flipX = boolean(frame.flipX ?? false, `${p}.flipX`), flipY = boolean(frame.flipY ?? false, `${p}.flipY`);
+    const wrap = boolean(frame.wrap ?? false, `${p}.wrap`);
     if (dx || dy || flipX || flipY) {
       const transformed = new Uint8ClampedArray(data.length);
       for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-        const px = (flipX ? width - 1 - x : x) + dx, py = (flipY ? height - 1 - y : y) + dy;
+        let px = (flipX ? width - 1 - x : x) + dx, py = (flipY ? height - 1 - y : y) + dy;
+        if (wrap) { px = ((px % width) + width) % width; py = ((py % height) + height) % height; }
         if (px >= 0 && py >= 0 && px < width && py < height) transformed.set(data.subarray((y * width + x) * 4, (y * width + x) * 4 + 4), (py * width + px) * 4);
-        else if (data[(y * width + x) * 4 + 3]) warnings.add('Some drawing falls outside the canvas and is clipped.');
+        else if (data[(y * width + x) * 4 + 3]) clip(`${p}.translate`);
       }
       data = transformed;
     }
@@ -223,7 +311,7 @@ export function renderProject(spec, options = {}) {
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
           const tx = x + lx, ty = y + ly, i = (y * width + x) * 4;
           if (tx >= 0 && tx < width && ty >= 0 && ty < height) blend(data, (ty * width + tx) * 4, pixels.subarray(i, i + 4), opacity);
-          else if (pixels[i + 3]) warnings.add('Some drawing falls outside the canvas and is clipped.');
+          else if (pixels[i + 3]) clip(lp);
         }
       }
     }
@@ -236,7 +324,8 @@ export function renderProject(spec, options = {}) {
       const x = integer(pixel.x, `${pp}.x`, 0, width - 1), y = integer(pixel.y, `${pp}.y`, 0, height - 1);
       data.set(color(pixel.color, `${pp}.color`), (y * width + x) * 4);
     }
-    const result = { name: frameName, duration, data };
+    activePalette = palette;
+    const result = { name: frameName, duration, data, ...(frameAnchor && { anchor: frameAnchor }), ...(points && { points }), ...(overrides && { palette: overrides }) };
     rendered.set(frameName, result);
     return result;
   });
@@ -259,13 +348,43 @@ export function renderProject(spec, options = {}) {
     animations[key] = { frames: indices, loop, duration: indices.reduce((sum, i) => sum + frames[i].duration, 0) };
   }
   if (!Object.keys(animations).length) fail('project.animations', 'at least one animation is required; omit this field for a default animation');
-  const sheet = object(spec.sheet ?? {}, 'project.sheet', ['columns', 'padding', 'scale']);
+  const sheet = object(spec.sheet ?? {}, 'project.sheet', ['columns', 'padding', 'scale', 'trim']);
   const columns = integer(sheet.columns ?? Math.min(frames.length, 8), 'project.sheet.columns', 1, 256);
   const padding = integer(sheet.padding ?? 0, 'project.sheet.padding', 0, 16);
   const scale = integer(sheet.scale ?? 1, 'project.sheet.scale', 1, 16);
-  const sheetWidth = columns * (width + padding * 2) * scale, sheetHeight = Math.ceil(frames.length / columns) * (height + padding * 2) * scale;
+  const trim = boolean(sheet.trim ?? false, 'project.sheet.trim');
+  const layout = trim ? packTrimmed(frames, width, height, padding, scale) : null;
+  const sheetWidth = layout ? layout.width : columns * (width + padding * 2) * scale, sheetHeight = layout ? layout.height : Math.ceil(frames.length / columns) * (height + padding * 2) * scale;
   if (sheetWidth * sheetHeight > 16777216) fail('project.sheet', 'atlas exceeds 16,777,216 pixels; reduce scale or columns');
-  return { name: projectName, width, height, frames, animations, palette, sheet: { columns, padding, scale, width: sheetWidth, height: sheetHeight }, warnings: [...warnings] };
+  const warnings = [], clipping = [...clipped].map(([path, pixels]) => ({ path, pixels }));
+  if (clipping.length) warnings.push(`Some drawing falls outside the canvas and is clipped: ${clipping[0].path} (${clipping[0].pixels} px)${clipping.length > 1 ? ` and ${clipping.length - 1} more location${clipping.length > 2 ? 's' : ''}` : ''}.`);
+  return {
+    name: projectName, width, height, frames, animations, palette,
+    sheet: { columns, padding, scale, width: sheetWidth, height: sheetHeight, ...(layout && { trim: true, layout: layout.cells }) },
+    warnings, ...(clipping.length && { clipping: clipping.slice(0, 64), ...(clipping.length > 64 && { clippingOmitted: clipping.length - 64 }) })
+  };
+}
+
+// Deterministic shelf packing of each frame's visible bounds (tallest first, then recipe order).
+// Cell coordinates are exported pixels; source bounds are unscaled canvas pixels.
+function packTrimmed(frames, width, height, padding, scale) {
+  const boxes = frames.map((frame, index) => {
+    let left = width, top = height, right = -1, bottom = -1;
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) if (frame.data[(y * width + x) * 4 + 3]) {
+      if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; if (y > bottom) bottom = y;
+    }
+    return right < 0 ? { index, sx: 0, sy: 0, w: 1, h: 1, empty: true } : { index, sx: left, sy: top, w: right - left + 1, h: bottom - top + 1 };
+  });
+  const cellWidth = box => (box.w + padding * 2) * scale, cellHeight = box => (box.h + padding * 2) * scale;
+  const target = Math.max(...boxes.map(cellWidth), Math.ceil(Math.sqrt(boxes.reduce((sum, box) => sum + cellWidth(box) * cellHeight(box), 0))));
+  const cells = new Array(boxes.length);
+  let cursorX = 0, cursorY = 0, shelf = 0, used = 0;
+  for (const box of [...boxes].sort((a, b) => cellHeight(b) - cellHeight(a) || a.index - b.index)) {
+    if (cursorX > 0 && cursorX + cellWidth(box) > target) { cursorY += shelf; cursorX = 0; shelf = 0; }
+    cells[box.index] = { x: cursorX + padding * scale, y: cursorY + padding * scale, sx: box.sx, sy: box.sy, w: box.w, h: box.h, ...(box.empty && { empty: true }) };
+    cursorX += cellWidth(box); shelf = Math.max(shelf, cellHeight(box)); used = Math.max(used, cursorX);
+  }
+  return { width: used, height: cursorY + shelf, cells };
 }
 
 export function scalePixels(data, width, height, scale = 1) {
@@ -278,21 +397,40 @@ export function scalePixels(data, width, height, scale = 1) {
   return result;
 }
 
-export function buildAtlas(project) {
-  const { width, height, frames, sheet } = project;
-  const data = new Uint8ClampedArray(sheet.width * sheet.height * 4);
+// Packs frames into one RGBA sheet. `trim: false` forces the uniform grid even for a trimmed recipe (aligned
+// material passes need identical rectangles). Anchors and points are exported pixels; pivot is anchor/source size.
+export function buildAtlas(project, { trim } = {}) {
+  const { width, height, frames, sheet } = project, s = sheet.scale;
+  const trimmed = Boolean(sheet.trim) && trim !== false;
+  const gridWidth = sheet.columns * (width + sheet.padding * 2) * s, gridHeight = Math.ceil(frames.length / sheet.columns) * (height + sheet.padding * 2) * s;
+  const atlasWidth = trimmed ? sheet.width : gridWidth, atlasHeight = trimmed ? sheet.height : gridHeight;
+  if (atlasWidth * atlasHeight > 16777216) fail('project.sheet', 'atlas exceeds 16,777,216 pixels; reduce scale or columns');
+  const data = new Uint8ClampedArray(atlasWidth * atlasHeight * 4);
   const entries = Object.create(null);
+  const extras = frame => ({
+    ...(frame.anchor && { pivot: { x: round6(frame.anchor[0] / width), y: round6(frame.anchor[1] / height) }, anchor: { x: frame.anchor[0] * s, y: frame.anchor[1] * s } }),
+    ...(frame.points && { points: Object.fromEntries(Object.entries(frame.points).map(([key, [x, y]]) => [key, { x: x * s, y: y * s }])) })
+  });
   frames.forEach((frame, i) => {
-    const x = ((i % sheet.columns) * (width + sheet.padding * 2) + sheet.padding) * sheet.scale;
-    const y = (Math.floor(i / sheet.columns) * (height + sheet.padding * 2) + sheet.padding) * sheet.scale;
-    const w = width * sheet.scale, h = height * sheet.scale;
-    const pixels = scalePixels(frame.data, width, height, sheet.scale);
-    for (let row = 0; row < h; row++) data.set(pixels.subarray(row * w * 4, (row + 1) * w * 4), ((y + row) * sheet.width + x) * 4);
-    entries[frame.name] = { frame: { x, y, w, h }, rotated: false, trimmed: false, spriteSourceSize: { x: 0, y: 0, w, h }, sourceSize: { w, h }, duration: frame.duration };
+    const pixels = scalePixels(frame.data, width, height, s), rowBytes = width * s * 4;
+    if (trimmed) {
+      const cell = sheet.layout[i], w = cell.w * s, h = cell.h * s;
+      if (!cell.empty) for (let row = 0; row < h; row++) {
+        const from = ((cell.sy * s + row) * width * s + cell.sx * s) * 4;
+        data.set(pixels.subarray(from, from + w * 4), ((cell.y + row) * atlasWidth + cell.x) * 4);
+      }
+      entries[frame.name] = { frame: { x: cell.x, y: cell.y, w, h }, rotated: false, trimmed: true, spriteSourceSize: { x: cell.sx * s, y: cell.sy * s, w, h }, sourceSize: { w: width * s, h: height * s }, duration: frame.duration, ...extras(frame) };
+      return;
+    }
+    const x = ((i % sheet.columns) * (width + sheet.padding * 2) + sheet.padding) * s;
+    const y = (Math.floor(i / sheet.columns) * (height + sheet.padding * 2) + sheet.padding) * s;
+    const w = width * s, h = height * s;
+    for (let row = 0; row < h; row++) data.set(pixels.subarray(row * rowBytes, (row + 1) * rowBytes), ((y + row) * atlasWidth + x) * 4);
+    entries[frame.name] = { frame: { x, y, w, h }, rotated: false, trimmed: false, spriteSourceSize: { x: 0, y: 0, w, h }, sourceSize: { w, h }, duration: frame.duration, ...extras(frame) };
   });
   const animations = Object.fromEntries(Object.entries(project.animations).map(([key, a]) => [key, { ...a, frames: a.frames.map(i => frames[i].name) }]));
-  const meta = { app: 'PixelForge', version: '1', image: `${project.name}.png`, format: 'RGBA8888', size: { w: sheet.width, h: sheet.height }, scale: String(sheet.scale) };
-  return { data, width: sheet.width, height: sheet.height, metadata: { frames: entries, animations, meta } };
+  const meta = { app: 'PixelForge', version: '1', image: `${project.name}.png`, format: 'RGBA8888', size: { w: atlasWidth, h: atlasHeight }, scale: String(s) };
+  return { data, width: atlasWidth, height: atlasHeight, metadata: { frames: entries, animations, meta } };
 }
 
 // Inspection and comparison build in-memory contact sheets and palette-key text. Nothing is written.
@@ -377,6 +515,45 @@ function drawSheet(sources, width, region, { scale, background = null, columns, 
   return { ...layout, data };
 }
 
+// A frame repeated 3x3, for judging how a tile reads when it tiles.
+export function tileRepeat(data, width, height) {
+  const out = new Uint8ClampedArray(width * height * 9 * 4), w = width * 3;
+  for (let y = 0; y < height * 3; y++) for (let x = 0; x < w; x++) {
+    const from = ((y % height) * width + x % width) * 4;
+    out.set(data.subarray(from, from + 4), (y * w + x) * 4);
+  }
+  return out;
+}
+// Advisory seam evidence. Opposite edges do not need to match to tile well; what reads as a seam is (a) a line that
+// doubles because both edges carry it, or (b) more large value steps across the wrap than across any interior
+// boundary (a gradient or texture that does not continue). A stroke that merely touches one edge is not flagged.
+export function tileReport(data, width, height) {
+  const luma = at => (0.2126 * data[at] + 0.7152 * data[at + 1] + 0.0722 * data[at + 2]) * data[at + 3] / 255;
+  const same = (a, b) => colorId(data, a) === colorId(data, b);
+  const large = (a, b) => Math.abs(luma(a) - luma(b)) >= 24 || Math.abs(data[a + 3] - data[b + 3]) >= 128;
+  const axis = (length, across, at) => {
+    // `at(i, j)` addresses position i along the wrap axis and j across it.
+    let wrapSteps = 0, interiorMax = 0;
+    const doubled = [];
+    for (let j = 0; j < across; j++) {
+      if (large(at(length - 1, j), at(0, j))) wrapSteps++;
+      if (length >= 3 && data[at(0, j) + 3] && same(at(0, j), at(length - 1, j)) && !same(at(0, j), at(1, j)) && !same(at(length - 1, j), at(length - 2, j))) doubled.push(j);
+    }
+    for (let i = 0; i < length - 1; i++) {
+      let steps = 0;
+      for (let j = 0; j < across; j++) if (large(at(i, j), at(i + 1, j))) steps++;
+      interiorMax = Math.max(interiorMax, steps);
+    }
+    const threshold = Math.max(2, Math.ceil(across / 4));
+    return { wrapSteps, interiorMaxSteps: interiorMax, doubled, suspicious: (wrapSteps > interiorMax && wrapSteps >= threshold) || doubled.length >= threshold };
+  };
+  const leftRight = axis(width, height, (i, j) => (j * width + i) * 4), topBottom = axis(height, width, (i, j) => (i * width + j) * 4);
+  return {
+    leftRight: { wrapSteps: leftRight.wrapSteps, interiorMaxSteps: leftRight.interiorMaxSteps, doubledRows: leftRight.doubled, suspicious: leftRight.suspicious },
+    topBottom: { wrapSteps: topBottom.wrapSteps, interiorMaxSteps: topBottom.interiorMaxSteps, doubledColumns: topBottom.doubled, suspicious: topBottom.suspicious }
+  };
+}
+
 export function inspectProject(project, options = {}) {
   object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'view', 'native', 'diagnostics', 'maxCells']);
   const { width, height, frames } = project;
@@ -394,6 +571,10 @@ export function inspectProject(project, options = {}) {
       return index;
     });
   }
+  const mode = options.view ?? 'color';
+  if (!['color', 'silhouette', 'grayscale', 'onion', 'tile'].includes(mode)) fail('inspect.view', 'expected color, silhouette, grayscale, onion or tile');
+  if (mode === 'onion' && options.animation === undefined) fail('inspect.view', 'onion requires an animation so neighbors have an unambiguous playback position');
+  if (mode === 'tile' && options.region !== undefined) fail('inspect.region', 'tile view repeats whole frames; omit region');
   let region = { x: 0, y: 0, w: width, h: height };
   if (options.region !== undefined) {
     const r = object(options.region, 'inspect.region', ['x', 'y', 'w', 'h']);
@@ -403,25 +584,32 @@ export function inspectProject(project, options = {}) {
   const grid = boolean(options.grid ?? false, 'inspect.grid');
   const scale = options.scale === undefined ? undefined : integer(options.scale, 'inspect.scale', 1, 16);
   const background = (options.background ?? 'checker') === 'checker' ? null : parseColor(options.background, project.palette, 'inspect.background');
-  const mode = options.view ?? 'color';
-  if (!['color', 'silhouette', 'grayscale', 'onion'].includes(mode)) fail('inspect.view', 'expected color, silhouette, grayscale or onion');
-  if (mode === 'onion' && options.animation === undefined) fail('inspect.view', 'onion requires an animation so neighbors have an unambiguous playback position');
   const native = boolean(options.native ?? false, 'inspect.native'), diagnostics = boolean(options.diagnostics ?? false, 'inspect.diagnostics');
   const total = cells.length;
   let positions = cells.map((_, i) => i);
   if (options.maxCells !== undefined) {
     const requested = integer(options.maxCells, 'inspect.maxCells', 1, 256);
-    const count = Math.min(total, requested, Math.max(1, Math.floor(4094 / (Math.max(region.w, region.h) + 2)) ** 2));
+    const side = mode === 'tile' ? Math.max(width, height) * 3 : Math.max(region.w, region.h);
+    const count = Math.min(total, requested, Math.max(1, Math.floor(4094 / (side + 2)) ** 2));
     if (count < total) positions = Array.from({ length: count }, (_, i) => count === 1 ? 0 : Math.floor(i * (total - 1) / (count - 1)));
     cells = positions.map(i => cells[i]);
   }
   const unique = [...new Set(cells)];
   if (grid && unique.length * region.w * region.h > 16384) fail('inspect.grid', `grids are limited to 16,384 pixels, not ${unique.length} × ${region.w}×${region.h}; select fewer frames or a smaller region`);
-  const sources = cells.map((i, n) => mode === 'onion' ? onionPixels(project, project.animations[options.animation], positions[n]) : reviewPixels(frames[i].data, mode));
-  const view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(sources, width, region, { scale, background }) };
-  if (mode !== 'color') view.mode = mode;
+  let view;
+  if (mode === 'tile') {
+    const repeats = new Map(unique.map(i => [i, tileRepeat(frames[i].data, width, height)]));
+    const tiled = { x: 0, y: 0, w: width * 3, h: height * 3 };
+    view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(cells.map(i => repeats.get(i)), width * 3, tiled, { scale, background }), mode };
+    view.tiles = unique.map(i => ({ frame: frames[i].name, ...tileReport(frames[i].data, width, height) }));
+    if (native) view.nativeSheet = drawSheet(cells.map(i => repeats.get(i)), width * 3, tiled, { scale: 1, background });
+  } else {
+    const sources = cells.map((i, n) => mode === 'onion' ? onionPixels(project, project.animations[options.animation], positions[n]) : reviewPixels(frames[i].data, mode));
+    view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(sources, width, region, { scale, background }) };
+    if (mode !== 'color') view.mode = mode;
+    if (native) view.nativeSheet = drawSheet(sources, width, region, { scale: 1, background });
+  }
   if (total !== cells.length) view.sampling = { total, shown: cells.length, omitted: total - cells.length, positions, method: 'evenly spaced, including endpoints; durations are original, not playback timing' };
-  if (native) view.nativeSheet = drawSheet(sources, width, region, { scale: 1, background });
   if (diagnostics) view.diagnostics = analyzeProject(project);
   if (options.animation !== undefined && (diagnostics || mode === 'onion')) {
     const a = project.animations[options.animation]; let start = 0;
@@ -482,6 +670,8 @@ export function analyzeProject(project) {
   const known = new Set(Object.values(project.palette).map(color => colorId(parseColor(color), 0)));
   const stats = frames.map(frame => {
     const colors = new Set(), outside = new Set(), isolated = [], unlisted = [];
+    // Colors a frame palette introduces are declared for that frame.
+    const declared = frame.palette ? new Set([...known, ...Object.values(frame.palette).map(color => colorId(parseColor(color), 0))]) : known;
     let visible = 0, isolatedCount = 0, hash = 2166136261;
     for (let at = 0; at < frame.data.length; at += 4) {
       const id = frame.data[at + 3] ? colorId(frame.data, at) : 0;
@@ -489,7 +679,7 @@ export function analyzeProject(project) {
       if (!id) continue;
       visible++; colors.add(id);
       const x = at / 4 % width, y = Math.floor(at / 4 / width);
-      if (!known.has(id) && !outside.has(id)) { outside.add(id); if (unlisted.length < 32) unlisted.push({ x, y, color: toHex(frame.data.subarray(at, at + 4)) }); }
+      if (!declared.has(id) && !outside.has(id)) { outside.add(id); if (unlisted.length < 32) unlisted.push({ x, y, color: toHex(frame.data.subarray(at, at + 4)) }); }
       let neighbor = false;
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
         if ((dx || dy) && x + dx >= 0 && x + dx < width && y + dy >= 0 && y + dy < height && frame.data[((y + dy) * width + x + dx) * 4 + 3]) neighbor = true;

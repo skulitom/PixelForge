@@ -14,7 +14,7 @@ Self-review against [the brief](../brief.md), made from native and enlarged cont
 ## Weak or unfinished
 
 - **Terrain repetition.** Grass and sand textures repeat every 16px and are visible across large open areas; props break it up but there are no interior tile variants.
-- **Oak.** The emulated outline fixed the "pile of balls" look, but the canopy is nearly symmetrical and the trunk is short for the mass above it.
+- **Oak.** The single canopy outline (first emulated with dilated cluster symbols, now one `outline` op with identical pixels) fixed the "pile of balls" look, but the canopy is nearly symmetrical and the trunk is short for the mass above it.
 - **Palm.** Fronds are thin; the sway alternates two droop poses only, and coconuts are mostly hidden.
 - **Side walk.** A chibi small-step cycle: the stride is readable but not weighty; the arm swing is two pixels.
 - **Item-get pose.** The first version put the hands at shoulder height and the hold marker inside the hat, hiding the key. Fixed in the pose source (raised arm parts, higher `hold` point), but the long arms are stiff.
@@ -30,6 +30,6 @@ Self-review against [the brief](../brief.md), made from native and enlarged cont
 | Shore | Dashed rim from 8px-periodic notches; bank shading beside side notches | One recession per edge piece, bank only over open water, softer foam phases |
 | Grass | Tufts tiled into a high-contrast wallpaper | Quiet slanted blade strokes; variety moved into props |
 | Keeper | Side stride too short; passing frames identical; side windup hid the blade behind the hat | Wider contact legs, distinct passing poses, horizontal backswing |
-| Oak | Separately outlined clusters, floating canopy | Dilated-cluster outline pass, trunk tucked under the canopy |
+| Oak | Separately outlined clusters, floating canopy | One outline around the whole canopy (dilated clusters, later the `outline` op), trunk tucked under the canopy |
 | Effects | Leaves and shards too small to read | Two-pixel flutter shapes, more and larger shards |
 | Hearts | Asymmetric lobes | Symmetric 9×8 hearts |

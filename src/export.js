@@ -5,20 +5,23 @@ import path from 'node:path';
 
 const json = value => JSON.stringify(value, null, 2) + '\n';
 export function generateCSS(project, atlas) {
-  const lines = [`/* PixelForge: atlas coordinates are pixels at the exported scale. */`, `.pf-${project.name} {`, `  display: inline-block;`, `  width: ${project.width * project.sheet.scale}px; height: ${project.height * project.sheet.scale}px;`, `  background-image: url("${project.name}.png");`, `  background-repeat: no-repeat; image-rendering: pixelated;`, `}`];
+  // A trimmed atlas cannot back a fixed-size element without showing neighbouring frames, so trimmed recipes
+  // switch between the full-canvas frame PNGs instead of sliding a background position.
+  const trimmed = Boolean(project.sheet.trim), size = `width: ${project.width * project.sheet.scale}px; height: ${project.height * project.sheet.scale}px;`;
+  const image = frame => `background-image: url("frames/${frame.name}.png");`;
+  const place = frame => { const rect = atlas.metadata.frames[frame.name].frame; return `background-position: -${rect.x}px -${rect.y}px;`; };
+  const show = trimmed ? image : place;
+  const lines = [`/* PixelForge: ${trimmed ? 'frames switch between the full-canvas images in frames/.' : 'atlas coordinates are pixels at the exported scale.'} */`, `.pf-${project.name} {`, `  display: inline-block;`, `  ${size}`, trimmed ? `  ${image(project.frames[0])}` : `  background-image: url("${project.name}.png");`, `  background-repeat: no-repeat; image-rendering: pixelated;`, `}`];
   for (const [key, anim] of Object.entries(project.animations)) {
     const id = `pf-${project.name}-${key}`;
-    const first = atlas.metadata.frames[project.frames[anim.frames[0]].name].frame;
-    lines.push(`.${id} { background-position: -${first.x}px -${first.y}px; animation: ${id} ${anim.duration}ms steps(1, end) ${anim.loop ? 'infinite' : '1 forwards'}; }`, `@keyframes ${id} {`);
+    lines.push(`.${id} { ${show(project.frames[anim.frames[0]])} animation: ${id} ${anim.duration}ms steps(1, end) ${anim.loop ? 'infinite' : '1 forwards'}; }`, `@keyframes ${id} {`);
     let elapsed = 0;
     for (const index of anim.frames) {
-      const f = project.frames[index], rect = atlas.metadata.frames[f.name].frame;
-      lines.push(`  ${Number((elapsed / anim.duration * 100).toFixed(8))}% { background-position: -${rect.x}px -${rect.y}px; }`);
+      const f = project.frames[index];
+      lines.push(`  ${Number((elapsed / anim.duration * 100).toFixed(8))}% { ${show(f)} }`);
       elapsed += f.duration;
     }
-    const lastIndex = anim.loop ? anim.frames[0] : anim.frames.at(-1);
-    const last = atlas.metadata.frames[project.frames[lastIndex].name].frame;
-    lines.push(`  100% { background-position: -${last.x}px -${last.y}px; }`, `}`);
+    lines.push(`  100% { ${show(project.frames[anim.loop ? anim.frames[0] : anim.frames.at(-1)])} }`, `}`);
   }
   lines.push('@media (prefers-reduced-motion: reduce) {', ...Object.keys(project.animations).map(key => `  .pf-${project.name}-${key} { animation: none; }`), '}');
   return lines.join('\n') + '\n';

@@ -6,7 +6,7 @@
     "idle-0": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -80,7 +80,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-closed",
+          "definition": "claw-l-closed",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -89,7 +90,12 @@
             23,
             13
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              8
+            ]
+          }
         }
       },
       "markers": []
@@ -97,7 +103,7 @@
     "idle-1": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -171,7 +177,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-closed",
+          "definition": "claw-l-closed",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -180,7 +187,12 @@
             23,
             13
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              8
+            ]
+          }
         }
       },
       "markers": []
@@ -188,7 +200,7 @@
     "idle-2": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -257,7 +269,8 @@
           "points": {}
         },
         "clawR": {
-          "definition": "claw-r-open",
+          "definition": "claw-l-open",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -274,7 +287,7 @@
     "walk-0": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -348,7 +361,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-closed",
+          "definition": "claw-l-closed",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -357,7 +371,12 @@
             23,
             13
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              8
+            ]
+          }
         }
       },
       "markers": []
@@ -365,7 +384,7 @@
     "walk-1": {
       "origin": [
         16,
-        17
+        19
       ],
       "parts": {
         "legs": {
@@ -439,7 +458,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-closed",
+          "definition": "claw-l-closed",
+          "flipX": true,
           "topLeft": [
             23,
             7
@@ -448,7 +468,12 @@
             23,
             12
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              7
+            ]
+          }
         }
       },
       "markers": []
@@ -456,7 +481,7 @@
     "walk-2": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -525,7 +550,8 @@
           "points": {}
         },
         "clawR": {
-          "definition": "claw-r-open",
+          "definition": "claw-l-open",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -542,7 +568,7 @@
     "walk-3": {
       "origin": [
         16,
-        17
+        19
       ],
       "parts": {
         "legs": {
@@ -611,7 +637,8 @@
           "points": {}
         },
         "clawR": {
-          "definition": "claw-r-open",
+          "definition": "claw-l-open",
+          "flipX": true,
           "topLeft": [
             23,
             7
@@ -628,7 +655,7 @@
     "snap-0": {
       "origin": [
         16,
-        17
+        19
       ],
       "parts": {
         "legs": {
@@ -702,7 +729,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-raised",
+          "definition": "claw-l-raised",
+          "flipX": true,
           "topLeft": [
             23,
             5
@@ -711,7 +739,12 @@
             23,
             12
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              5
+            ]
+          }
         }
       },
       "markers": []
@@ -719,7 +752,7 @@
     "snap-1": {
       "origin": [
         16,
-        16
+        19
       ],
       "parts": {
         "legs": {
@@ -788,7 +821,8 @@
           "points": {}
         },
         "clawR": {
-          "definition": "claw-r-open",
+          "definition": "claw-l-open",
+          "flipX": true,
           "topLeft": [
             23,
             6
@@ -805,7 +839,7 @@
     "snap-2": {
       "origin": [
         16,
-        18
+        19
       ],
       "parts": {
         "legs": {
@@ -879,7 +913,8 @@
           }
         },
         "clawR": {
-          "definition": "claw-r-closed",
+          "definition": "claw-l-closed",
+          "flipX": true,
           "topLeft": [
             23,
             8
@@ -888,7 +923,12 @@
             23,
             13
           ],
-          "points": {}
+          "points": {
+            "tip": [
+              28,
+              8
+            ]
+          }
         }
       },
       "markers": [
@@ -906,7 +946,7 @@
     "hurt": {
       "origin": [
         16,
-        16
+        19
       ],
       "parts": {
         "legs": {
@@ -975,7 +1015,8 @@
           "points": {}
         },
         "clawR": {
-          "definition": "claw-r-open",
+          "definition": "claw-l-open",
+          "flipX": true,
           "topLeft": [
             23,
             6

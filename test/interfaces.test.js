@@ -49,11 +49,12 @@ test('MCP handshake, discovery, help, errors and render work over stdio', async 
   input.end('not json\n'); await running;
   const results = text.trim().split('\n').map(line => JSON.parse(line));
   assert.equal(results.length, 8); assert.equal(results[0].result.protocolVersion, '2025-11-25');
-  assert.equal(results[1].result.tools.length, 5); assert.equal(JSON.parse(results[2].result.content[0].text).ok, true);
+  assert.equal(results[1].result.tools.length, 8); assert.equal(JSON.parse(results[2].result.content[0].text).ok, true);
   const render = results[3].result;
   assert.equal(render.content[1].mimeType, 'image/png');
   const written = JSON.parse(render.content[0].text); assert.ok(written.directory.startsWith(dir + path.sep));
-  assert.ok((await readFile(written.files[0])).length > 0);
+  assert.ok((await readFile(path.join(written.directory, written.files[0]))).length > 0);
+  assert.equal(written.frames.count, 1); assert.ok(!written.files.some(file => file.startsWith('frames/')));
   assert.equal(results[4].result.isError, true); assert.match(results[5].result.content[0].text, /PixelForge/);
   assert.equal(results[6].error.code, -32601); assert.equal(results[7].error.code, -32700);
 });
@@ -102,7 +103,7 @@ test('MCP revisions let pixel_patch edit, compare and export without resending t
   assert.deepEqual(report.frames, { changed: [{ frame: 'a', pixels: 2, box: { x: 10, y: 1, w: 2, h: 1 }, changes: [{ x: 10, y: 1, from: '.', to: 'k' }, { x: 11, y: 1, from: 'k', to: '.' }] }], unchanged: ['b'], durations: [{ frame: 'b', from: 100, to: 150 }] });
   assert.equal(patched.content[1].mimeType, 'image/png');
   const rendered = JSON.parse((await call('pixel_render', { revision: report.revision })).content[0].text);
-  const saved = JSON.parse(await readFile(rendered.files.find(file => file.endsWith('.pixel.json')), 'utf8'));
+  const saved = JSON.parse(await readFile(path.join(rendered.directory, rendered.files.find(file => file.endsWith('.pixel.json'))), 'utf8'));
   assert.deepEqual([rendered.revision, saved.frames[0].ops[0].x], [report.revision, 10]);
   assert.equal(JSON.parse((await call('pixel_inspect', { revision: base })).content[0].text).revision, base);
   const review = await call('pixel_inspect', { revision: report.revision, reference: base, native: true, view: 'silhouette', diagnostics: true });
@@ -125,7 +126,7 @@ test('MCP revisions from validate, inspect and paint survive process restarts be
   assert.deepEqual(await readdir(dir), ['.revisions']);
   const restarted = runMCP(dir, [...ids.map(revision => ['pixel_inspect', { revision, grid: true }]), ['pixel_render', { revision: ids[2] }]]);
   restarted.forEach((result, i) => { assert.ok(!result.isError, JSON.stringify(result)); assert.equal(JSON.parse(result.content[0].text).revision, ids[Math.min(i, 2)]); });
-  const rendered = JSON.parse(restarted[3].content[0].text), saved = JSON.parse(await readFile(rendered.files.find(file => file.endsWith('.pixel.json')), 'utf8'));
+  const rendered = JSON.parse(restarted[3].content[0].text), saved = JSON.parse(await readFile(path.join(rendered.directory, rendered.files.find(file => file.endsWith('.pixel.json'))), 'utf8'));
   assert.deepEqual(saved.frames[0].pixels, changes[0].value);
   assert.deepEqual(rendered.preview.cells, [{ frame: 'a', duration: 100 }, { frame: 'b', duration: 100 }]);
   assert.match(restarted[2].content[2].text, /k\.$/m);
@@ -145,7 +146,7 @@ test('MCP render previews every frame or an animation in playback order, with ex
     assert.deepEqual(info.preview.cells.map(c => c.duration), i ? [70, 100, 130, 100] : [70, 100, 130]);
     assert.deepEqual(Buffer.from(result.content[1].data, 'base64'), encodePNG(view.sheet.data, view.sheet.width, view.sheet.height));
     assert.equal(info.preview.sheet.width, view.sheet.width);
-    assert.ok(info.files.some(file => file.endsWith(path.join('animations', 'idle.png'))));
+    assert.ok(info.files.includes('animations/idle.png'));
   }
   assert.notEqual(JSON.parse(results[0].content[0].text).directory, JSON.parse(results[1].content[0].text).directory);
   const invalidDir = path.join(dir, 'invalid');
@@ -178,7 +179,7 @@ test('MCP exports a maximum-length animation with a bounded, explicit sampled pr
   assert.ok(!result.isError, JSON.stringify(result));
   const info = JSON.parse(result.content[0].text);
   assert.equal(info.preview.sampling.omitted, 768); assert.equal(info.preview.sampling.positions.at(-1), 1023);
-  const atlas = JSON.parse(await readFile(info.files.find(file => file.endsWith('.atlas.json')), 'utf8'));
+  const atlas = JSON.parse(await readFile(path.join(info.directory, info.files.find(file => file.endsWith('.atlas.json'))), 'utf8'));
   assert.equal(atlas.animations.hold.frames.length, 1024); await access(info.playback);
 });
 test('CLI inspect prints cells and grids, and writes a PNG only when asked', async t => {

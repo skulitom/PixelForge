@@ -1082,9 +1082,11 @@
         20,
         31
       ],
+      "mirror": "idle-r",
       "parts": {
         "legs": {
-          "definition": "legs-l",
+          "definition": "legs-r",
+          "flipX": true,
           "topLeft": [
             16,
             30
@@ -1101,7 +1103,8 @@
           }
         },
         "body": {
-          "definition": "body-l",
+          "definition": "body-r",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -1118,7 +1121,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -1137,9 +1141,11 @@
         20,
         31
       ],
+      "mirror": "breathe-r",
       "parts": {
         "legs": {
-          "definition": "legs-l-pass",
+          "definition": "legs-r-pass",
+          "flipX": true,
           "topLeft": [
             17,
             29
@@ -1156,7 +1162,8 @@
           }
         },
         "body": {
-          "definition": "body-l",
+          "definition": "body-r",
+          "flipX": true,
           "topLeft": [
             16,
             22
@@ -1173,7 +1180,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             9
@@ -1192,9 +1200,11 @@
         20,
         31
       ],
+      "mirror": "walk-r-1",
       "parts": {
         "legs": {
-          "definition": "legs-l-c1",
+          "definition": "legs-r-c1",
+          "flipX": true,
           "topLeft": [
             14,
             30
@@ -1215,7 +1225,8 @@
           }
         },
         "body": {
-          "definition": "body-l-back",
+          "definition": "body-r-back",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -1232,7 +1243,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -1261,9 +1273,11 @@
         20,
         31
       ],
+      "mirror": "walk-r-2",
       "parts": {
         "legs": {
-          "definition": "legs-l-pb",
+          "definition": "legs-r-pb",
+          "flipX": true,
           "topLeft": [
             17,
             29
@@ -1280,7 +1294,8 @@
           }
         },
         "body": {
-          "definition": "body-l",
+          "definition": "body-r",
+          "flipX": true,
           "topLeft": [
             16,
             22
@@ -1297,7 +1312,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             9
@@ -1316,9 +1332,11 @@
         20,
         31
       ],
+      "mirror": "walk-r-3",
       "parts": {
         "legs": {
-          "definition": "legs-l-c2",
+          "definition": "legs-r-c2",
+          "flipX": true,
           "topLeft": [
             14,
             30
@@ -1339,7 +1357,8 @@
           }
         },
         "body": {
-          "definition": "body-l-fwd",
+          "definition": "body-r-fwd",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -1356,7 +1375,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -1385,9 +1405,11 @@
         20,
         31
       ],
+      "mirror": "walk-r-4",
       "parts": {
         "legs": {
-          "definition": "legs-l-pa",
+          "definition": "legs-r-pa",
+          "flipX": true,
           "topLeft": [
             17,
             29
@@ -1404,7 +1426,8 @@
           }
         },
         "body": {
-          "definition": "body-l",
+          "definition": "body-r",
+          "flipX": true,
           "topLeft": [
             16,
             22
@@ -1421,7 +1444,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             9
@@ -1550,9 +1574,11 @@
         20,
         31
       ],
+      "mirror": "hurt-r",
       "parts": {
         "legs": {
-          "definition": "legs-l",
+          "definition": "legs-r",
+          "flipX": true,
           "topLeft": [
             16,
             30
@@ -1569,7 +1595,8 @@
           }
         },
         "body": {
-          "definition": "body-l",
+          "definition": "body-r",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -1586,7 +1613,8 @@
           }
         },
         "head": {
-          "definition": "head-l-hurt",
+          "definition": "head-r-hurt",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -2379,9 +2407,11 @@
         20,
         31
       ],
+      "mirror": "attack-r-1",
       "parts": {
         "legs": {
-          "definition": "legs-l",
+          "definition": "legs-r",
+          "flipX": true,
           "topLeft": [
             16,
             30
@@ -2398,7 +2428,8 @@
           }
         },
         "body": {
-          "definition": "body-l-noarm",
+          "definition": "body-r-noarm",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -2419,7 +2450,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -2431,7 +2463,8 @@
           "points": {}
         },
         "sword": {
-          "definition": "sa-l-windup",
+          "definition": "sa-r-windup",
+          "flipX": true,
           "topLeft": [
             19,
             22
@@ -2465,9 +2498,11 @@
         20,
         31
       ],
+      "mirror": "attack-r-2",
       "parts": {
         "legs": {
-          "definition": "legs-l",
+          "definition": "legs-r",
+          "flipX": true,
           "topLeft": [
             16,
             30
@@ -2484,7 +2519,8 @@
           }
         },
         "body": {
-          "definition": "body-l-noarm",
+          "definition": "body-r-noarm",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -2505,7 +2541,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -2517,7 +2554,8 @@
           "points": {}
         },
         "sword": {
-          "definition": "sa-l-strike",
+          "definition": "sa-r-strike",
+          "flipX": true,
           "topLeft": [
             3,
             22
@@ -2551,9 +2589,11 @@
         20,
         31
       ],
+      "mirror": "attack-r-3",
       "parts": {
         "legs": {
-          "definition": "legs-l",
+          "definition": "legs-r",
+          "flipX": true,
           "topLeft": [
             16,
             30
@@ -2570,7 +2610,8 @@
           }
         },
         "body": {
-          "definition": "body-l-noarm",
+          "definition": "body-r-noarm",
+          "flipX": true,
           "topLeft": [
             16,
             23
@@ -2591,7 +2632,8 @@
           }
         },
         "head": {
-          "definition": "head-l",
+          "definition": "head-r",
+          "flipX": true,
           "topLeft": [
             11,
             10
@@ -2603,7 +2645,8 @@
           "points": {}
         },
         "sword": {
-          "definition": "sa-l-recover",
+          "definition": "sa-r-recover",
+          "flipX": true,
           "topLeft": [
             13,
             24
@@ -2709,7 +2752,8 @@
           "points": {}
         },
         "armR": {
-          "definition": "arm-up-r",
+          "definition": "arm-up-l",
+          "flipX": true,
           "topLeft": [
             24,
             8

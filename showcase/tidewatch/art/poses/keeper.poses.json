@@ -5,25 +5,7 @@
   "width": 40,
   "height": 40,
   "palette": {
-    "k": "#1b1528",
-    "U": "#663b2e",
-    "p": "#ffe2c6",
-    "P": "#f4b28e",
-    "q": "#cf7e69",
-    "a": "#f28f4a",
-    "A": "#c35a33",
-    "z": "#823429",
-    "e": "#fff3a3",
-    "E": "#fcd04a",
-    "f": "#dc9531",
-    "F": "#9e5d2b",
-    "B": "#3c4886",
-    "V": "#272c55",
-    "m": "#f7f9ff",
-    "M": "#b7c2d6",
-    "v": "#727d98",
-    "X": "#ffe46e",
-    "i": "#ffa243"
+    "$ref": "../palette.json"
   },
   "parts": {
     "head-d": {
@@ -207,31 +189,6 @@
       ],
       "anchor": [
         2,
-        16
-      ]
-    },
-    "arm-up-r": {
-      "rows": [
-        ".kqk",
-        ".kPk",
-        ".kEk",
-        ".kfk",
-        "kEk.",
-        "kEk.",
-        "kfk.",
-        "kEk.",
-        "kEk.",
-        "kfk.",
-        "kEk.",
-        "kEk.",
-        "kfk.",
-        "kEk.",
-        "kEk.",
-        "kfk.",
-        "kEk."
-      ],
-      "anchor": [
-        1,
         16
       ]
     },
@@ -920,303 +877,6 @@
           7
         ]
       }
-    },
-    "head-l": {
-      "rows": [
-        "......kkkkkkk.....",
-        "....kkEEEeeeekk...",
-        "...kEEEEEEEEeeek..",
-        "..kEEEEEEEEEEEeek.",
-        ".kfEEEEEEEEEEEEEk.",
-        "kfEEEEEEEEEEEEEEEk",
-        "kFffffffffffEEEEfk",
-        ".kkppppaaaAzkEEEfk",
-        "..kPpkpppaAzkEEEfk",
-        "..kPPppppaAzkEEffk",
-        "...kqqpppAzzkEffFk",
-        "....kkqqqzzkkfFFk.",
-        ".....kkkkkkkkkkk.."
-      ],
-      "anchor": [
-        9,
-        12
-      ]
-    },
-    "head-l-hurt": {
-      "rows": [
-        "......kkkkkkk.....",
-        "....kkEEEeeeekk...",
-        "...kEEEEEEEEeeek..",
-        "..kEEEEEEEEEEEeek.",
-        ".kfEEEEEEEEEEEEEk.",
-        "kfEEEEEEEEEEEEEEEk",
-        "kFffffffffffEEEEfk",
-        ".kkppppaaaAzkEEEfk",
-        "..kPpkkppaAzkEEEfk",
-        "..kPPppppaAzkEEffk",
-        "...kqqpppAzzkEffFk",
-        "....kkqqqzzkkfFFk.",
-        ".....kkkkkkkkkkk.."
-      ],
-      "anchor": [
-        9,
-        12
-      ]
-    },
-    "body-l": {
-      "rows": [
-        ".kfEEeEEfk",
-        "kfEEEEeEEk",
-        "kfEEEEEeEk",
-        "kfEEEPPEEk",
-        "kkUUPPUUkk",
-        "kEEEEEEEEk",
-        "kFfffffffk"
-      ],
-      "anchor": [
-        4,
-        6
-      ],
-      "points": {
-        "neck": [
-          4,
-          -1
-        ]
-      }
-    },
-    "body-l-fwd": {
-      "rows": [
-        ".kfEEeEEfk",
-        "kfEEEEeEEk",
-        "kfEEEEEeEk",
-        "kfEPPEEEEk",
-        "kkPPUUUUkk",
-        "kEEEEEEEEk",
-        "kFfffffffk"
-      ],
-      "anchor": [
-        4,
-        6
-      ],
-      "points": {
-        "neck": [
-          4,
-          -1
-        ]
-      }
-    },
-    "body-l-back": {
-      "rows": [
-        ".kfEEeEEfk",
-        "kfEEEEeEEk",
-        "kfEEEEEeEk",
-        "kfEEEEPPEk",
-        "kkUUUUPPkk",
-        "kEEEEEEEEk",
-        "kFfffffffk"
-      ],
-      "anchor": [
-        4,
-        6
-      ],
-      "points": {
-        "neck": [
-          4,
-          -1
-        ]
-      }
-    },
-    "legs-l": {
-      "rows": [
-        ".kBBkBBk.",
-        "kUUUkUUUk"
-      ],
-      "anchor": [
-        4,
-        1
-      ],
-      "points": {
-        "hip": [
-          4,
-          -1
-        ]
-      }
-    },
-    "legs-l-c1": {
-      "rows": [
-        ".kBBk...kVVk.",
-        "kUUUk...kUUUk"
-      ],
-      "anchor": [
-        6,
-        1
-      ],
-      "points": {
-        "hip": [
-          6,
-          -1
-        ],
-        "foot": [
-          2,
-          1
-        ]
-      }
-    },
-    "legs-l-c2": {
-      "rows": [
-        ".kVVk...kBBk.",
-        "kUUUk...kUUUk"
-      ],
-      "anchor": [
-        6,
-        1
-      ],
-      "points": {
-        "hip": [
-          6,
-          -1
-        ],
-        "foot": [
-          2,
-          1
-        ]
-      }
-    },
-    "legs-l-pass": {
-      "rows": [
-        ".kBBVk...",
-        ".kBBVk...",
-        ".kUUUUk.."
-      ],
-      "anchor": [
-        3,
-        2
-      ],
-      "points": {
-        "hip": [
-          3,
-          -1
-        ]
-      }
-    },
-    "legs-l-pa": {
-      "rows": [
-        ".kBBkVk..",
-        "kBBkUUk..",
-        "kUUUkk..."
-      ],
-      "anchor": [
-        3,
-        2
-      ],
-      "points": {
-        "hip": [
-          3,
-          -1
-        ]
-      }
-    },
-    "legs-l-pb": {
-      "rows": [
-        ".kBBVk...",
-        "UUUkVk...",
-        ".kkUUUk.."
-      ],
-      "anchor": [
-        3,
-        2
-      ],
-      "points": {
-        "hip": [
-          3,
-          -1
-        ]
-      }
-    },
-    "body-l-noarm": {
-      "rows": [
-        ".kfEEeEEfk",
-        "kfEEEEeEEk",
-        "kfEEEEEeEk",
-        "kfEEEEEEEk",
-        "kkUUUUUUkk",
-        "kEEEEEEEEk",
-        "kFfffffffk"
-      ],
-      "anchor": [
-        4,
-        6
-      ],
-      "points": {
-        "neck": [
-          4,
-          -1
-        ],
-        "shoulder": [
-          3,
-          1
-        ]
-      }
-    },
-    "sa-l-windup": {
-      "rows": [
-        ".kkkk.k..........",
-        "kEEfqkXkkkkkkkk..",
-        "kEfqqkXmmmmmmmmk.",
-        ".kkkkkXMMMMMMMvk.",
-        "......k.kkkkkkk.."
-      ],
-      "anchor": [
-        0,
-        2
-      ],
-      "points": {
-        "tip": [
-          15,
-          2
-        ]
-      }
-    },
-    "sa-l-strike": {
-      "rows": [
-        "..........k.kkkk.",
-        "..kkkkkkkkXkqfEEk",
-        ".kmmmmmmmmXkqqfEk",
-        ".kvMMMMMMMXkkkkk.",
-        "..kkkkkkk.k......"
-      ],
-      "anchor": [
-        16,
-        2
-      ],
-      "points": {
-        "tip": [
-          1,
-          2
-        ]
-      }
-    },
-    "sa-l-recover": {
-      "rows": [
-        ".....kEk",
-        "....kfEk",
-        "...kqqk.",
-        "..kiXkk.",
-        ".kMmk...",
-        "kMmk....",
-        "kmk.....",
-        ".k......"
-      ],
-      "anchor": [
-        6,
-        0
-      ],
-      "points": {
-        "tip": [
-          1,
-          7
-        ]
-      }
     }
   },
   "poses": [
@@ -1804,197 +1464,27 @@
     },
     {
       "name": "idle-l",
-      "duration": 600,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l"
-        },
-        {
-          "name": "body",
-          "part": "body-l",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ]
+      "mirror": "idle-r"
     },
     {
       "name": "breathe-l",
-      "duration": 400,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l-pass"
-        },
-        {
-          "name": "body",
-          "part": "body-l",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ]
+      "mirror": "breathe-r"
     },
     {
       "name": "walk-l-1",
-      "duration": 140,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l-c1"
-        },
-        {
-          "name": "body",
-          "part": "body-l-back",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ],
-      "markers": [
-        {
-          "name": "step",
-          "part": "legs",
-          "point": "foot"
-        }
-      ]
+      "mirror": "walk-r-1"
     },
     {
       "name": "walk-l-2",
-      "duration": 120,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l-pb"
-        },
-        {
-          "name": "body",
-          "part": "body-l",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ]
+      "mirror": "walk-r-2"
     },
     {
       "name": "walk-l-3",
-      "duration": 140,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l-c2"
-        },
-        {
-          "name": "body",
-          "part": "body-l-fwd",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ],
-      "markers": [
-        {
-          "name": "step",
-          "part": "legs",
-          "point": "foot"
-        }
-      ]
+      "mirror": "walk-r-3"
     },
     {
       "name": "walk-l-4",
-      "duration": 120,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l-pa"
-        },
-        {
-          "name": "body",
-          "part": "body-l",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ]
+      "mirror": "walk-r-4"
     },
     {
       "name": "hurt-d",
@@ -2058,33 +1548,7 @@
     },
     {
       "name": "hurt-l",
-      "duration": 300,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l"
-        },
-        {
-          "name": "body",
-          "part": "body-l",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l-hurt",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        }
-      ]
+      "mirror": "hurt-r"
     },
     {
       "name": "attack-d-1",
@@ -2493,138 +1957,15 @@
     },
     {
       "name": "attack-l-1",
-      "duration": 70,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l"
-        },
-        {
-          "name": "body",
-          "part": "body-l-noarm",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        },
-        {
-          "name": "sword",
-          "part": "sa-l-windup",
-          "attach": {
-            "part": "body",
-            "point": "shoulder"
-          }
-        }
-      ],
-      "markers": [
-        {
-          "name": "blade",
-          "part": "sword",
-          "point": "tip"
-        }
-      ]
+      "mirror": "attack-r-1"
     },
     {
       "name": "attack-l-2",
-      "duration": 150,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l"
-        },
-        {
-          "name": "body",
-          "part": "body-l-noarm",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        },
-        {
-          "name": "sword",
-          "part": "sa-l-strike",
-          "attach": {
-            "part": "body",
-            "point": "shoulder"
-          }
-        }
-      ],
-      "markers": [
-        {
-          "name": "hit",
-          "part": "sword",
-          "point": "tip"
-        }
-      ]
+      "mirror": "attack-r-2"
     },
     {
       "name": "attack-l-3",
-      "duration": 90,
-      "origin": [
-        20,
-        31
-      ],
-      "parts": [
-        {
-          "name": "legs",
-          "part": "legs-l"
-        },
-        {
-          "name": "body",
-          "part": "body-l-noarm",
-          "attach": {
-            "part": "legs",
-            "point": "hip"
-          }
-        },
-        {
-          "name": "head",
-          "part": "head-l",
-          "attach": {
-            "part": "body",
-            "point": "neck"
-          }
-        },
-        {
-          "name": "sword",
-          "part": "sa-l-recover",
-          "attach": {
-            "part": "body",
-            "point": "shoulder"
-          }
-        }
-      ],
-      "markers": [
-        {
-          "name": "blade",
-          "part": "sword",
-          "point": "tip"
-        }
-      ]
+      "mirror": "attack-r-3"
     },
     {
       "name": "hold-up",
@@ -2664,7 +2005,8 @@
         },
         {
           "name": "armR",
-          "part": "arm-up-r",
+          "part": "arm-up-l",
+          "flipX": true,
           "attach": {
             "part": "body",
             "point": "shoulderR"
@@ -2783,6 +2125,7 @@
     }
   },
   "sheet": {
-    "columns": 8
+    "columns": 8,
+    "trim": true
   }
 }

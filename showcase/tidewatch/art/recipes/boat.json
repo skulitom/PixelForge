@@ -4,13 +4,14 @@
   "width": 48,
   "height": 32,
   "palette": {
-    "k": "#1b1528",
-    "w": "#effcff",
-    "W": "#97e3e3",
-    "o": "#f0b87c",
-    "O": "#c9844f",
-    "u": "#975a3a",
-    "U": "#663b2e"
+    "$ref": "../palette.json"
+  },
+  "anchor": [
+    24,
+    24
+  ],
+  "sheet": {
+    "trim": true
   },
   "frames": [
     {

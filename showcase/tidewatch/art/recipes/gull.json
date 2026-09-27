@@ -4,11 +4,12 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "7": "#ffffff",
-    "8": "#d2d9e8",
-    "k": "#1b1528",
-    "X": "#ffe46e"
+    "$ref": "../palette.json"
   },
+  "anchor": [
+    8,
+    8
+  ],
   "frames": [
     {
       "name": "up-0",
@@ -170,5 +171,8 @@
         "glide-4"
       ]
     }
+  },
+  "sheet": {
+    "trim": true
   }
 }

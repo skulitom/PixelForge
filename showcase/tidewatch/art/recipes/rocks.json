@@ -4,17 +4,15 @@
   "width": 32,
   "height": 32,
   "palette": {
-    "k": "#1b1528",
-    "r": "#f0ece2",
-    "R": "#c9c2b4",
-    "t": "#9a918c",
-    "T": "#6b6478",
-    "y": "#463f5a",
-    "_": "#1b152866"
+    "$ref": "../palette.json"
   },
   "frames": [
     {
       "name": "boulder-a",
+      "anchor": [
+        16,
+        23
+      ],
       "ops": [
         {
           "op": "grid",
@@ -59,6 +57,10 @@
     },
     {
       "name": "boulder-b",
+      "anchor": [
+        16,
+        20
+      ],
       "ops": [
         {
           "op": "grid",
@@ -101,5 +103,8 @@
         }
       ]
     }
-  ]
+  ],
+  "sheet": {
+    "trim": true
+  }
 }

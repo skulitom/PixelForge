@@ -28,7 +28,8 @@ test('scene honors anchors, playback durations, state changes and persistent aft
   assert.equal(b.placements[0].frame, 'a'); assert.equal(settled.placements[0].frame, 'b');
   assert.deepEqual(renderScene(prepared, { time: 900 }).data, settled.data);
   assert.throws(() => prepareScene({ ...scene, instances: [{ ...scene.instances[0], scale: 1.25 }] }), /fractional/);
-  assert.throws(() => prepareScene({ ...scene, instances: [{ ...scene.instances[0], repeat: [32, 32], scale: 16 }, scene.instances[0]] }), /1,024/);
+  assert.throws(() => prepareScene({ ...scene, instances: Array(5).fill({ ...scene.instances[0], repeat: [32, 32] }) }), /4,096 draws/);
+  assert.throws(() => prepareScene({ ...scene, instances: [{ ...scene.instances[0], repeat: [32, 32], scale: 16 }, { ...scene.instances[0], repeat: [32, 32], scale: 16 }, { ...scene.instances[0], repeat: [32, 32], scale: 16 }, { ...scene.instances[0], repeat: [32, 32], scale: 16 }, scene.instances[0]] }), /4,194,304 drawing pixels/);
   assert.throws(() => prepareScene({ ...scene, instances: [{ ...scene.instances[0], sequence: [{ time: 4, frame: 'a' }, { time: 3, frame: 'b' }] }] }), /increase strictly/);
   const moving = prepareScene({ ...scene, instances: [{ ...scene.instances[0], trajectory: [{ time: 0, at: [3, 4] }, { time: 100, at: [6, 4] }] }] });
   assert.equal(renderScene(moving, { time: 50 }).placements[0].x, 4);
@@ -50,10 +51,15 @@ test('material passes align exactly; light direction changes hand-authored norma
   assert.equal(JSON.parse(bundle.files.get('assets/0/atlas.json')).meta.image, 'color.png');
   for (const file of Object.values(contract.assets.prop.passes)) assert.equal(decodePNG(bundle.files.get(file)).width, 1);
 });
-test('tile repeat exposes a seeded edge mismatch with coordinates', () => {
-  const rendered = renderProject(asset), tile = inspectTile(rendered, 'a');
-  assert.equal(tile.width, 6); assert.equal(tile.height, 6);
-  assert.ok(tile.mismatches.horizontal.includes(0)); assert.ok(tile.mismatches.vertical.includes(0));
+test('tile repeat exposes a seeded doubled edge line and leaves a clean tile unflagged', () => {
+  const edged = renderProject({ version: 1, name: 'edged', width: 4, height: 4, palette: { g: '#4a9a4a', k: '#1b1528' }, frames: [
+    { name: 'lined', ops: [{ op: 'rect', w: 4, h: 4, color: 'g' }, { op: 'line', x2: 0, y2: 3, color: 'k' }, { op: 'line', x: 3, x2: 3, y2: 3, color: 'k' }] },
+    { name: 'clean', ops: [{ op: 'rect', w: 4, h: 4, color: 'g' }, { op: 'pixel', x: 1, y: 1, color: 'k' }] }
+  ] });
+  const tile = inspectTile(edged, 'lined');
+  assert.equal(tile.width, 12); assert.equal(tile.height, 12);
+  assert.deepEqual(tile.leftRight.doubledRows, [0, 1, 2, 3]); assert.equal(tile.leftRight.suspicious, true);
+  assert.equal(inspectTile(edged, 'clean').leftRight.suspicious, false);
 });
 test('quality examples validate, preserve source poses and create deterministic scenes', async () => {
   const source = JSON.parse(await readFile(new URL('../examples/quality/hollow.scene.json', import.meta.url), 'utf8'));

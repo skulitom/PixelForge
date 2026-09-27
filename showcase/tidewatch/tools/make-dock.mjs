@@ -1,5 +1,5 @@
 // One-time scaffold for the pier tiles (16x16) and headland boulders (32x32).
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const force = { force: process.argv.includes('--force') };
 const mirror = rows => rows.map(row => [...row].reverse().join(''));
 // Planks run across the pier; every fourth row is a gap. Grain specks are hand-placed per plank.
@@ -15,7 +15,7 @@ const endR = [...deckR.slice(0, 12), 'uuuuuuuuuuuuuuUk', 'UUUUUUUUUUUUUUkk', 'kk
 const postsL = ['.kUuk...........', '.kUuk...........', '.kUuk...........', '.kUuk...........', 'wkUukw..........', '.WWWW...........', '................', ...Array(9).fill('................')];
 const postsR = mirror(postsL);
 const tiles = { 'deck-l': deckL, 'deck-r': deckR, 'end-l': endL, 'end-r': endR, 'posts-l': postsL, 'posts-r': postsR };
-writeJSON('art/recipes/dock.json', { version: 1, name: 'dock', width: 16, height: 16, palette: paletteFor(Object.values(tiles)), frames: Object.entries(tiles).map(([name, rows]) => ({ name, ops: [{ op: 'grid', x: 0, y: 0, rows }] })), sheet: { columns: 6 } }, force);
+writeJSON('art/recipes/dock.json', { version: 1, name: 'dock', width: 16, height: 16, palette: linkedPalette(), frames: Object.entries(tiles).map(([name, rows]) => ({ name, ops: [{ op: 'grid', x: 0, y: 0, rows }] })), sheet: { columns: 6 } }, force);
 // Boulders: a broad lit top plane, a darker face, cracks following the planes, a grounded shadow.
 const boulders = {
   'boulder-a': [
@@ -38,5 +38,6 @@ const boulders = {
     ...Array(8).fill('................................')
   ].map(r => r.slice(0, 32))
 };
-writeJSON('art/recipes/rocks.json', { version: 1, name: 'rocks', width: 32, height: 32, palette: paletteFor(Object.values(boulders)), frames: Object.entries(boulders).map(([name, rows]) => ({ name, ops: [{ op: 'grid', x: 0, y: 0, rows }] })) }, force);
+const ROCK_ANCHORS = { 'boulder-a': [16, 23], 'boulder-b': [16, 20] };
+writeJSON('art/recipes/rocks.json', { version: 1, name: 'rocks', width: 32, height: 32, palette: linkedPalette(), frames: Object.entries(boulders).map(([name, rows]) => ({ name, anchor: ROCK_ANCHORS[name], ops: [{ op: 'grid', x: 0, y: 0, rows }] })), sheet: { trim: true } }, force);
 console.log('dock and rocks written');

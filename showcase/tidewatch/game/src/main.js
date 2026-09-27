@@ -3,9 +3,9 @@ import { Renderer, VIEW_W, VIEW_H } from './render.js';
 import { UI } from './ui.js';
 import { Input } from './input.js';
 import { Sound } from './audio.js';
-import { World, ANCHORS } from './world.js';
+import { World } from './world.js';
 import { TILE, COLS, ROWS, at, isSand, isGrass } from './map.js';
-import { maskAt } from './autotile.js';
+import { neighbourMask } from './pixelforge/autotile.js';
 
 const NAMES = ['water', 'shore', 'grass', 'dock', 'props', 'flora', 'rocks', 'lighthouse', 'cottage', 'lamp', 'boat', 'keeper', 'crab', 'jelly', 'gull', 'fisher', 'fx', 'slash', 'pickups', 'ui', 'dialog', 'font'];
 const ATLAS_OF = { palm: 'flora', oak: 'flora', 'boulder-a': 'rocks', 'boulder-b': 'rocks', lighthouse: 'lighthouse', cottage: 'cottage', lamp: 'lamp', fisher: 'fisher', boat: 'boat' };
@@ -13,28 +13,28 @@ const PHASES = { day: [1, 1, 1], dusk: [1.0, 0.8, 0.64], night: [0.2, 0.25, 0.46
 const canvas = document.getElementById('game'), stage = document.getElementById('stage');
 const status = document.getElementById('status');
 
-const [atlases, keeperMeta, fontMap] = await Promise.all([loadAll(NAMES), fetch('./assets/keeper.meta.json').then(r => r.json()), fetch('./assets/font.map.json').then(r => r.json())]);
+const [atlases, fontMap] = await Promise.all([loadAll(NAMES), fetch('./assets/font.map.json').then(r => r.json())]);
 const renderer = new Renderer(canvas), ui = new UI(renderer.out, atlases, fontMap), input = new Input(document), sound = new Sound();
-let world = new World(keeperMeta), mode = 'title', paused = false, typed = 0, typeClock = 0, last = performance.now(), accumulator = 0;
+// The keeper atlas carries the pose anchors and marker points (blade tips, held item) the simulation needs.
+let world = new World(atlases.keeper.meta), mode = 'title', paused = false, typed = 0, typeClock = 0, last = performance.now(), accumulator = 0;
 let ambient = [1, 1, 1], cam = { x: 0, y: 0 }, endingShown = false, fps = { frames: 0, time: 0, value: 60 };
 window.__tidewatch = { get world() { return world; }, get mode() { return mode; }, get renderer() { return renderer; }, get fps() { return fps.value; }, get cam() { return cam; }, get typed() { return typed; },
   start: () => { if (mode === 'title') mode = 'play'; },
   // Deterministic stepping for tests and headless panes where requestAnimationFrame is throttled.
   advance(ms) { let now = performance.now(); for (let t = 0; t < ms; t += 1000 / 60) { now += 1000 / 60; accumulator += 1000 / 60; fps.frames = 0; tick(1000 / 60, now); } } };
 
-// Static terrain: autotile masks are resolved once, then drawn each frame with the atlas's own animation timing.
+// Static terrain: PixelForge's blob masks are resolved once; each shore tile plays its own compiled surf cycle.
 const masks = [];
 for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-  masks.push({ sand: isSand(x, y) ? maskAt(null, x, y, (_, i, j) => isSand(i, j)) : -1, grass: isGrass(x, y) ? maskAt(null, x, y, (_, i, j) => isGrass(i, j)) : -1, variant: 'abc'[(x * 7 + y * 13 + ((x * y) % 5)) % 3] });
+  masks.push({ sand: isSand(x, y) ? neighbourMask('blob', (dx, dy) => isSand(x + dx, y + dy)) : -1, grass: isGrass(x, y) ? neighbourMask('blob', (dx, dy) => isGrass(x + dx, y + dy)) : -1, variant: 'abc'[(x * 7 + y * 13 + ((x * y) % 5)) % 3] });
 }
 function drawTerrain(time) {
   const x0 = Math.max(0, Math.floor(cam.x / TILE)), y0 = Math.max(0, Math.floor(cam.y / TILE));
   const x1 = Math.min(COLS - 1, Math.floor((cam.x + VIEW_W) / TILE)), y1 = Math.min(ROWS - 1, Math.floor((cam.y + VIEW_H) / TILE));
-  const foam = frameAt(atlases.shore, 'foam', time).split('-').pop();
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const m = masks[y * COLS + x], c = at(x, y);
     if (m.sand !== 255 || c === 'D') renderer.draw(atlases.water, frameAt(atlases.water, `shimmer-${m.variant}`, time + (x % 2) * 130), x * TILE, y * TILE);
-    if (m.sand >= 0) renderer.draw(atlases.shore, `shore-${m.sand}-${m.sand === 255 ? 0 : foam}`, x * TILE, y * TILE);
+    if (m.sand >= 0) renderer.draw(atlases.shore, frameAt(atlases.shore, `surf-${m.sand}`, time), x * TILE, y * TILE);
     if (m.grass >= 0) renderer.draw(atlases.grass, `grass-${m.grass}`, x * TILE, y * TILE);
     if (c === 'D' || c === 'P') {
       const side = at(x - 1, y) === c ? 'r' : 'l', end = at(x, y + 1) !== 'D';
@@ -42,7 +42,8 @@ function drawTerrain(time) {
     }
   }
 }
-function place(atlasName, frame, x, y, anchor, opts) { renderer.draw(atlases[atlasName], frame, x - anchor[0], y - anchor[1], opts); }
+// Sprites are drawn at their ground point; each atlas frame's anchor says which pixel stands there.
+function place(atlasName, frame, x, y, opts) { renderer.draw(atlases[atlasName], frame, x, y, opts); }
 function shadow(x, y, w) { for (const [dy, inset] of [[-1, 2], [0, 0], [1, 2]]) renderer.rect(x - w / 2 + inset, y + dy, w - inset * 2, 1, 'rgba(27,21,40,0.35)'); }
 function propFrame(p, time) {
   switch (p.kind) {
@@ -67,27 +68,27 @@ function playerFrame(p) {
 }
 function drawWorld(time) {
   drawTerrain(time);
-  for (const p of world.props) if (p.alive && p.flat) place('props', p.kind, p.x, p.y, ANCHORS[p.kind]);
+  for (const p of world.props) if (p.alive && p.flat) place('props', p.kind, p.x, p.y);
   const list = [];
-  for (const p of world.props) if (p.alive && !p.flat) list.push({ y: p.y + (p.kind === 'boat' ? -40 : 0), draw: () => place(ATLAS_OF[p.kind] ?? 'props', propFrame(p, time), p.x, p.y, ANCHORS[p.cut ? `${p.kind}-cut` : p.kind] ?? ANCHORS[p.kind]) });
+  for (const p of world.props) if (p.alive && !p.flat) list.push({ y: p.y + (p.kind === 'boat' ? -40 : 0), draw: () => place(ATLAS_OF[p.kind] ?? 'props', propFrame(p, time), p.x, p.y) });
   for (const e of world.enemies) if (e.alive) list.push({ y: e.y, draw: () => {
     shadow(e.x, e.y, e.kind === 'crab' ? 14 : 10);
     const anim = e.state === 'snap' ? 'snap' : e.state === 'hurt' ? 'hurt' : e.state === 'hop' ? 'hop' : e.state === 'walk' ? 'walk' : 'idle';
     const atlas = atlases[e.kind], lift = e.kind === 'jelly' && e.state === 'hop' && e.t > 110 && e.t < 400 ? Math.round(Math.sin((e.t - 110) / 290 * Math.PI) * 6) : 0;
-    place(e.kind, frameAt(atlas, anim, e.t), e.x, e.y - lift, ANCHORS[e.kind], { flip: e.kind === 'crab' && e.dir < 0 && e.state !== 'snap' });
+    place(e.kind, frameAt(atlas, anim, e.t), e.x, e.y - lift, { flip: e.kind === 'crab' && e.dir < 0 && e.state !== 'snap' });
   } });
-  for (const k of world.pickups) list.push({ y: k.y, draw: () => { shadow(k.x, k.y, 8); place('pickups', frameAt(atlases.pickups, k.kind, k.t), k.x, k.y - Math.round(k.z), ANCHORS.pickup); } });
+  for (const k of world.pickups) list.push({ y: k.y, draw: () => { shadow(k.x, k.y, 8); place('pickups', frameAt(atlases.pickups, k.kind, k.t), k.x, k.y - Math.round(k.z)); } });
   const p = world.player;
   list.push({ y: p.y, draw: () => {
     shadow(p.x, p.y, 12);
     if (p.inv > 0 && p.state !== 'hurt' && Math.floor(p.inv / 70) % 2) return;
-    place('keeper', playerFrame(p), p.x, p.y, ANCHORS.keeper);
-    if (p.state === 'hold' && p.held) { const m = keeperMeta.poses['hold-up'].markers[0].at; place('pickups', frameAt(atlases.pickups, p.held, p.t), p.x - 20 + m[0], p.y - 31 + m[1], ANCHORS.pickup); }
+    place('keeper', playerFrame(p), p.x, p.y);
+    if (p.state === 'hold' && p.held) { const pose = atlases.keeper.frames['hold-up'], item = pose.points.item; place('pickups', frameAt(atlases.pickups, p.held, p.t), p.x - pose.anchor.x + item.x, p.y - pose.anchor.y + item.y); }
   } });
   list.sort((a, b) => a.y - b.y).forEach(item => item.draw());
-  for (const e of world.effects) place(e.atlas, frameAt(atlases[e.atlas], e.anim, e.t), e.x, e.y, ANCHORS[e.atlas === 'slash' ? 'slash' : 'fx'], { lightPasses: e.atlas !== 'slash' });
+  for (const e of world.effects) place(e.atlas, frameAt(atlases[e.atlas], e.anim, e.t), e.x, e.y, { lightPasses: e.atlas !== 'slash' });
   world.effects = world.effects.filter(e => !animationDone(atlases[e.atlas], e.anim, e.t));
-  for (const g of world.gulls) place('gull', frameAt(atlases.gull, Math.floor(g.t / 2400) % 3 === 2 ? 'glide' : 'flap', g.t), g.x, g.y, ANCHORS.gull, { flip: g.vx < 0 });
+  for (const g of world.gulls) place('gull', frameAt(atlases.gull, Math.floor(g.t / 2400) % 3 === 2 ? 'glide' : 'flap', g.t), g.x, g.y, { flip: g.vx < 0 });
 }
 function lightsFor(time) {
   const lights = [], f = world.flags;

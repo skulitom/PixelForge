@@ -4,212 +4,58 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "g": "#2a6b45",
-    "h": "#4a9a4a",
-    "j": "#7fbd4f",
-    "l": "#c4df6a",
-    "_": "#1b152866"
+    "$ref": "../palette.json"
   },
   "symbols": {
-    "q-tl-o": [
-      "........",
-      "........",
-      "........",
-      ".....ljj",
-      "...jjjjh",
-      "...jjhhj",
-      "...jhhjh",
-      "...jhhhh"
-    ],
-    "q-tr-h": [
-      "........",
-      "........",
-      ".l...l..",
-      "jjggjjjg",
-      "hgj_jhgh",
-      "hhjjjhhh",
-      "jhhhhhhh",
-      "hhhhhhhh"
-    ],
-    "q-bl-v": [
-      "...ghhhh",
-      "..._jhhh",
-      "....jhhh",
-      "..jjjjhh",
-      "...jhhhh",
-      "...jhhhh",
-      "...jhhhh",
-      "...jhhhh"
-    ],
-    "q-br-f": [
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhjhhhh",
-      "hhhhhhhh",
-      "hgghhhhh",
-      "hhhhhhhh",
-      "hhhhhhjh",
-      "hhhhhhhj"
-    ],
-    "q-tl-h": [
-      "........",
-      "..l.....",
-      "..j..l..",
-      ".ljjjjjj",
-      "jjjhhhhh",
-      "hhhhhhhj",
-      "hhhhhhjh",
-      "hghhhhhh"
-    ],
-    "q-tr-o": [
-      "........",
-      "........",
-      ".ll.....",
-      "jgj.....",
-      "hhjg....",
-      "hhhhg...",
-      "jhhhg...",
-      "hhhhg..."
-    ],
-    "q-bl-f": [
-      "hhhhhhhh",
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhhhjhh",
-      "hhhhhhhh",
-      "hhhhhhhh",
-      "hjhhhhhh",
-      "hhjhhhhh"
-    ],
-    "q-br-v": [
-      "hhhhg...",
-      "hhhhg...",
-      "hhhjg...",
-      "hhhgg...",
-      "hggg_...",
-      "hhhg....",
-      "hhhhg...",
-      "hhhhg..."
-    ],
-    "q-tl-v": [
-      "...jhhhh",
-      "...jhhhh",
-      "...jhhhh",
-      "...ghhhh",
-      "..._jhhh",
-      "....jhhj",
-      "...jjhjh",
-      "...jhhhh"
-    ],
-    "q-tr-f": [
-      "hhhhhhhh",
-      "hhjhhhhh",
-      "hhhjhhhh",
-      "hhhhhhhh",
-      "hhhhhhgh",
-      "hhhhhhhh",
-      "jhhhhhhh",
-      "hhhhhhhh"
-    ],
-    "q-bl-o": [
-      "...jhhhh",
-      "...jhhhh",
-      "...gjhhh",
-      "..._gghh",
-      "....__gg",
-      "......__",
-      "........",
-      "........"
-    ],
-    "q-br-h": [
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhjhhhh",
-      "hhhhhggg",
-      "gggggg__",
-      "______..",
-      "........",
-      "........"
-    ],
-    "q-tl-f": [
-      "hhhhhhhh",
-      "hhhhhhhh",
-      "hhjhhhhh",
-      "hhhjhhhh",
-      "hhhhhhhh",
-      "hhhhhhhj",
-      "hhhhhhjh",
-      "hghhhhhh"
-    ],
-    "q-tr-v": [
-      "hhhhg...",
-      "hhjhg...",
-      "hhhgg...",
-      "hhhg_...",
-      "hhhg....",
-      "hhhhg...",
-      "jhhhg...",
-      "hhhhg..."
-    ],
-    "q-bl-h": [
-      "hhhhhhhh",
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhggghh",
-      "gggg__gg",
-      "____..__",
-      "........",
-      "........"
-    ],
-    "q-br-o": [
-      "hhhhg...",
-      "hhhhg...",
-      "hhhgg...",
-      "hhhg_...",
-      "gggg....",
-      "____....",
-      "........",
-      "........"
-    ],
-    "q-br-i": [
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhjhhhh",
-      "hhhhhhhh",
-      "hgghhhgg",
-      "hhhhhgg_",
-      "hhhhgg_.",
-      "hhhhg_.."
-    ],
-    "q-bl-i": [
-      "hhhhhhhh",
-      "hhhhhhhh",
-      "hhhhjhhh",
-      "hhhhhjhh",
-      "ghhhhhhh",
-      "_ghhhhhh",
-      "._ghhhhh",
-      ".._jhhhh"
-    ],
-    "q-tr-i": [
-      "hhhhgl..",
-      "hhjhhg..",
-      "hhhjhhg.",
-      "hhhhhhhj",
-      "hhhhhhgh",
-      "hhhhhhhh",
-      "jhhhhhhh",
-      "hhhhhhhh"
-    ],
-    "q-tl-i": [
-      "..jjhhhh",
-      ".ljjhhhh",
-      ".jjhhhhh",
-      "jjhjhhhh",
-      "hhhhhhhh",
-      "hhhhhhhj",
-      "hhhhhhjh",
-      "hghhhhhh"
+    "template": [
+      "..................jjhhhhhhhhgl..",
+      ".................ljjhhhhhhjhhg..",
+      ".........ll......jjhhhhhhhhjhhg.",
+      ".....ljjjgj.....jjhjhhhhhhhhhhhj",
+      "...jjjjhhhjg....hhhhhhhhhhhhhhgh",
+      "...jjhhjhhhhg...hhhhhhhjhhhhhhhh",
+      "...jhhjhjhhhg...hhhhhhjhjhhhhhhh",
+      "...jhhhhhhhhg...hghhhhhhhhhhhhhh",
+      "...jhhhhhhhhg...hhhhhhhhhhhhhhhh",
+      "...jhhhhhhhhg...hhhhhhhhhhhhjhhh",
+      "...gjhhhhhhgg...hhhhjhhhhhhjhhhh",
+      "..._gghhhhhg_...hhhhhjhhhhhhhhhh",
+      "....__gggggg....ghhhhhhhhgghhhgg",
+      "......______...._ghhhhhhhhhhhgg_",
+      "................._ghhhhhhhhhgg_.",
+      ".................._jhhhhhhhhg_..",
+      "................................",
+      "..................l.............",
+      ".........l...l....j..l...ll.....",
+      ".....ljjjjggjjjg.ljjjjjjjgj.....",
+      "...jjjjhhgj_jhghjjjhhhhhhhjg....",
+      "...jjhhjhhjjjhhhhhhhhhhjhhhhg...",
+      "...jhhjhjhhhhhhhhhhhhhjhjhhhg...",
+      "...jhhhhhhhhhhhhhghhhhhhhhhhg...",
+      "...ghhhhhhhhhhhhhhhhhhhhhhhhg...",
+      "..._jhhhhhhhjhhhhhhhhhhhhhhhg...",
+      "....jhhhhhhjhhhhhhhhjhhhhhhjg...",
+      "..jjjjhhhhhhhhhhhhhhhjhhhhhgg...",
+      "...jhhhhhgghhhhhhhhhhhhhhggg_...",
+      "...jhhhhhhhhhhhhhhhhhhhhhhhg....",
+      "...jhhhhhhhhhhjhhjhhhhhhhhhhg...",
+      "...jhhhhhhhhhhhjhhjhhhhhhhhhg...",
+      "...jhhhhhhhhhhhhhhhhhhhhhhhhg...",
+      "...jhhhhhhjhhhhhhhhhhhhhhhjhg...",
+      "...jhhhhhhhjhhhhhhjhhhhhhhhgg...",
+      "...ghhhhhhhhhhhhhhhjhhhhhhhg_...",
+      "..._jhhhhhhhhhghhhhhhhhhhhhg....",
+      "....jhhjhhhhhhhhhhhhhhhjhhhhg...",
+      "...jjhjhjhhhhhhhhhhhhhjhjhhhg...",
+      "...jhhhhhhhhhhhhhghhhhhhhhhhg...",
+      "...jhhhhhhhhhhhhhhhhhhhhhhhhg...",
+      "...jhhhhhhhhjhhhhhhhhhhhhhhhg...",
+      "...gjhhhhhhjhhhhhhhhjhhhhhhgg...",
+      "..._gghhhhhhhggghhhggghhhhhg_...",
+      "....__gggggggg__gggg__gggggg....",
+      "......________..____..______....",
+      "................................",
+      "................................"
     ]
   },
   "frames": [
@@ -217,26 +63,42 @@
       "name": "grass-0",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -246,26 +108,42 @@
       "name": "grass-1",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -275,26 +153,42 @@
       "name": "grass-4",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -304,26 +198,42 @@
       "name": "grass-5",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -333,26 +243,42 @@
       "name": "grass-7",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -362,26 +288,42 @@
       "name": "grass-16",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -391,26 +333,42 @@
       "name": "grass-17",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -420,26 +378,42 @@
       "name": "grass-20",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -449,26 +423,42 @@
       "name": "grass-21",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -478,26 +468,42 @@
       "name": "grass-23",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -507,26 +513,42 @@
       "name": "grass-28",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -536,26 +558,42 @@
       "name": "grass-29",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -565,26 +603,42 @@
       "name": "grass-31",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 0,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -594,26 +648,42 @@
       "name": "grass-64",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -623,26 +693,42 @@
       "name": "grass-65",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -652,26 +738,42 @@
       "name": "grass-68",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -681,26 +783,42 @@
       "name": "grass-69",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -710,26 +828,42 @@
       "name": "grass-71",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -739,26 +873,42 @@
       "name": "grass-80",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -768,26 +918,42 @@
       "name": "grass-81",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -797,26 +963,42 @@
       "name": "grass-84",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -826,26 +1008,42 @@
       "name": "grass-85",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -855,26 +1053,42 @@
       "name": "grass-87",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -884,26 +1098,42 @@
       "name": "grass-92",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -913,26 +1143,42 @@
       "name": "grass-93",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -942,26 +1188,42 @@
       "name": "grass-95",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -971,26 +1233,42 @@
       "name": "grass-112",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1000,26 +1278,42 @@
       "name": "grass-113",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1029,26 +1323,42 @@
       "name": "grass-116",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1058,26 +1368,42 @@
       "name": "grass-117",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1087,26 +1413,42 @@
       "name": "grass-119",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1116,26 +1458,42 @@
       "name": "grass-124",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 16,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1145,26 +1503,42 @@
       "name": "grass-125",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1174,26 +1548,42 @@
       "name": "grass-127",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1203,26 +1593,42 @@
       "name": "grass-193",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-o",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1232,26 +1638,42 @@
       "name": "grass-197",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1261,26 +1683,42 @@
       "name": "grass-199",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-h",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 40,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1290,26 +1728,42 @@
       "name": "grass-209",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1319,26 +1773,42 @@
       "name": "grass-213",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1348,26 +1818,42 @@
       "name": "grass-215",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1377,26 +1863,42 @@
       "name": "grass-221",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1406,26 +1908,42 @@
       "name": "grass-223",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1435,26 +1953,42 @@
       "name": "grass-241",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-v",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1464,26 +1998,42 @@
       "name": "grass-245",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1493,26 +2043,42 @@
       "name": "grass-247",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 8,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1522,26 +2088,42 @@
       "name": "grass-253",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-i",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 24,
+          "sy": 0,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
@@ -1551,85 +2133,48 @@
       "name": "grass-255",
       "ops": [
         {
-          "op": "stamp",
-          "symbol": "q-tl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-tr-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 32,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 0
         },
         {
-          "op": "stamp",
-          "symbol": "q-bl-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 16,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 0,
           "y": 8
         },
         {
-          "op": "stamp",
-          "symbol": "q-br-f",
+          "op": "copy",
+          "symbol": "template",
+          "sx": 8,
+          "sy": 24,
+          "w": 8,
+          "h": 8,
           "x": 8,
           "y": 8
         }
       ]
     }
   ],
-  "animations": {
-    "tiles": {
-      "frames": [
-        "grass-0",
-        "grass-1",
-        "grass-4",
-        "grass-5",
-        "grass-7",
-        "grass-16",
-        "grass-17",
-        "grass-20",
-        "grass-21",
-        "grass-23",
-        "grass-28",
-        "grass-29",
-        "grass-31",
-        "grass-64",
-        "grass-65",
-        "grass-68",
-        "grass-69",
-        "grass-71",
-        "grass-80",
-        "grass-81",
-        "grass-84",
-        "grass-85",
-        "grass-87",
-        "grass-92",
-        "grass-93",
-        "grass-95",
-        "grass-112",
-        "grass-113",
-        "grass-116",
-        "grass-117",
-        "grass-119",
-        "grass-124",
-        "grass-125",
-        "grass-127",
-        "grass-193",
-        "grass-197",
-        "grass-199",
-        "grass-209",
-        "grass-213",
-        "grass-215",
-        "grass-221",
-        "grass-223",
-        "grass-241",
-        "grass-245",
-        "grass-247",
-        "grass-253",
-        "grass-255"
-      ]
-    }
-  },
   "sheet": {
     "columns": 16
   }

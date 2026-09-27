@@ -1,7 +1,7 @@
 // Lists the APNG previews written by tools/build-assets.mjs.
 const items = [
   ['keeper-walk-d', 'Keeper walk'], ['keeper-attack-r', 'Cutlass swing'], ['keeper-attack-d', 'Downward strike'], ['crab-snap', 'Crab snap'],
-  ['jelly-hop', 'Brine jelly hop'], ['shore-foam', 'Surf cycle'], ['lighthouse-night', 'Lantern room'], ['flora-palm', 'Palm sway'],
+  ['jelly-hop', 'Brine jelly hop'], ['shore-surf-0', 'Surf cycle'], ['lighthouse-night', 'Lantern room'], ['flora-palm', 'Palm sway'],
   ['fx-leaves', 'Cut grass'], ['fx-poof', 'Poof'], ['fx-splash', 'Splash'], ['slash-slash-d', 'Slash arc'], ['gull-flap', 'Gull'], ['fisher-idle', 'Old Wren'], ['pickups-flint', 'Sunflint']
 ];
 const gallery = document.getElementById('gallery');

@@ -6,12 +6,14 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 
 - `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
+- `src/autotile.js`: browser-compatible blob/cardinal neighbour masks and template quarter layout, shared by scene tilemaps and the autotile compiler in `src/authoring.js`.
+- `src/resolve.js`: Node-side resolution of shared palette files and scene asset references; the renderer itself never reads files.
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer.
-- `schema.json`: generated with `node scripts/generate-schema.js`.
+- `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.
 
 Run `npm test` after functional changes. Keep the schema, authoring reference and runtime validation aligned. Binary export changes should also be checked with an independent image decoder. Do not replace the text-first workflow with a UI-only drawing tool.

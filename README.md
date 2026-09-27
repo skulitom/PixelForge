@@ -118,16 +118,16 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 
 | File | Use |
 | --- | --- |
-| `name.png` | RGBA PNG sprite sheet, with configurable columns, padding and integer scale |
-| `name.atlas.json` | TexturePacker-style JSON hash: rectangles, source sizes, frame durations and named animations |
+| `name.png` | RGBA PNG sprite sheet, with configurable columns, padding and integer scale, or packed by visible bounds with `sheet.trim` |
+| `name.atlas.json` | TexturePacker-style JSON hash: rectangles, trim offsets, source sizes, pivots/anchors, named points, frame durations and named animations |
 | `frames/*.png` | Each frame as a transparent PNG |
 | `animations/*.png` | APNG for each animation, retaining transparency, frame timing and loop behavior |
 | `name.css` | CSS animation classes; supports multi-row sheets and unequal frame durations |
-| `player.js` | Small, dependency-free Canvas player with play, pause, resume and named animations |
+| `player.js` | Small, dependency-free Canvas player with play, pause, resume and named animations, plus `loadSpriteSheet`, `frameAt` and `drawFrame` for games |
 | `name.pixel.json` | Editable source recipe |
 | `preview.html` | Standalone preview you can open directly in a browser |
 
-APNG files use the `.png` extension intentionally. Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers, and compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
 ## Connect an agent through MCP
 
@@ -157,15 +157,18 @@ command = "node"
 args = ["/absolute/path/to/PixelForge/bin/pixelforge.js", "mcp", "--out", "/absolute/path/to/PixelForge/output"]
 ```
 
-The five tools are:
+The eight tools are:
 
-- **`pixel_help`**: authoring guide, full schema and a complete sample.
-- **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets.
-- **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
+- **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes or autotile schemas.
+- **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location.
+- **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
-- **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus output paths. Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
+- **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
+- **`pixel_compile`**: compile a `pixelforge-poses` source or a `pixelforge-autotile` template into a recipe revision, with a contact sheet and optional metadata.
+- **`pixel_scene`**: render a `pixelforge-scene` manifest (tilemaps with autotile legends, sequences, trajectories, lighting) at any time, or export it; assets may be revisions.
+- **`pixel_import`**: import a native-resolution PNG, given as base64 or a file inside the server root, as a lossless recipe revision.
 
-`pixel_patch` also supports compact `grid`, masked `move` and regional `recolor`, with explicit `frame` or `inherited` scope. Large `pixel_render` previews are sampled with total/shown/omitted metadata instead of blocking a valid export; exported animations remain complete. Pose compilation, scene export, guarded overlays and PNG import are available through the CLI/JavaScript API, then compiled sprite recipes use the same five MCP tools.
+`pixel_patch` also supports compact `grid`, masked `move` and regional `recolor`, with explicit `frame` or `inherited` scope, and applies saved correction overlays (`overlay`). Large `pixel_render` previews are sampled with total/shown/omitted metadata instead of blocking a valid export; exported animations remain complete. Palette and scene file references resolve inside the server's `--root` (default: its working directory); requests may be up to 16 MiB, and an oversized request is answered with an error without stopping the server.
 
 Send a recipe once. Each successful recipe-tool response includes a `revision` id that the other tools accept in place of `project`, so later calls, including patches, need not resend the recipe. Validate, inspect, patch and render save immutable snapshots in `<MCP --out directory>/.revisions/`; they survive restarts when you use the same directory, even before an asset export. Prefer an absolute `--out` path. Earlier revisions remain undo points. Older rendered revisions can be recovered from saved bundle recipes. Render also saves the recipe beside the assets.
 
@@ -199,6 +202,20 @@ Or use CSS alone:
 ```
 
 CSS honors reduced-motion preferences. The Canvas API leaves autoplay decisions to the application. Atlas paths in `SpritePlayer.load` resolve relative to the atlas URL.
+
+A game drawing many sprites into one canvas can use the same module's helpers. `drawFrame` places a frame by its anchor (when the recipe declares one) and restores trimmed frames to their original offset:
+
+```html
+<script type="module">
+  import { loadSpriteSheet, frameAt, drawFrame } from './assets/player.js';
+  const hero = await loadSpriteSheet('./assets/hero.atlas.json'), context = canvas.getContext('2d');
+  requestAnimationFrame(function draw(time) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    drawFrame(context, hero, frameAt(hero.atlas, 'walk', time), 64, 96, { scale: 3 }); // (64, 96) is where the anchor lands
+    requestAnimationFrame(draw);
+  });
+</script>
+```
 
 For a game engine, use the atlas rectangles or individual PNGs. For regular-grid importers, set `sheet.padding` to `0` and use the exported frame dimensions. Phaser accepts the JSON-hash frame layout via `load.atlas`; named animation sequences are in the extra `animations` field. See [game integration notes](docs/game-integration.md).
 

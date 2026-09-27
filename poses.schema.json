@@ -26,7 +26,13 @@
     },
     "palette": {
       "type": "object",
-      "maxProperties": 256,
+      "maxProperties": 257,
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "description": "Shared palette file, resolved by the CLI and MCP relative to this recipe. Local entries add to or override it."
+        }
+      },
       "additionalProperties": {
         "type": "string",
         "pattern": "^(transparent|#([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8}))$"
@@ -54,7 +60,8 @@
               "maximum": 4096
             },
             "maxItems": 2,
-            "minItems": 2
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
           },
           "points": {
             "type": "object",
@@ -71,7 +78,8 @@
                 "maximum": 4096
               },
               "maxItems": 2,
-              "minItems": 2
+              "minItems": 2,
+              "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
             }
           }
         },
@@ -104,7 +112,13 @@
               "maximum": 4096
             },
             "maxItems": 2,
-            "minItems": 2
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+          },
+          "mirror": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+            "description": "Reflect an earlier pose around its origin column (parts, points and markers); omit parts, markers and origin."
           },
           "parts": {
             "type": "array",
@@ -129,7 +143,8 @@
                     "maximum": 4096
                   },
                   "maxItems": 2,
-                  "minItems": 2
+                  "minItems": 2,
+                  "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
                 },
                 "attach": {
                   "type": "object",
@@ -150,6 +165,10 @@
                     "point"
                   ],
                   "additionalProperties": false
+                },
+                "flipX": {
+                  "type": "boolean",
+                  "description": "Mirror this part, its anchor and its points inside the part."
                 }
               },
               "required": [
@@ -192,10 +211,21 @@
           }
         },
         "required": [
-          "name",
-          "parts"
+          "name"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "parts"
+            ]
+          },
+          {
+            "required": [
+              "mirror"
+            ]
+          }
+        ]
       },
       "maxItems": 256,
       "minItems": 1
@@ -257,6 +287,10 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 16
+        },
+        "trim": {
+          "type": "boolean",
+          "description": "Pack each frame by its visible bounds; the atlas reports trimmed rectangles with spriteSourceSize. Ignores columns."
         }
       },
       "required": [],
@@ -314,11 +348,56 @@
           "maxItems": 2,
           "minItems": 2
         },
+        "wrap": {
+          "type": "boolean",
+          "description": "Translation wraps around the canvas instead of clipping (scrolling tiles)."
+        },
         "flipX": {
           "type": "boolean"
         },
         "flipY": {
           "type": "boolean"
+        },
+        "palette": {
+          "type": "object",
+          "maxProperties": 256,
+          "additionalProperties": {
+            "type": "string",
+            "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+          },
+          "description": "Recolor project palette keys for this frame only (palette cycling). Keys must exist in the project palette."
+        },
+        "anchor": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -4096,
+            "maximum": 4096
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+        },
+        "points": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+            "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+          },
+          "description": "Named frame positions (hands, hit points, glyph advance), exported in the atlas in exported pixels."
         },
         "ops": {
           "type": "array",
@@ -682,6 +761,18 @@
                 180,
                 270
               ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
             }
           },
           "required": [
@@ -729,6 +820,18 @@
                 180,
                 270
               ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
             }
           },
           "required": [
@@ -736,6 +839,123 @@
             "symbol"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "copy"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "symbol": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "sx": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "sy": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "rotate": {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ]
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "from"
+              ]
+            },
+            {
+              "required": [
+                "symbol"
+              ]
+            }
+          ],
+          "description": "Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA)."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "outline"
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "diagonal": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "color"
+          ],
+          "additionalProperties": false,
+          "description": "Draw a 1px outline around every visible pixel in this buffer (frame or layer); diagonal also fills corners."
         }
       ]
     }

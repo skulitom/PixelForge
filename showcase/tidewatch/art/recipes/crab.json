@@ -4,12 +4,12 @@
   "width": 32,
   "height": 24,
   "palette": {
-    "1": "#ff806a",
-    "2": "#de4444",
-    "3": "#962d42",
-    "7": "#ffffff",
-    "k": "#1b1528"
+    "$ref": "../palette.json"
   },
+  "anchor": [
+    16,
+    19
+  ],
   "symbols": {
     "shell": [
       "....kkkkkkkk....",
@@ -84,35 +84,6 @@
       "kk.k2k2k........k2k.kk",
       "....kk.k2k....k2kk....",
       "........kk....kk......"
-    ],
-    "claw-r-open": [
-      ".kk..kk",
-      "k2k.k1k",
-      "k21k11k",
-      "k2211k.",
-      "kk22k..",
-      "k2kk...",
-      ".kk...."
-    ],
-    "claw-r-closed": [
-      "..kkkk.",
-      ".k2111k",
-      "k22111k",
-      "k2211k.",
-      "kk22k..",
-      "k2kk...",
-      ".kk...."
-    ],
-    "claw-r-raised": [
-      "..kk.kk",
-      ".k2kk1k",
-      ".k2k11k",
-      ".k2211k",
-      ".k221k.",
-      ".k22k..",
-      "kk22k..",
-      "k2kk...",
-      ".kk...."
     ]
   },
   "frames": [
@@ -169,9 +140,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-closed",
+              "symbol": "claw-l-closed",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -230,9 +202,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-closed",
+              "symbol": "claw-l-closed",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -291,9 +264,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-open",
+              "symbol": "claw-l-open",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -352,9 +326,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-closed",
+              "symbol": "claw-l-closed",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -413,9 +388,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-closed",
+              "symbol": "claw-l-closed",
               "x": 23,
-              "y": 7
+              "y": 7,
+              "flipX": true
             }
           ]
         }
@@ -474,9 +450,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-open",
+              "symbol": "claw-l-open",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -535,9 +512,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-open",
+              "symbol": "claw-l-open",
               "x": 23,
-              "y": 7
+              "y": 7,
+              "flipX": true
             }
           ]
         }
@@ -596,9 +574,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-raised",
+              "symbol": "claw-l-raised",
               "x": 23,
-              "y": 5
+              "y": 5,
+              "flipX": true
             }
           ]
         }
@@ -657,9 +636,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-open",
+              "symbol": "claw-l-open",
               "x": 23,
-              "y": 6
+              "y": 6,
+              "flipX": true
             }
           ]
         }
@@ -668,6 +648,12 @@
     {
       "name": "snap-2",
       "duration": 160,
+      "points": {
+        "hit": [
+          3,
+          8
+        ]
+      },
       "layers": [
         {
           "name": "legs",
@@ -718,9 +704,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-closed",
+              "symbol": "claw-l-closed",
               "x": 23,
-              "y": 8
+              "y": 8,
+              "flipX": true
             }
           ]
         }
@@ -779,9 +766,10 @@
           "ops": [
             {
               "op": "stamp",
-              "symbol": "claw-r-open",
+              "symbol": "claw-l-open",
               "x": 23,
-              "y": 6
+              "y": 6,
+              "flipX": true
             }
           ]
         }
@@ -821,6 +809,7 @@
     }
   },
   "sheet": {
-    "columns": 6
+    "columns": 6,
+    "trim": true
   }
 }

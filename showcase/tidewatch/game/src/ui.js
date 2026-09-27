@@ -1,18 +1,9 @@
 // Text and HUD drawn straight onto the output canvas after lighting, so the interface is never darkened.
-// PixelForge frames all share one canvas size and carry no per-frame metadata, so glyph advance widths are
-// measured from the exported pixels at load time.
+// Each glyph frame in the font atlas carries an `advance` point: where the next glyph starts.
 export class UI {
   constructor(ctx, atlases, fontMap) {
     this.g = ctx; this.font = atlases.font; this.ui = atlases.ui; this.box = atlases.dialog; this.map = fontMap;
-    this.widths = new Map(); this.tinted = new Map();
-    const probe = document.createElement('canvas'); probe.width = this.font.color.width; probe.height = this.font.color.height;
-    const pg = probe.getContext('2d'); pg.drawImage(this.font.color, 0, 0);
-    const data = pg.getImageData(0, 0, probe.width, probe.height).data;
-    for (const [name, f] of this.font.lookup) {
-      let right = -1;
-      for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) if (data[((f.y + y) * probe.width + f.x + x) * 4 + 3]) right = Math.max(right, x);
-      this.widths.set(name, right + 2);
-    }
+    this.widths = new Map(Object.entries(this.font.frames).map(([name, frame]) => [name, frame.points.advance.x])); this.tinted = new Map();
   }
   tint(color) {
     if (!this.tinted.has(color)) {

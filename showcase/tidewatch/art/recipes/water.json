@@ -4,10 +4,7 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "W": "#97e3e3",
-    "c": "#4cb8d0",
-    "C": "#3288c0",
-    "n": "#2a61a6"
+    "$ref": "../palette.json"
   },
   "symbols": {
     "crest0": [

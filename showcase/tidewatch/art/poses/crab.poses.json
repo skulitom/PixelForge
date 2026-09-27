@@ -5,11 +5,7 @@
   "width": 32,
   "height": 24,
   "palette": {
-    "1": "#ff806a",
-    "2": "#de4444",
-    "3": "#962d42",
-    "7": "#ffffff",
-    "k": "#1b1528"
+    "$ref": "../palette.json"
   },
   "parts": {
     "shell": {
@@ -169,53 +165,6 @@
         11,
         0
       ]
-    },
-    "claw-r-open": {
-      "rows": [
-        ".kk..kk",
-        "k2k.k1k",
-        "k21k11k",
-        "k2211k.",
-        "kk22k..",
-        "k2kk...",
-        ".kk...."
-      ],
-      "anchor": [
-        0,
-        5
-      ]
-    },
-    "claw-r-closed": {
-      "rows": [
-        "..kkkk.",
-        ".k2111k",
-        "k22111k",
-        "k2211k.",
-        "kk22k..",
-        "k2kk...",
-        ".kk...."
-      ],
-      "anchor": [
-        0,
-        5
-      ]
-    },
-    "claw-r-raised": {
-      "rows": [
-        "..kk.kk",
-        ".k2kk1k",
-        ".k2k11k",
-        ".k2211k",
-        ".k221k.",
-        ".k22k..",
-        "kk22k..",
-        "k2kk...",
-        ".kk...."
-      ],
-      "anchor": [
-        0,
-        7
-      ]
     }
   },
   "poses": [
@@ -224,7 +173,7 @@
       "duration": 900,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -232,12 +181,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -257,7 +210,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-closed",
+          "part": "claw-l-closed",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -270,7 +224,7 @@
       "duration": 140,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -278,12 +232,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -303,7 +261,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-closed",
+          "part": "claw-l-closed",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -316,7 +275,7 @@
       "duration": 500,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -324,12 +283,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -349,7 +312,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-open",
+          "part": "claw-l-open",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -362,7 +326,7 @@
       "duration": 110,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -370,12 +334,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -395,7 +363,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-closed",
+          "part": "claw-l-closed",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -408,7 +377,7 @@
       "duration": 110,
       "origin": [
         16,
-        17
+        19
       ],
       "parts": [
         {
@@ -416,12 +385,16 @@
           "part": "legs-b",
           "at": [
             0,
-            -2
+            -4
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -2
+          ]
         },
         {
           "name": "eyes",
@@ -441,7 +414,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-closed",
+          "part": "claw-l-closed",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -454,7 +428,7 @@
       "duration": 110,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -462,12 +436,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -487,7 +465,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-open",
+          "part": "claw-l-open",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -500,7 +479,7 @@
       "duration": 110,
       "origin": [
         16,
-        17
+        19
       ],
       "parts": [
         {
@@ -508,12 +487,16 @@
           "part": "legs-b",
           "at": [
             0,
-            -2
+            -4
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -2
+          ]
         },
         {
           "name": "eyes",
@@ -533,7 +516,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-open",
+          "part": "claw-l-open",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -546,7 +530,7 @@
       "duration": 220,
       "origin": [
         16,
-        17
+        19
       ],
       "parts": [
         {
@@ -554,12 +538,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -4
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -2
+          ]
         },
         {
           "name": "eyes",
@@ -579,7 +567,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-raised",
+          "part": "claw-l-raised",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -592,7 +581,7 @@
       "duration": 90,
       "origin": [
         16,
-        16
+        19
       ],
       "parts": [
         {
@@ -600,12 +589,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -5
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -3
+          ]
         },
         {
           "name": "eyes",
@@ -625,7 +618,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-open",
+          "part": "claw-l-open",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -638,7 +632,7 @@
       "duration": 160,
       "origin": [
         16,
-        18
+        19
       ],
       "parts": [
         {
@@ -646,12 +640,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -3
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -1
+          ]
         },
         {
           "name": "eyes",
@@ -671,7 +669,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-closed",
+          "part": "claw-l-closed",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -691,7 +690,7 @@
       "duration": 200,
       "origin": [
         16,
-        16
+        19
       ],
       "parts": [
         {
@@ -699,12 +698,16 @@
           "part": "legs-a",
           "at": [
             0,
-            -2
+            -5
           ]
         },
         {
           "name": "shell",
-          "part": "shell"
+          "part": "shell",
+          "at": [
+            0,
+            -3
+          ]
         },
         {
           "name": "eyes",
@@ -724,7 +727,8 @@
         },
         {
           "name": "clawR",
-          "part": "claw-r-open",
+          "part": "claw-l-open",
+          "flipX": true,
           "attach": {
             "part": "shell",
             "point": "clawR"
@@ -766,6 +770,7 @@
     }
   },
   "sheet": {
-    "columns": 6
+    "columns": 6,
+    "trim": true
   }
 }

@@ -4,12 +4,12 @@
   "width": 48,
   "height": 48,
   "palette": {
-    "7": "#ffffff",
-    "8": "#d2d9e8",
-    "W": "#97e3e3",
-    "M": "#b7c2d6",
-    "x": "#fffcea"
+    "$ref": "../palette.json"
   },
+  "anchor": [
+    24,
+    24
+  ],
   "frames": [
     {
       "name": "slash-d-0",
@@ -779,6 +779,7 @@
     }
   },
   "sheet": {
-    "columns": 6
+    "columns": 6,
+    "trim": true
   }
 }

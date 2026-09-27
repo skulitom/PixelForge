@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, createSceneBundle, createOverlay, applyOverlay, importPNG } from '../src/index.js';
+import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -13,17 +13,20 @@ const HELP = `PixelForge — text to pixels, without dependencies
                                            Preview edits; writes only --out and --image
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
   pixelforge compile <poses.json> --out recipe.json [--metadata poses.meta.json]
+  pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
+                                           Build a 47-tile blob or 16-tile cardinal set
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
   pixelforge overlay <recipe.json> --changes edits.json --out fixes.json [--selections regions.json]
   pixelforge import <image.png> --out recipe.json [--atlas atlas.json] [--name imported]
   pixelforge preview [file.json] [--port 4747]
-  pixelforge mcp [--out directory]         Run the MCP server over stdio
+  pixelforge mcp [--out directory] [--root directory]  Run the MCP server over stdio
   pixelforge schema                       Print the JSON Schema
 
 Options: --force allows overwriting exported files. '-' reads JSON from stdin.
+Palette references ({"$ref": "palette.json"}) and scene asset files resolve from the input file's folder.
 Inspect: --frames a,b or --animation name picks cells; --region x,y,w,h crops;
 --grid adds palette-key rows; --scale 1-16 and --background color style the sheet.
---view color|silhouette|grayscale|onion; --native adds a 1x PNG; --diagnostics adds advisory evidence.
+--view color|silhouette|grayscale|onion|tile; --native adds a 1x PNG; --diagnostics adds advisory evidence.
 --max-cells 1-256 samples long sequences with explicit omission metadata.
 Patch accepts correction overlays as --changes; a changed base fails with a fingerprint conflict.
 All command results except the preview server are JSON. Errors exit with code 1.
@@ -34,7 +37,7 @@ function parseArgs(args) {
   const positional = [], options = {};
   for (let i = 0; i < args.length; i++) {
     if (['--force', '--grid', '--native', '--diagnostics'].includes(args[i])) options[args[i].slice(2)] = true;
-    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference'].includes(args[i])) {
+    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root'].includes(args[i])) {
       const key = args[i].slice(2);
       if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`--${key} requires a value`);
       options[key] = args[++i];
@@ -48,7 +51,20 @@ async function readProject(file) {
   let source;
   if (file === '-') { const chunks = []; for await (const chunk of process.stdin) chunks.push(chunk); source = Buffer.concat(chunks).toString('utf8'); }
   else source = await readFile(file, 'utf8');
-  return JSON.parse(source.replace(/^\uFEFF/, ''));
+  return JSON.parse(source.replace(/^﻿/, ''));
+}
+// Reads a document and inlines its references relative to its own folder (stdin: the working directory).
+async function readResolved(file) {
+  const original = await readProject(file), baseDir = file === '-' ? process.cwd() : path.dirname(path.resolve(file));
+  const resolution = await resolveReferences(original, { baseDir });
+  return { original, document: resolution.document, resolution, baseDir };
+}
+// Compiled output keeps a shared-palette link, rewritten relative to where the output is written.
+function linkPalette(recipe, input, outFile) {
+  const link = input.resolution.palettes.find(entry => ['poses', 'autotile', 'project'].includes(entry.where));
+  if (!link) return recipe;
+  const shared = path.resolve(input.baseDir, link.reference), reference = path.relative(path.dirname(path.resolve(outFile)), shared).split(path.sep).join('/');
+  return restorePaletteReference({ palette: { $ref: reference } }, recipe, { palettes: [{ ...link, where: 'project' }] });
 }
 function inspectOptions({ frames, animation, region, grid, scale, background, view, native, diagnostics, 'max-cells': maxCells }) {
   if (region !== undefined && !/^\d+,\d+,\d+,\d+$/.test(region)) throw new Error('--region expects four whole numbers: x,y,w,h');
@@ -70,14 +86,15 @@ async function writeOutputs(targets, force) {
   }
   return Object.fromEntries(entries.map(([label, target]) => [label, target]));
 }
-const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings });
+const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings, ...(project.clipping && { clipping: project.clipping }) });
+const referenced = input => input.resolution.files.length ? { resolved: input.resolution.files } : {};
 try {
   const [command = 'help', ...rest] = process.argv.slice(2);
   if (['help', '--help', '-h'].includes(command)) process.stdout.write(HELP);
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], preview: ['port'], mcp: ['out'], schema: [], compile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
+    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], preview: ['port'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -87,20 +104,24 @@ try {
       console.log(JSON.stringify({ ok: true, file }));
     } else if (command === 'schema') process.stdout.write(await readFile(new URL('../schema.json', import.meta.url), 'utf8'));
     else if (command === 'mcp') {
-      const { startMCP } = await import('../src/mcp.js'); await startMCP({ directory: options.out });
+      const { startMCP } = await import('../src/mcp.js'); await startMCP({ directory: options.out, ...(options.root !== undefined && { root: path.resolve(options.root) }) });
     } else if (command === 'preview') {
       const { startStudio } = await import('../src/server.js');
       const port = options.port === undefined ? 4747 : Number(options.port);
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be an integer from 0 to 65535');
-      await startStudio({ port, project: positional[0] ? await readProject(positional[0]) : undefined });
-    } else if (['compile', 'overlay', 'import'].includes(command)) {
+      await startStudio({ port, project: positional[0] ? (await readResolved(positional[0])).document : undefined });
+    } else if (['compile', 'autotile', 'overlay', 'import'].includes(command)) {
       if (!options.out || !/\.json$/i.test(options.out)) throw new Error(`${command} requires --out <new.json>`);
-      let value, metadata;
-      if (command === 'compile') { const compiled = compilePoses(await readProject(positional[0])); value = compiled.recipe; metadata = compiled.metadata; }
-      else if (command === 'overlay') {
+      let value, metadata, input;
+      if (command === 'compile' || command === 'autotile') {
+        input = await readResolved(positional[0]);
+        const compiled = command === 'compile' ? compilePoses(input.document) : compileAutotile(input.document);
+        value = linkPalette(compiled.recipe, input, options.out); metadata = compiled.metadata;
+      } else if (command === 'overlay') {
         if (!options.changes) throw new Error('overlay requires --changes <edits.json>');
         if (positional[0] === '-' && options.changes === '-') throw new Error('Only one input can use stdin');
-        value = createOverlay(await readProject(positional[0]), await readProject(options.changes), options.selections ? await readProject(options.selections) : {});
+        input = await readResolved(positional[0]);
+        value = createOverlay(input.document, await readProject(options.changes), options.selections ? await readProject(options.selections) : {});
       } else {
         if (!positional[0] || positional[0] === '-') throw new Error('import requires a PNG filename');
         const imported = importPNG(await readFile(positional[0]), { name: options.name, atlas: options.atlas ? await readProject(options.atlas) : undefined });
@@ -108,43 +129,46 @@ try {
       }
       if (options.metadata && !/\.json$/i.test(options.metadata)) throw new Error('--metadata must name a .json file');
       const written = await writeOutputs({ recipe: [options.out, JSON.stringify(value, null, 2) + '\n'], ...(options.metadata && { metadata: [options.metadata, JSON.stringify(metadata, null, 2) + '\n'] }) }, options.force);
-      console.log(JSON.stringify({ ok: true, ...written, ...(metadata && !options.metadata && { metadata }) }, null, 2));
+      console.log(JSON.stringify({ ok: true, ...written, ...(metadata && !options.metadata && { metadata }), ...(input && referenced(input)) }, null, 2));
     } else if (command === 'scene') {
       if (!options.out) throw new Error('scene requires --out <directory>');
-      const bundle = await createSceneBundle(await readProject(positional[0]));
-      console.log(JSON.stringify({ ok: true, files: await writeBundle(bundle, options.out, options), warnings: bundle.warnings }));
+      const input = await readResolved(positional[0]), bundle = await createSceneBundle(input.document);
+      console.log(JSON.stringify({ ok: true, files: await writeBundle(bundle, options.out, options), warnings: bundle.warnings, ...referenced(input) }));
     } else if (command === 'inspect') {
       const layerOptions = options.layers === undefined ? {} : { layers: options.layers.split(',') };
       if (positional[0] === '-' && options.reference === '-') throw new Error('Only one inspection input can use stdin');
-      const project = renderProject(await readProject(positional[0]), layerOptions);
-      const comparison = options.reference ? compareProjects(renderProject(await readProject(options.reference), layerOptions), project) : undefined;
+      const input = await readResolved(positional[0]), project = renderProject(input.document, layerOptions);
+      const comparison = options.reference ? compareProjects(renderProject((await readResolved(options.reference)).document, layerOptions), project) : undefined;
       const { image: referenceImage, ...comparisonReport } = comparison ?? {};
       const view = inspectProject(project, inspectOptions(options)), { data, ...sheet } = view.sheet;
       if (options.out && !/\.png$/i.test(options.out)) throw new Error('inspect --out must name a .png file');
       const written = await writeOutputs(options.out ? { image: [options.out, encodePNG(data, sheet.width, sheet.height)], ...(view.nativeSheet && { nativeImage: [options.out.replace(/\.png$/i, '.native.png'), encodePNG(view.nativeSheet.data, view.nativeSheet.width, view.nativeSheet.height)] }), ...(referenceImage && { referenceImage: [options.out.replace(/\.png$/i, '.reference.png'), encodePNG(referenceImage.sheet.data, referenceImage.sheet.width, referenceImage.sheet.height)] }) } : {}, options.force);
       // Pretty-printed so grid rows line up for reading.
-      console.log(JSON.stringify({ ok: true, ...summary(project), ...view, sheet, nativeSheet: view.nativeSheet ? { ...view.nativeSheet, data: undefined } : undefined, ...(comparison && { comparison: comparisonReport }), ...written }, null, 2));
+      console.log(JSON.stringify({ ok: true, ...summary(project), ...view, sheet, nativeSheet: view.nativeSheet ? { ...view.nativeSheet, data: undefined } : undefined, ...(comparison && { comparison: comparisonReport }), ...written, ...referenced(input) }, null, 2));
     } else if (command === 'patch') {
       if (!options.changes) throw new Error('patch requires --changes <file.json|->');
       if (positional[0] === '-' && options.changes === '-') throw new Error('Only one of the project and --changes can be read from stdin');
       if (options.out && !/\.json$/i.test(options.out)) throw new Error('patch --out must name a .json file');
       if (options.image && !/\.png$/i.test(options.image)) throw new Error('patch --image must name a .png file');
-      const base = await readProject(positional[0]), changes = await readProject(options.changes);
-      const { recipe, edits } = changes?.format === 'pixelforge-overlay' ? applyOverlay(base, changes) : patchRecipe(base, Array.isArray(changes) ? changes : changes?.changes);
+      const input = await readResolved(positional[0]), base = input.document, changes = await readProject(options.changes);
+      const applied = changes?.format === 'pixelforge-overlay' ? applyOverlay(base, changes) : patchRecipe(base, Array.isArray(changes) ? changes : changes?.changes);
+      const { recipe, edits } = applied;
       const after = renderProject(recipe), { image, ...report } = compareProjects(renderProject(base), after);
+      // A recipe that referenced a shared palette keeps that reference; only new or changed entries stay local.
+      const saved = restorePaletteReference(input.original, recipe, input.resolution);
       const written = await writeOutputs({
-        ...(options.out && { recipe: [options.out, Buffer.from(JSON.stringify(recipe, null, 2) + '\n')] }),
+        ...(options.out && { recipe: [options.out, Buffer.from(JSON.stringify(saved, null, 2) + '\n')] }),
         ...(options.image && image && { image: [options.image, encodePNG(image.sheet.data, image.sheet.width, image.sheet.height)] })
       }, options.force);
       const { sheet, ...drawn } = image ?? {};
-      console.log(JSON.stringify({ ok: true, name: after.name, edits, ...report, ...(written.image && { image: { ...drawn, scale: sheet.scale, file: written.image } }), ...(written.recipe && { recipe: written.recipe }), warnings: after.warnings }, null, 2));
+      console.log(JSON.stringify({ ok: true, name: after.name, edits, ...(applied.rebased && { rebased: true }), ...report, ...(written.image && { image: { ...drawn, scale: sheet.scale, file: written.image } }), ...(written.recipe && { recipe: written.recipe }), warnings: after.warnings, ...(after.clipping && { clipping: after.clipping }) }, null, 2));
     } else {
-      const spec = await readProject(positional[0]);
-      if (command === 'validate') console.log(JSON.stringify({ ok: true, ...summary(renderProject(spec)) }));
+      const input = await readResolved(positional[0]);
+      if (command === 'validate') console.log(JSON.stringify({ ok: true, ...summary(renderProject(input.document)), ...referenced(input) }));
       else {
         if (!options.out) throw new Error('render requires --out <directory>');
-        const bundle = await createBundle(spec), files = await writeBundle(bundle, options.out, options);
-        console.log(JSON.stringify({ ok: true, ...summary(bundle.project), files }));
+        const bundle = await createBundle(input.document), files = await writeBundle(bundle, options.out, options);
+        console.log(JSON.stringify({ ok: true, ...summary(bundle.project), files, ...referenced(input) }));
       }
     }
   }

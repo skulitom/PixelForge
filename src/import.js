@@ -70,7 +70,8 @@ export function importPNG(bytes, { name = 'imported', atlas } = {}) {
     return { name: frameName, duration: entry.duration ?? 100, pixels };
   });
   // Typical pixel art should return as compact, palette-editable grids, not thousands of literal overrides.
-  const symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&*+-/:;<=>@^_~';
+  // ASCII keys first, then single-code-unit Latin letters, up to the 256-colour palette limit.
+  const symbols = [...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&*+-/:;<=>@^_~', ...Array.from({ length: 400 }, (_, i) => String.fromCharCode(0xc0 + i))].slice(0, 256);
   const colors = new Map(); let compact = true;
   for (const frame of frames) {
     for (const pixel of frame.pixels) if (!pixel.color.endsWith('00') && !colors.has(pixel.color)) {

@@ -27,3 +27,48 @@ test('Canvas player respects durations, once/loop behavior, pause/resume and sca
   assert.throws(() => player.play('toString'), /Unknown animation/);
   player.destroy(); assert.equal(pending.size, 0); assert.equal(player.animation, null);
 });
+
+test('runtime helpers look up frames by time and draw trimmed, anchored and mirrored frames', async t => {
+  const { frameAt, drawFrame, loadSpriteSheet } = await import('../src/runtime.js');
+  const atlas = {
+    meta: { image: 'sheet.png' },
+    frames: {
+      a: { frame: { x: 4, y: 0, w: 2, h: 3 }, trimmed: true, spriteSourceSize: { x: 5, y: 1, w: 2, h: 3 }, sourceSize: { w: 8, h: 6 }, anchor: { x: 4, y: 6 }, duration: 50 },
+      b: { frame: { x: 0, y: 0, w: 4, h: 4 }, duration: 70 }
+    },
+    animations: { run: { frames: ['a', 'b'], duration: 120, loop: true }, once: { frames: ['a', 'b'], duration: 120, loop: false } }
+  };
+  assert.deepEqual([frameAt(atlas, 'run', 49), frameAt(atlas, 'run', 50), frameAt(atlas, 'run', 130), frameAt(atlas, 'once', 999)], ['a', 'b', 'a', 'b']);
+  assert.throws(() => frameAt(atlas, 'toString', 0), /Unknown animation/);
+  const calls = [], context = { save: () => calls.push(['save']), restore: () => calls.push(['restore']), translate: (...a) => calls.push(['translate', ...a]), scale: (...a) => calls.push(['scale', ...a]), drawImage: (...a) => calls.push(['draw', ...a.slice(1)]) };
+  const sheet = { image: {}, atlas };
+  drawFrame(context, sheet, 'a', 100, 50, { scale: 2 }); // anchor (4, 6) lands on (100, 50); the trimmed rect sits at source (5, 1)
+  assert.deepEqual(calls.pop(), ['draw', 4, 0, 2, 3, 102, 40, 4, 6]);
+  drawFrame(context, sheet, 'a', 100, 50, { flipX: true });
+  assert.deepEqual(calls.slice(-5), [['save'], ['translate', 99, 45], ['scale', -1, 1], ['draw', 4, 0, 2, 3, 0, 0, 2, 3], ['restore']]);
+  drawFrame(context, sheet, 'b', 10, 10, { anchor: false });
+  assert.deepEqual(calls.pop(), ['draw', 0, 0, 4, 4, 10, 10, 4, 4]);
+  // The loader resolves on the image's load event and never waits on decode().
+  const saved = { fetch: globalThis.fetch, Image: globalThis.Image, document: globalThis.document };
+  t.after(() => Object.assign(globalThis, saved));
+  globalThis.document = { baseURI: 'http://local.test/assets/' };
+  globalThis.fetch = async url => ({ ok: true, json: async () => ({ ...atlas, requested: String(url) }) });
+  globalThis.Image = class { decode() { return new Promise(() => {}); } set src(value) { this.url = value; queueMicrotask(() => this.onload()); } };
+  const loaded = await loadSpriteSheet('hero.atlas.json');
+  assert.equal(loaded.atlas.requested, 'http://local.test/assets/hero.atlas.json');
+  assert.equal(loaded.image.url, 'http://local.test/assets/sheet.png');
+  globalThis.Image = class { set src(value) { queueMicrotask(() => this.onerror()); } };
+  await assert.rejects(loadSpriteSheet('hero.atlas.json'), /Could not load atlas image/);
+});
+
+test('Canvas player keeps the full source size and draws trimmed frames at their offset', t => {
+  const originalRAF = globalThis.requestAnimationFrame, originalCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = () => 1; globalThis.cancelAnimationFrame = () => {};
+  t.after(() => { if (originalRAF) globalThis.requestAnimationFrame = originalRAF; else delete globalThis.requestAnimationFrame; if (originalCancel) globalThis.cancelAnimationFrame = originalCancel; else delete globalThis.cancelAnimationFrame; });
+  const draws = [], ctx = { clearRect() {}, drawImage(...args) { draws.push(args.slice(1)); } };
+  const canvas = { width: 0, height: 0, style: {}, getContext() { return ctx; } };
+  const atlas = { frames: { a: { frame: { x: 4, y: 0, w: 2, h: 3 }, spriteSourceSize: { x: 5, y: 1, w: 2, h: 3 }, sourceSize: { w: 8, h: 6 }, duration: 50 } }, animations: { idle: { frames: ['a'], duration: 50, loop: true } } };
+  new SpritePlayer(canvas, {}, atlas, { scale: 2 }).play('idle');
+  assert.deepEqual([canvas.width, canvas.height], [16, 12]);
+  assert.deepEqual(draws.at(-1), [4, 0, 2, 3, 10, 2, 4, 6]);
+});

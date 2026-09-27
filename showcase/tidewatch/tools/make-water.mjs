@@ -1,5 +1,5 @@
 // One-time scaffold for the water recipe. After this, art/recipes/water.json is the authoritative source.
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const symbols = {
   crest0: ['.......', '..ccc..'],
   crest1: ['..ccc..', '.c...c.'],
@@ -28,5 +28,5 @@ for (const [variant, layout] of Object.entries(layouts)) {
   animations[`shimmer-${variant}`] = { frames: names };
 }
 const recipe = { version: 1, name: 'water', width: 16, height: 16, palette: {}, symbols, frames, animations, sheet: { columns: 4 } };
-recipe.palette = paletteFor(symbols, ['C']);
+recipe.palette = linkedPalette();
 writeJSON('art/recipes/water.json', recipe, { force: process.argv.includes('--force') });

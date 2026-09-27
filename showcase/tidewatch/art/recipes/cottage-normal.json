@@ -2,6 +2,10 @@
   "version": 1,
   "width": 64,
   "height": 64,
+  "anchor": [
+    32,
+    59
+  ],
   "animations": {
     "day": {
       "frames": [

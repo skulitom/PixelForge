@@ -22,12 +22,16 @@ try {
   for (const id of ['lit', 'density']) $(id).onchange = draw;
   $('scale').onchange = () => { manualScale = true; draw(); };
   if (scene.lighting?.lights.length) {
+    // Every light is movable: pick one, then drag its position.
     $('lights').hidden = false;
-    const light = scene.lighting.lights[0];
-    for (const [i, id] of ['light-x', 'light-y'].entries()) { $(id).value = light.at[i]; $(id).oninput = () => { light.at[i] = Number($(id).value); draw(); }; }
+    $('light-pick').replaceChildren(...scene.lighting.lights.map((_, i) => Object.assign(document.createElement('option'), { value: String(i), textContent: String(i + 1) })));
+    const selected = () => scene.lighting.lights[Number($('light-pick').value)];
+    const sync = () => { for (const [i, id] of ['light-x', 'light-y'].entries()) $(id).value = selected().at[i]; };
+    for (const [i, id] of ['light-x', 'light-y'].entries()) $(id).oninput = () => { selected().at[i] = Number($(id).value); draw(); };
+    $('light-pick').onchange = sync; sync();
   }
   $('save').onclick = () => {
-    const saved = structuredClone(source); saved.lighting.lights[0].at = [...scene.lighting.lights[0].at];
+    const saved = structuredClone(source); scene.lighting.lights.forEach((light, i) => { saved.lighting.lights[i].at = [...light.at]; });
     const url = URL.createObjectURL(new Blob([JSON.stringify(saved, null, 2) + '\n'], { type: 'application/json' }));
     const link = document.createElement('a'); link.href = url; link.download = `${source.name}.scene.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   };

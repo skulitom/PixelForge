@@ -4,25 +4,12 @@
   "width": 32,
   "height": 32,
   "palette": {
-    "7": "#ffffff",
-    "8": "#d2d9e8",
-    "9": "#8e97ae",
-    "k": "#1b1528",
-    "g": "#2a6b45",
-    "h": "#4a9a4a",
-    "j": "#7fbd4f",
-    "l": "#c4df6a",
-    "w": "#effcff",
-    "W": "#97e3e3",
-    "r": "#f0ece2",
-    "R": "#c9c2b4",
-    "t": "#9a918c",
-    "O": "#c9844f",
-    "u": "#975a3a",
-    "U": "#663b2e",
-    "M": "#b7c2d6",
-    "x": "#fffcea"
+    "$ref": "../palette.json"
   },
+  "anchor": [
+    16,
+    20
+  ],
   "frames": [
     {
       "name": "leaves-0",
@@ -1627,6 +1614,7 @@
     }
   },
   "sheet": {
-    "columns": 8
+    "columns": 8,
+    "trim": true
   }
 }

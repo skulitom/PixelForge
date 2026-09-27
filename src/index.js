@@ -1,9 +1,11 @@
-export { PixelError, parseColor, renderProject, buildAtlas, scalePixels, inspectProject, compareProjects, analyzeProject, reviewPixels, animationPosition, animationNeighbors, onionPixels } from './core.js';
+export { PixelError, MAX_REQUEST_BYTES, parseColor, renderProject, buildAtlas, scalePixels, inspectProject, compareProjects, analyzeProject, reviewPixels, animationPosition, animationNeighbors, onionPixels, tileRepeat, tileReport } from './core.js';
 export { patchRecipe } from './patch.js';
 export { encodePNG, encodeAPNG } from './png.js';
 export { createBundle, writeBundle, createZip, generateCSS } from './export.js';
-export { compilePoses } from './authoring.js';
+export { compilePoses, compileAutotile } from './authoring.js';
+export { BLOB_MASKS, CARDINAL_MASKS, neighbourMask, quadrantPieces, templatePiece } from './autotile.js';
 export { prepareScene, renderScene, inspectTile } from './scene.js';
 export { createSceneBundle } from './scene-export.js';
 export { createOverlay, applyOverlay, recipeFingerprint } from './overlays.js';
 export { decodePNG, importPNG } from './import.js';
+export { resolveReferences, restorePaletteReference } from './resolve.js';

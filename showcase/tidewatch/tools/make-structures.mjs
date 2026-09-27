@@ -1,16 +1,18 @@
 // One-time scaffold for the cottage (64x64), lamp post (16x32) and rowboat (48x32), with aligned normal/emissive passes.
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const enc = (nx, ny, nz) => { const n = Math.hypot(nx, ny, nz) || 1; return '#' + [nx, ny, nz].map(v => Math.round((v / n + 1) * 127.5).toString(16).padStart(2, '0')).join(''); };
 const NORMALS = { f: enc(0, 0, 1), r: enc(0, -0.55, 0.83), R: enc(-0.45, -0.5, 0.74), L: enc(0.45, -0.5, 0.74), u: enc(0, -0.9, 0.44), d: enc(0, 0.7, 0.7), l: enc(-0.8, 0, 0.6), e: enc(0.8, 0, 0.6) };
 const force = { force: process.argv.includes('--force') };
 function canvas(w, h) { const g = Array.from({ length: h }, () => Array(w).fill('.')); return { g, w, h, put(x, y, c) { if (x >= 0 && y >= 0 && x < w && y < h) g[y][x] = c; }, rows() { return g.map(r => r.join('')); } }; }
 function stampRows(c, x0, y0, rows) { rows.forEach((row, dy) => [...row].forEach((ch, dx) => { if (ch !== '.') c.put(x0 + dx, y0 + dy, ch); })); }
+// The anchor is the ground point the game places; every pass carries it so each atlas stands alone.
+const ANCHORS = { cottage: [32, 59], lamp: [7, 29] };
 function writePasses(name, w, h, frames, animations, columns) {
-  const base = { version: 1, width: w, height: h, animations, sheet: { columns } };
+  const base = { version: 1, width: w, height: h, anchor: ANCHORS[name], animations, sheet: { columns } };
   const pass = key => frames.map(f => ({ name: f.name, duration: f.duration, ops: [{ op: 'grid', x: 0, y: 0, rows: f[key] }] }));
-  writeJSON(`art/recipes/${name}.json`, { ...base, name, palette: paletteFor(frames.map(f => f.color)), frames: pass('color') }, force);
+  writeJSON(`art/recipes/${name}.json`, { ...base, name, palette: linkedPalette(), frames: pass('color') }, force);
   writeJSON(`art/recipes/${name}-normal.json`, { ...base, name: `${name}-normal`, palette: NORMALS, frames: pass('normal') }, force);
-  writeJSON(`art/recipes/${name}-emissive.json`, { ...base, name: `${name}-emissive`, palette: paletteFor(frames.map(f => f.emissive)), frames: pass('emissive') }, force);
+  writeJSON(`art/recipes/${name}-emissive.json`, { ...base, name: `${name}-emissive`, palette: linkedPalette(), frames: pass('emissive') }, force);
 }
 // ---------------- cottage ----------------
 function cottage(night) {
@@ -105,5 +107,5 @@ const boatFrame = (name, dy, duration) => ({ name, duration, ops: [
   { op: 'grid', x: 0, y: 10 + dy, rows: boat },
   { op: 'grid', x: 2, y: 26 + dy, rows: ['..ww..wWWw......wWw.....wWWw..ww'] }
 ] });
-writeJSON('art/recipes/boat.json', { version: 1, name: 'boat', width: 48, height: 32, palette: paletteFor(boat, ['wW']), frames: [boatFrame('bob-0', 0, 700), boatFrame('bob-1', 1, 700)], animations: { bob: { frames: ['bob-0', 'bob-1'] } } }, force);
+writeJSON('art/recipes/boat.json', { version: 1, name: 'boat', width: 48, height: 32, palette: linkedPalette(), anchor: [24, 24], sheet: { trim: true }, frames: [boatFrame('bob-0', 0, 700), boatFrame('bob-1', 1, 700)], animations: { bob: { frames: ['bob-0', 'bob-1'] } } }, force);
 console.log('structures written');

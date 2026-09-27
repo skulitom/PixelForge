@@ -1,7 +1,7 @@
-// One-time scaffold: hand-drawn coastline masks -> shaded 8x8 quarter symbols -> 47 blob tiles x 4 foam phases.
-// After generation, art/recipes/shore.json (symbols + frames) is the authoritative, editable source.
-import { paletteFor, writeJSON } from './common.mjs';
-import { blobMasks, quadrantsFor } from './autotile.mjs';
+// One-time scaffold: hand-drawn coastline masks -> a shaded pixelforge-autotile template with four surf phases.
+// art/terrain/shore.autotile.json is the authoritative, editable source; `pixelforge autotile` compiles it into
+// art/recipes/shore.json (47 blob tiles x 4 palette-cycled phases).
+import { linkedPalette, writeJSON } from './common.mjs';
 
 // Island: a 2x2-tile sand island inset 4px, with hand-placed 1px recessions away from quarter boundaries.
 const island = [
@@ -48,41 +48,21 @@ function shade(mask, outside) {
 }
 const crop = (rows, x, y) => rows.slice(y, y + 8).map(row => row.slice(x, x + 8));
 const shadedIsland = shade(island, false), shadedLake = shade(lake, true);
-const symbols = {};
-// Island tiles: TL(0,0) TR(1,0) BL(0,1) BR(1,1); quarter types follow from which neighbours are water.
-const islandQuarters = {
-  'tl-o': [0, 0], 'tr-h': [8, 0], 'bl-v': [0, 8], 'br-f': [8, 8],
-  'tl-h': [16, 0], 'tr-o': [24, 0], 'bl-f': [16, 8], 'br-v': [24, 8],
-  'tl-v': [0, 16], 'tr-f': [8, 16], 'bl-o': [0, 24], 'br-h': [8, 24],
-  'tl-f': [16, 16], 'tr-v': [24, 16], 'bl-h': [16, 24], 'br-o': [24, 24]
-};
-for (const [key, [x, y]] of Object.entries(islandQuarters)) symbols[`q-${key}`] = crop(shadedIsland, x, y);
+// Template, two tiles wide and three tall: [lone-island preview][inner corners] over the 2x2 island itself.
 // Inner corners come from the sand tiles diagonal to the lake's water tile.
-for (const [key, [x, y]] of Object.entries({ 'br-i': [8, 8], 'bl-i': [32, 8], 'tr-i': [8, 32], 'tl-i': [32, 32] })) symbols[`q-${key}`] = crop(shadedLake, x, y);
+const template = Array.from({ length: 48 }, () => Array(32).fill('.'));
+const paste = (rows, x0, y0) => rows.forEach((row, y) => [...row].forEach((c, x) => { template[y0 + y][x0 + x] = c; }));
+for (const [x, y] of [[0, 0], [24, 0], [0, 24], [24, 24]]) paste(crop(shadedIsland, x, y), x ? 8 : 0, y ? 8 : 0);
+paste(crop(shadedLake, 32, 32), 16, 0); paste(crop(shadedLake, 8, 32), 24, 0); paste(crop(shadedLake, 32, 8), 16, 8); paste(crop(shadedLake, 8, 8), 24, 8);
+paste(shadedIsland, 0, 16);
 const phases = [
   { '!': 'tint1', '@': 'tint2', '$': 'foam-soft', duration: 240 },
   { '!': 'tint1', '@': 'w', '$': 'tint3', duration: 200 },
   { '!': 'w', '@': 'foam-soft', '$': 'tint3', duration: 260 },
   { '!': 'foam-soft', '@': 'tint2', '$': 'tint3', duration: 340 }
 ];
-const frames = [], animations = {};
-for (const mask of blobMasks()) {
-  const q = quadrantsFor(mask), names = [];
-  phases.forEach((phase, p) => {
-    const name = `shore-${mask}-${p}`; names.push(name);
-    frames.push({ name, duration: phase.duration, ops: [
-      { op: 'stamp', symbol: `q-tl-${q.tl}`, x: 0, y: 0 }, { op: 'stamp', symbol: `q-tr-${q.tr}`, x: 8, y: 0 },
-      { op: 'stamp', symbol: `q-bl-${q.bl}`, x: 0, y: 8 }, { op: 'stamp', symbol: `q-br-${q.br}`, x: 8, y: 8 },
-      ...['!', '@', '$'].map(marker => ({ op: 'replace', from: marker, to: phase[marker] }))
-    ] });
-  });
-  if (mask === 255) animations.interior = { frames: [names[0]] };
-}
-animations.foam = { frames: ['shore-0-0', 'shore-0-1', 'shore-0-2', 'shore-0-3'] };
-const palette = {
-  ...paletteFor(symbols, ['w']),
-  '!': '#ff00f1', '@': '#ff00f2', '$': '#ff00f3',
-  tint1: '#97e3e388', tint2: '#97e3e366', tint3: '#97e3e344', 'foam-soft': '#effcffaa'
-};
-writeJSON('art/recipes/shore.json', { version: 1, name: 'shore', width: 16, height: 16, palette, symbols, frames, animations, sheet: { columns: 16 } }, { force: process.argv.includes('--force') });
-console.log('pieces', Object.keys(symbols).length, 'frames', frames.length);
+// The surf bands '!', '@' and '$' are palette entries; each phase is a variant that recolors them (palette cycling).
+const palette = linkedPalette({ tint1: '#97e3e388', tint2: '#97e3e366', tint3: '#97e3e344', 'foam-soft': '#effcffaa', '!': '#97e3e388', '@': '#97e3e366', '$': '#effcffaa' });
+const variants = phases.map(({ duration, ...colors }, p) => ({ name: String(p), duration, palette: colors }));
+writeJSON('art/terrain/shore.autotile.json', { format: 'pixelforge-autotile', version: 1, name: 'shore', tile: 16, mode: 'blob', palette, template: template.map(row => row.join('')), frame: 'shore-{mask}-{variant}', variants, animation: 'surf-{mask}', sheet: { columns: 16 } }, { force: process.argv.includes('--force') });
+console.log('template', template[0].length, 'x', template.length, 'variants', variants.length);

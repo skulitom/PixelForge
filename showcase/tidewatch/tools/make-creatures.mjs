@@ -1,7 +1,6 @@
 // One-time scaffold for creatures. Crab: pose source compiled by PixelForge. Jelly, gull and fisher: authored frames.
-import { paletteFor, writeJSON, palette as GLOBAL } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const force = { force: process.argv.includes('--force') };
-const mirror = rows => rows.map(row => [...row].reverse().join(''));
 // ---------------- crab (pose compiler) ----------------
 const parts = {
   shell: { rows: [
@@ -23,17 +22,15 @@ const parts = {
   'legs-a': { rows: ['kk..................kk', 'k2k................k2k', '.k2kk.k..........kk2k.', '..kk2k2k.......k2kk2k.', '....kk.k2k...k2k.kk...', '........kk...kk.......'], anchor: [11, 0] },
   'legs-b': { rows: ['.kk................kk.', '.k2k..............k2k.', 'k2kk.k............kk2k', 'kk.k2k2k........k2k.kk', '....kk.k2k....k2kk....', '........kk....kk......'], anchor: [11, 0] }
 };
-for (const key of ['claw-l-open', 'claw-l-closed', 'claw-l-raised']) {
-  const p = parts[key], w = p.rows[0].length;
-  parts[key.replace('-l-', '-r-')] = { rows: mirror(p.rows), anchor: [w - 1 - p.anchor[0], p.anchor[1]] };
-}
+// The origin is the ground contact (it becomes the atlas anchor); a hop lifts the body above it. The right claw is
+// the left claw flipped inside its own grid.
 const crabPose = (name, duration, { legs = 'legs-a', claws = 'closed', eyes = 'eyes-open', lift = 0, marker } = {}) => ({
-  name, duration, origin: [16, 18 - lift], parts: [
-    { name: 'legs', part: legs, at: [0, -2] },
-    { name: 'shell', part: 'shell' },
+  name, duration, origin: [16, 19], parts: [
+    { name: 'legs', part: legs, at: [0, -3 - lift] },
+    { name: 'shell', part: 'shell', at: [0, -1 - lift] },
     { name: 'eyes', part: eyes, attach: { part: 'shell', point: 'eyes' } },
     { name: 'clawL', part: `claw-l-${claws}`, attach: { part: 'shell', point: 'clawL' } },
-    { name: 'clawR', part: `claw-r-${claws}`, attach: { part: 'shell', point: 'clawR' } }
+    { name: 'clawR', part: `claw-l-${claws}`, flipX: true, attach: { part: 'shell', point: 'clawR' } }
   ], ...(marker && { markers: [{ name: marker, part: 'clawL', point: 'tip' }] })
 });
 parts['claw-l-closed'].points = { tip: [1, 0] }; parts['claw-l-raised'].points = { tip: [1, 0] };
@@ -43,11 +40,11 @@ const crabPoses = [
   crabPose('snap-0', 220, { claws: 'raised', eyes: 'eyes-angry', lift: 1 }), crabPose('snap-1', 90, { claws: 'open', eyes: 'eyes-angry', lift: 2 }), crabPose('snap-2', 160, { claws: 'closed', eyes: 'eyes-angry', marker: 'hit' }),
   crabPose('hurt', 200, { claws: 'open', eyes: 'eyes-blink', lift: 2 })
 ];
-writeJSON('art/poses/crab.poses.json', { format: 'pixelforge-poses', version: 1, name: 'crab', width: 32, height: 24, palette: paletteFor(Object.values(parts).map(p => p.rows)), parts, poses: crabPoses, animations: {
+writeJSON('art/poses/crab.poses.json', { format: 'pixelforge-poses', version: 1, name: 'crab', width: 32, height: 24, palette: linkedPalette(), parts, poses: crabPoses, animations: {
   idle: { frames: ['idle-0', 'idle-1', 'idle-0', 'idle-2'] }, walk: { frames: ['walk-0', 'walk-1', 'walk-2', 'walk-3'] }, snap: { frames: ['snap-0', 'snap-1', 'snap-2'], loop: false }, hurt: { frames: ['hurt'], loop: false }
-}, sheet: { columns: 6 } }, force);
+}, sheet: { columns: 6, trim: true } }, force);
 // ---------------- brine jelly (translucent on purpose) ----------------
-const jellyPalette = { k: GLOBAL.k, '6': GLOBAL['6'], '4': GLOBAL['4'], '7': GLOBAL['7'], H: '#a266d6bb', J: '#66429ae6', Q: '#e5adf7dd', Y: '#633f9655', _: GLOBAL._ };
+const jellyPalette = linkedPalette({ H: '#a266d6bb', J: '#66429ae6', Q: '#e5adf7dd', Y: '#633f9655' });
 const J = {
   rest: ['................', '................', '................', '................', '................',
     '.....JJJJJJ.....', '...JJQQHHHHJJ...', '..JQQ7QHHHHHHJ..', '..JQ7QHHHHHHHJ..', '.JHQHHH66HHHHHJ.', '.JHHHH6446HHHHJ.', '.JHHHHH66HHHHHJ.', '..JJHHHHHHHHJJ..', '...YJJJJJJJJY...', '....________....', '................'],
@@ -61,9 +58,9 @@ const J = {
     '.....777777.....', '...7777777777...', '..777777777777..', '..777777777777..', '.77777744777777.', '.77777444477777.', '.77777744777777.', '..777777777777..', '...7777777777...', '....________....', '................']
 };
 const jellyFrames = [['rest', 520], ['wobble', 380], ['squash', 110], ['stretch', 90], ['air', 180], ['squash', 120], ['hurt', 120]].map(([key, duration], i) => ({ name: `${key}-${i}`, duration, ops: [{ op: 'grid', x: 0, y: 0, rows: J[key] }] }));
-writeJSON('art/recipes/jelly.json', { version: 1, name: 'jelly', width: 16, height: 16, palette: jellyPalette, frames: jellyFrames, animations: {
+writeJSON('art/recipes/jelly.json', { version: 1, name: 'jelly', width: 16, height: 16, palette: jellyPalette, anchor: [8, 13], frames: jellyFrames, animations: {
   idle: { frames: ['rest-0', 'wobble-1'] }, hop: { frames: ['squash-2', 'stretch-3', 'air-4', 'squash-5', 'rest-0'], loop: false }, hurt: { frames: ['hurt-6'], loop: false }
-}, sheet: { columns: 7 } }, force);
+}, sheet: { columns: 7, trim: true } }, force);
 // ---------------- gull (ambient) ----------------
 const gull = {
   up: ['................', '..kk........kk..', '.k77k......k77k.', '..k77k....k77k..', '...k778kk877k...', '....k7777777k...', '.....kk77kXk....', '.......kkk......', '................', '................', '................', '................', '................', '................', '................', '................'],
@@ -72,7 +69,7 @@ const gull = {
   glide: ['................', '................', '................', '................', 'kkkk......kkkk..', '8777kkkkkk7778k.', '.kk7777777777kk.', '...kkk777kXk....', '......kkk.......', '................', '................', '................', '................', '................', '................', '................']
 };
 const gullFrames = [['up', 110], ['mid', 90], ['down', 110], ['mid', 90], ['glide', 600]].map(([key, duration], i) => ({ name: `${key}-${i}`, duration, ops: [{ op: 'grid', x: 0, y: 0, rows: gull[key] }] }));
-writeJSON('art/recipes/gull.json', { version: 1, name: 'gull', width: 16, height: 16, palette: paletteFor(Object.values(gull)), frames: gullFrames, animations: { flap: { frames: ['up-0', 'mid-1', 'down-2', 'mid-3'] }, glide: { frames: ['glide-4'] } } }, force);
+writeJSON('art/recipes/gull.json', { version: 1, name: 'gull', width: 16, height: 16, palette: linkedPalette(), anchor: [8, 8], frames: gullFrames, animations: { flap: { frames: ['up-0', 'mid-1', 'down-2', 'mid-3'] }, glide: { frames: ['glide-4'] } }, sheet: { trim: true } }, force);
 // ---------------- old fisher (NPC, seated on a crate with a pipe) ----------------
 const fisherBase = [
   '..........kkkkkk........',
@@ -108,5 +105,5 @@ const fisherFrames = [
   fisher('puff-2', 260, [{ op: 'grid', x: 20, y: 14, rows: ['kk', 'uk'] }, smoke(21, 6, ['..88', '.8.8', '88..'])]),
   fisher('puff-3', 300, [{ op: 'grid', x: 20, y: 14, rows: ['kk', 'uk'] }, smoke(22, 2, ['.9.', '9.9', '.9.'])])
 ];
-writeJSON('art/recipes/fisher.json', { version: 1, name: 'fisher', width: 32, height: 32, palette: paletteFor(fisherBase, ['kiu89_']), frames: fisherFrames, animations: { idle: { frames: ['idle-0', 'idle-0', 'puff-1', 'puff-2', 'puff-3'] } } }, force);
+writeJSON('art/recipes/fisher.json', { version: 1, name: 'fisher', width: 32, height: 32, palette: linkedPalette(), anchor: [16, 30], frames: fisherFrames, animations: { idle: { frames: ['idle-0', 'idle-0', 'puff-1', 'puff-2', 'puff-3'] } }, sheet: { trim: true } }, force);
 console.log('creatures written');

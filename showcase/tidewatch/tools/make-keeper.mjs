@@ -1,6 +1,5 @@
 // One-time scaffold for the keeper's pose source. art/poses/keeper.poses.json is authoritative afterwards.
-import { paletteFor, writeJSON } from './common.mjs';
-const mirror = rows => rows.map(row => [...row].reverse().join(''));
+import { linkedPalette, writeJSON } from './common.mjs';
 const P = {};
 const swap = (rows, edits) => rows.map((row, i) => edits[i] ?? row);
 // ---------- facing down (front) ----------
@@ -16,7 +15,6 @@ P['body-d-a'] = bodyD(['..kfEekkkkeEfk..', '.kEkEeEEEEEfkfk.', '.kPkeEEEEEEfkfk.
 P['body-d-b'] = bodyD(['..kfEekkkkeEfk..', '.kEkEeEEEEEfkqk.', '.kEkeEEEEEEfkqk.', '.kEkEEEEEEEfkfk.', '.kPkUUUMMUUUkk..', '.kPEEEEEEEEEEk..', '..kfffffffffFk..']);
 P['body-d-lift'] = { rows: ['..kfEekkkkeEfk..', '...kEeEEEEEfk...', '...keEEEEEEfk...', '...kEEEEEEEfk...', '...kUUUMMUUUk...', '..kEEEEEEEEEEk..', '..kfffffffffFk..'], anchor: [8, 6], points: { neck: [8, -1], shoulderL: [2, 1], shoulderR: [13, 1], hold: [8, -16] } };
 P['arm-up-l'] = { rows: ['kqk.', 'kPk.', 'kEk.', 'kfk.', '.kEk', '.kEk', '.kfk', '.kEk', '.kEk', '.kfk', '.kEk', '.kEk', '.kfk', '.kEk', '.kEk', '.kfk', '.kEk'], anchor: [2, 16] };
-P['arm-up-r'] = { rows: mirror(P['arm-up-l'].rows), anchor: [1, 16] };
 // legs: anchor on the ground row, hip one row above the part
 P['legs-d'] = { rows: ['.kBBkkBBk.', 'kUUUkkUUUk'], anchor: [5, 1], points: { hip: [5, -1] } };
 P['legs-d-cl'] = { rows: ['.kBBkkUUUk', '.kBBk.kkk.', 'kUUUk.....'], anchor: [5, 1], points: { hip: [5, -1], foot: [2, 2] } };
@@ -61,11 +59,6 @@ P['sa-u-recover'] = { rows: ['.k.....', 'kmk....', 'kMmk...', '.kMmk..', '..kXik
 P['sa-r-windup'] = { rows: ['..........k.kkkk.', '..kkkkkkkkXkqfEEk', '.kmmmmmmmmXkqqfEk', '.kvMMMMMMMXkkkkk.', '..kkkkkkk.k......'], anchor: [16, 2], points: { tip: [1, 2] } };
 P['sa-r-strike'] = { rows: ['.kkkk.k..........', 'kEEfqkXkkkkkkkk..', 'kEfqqkXmmmmmmmmk.', '.kkkkkXMMMMMMMvk.', '......k.kkkkkkk..'], anchor: [0, 2], points: { tip: [15, 2] } };
 P['sa-r-recover'] = { rows: ['kEk.....', 'kEfk....', '.kqqk...', '.kkXik..', '...kmMk.', '....kmMk', '.....kmk', '......k.'], anchor: [1, 0], points: { tip: [6, 7] } };
-// left-facing parts mirror the right-facing grids (anchors and points mirrored too)
-for (const [key, part] of Object.entries(P)) if (/-r(-|$)/.test(key)) {
-  const w = part.rows[0].length, flip = ([x, y]) => [w - 1 - x, y];
-  P[key.replace(/-r(-|$)/, '-l$1')] = { rows: mirror(part.rows), anchor: flip(part.anchor), ...(part.points && { points: Object.fromEntries(Object.entries(part.points).map(([k, v]) => [k, flip(v)])) }) };
-}
 const origin = [20, 31];
 const pose = (name, duration, legs, body, head, markers) => ({ name, duration, origin, parts: [
   { name: 'legs', part: legs }, { name: 'body', part: body, attach: { part: 'legs', point: 'hip' } }, { name: 'head', part: head, attach: { part: 'body', point: 'neck' } }
@@ -74,8 +67,7 @@ const poses = [];
 for (const [dir, legs, pass, c1, c2, body, a, b, head, passA, passB] of [
   ['d', 'legs-d', 'legs-d-pass', 'legs-d-cl', 'legs-d-cr', 'body-d', 'body-d-a', 'body-d-b', 'head-d', 'legs-d-pa', 'legs-d-pb'],
   ['u', 'legs-d', 'legs-d-pass', 'legs-d-cr', 'legs-d-cl', 'body-u', 'body-u-a', 'body-u-b', 'head-u', 'legs-d-pb', 'legs-d-pa'],
-  ['r', 'legs-r', 'legs-r-pass', 'legs-r-c1', 'legs-r-c2', 'body-r', 'body-r-back', 'body-r-fwd', 'head-r', 'legs-r-pa', 'legs-r-pb'],
-  ['l', 'legs-l', 'legs-l-pass', 'legs-l-c1', 'legs-l-c2', 'body-l', 'body-l-back', 'body-l-fwd', 'head-l', 'legs-l-pa', 'legs-l-pb']
+  ['r', 'legs-r', 'legs-r-pass', 'legs-r-c1', 'legs-r-c2', 'body-r', 'body-r-back', 'body-r-fwd', 'head-r', 'legs-r-pa', 'legs-r-pb']
 ]) {
   poses.push(pose(`idle-${dir}`, 600, legs, body, head));
   poses.push(pose(`breathe-${dir}`, 400, pass, body, head));
@@ -84,9 +76,12 @@ for (const [dir, legs, pass, c1, c2, body, a, b, head, passA, passB] of [
   poses.push(pose(`walk-${dir}-3`, 140, c2, b, head, [{ name: 'step', part: 'legs', point: 'foot' }]));
   poses.push(pose(`walk-${dir}-4`, 120, passA, body, head));
 }
+// Facing left mirrors each right-facing pose around the origin, markers included, so no left parts are drawn.
+const mirrored = name => ({ name: name.replace('-r', '-l'), mirror: name });
+poses.push(...['idle-r', 'breathe-r', 'walk-r-1', 'walk-r-2', 'walk-r-3', 'walk-r-4'].map(mirrored));
 poses.push(pose('hurt-d', 300, 'legs-d', 'body-d', 'head-d-hurt'));
 poses.push(pose('hurt-r', 300, 'legs-r', 'body-r', 'head-r-hurt'));
-poses.push(pose('hurt-l', 300, 'legs-l', 'body-l', 'head-l-hurt'));
+poses.push(mirrored('hurt-r'));
 // Attacks: windup, strike (hit window, blade marker), recover. Facing up, the sword arm is behind the head.
 const attack = (dir, legs, body, head, swordBehind) => ['windup', 'strike', 'recover'].map((phase, i) => {
   const sword = { name: 'sword', part: `sa-${dir}-${phase}`, attach: { part: 'body', point: 'shoulder' } };
@@ -98,10 +93,10 @@ const attack = (dir, legs, body, head, swordBehind) => ['windup', 'strike', 'rec
 poses.push(...attack('d', 'legs-d', 'body-d-noarm', 'head-d', [false, false, false]));
 poses.push(...attack('u', 'legs-d', 'body-u-noarm', 'head-u', [false, true, true]));
 poses.push(...attack('r', 'legs-r', 'body-r-noarm', 'head-r', [false, false, false]));
-poses.push(...attack('l', 'legs-l', 'body-l-noarm', 'head-l', [false, false, false]));
+poses.push(...['attack-r-1', 'attack-r-2', 'attack-r-3'].map(mirrored));
 poses.push({ name: 'hold-up', duration: 900, origin, parts: [
   { name: 'legs', part: 'legs-d' }, { name: 'body', part: 'body-d-lift', attach: { part: 'legs', point: 'hip' } }, { name: 'head', part: 'head-d-happy', attach: { part: 'body', point: 'neck' } },
-  { name: 'armL', part: 'arm-up-l', attach: { part: 'body', point: 'shoulderL' } }, { name: 'armR', part: 'arm-up-r', attach: { part: 'body', point: 'shoulderR' } }
+  { name: 'armL', part: 'arm-up-l', attach: { part: 'body', point: 'shoulderL' } }, { name: 'armR', part: 'arm-up-l', flipX: true, attach: { part: 'body', point: 'shoulderR' } }
 ], markers: [{ name: 'item', part: 'body', point: 'hold' }] });
 const animations = {};
 for (const dir of 'durl') {
@@ -111,6 +106,6 @@ for (const dir of 'durl') {
 for (const dir of 'durl') animations[`attack-${dir}`] = { frames: [1, 2, 3].map(i => `attack-${dir}-${i}`), loop: false };
 animations['hurt-d'] = { frames: ['hurt-d'], loop: false };
 animations['hold-up'] = { frames: ['hold-up'], loop: false };
-const source = { format: 'pixelforge-poses', version: 1, name: 'keeper', width: 40, height: 40, palette: paletteFor(Object.values(P).map(p => p.rows)), parts: P, poses, animations, sheet: { columns: 8 } };
+const source = { format: 'pixelforge-poses', version: 1, name: 'keeper', width: 40, height: 40, palette: linkedPalette(), parts: P, poses, animations, sheet: { columns: 8, trim: true } };
 writeJSON('art/poses/keeper.poses.json', source, { force: process.argv.includes('--force') });
 console.log('parts', Object.keys(P).length, 'poses', poses.length);

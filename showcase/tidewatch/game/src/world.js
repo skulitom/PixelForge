@@ -1,14 +1,8 @@
 // Deterministic game simulation: no DOM access. Positions are world pixels; y is the ground contact line.
 import { TILE, COLS, ROWS, OBJECTS, ENEMIES, START, walkable } from './map.js';
 
-// Sprite anchors: the pixel of each frame that stands on the object's ground point. Plain PixelForge recipes
-// have no pivot field, so these were measured from the recipes (poses use their compiled origins).
-export const ANCHORS = {
-  lighthouse: [32, 125], cottage: [32, 59], lamp: [7, 29], sign: [8, 12], palm: [22, 61], oak: [23, 55], bush: [8, 12], 'bush-cut': [8, 13],
-  grass: [8, 13], 'grass-cut': [8, 13], 'flower-red': [8, 11], 'flower-violet': [8, 11], 'flower-white': [8, 11], rock: [8, 12], 'boulder-a': [16, 23],
-  'boulder-b': [16, 20], pot: [8, 13], chest: [8, 12], shell: [8, 12], starfish: [8, 12], pebbles: [8, 12], fisher: [16, 30], boat: [24, 24],
-  keeper: [20, 31], crab: [16, 19], jelly: [8, 13], pickup: [8, 12], fx: [16, 20], slash: [24, 24], gull: [8, 8]
-};
+// Sprite anchors (the pixel that stands on an object's ground point) live in the PixelForge atlases, authored in
+// the recipes. Collision boxes are game rules, relative to that ground point.
 const SOLID = {
   lighthouse: [-20, -14, 40, 14], cottage: [-22, -24, 44, 24], palm: [-4, -4, 8, 4], oak: [-5, -4, 10, 4], bush: [-7, -6, 14, 6], rock: [-7, -6, 14, 6],
   'boulder-a': [-13, -8, 26, 8], 'boulder-b': [-12, -6, 24, 6], pot: [-5, -5, 10, 5], chest: [-7, -6, 14, 6], sign: [-4, -4, 8, 4], lamp: [-3, -3, 6, 3], fisher: [-7, -6, 14, 6]
@@ -20,8 +14,9 @@ const rectAt = (e, r) => [e.x + r[0], e.y + r[1], r[2], r[3]];
 function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 
 export class World {
-  constructor(meta, seed = 7) {
-    this.random = rng(seed); this.meta = meta; this.time = 0;
+  // `keeper` is the keeper's exported atlas JSON: its strike frames carry the blade tip as a `hit` point.
+  constructor(keeper, seed = 7) {
+    this.random = rng(seed); this.keeper = keeper; this.time = 0;
     this.player = { x: START.x, y: START.y, dir: 'u', state: 'idle', t: 0, hp: 6, maxHp: 6, inv: 0, kx: 0, ky: 0, kt: 0, hitSet: new Set() };
     this.props = OBJECTS.map(([kind, tx, ty, extra = {}], id) => ({ id, kind, x: tx * TILE + 8 + (extra.dx ?? 0), y: ty * TILE + 16 + (extra.dy ?? 0) - (FLAT.has(kind) ? 4 : 0), item: extra.item, alive: true, cut: false, open: false, t: 0, flat: FLAT.has(kind) }));
     this.enemies = ENEMIES.map(([kind, tx, ty], id) => ({ id, kind, x: tx * TILE + 8, y: ty * TILE + 12, hp: kind === 'crab' ? 2 : 1, state: 'idle', t: this.random() * 800, dir: 1, vx: 0, vy: 0, kt: 0, cool: 0, wander: 0, alive: true, hurt: 0 }));
@@ -44,10 +39,10 @@ export class World {
     if (dy) { const r = rectAt({ x: e.x, y: e.y + dy }, box); if (!this.solidAt(r)) e.y += dy; else if (!dx) { for (const nudge of [-1, 1]) { const s = rectAt({ x: e.x + nudge, y: e.y + dy }, box); if (!this.solidAt(s)) { e.x += nudge; break; } } } }
     e.x = Math.max(8, Math.min(COLS * TILE - 8, e.x)); e.y = Math.max(8, Math.min(ROWS * TILE - 2, e.y));
   }
-  // Attack reach comes from the compiled pose markers: the blade tip in each strike pose.
+  // Attack reach comes from the atlas: the blade tip (`hit` point) of each strike frame, relative to its anchor.
   attackBox() {
-    const p = this.player, pose = this.meta.poses[`attack-${p.dir}-2`], tip = pose.markers[0].at, origin = pose.origin;
-    const tx = p.x + tip[0] - origin[0], ty = p.y + tip[1] - origin[1], cx = p.x, cy = p.y - 9;
+    const p = this.player, frame = this.keeper.frames[`attack-${p.dir}-2`], tip = frame.points.hit, anchor = frame.anchor;
+    const tx = p.x + tip.x - anchor.x, ty = p.y + tip.y - anchor.y, cx = p.x, cy = p.y - 9;
     const left = Math.min(tx, cx) - 7, top = Math.min(ty, cy) - 7, right = Math.max(tx, cx) + 7, bottom = Math.max(ty, cy) + 7;
     return [left, top, right - left, bottom - top];
   }

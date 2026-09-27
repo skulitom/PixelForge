@@ -4,14 +4,7 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "k": "#1b1528",
-    "w": "#effcff",
-    "W": "#97e3e3",
-    "o": "#f0b87c",
-    "O": "#c9844f",
-    "u": "#975a3a",
-    "U": "#663b2e",
-    "v": "#727d98"
+    "$ref": "../palette.json"
   },
   "frames": [
     {

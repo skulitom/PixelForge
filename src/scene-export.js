@@ -13,19 +13,20 @@ export async function createSceneBundle(source) {
   for (const [id, asset] of Object.entries(scene.assets)) {
     // Asset keys may contain punctuation; use a stable numeric export directory.
     const directory = `assets/${Object.keys(alignment.assets).length}`;
-    const atlas = buildAtlas(asset.recipe);
+    // Aligned passes share one uniform grid, even when a recipe trims its own export.
+    const atlas = buildAtlas(asset.recipe, { trim: false });
     atlas.metadata.meta.image = 'color.png';
     alignment.assets[id] = { directory, metadata: `${directory}/atlas.json`, passes: {} };
     files.set(`${directory}/atlas.json`, Buffer.from(JSON.stringify(atlas.metadata, null, 2) + '\n'));
     for (const [pass, project] of Object.entries(asset)) {
-      const rendered = pass === 'recipe' ? atlas : buildAtlas(project), filename = `${directory}/${pass === 'recipe' ? 'color' : pass}.png`;
+      const rendered = pass === 'recipe' ? atlas : buildAtlas(project, { trim: false }), filename = `${directory}/${pass === 'recipe' ? 'color' : pass}.png`;
       files.set(filename, encodePNG(rendered.data, rendered.width, rendered.height));
       alignment.assets[id].passes[pass === 'recipe' ? 'color' : pass] = filename;
     }
   }
   files.set('alignment.json', Buffer.from(JSON.stringify(alignment, null, 2) + '\n'));
   files.set('review.json', Buffer.from(JSON.stringify({ placements: view.placements, warnings: view.warnings }, null, 2) + '\n'));
-  for (const file of ['core.js', 'authoring.js', 'scene.js']) files.set(file, await readFile(new URL(file, import.meta.url)));
+  for (const file of ['core.js', 'authoring.js', 'autotile.js', 'scene.js']) files.set(file, await readFile(new URL(file, import.meta.url)));
   for (const [file, source] of [['preview.html', '../studio/scene.html'], ['scene-player.js', '../studio/scene-player.js'], ['scene.css', '../studio/scene.css']]) files.set(file, await readFile(new URL(source, import.meta.url)));
   return { files, scene, warnings: view.warnings };
 }

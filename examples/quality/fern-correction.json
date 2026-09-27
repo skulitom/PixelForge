@@ -23,5 +23,15 @@
         ]
       }
     }
-  ]
+  ],
+  "frames": {
+    "still": "e44b70ee9e12f4a566be394f27f1bb7bcb7513260e7085f318375c844e675116"
+  },
+  "targets": [
+    "still"
+  ],
+  "colors": {
+    "g": "#72967dff",
+    "h": "#afc4a0ff"
+  }
 }

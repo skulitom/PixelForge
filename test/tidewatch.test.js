@@ -2,29 +2,35 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { renderProject, compilePoses } from '../src/index.js';
+import { fileURLToPath } from 'node:url';
+import { renderProject, compilePoses, compileAutotile, resolveReferences, neighbourMask, BLOB_MASKS } from '../src/index.js';
 import { World } from '../showcase/tidewatch/game/src/world.js';
-import { blobMasks, maskAt } from '../showcase/tidewatch/game/src/autotile.js';
-import { TERRAIN, isSand } from '../showcase/tidewatch/game/src/map.js';
+import { TERRAIN, isSand, isGrass } from '../showcase/tidewatch/game/src/map.js';
 
 const art = new URL('../showcase/tidewatch/art/', import.meta.url);
 const json = path => JSON.parse(readFileSync(new URL(path, art), 'utf8'));
+// Tidewatch sources link art/palette.json; resolve it the way the CLI does, relative to each file.
+const resolved = async path => (await resolveReferences(json(path), { baseDir: fileURLToPath(new URL('.', new URL(path, art))) })).document;
 const recipes = readdirSync(new URL('recipes/', art)).filter(f => f.endsWith('.json') && !f.includes('.meta.') && !f.includes('.map.'));
 
-test('Tidewatch: every recipe validates without clipping warnings', () => {
+test('Tidewatch: every recipe validates without clipping warnings', async () => {
   assert.ok(recipes.length >= 30);
   for (const file of recipes) {
-    const project = renderProject(json(`recipes/${file}`));
+    const project = renderProject(await resolved(`recipes/${file}`));
     assert.deepEqual(project.warnings, [], file);
   }
 });
 
-test('Tidewatch: compiled pose recipes and metadata match their authoritative pose sources', () => {
+test('Tidewatch: compiled recipes and metadata match their authoritative pose and autotile sources', async () => {
   for (const name of ['keeper', 'crab']) {
     // compilePoses uses null-prototype maps; compare the JSON a file would contain.
-    const { recipe, metadata } = JSON.parse(JSON.stringify(compilePoses(json(`poses/${name}.poses.json`))));
-    assert.deepEqual(recipe, json(`recipes/${name}.json`), `${name} recipe is stale; recompile it`);
+    const { recipe, metadata } = JSON.parse(JSON.stringify(compilePoses(await resolved(`poses/${name}.poses.json`))));
+    assert.deepEqual(recipe, await resolved(`recipes/${name}.json`), `${name} recipe is stale; recompile it`);
     assert.deepEqual(metadata, json(`recipes/${name}.meta.json`), `${name} metadata is stale; recompile it`);
+  }
+  for (const name of ['shore', 'grass']) {
+    const { recipe } = JSON.parse(JSON.stringify(compileAutotile(await resolved(`terrain/${name}.autotile.json`))));
+    assert.deepEqual(recipe, await resolved(`recipes/${name}.json`), `${name} recipe is stale; run pixelforge autotile`);
   }
 });
 
@@ -33,30 +39,42 @@ test('Tidewatch: exported game atlases match the recipes byte for byte', () => {
   assert.match(output, /All exported assets match their recipes/);
 });
 
-test('Tidewatch: material passes stay aligned with their colour recipes', () => {
+test('Tidewatch: material passes stay aligned with their colour recipes', async () => {
   for (const name of ['lighthouse', 'cottage', 'lamp']) {
-    const color = renderProject(json(`recipes/${name}.json`));
+    const color = renderProject(await resolved(`recipes/${name}.json`));
     for (const pass of ['normal', 'emissive']) {
-      const other = renderProject(json(`recipes/${name}-${pass}.json`));
+      const other = renderProject(await resolved(`recipes/${name}-${pass}.json`));
       assert.deepEqual(other.frames.map(f => [f.name, f.duration]), color.frames.map(f => [f.name, f.duration]), `${name}-${pass}`);
       assert.deepEqual([other.width, other.height], [color.width, color.height]);
     }
   }
 });
 
-test('Tidewatch: blob autotiling covers every sand tile with one of 47 authored tiles', () => {
-  const masks = new Set(blobMasks()), shore = renderProject(json('recipes/shore.json'));
-  assert.equal(masks.size, 47);
-  const names = new Set(shore.frames.map(f => f.name));
+test('Tidewatch: PixelForge blob masks give every sand and grass cell a compiled tile', async () => {
+  const shore = renderProject(await resolved('recipes/shore.json')), grass = renderProject(await resolved('recipes/grass.json'));
+  assert.equal(BLOB_MASKS.length, 47);
+  const frames = new Set(grass.frames.map(f => f.name));
   TERRAIN.forEach((row, y) => [...row].forEach((_, x) => {
-    if (!isSand(x, y)) return;
-    const mask = maskAt(null, x, y, (_, i, j) => isSand(i, j));
-    assert.ok(masks.has(mask) && names.has(`shore-${mask}-0`), `tile ${x},${y}`);
+    if (isSand(x, y)) assert.ok(Object.hasOwn(shore.animations, `surf-${neighbourMask('blob', (dx, dy) => isSand(x + dx, y + dy))}`), `sand ${x},${y}`);
+    if (isGrass(x, y)) assert.ok(frames.has(`grass-${neighbourMask('blob', (dx, dy) => isGrass(x + dx, y + dy))}`), `grass ${x},${y}`);
   }));
 });
 
+test('Tidewatch: the game places sprites from atlas anchors and reads reach, held items and glyph advances from points', () => {
+  const atlas = name => JSON.parse(readFileSync(new URL(`../showcase/tidewatch/game/assets/${name}.json`, import.meta.url), 'utf8'));
+  const keeper = atlas('keeper'), props = atlas('props'), font = atlas('font');
+  assert.deepEqual(keeper.frames['idle-d'].anchor, { x: 20, y: 31 });
+  assert.equal(keeper.frames['idle-d'].trimmed, true);
+  // Mirrored left-facing strikes carry mirrored blade tips.
+  const right = keeper.frames['attack-r-2'].points.hit, left = keeper.frames['attack-l-2'].points.hit;
+  assert.equal(right.x + left.x, 2 * 20); assert.equal(right.y, left.y);
+  assert.ok(keeper.frames['hold-up'].points.item);
+  assert.deepEqual([props.frames.pot.anchor, props.frames['flower-red'].anchor, props.frames.chest.anchor], [{ x: 8, y: 13 }, { x: 8, y: 11 }, { x: 8, y: 12 }]);
+  assert.deepEqual([font.frames.uM.points.advance.x, font.frames.period.points.advance.x], [6, 2]);
+});
+
 test('Tidewatch: the island can be completed in a deterministic headless run', () => {
-  const meta = json('recipes/keeper.meta.json'), world = new World(meta, 3);
+  const keeper = JSON.parse(readFileSync(new URL('../showcase/tidewatch/game/assets/keeper.json', import.meta.url), 'utf8')), world = new World(keeper, 3);
   const input = { pressed: new Set(), held: new Set(), take(k) { const had = this.pressed.has(k); this.pressed.delete(k); return had; }, axis() { return { x: 0, y: 0 }; } };
   const run = (ms, key) => { if (key) input.pressed.add(key); for (let t = 0; t < ms; t += 1000 / 60) world.update(1000 / 60, input); };
   const skip = () => { while (world.messages.length) world.messages.shift(); run(20); };

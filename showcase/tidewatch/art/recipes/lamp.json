@@ -2,6 +2,10 @@
   "version": 1,
   "width": 16,
   "height": 32,
+  "anchor": [
+    7,
+    29
+  ],
   "animations": {
     "off": {
       "frames": [
@@ -20,16 +24,7 @@
   },
   "name": "lamp",
   "palette": {
-    "k": "#1b1528",
-    "W": "#97e3e3",
-    "c": "#4cb8d0",
-    "C": "#3288c0",
-    "M": "#b7c2d6",
-    "v": "#727d98",
-    "x": "#fffcea",
-    "X": "#ffe46e",
-    "i": "#ffa243",
-    "_": "#1b152866"
+    "$ref": "../palette.json"
   },
   "frames": [
     {

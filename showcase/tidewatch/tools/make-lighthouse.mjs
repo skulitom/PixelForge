@@ -1,7 +1,7 @@
 // One-time scaffold for the lighthouse and its aligned normal/emissive passes (64x128).
 // Geometry is laid out row by row: a tapered, cylinder-shaded tower with hand-placed bands, windows,
 // door, masonry, gallery and lantern room. The three recipes share frame names, timing and animations.
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const W = 64, H = 128, CX = 32;
 const blank = () => Array.from({ length: H }, () => Array(W).fill('.'));
 const put = (g, x, y, c) => { if (x >= 0 && y >= 0 && x < W && y < H) g[y][x] = c; };
@@ -99,9 +99,9 @@ for (const [name, lit, phase, duration] of variants) {
   for (const pass of Object.keys(passes)) passes[pass].push({ name, duration, ops: [{ op: 'grid', x: 0, y: 0, rows: built[pass] }] });
 }
 const animations = { day: { frames: ['unlit'] }, night: { frames: ['lit-0', 'lit-1', 'lit-2', 'lit-3'] } };
-const base = { version: 1, width: W, height: H, animations, sheet: { columns: 5 } };
+const base = { version: 1, width: W, height: H, anchor: [32, 125], animations, sheet: { columns: 5 } };
 const force = { force: process.argv.includes('--force') };
-writeJSON('art/recipes/lighthouse.json', { ...base, name: 'lighthouse', palette: paletteFor(passes.color.map(f => f.ops[0].rows)), frames: passes.color }, force);
+writeJSON('art/recipes/lighthouse.json', { ...base, name: 'lighthouse', palette: linkedPalette(), frames: passes.color }, force);
 writeJSON('art/recipes/lighthouse-normal.json', { ...base, name: 'lighthouse-normal', palette: normalPalette, frames: passes.normal }, force);
-writeJSON('art/recipes/lighthouse-emissive.json', { ...base, name: 'lighthouse-emissive', palette: paletteFor(passes.emissive.map(f => f.ops[0].rows)), frames: passes.emissive }, force);
+writeJSON('art/recipes/lighthouse-emissive.json', { ...base, name: 'lighthouse-emissive', palette: linkedPalette(), frames: passes.emissive }, force);
 console.log('lighthouse passes written');

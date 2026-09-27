@@ -1,6 +1,6 @@
 // One-time scaffold for effects, pickups and UI. Effects use small, explicit particle layouts (hand-placed
 // starting points and velocities) so each material moves differently; the resulting grids are ordinary frames.
-import { paletteFor, writeJSON, palette as GLOBAL } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const force = { force: process.argv.includes('--force') };
 const canvas = (w, h) => Array.from({ length: h }, () => Array(w).fill('.'));
 const rows = g => g.map(r => r.join(''));
@@ -97,12 +97,12 @@ for (const [key, [list, duration]] of Object.entries(fxGroups)) {
   fxAnimations[key] = { frames: names, loop: false };
 }
 fxAnimations.sparkle.loop = true;
-writeJSON('art/recipes/fx.json', { version: 1, name: 'fx', width: 32, height: 32, palette: paletteFor(fxFrames.map(f => f.ops[0].rows)), frames: fxFrames, animations: fxAnimations, sheet: { columns: 8 } }, force);
+writeJSON('art/recipes/fx.json', { version: 1, name: 'fx', width: 32, height: 32, palette: linkedPalette(), anchor: [16, 20], frames: fxFrames, animations: fxAnimations, sheet: { columns: 8, trim: true } }, force);
 const slashFrames = [], slashAnimations = {};
 for (const dir of 'durl') {
   slashAnimations[`slash-${dir}`] = { frames: [0, 1, 2].map(f => { const name = `slash-${dir}-${f}`; slashFrames.push({ name, duration: [50, 70, 70][f], ops: [{ op: 'grid', x: 0, y: 0, rows: slash(dir, f) }] }); return name; }), loop: false };
 }
-writeJSON('art/recipes/slash.json', { version: 1, name: 'slash', width: 48, height: 48, palette: paletteFor(slashFrames.map(f => f.ops[0].rows)), frames: slashFrames, animations: slashAnimations, sheet: { columns: 6 } }, force);
+writeJSON('art/recipes/slash.json', { version: 1, name: 'slash', width: 48, height: 48, palette: linkedPalette(), anchor: [24, 24], frames: slashFrames, animations: slashAnimations, sheet: { columns: 6, trim: true } }, force);
 // ---------------- pickups (16x16) with an emissive pass for the sunflint ----------------
 const P = {
   'heart-0': ['................', '................', '................', '....kkk.kkk.....', '...k1x1k122k....', '...k1x11222k....', '...k1112223k....', '....k12223k.....', '.....k223k......', '......k3k.......', '.......k........', '................', '.....______.....', '................', '................'],
@@ -116,9 +116,9 @@ const P = {
 };
 const pickFrames = Object.entries(P).map(([name, g]) => ({ name, duration: name.startsWith('glass') ? 160 : name.startsWith('heart') ? 400 : 300, ops: [{ op: 'grid', x: 0, y: 0, rows: g }] }));
 const pickAnimations = { heart: { frames: ['heart-0', 'heart-1'] }, glass: { frames: ['glass-0', 'glass-0', 'glass-1', 'glass-2'] }, key: { frames: ['key'] }, flint: { frames: ['flint-0', 'flint-1'] } };
-writeJSON('art/recipes/pickups.json', { version: 1, name: 'pickups', width: 16, height: 16, palette: paletteFor(Object.values(P)), frames: pickFrames, animations: pickAnimations }, force);
+writeJSON('art/recipes/pickups.json', { version: 1, name: 'pickups', width: 16, height: 16, palette: linkedPalette(), anchor: [8, 12], frames: pickFrames, animations: pickAnimations }, force);
 const glow = name => P[name].map(r => r.replace(/[^xXeiI]/g, '.'));
-writeJSON('art/recipes/pickups-emissive.json', { version: 1, name: 'pickups-emissive', width: 16, height: 16, palette: paletteFor(Object.values(P)), frames: pickFrames.map(f => ({ ...f, ops: [{ op: 'grid', x: 0, y: 0, rows: f.name.startsWith('flint') ? glow(f.name) : ['................'] }] })), animations: pickAnimations }, force);
+writeJSON('art/recipes/pickups-emissive.json', { version: 1, name: 'pickups-emissive', width: 16, height: 16, palette: linkedPalette(), frames: pickFrames.map(f => ({ ...f, ops: [{ op: 'grid', x: 0, y: 0, rows: f.name.startsWith('flint') ? glow(f.name) : ['................'] }] })), animations: pickAnimations }, force);
 // ---------------- UI icons (16x16) and a 9-slice dialog frame (8x8) ----------------
 const U = {
   'heart-full': ['.kkk.kkk.', 'k1x1k122k', 'k1112222k', 'k1122223k', '.k12223k.', '..k223k..', '...k3k...', '....k....'],
@@ -129,7 +129,7 @@ const U = {
   'flint': ['..kk..', '.kxek.', 'kxXXik', 'keXiIk', '.kiIk.', '..kk..']
 };
 const uiFrames = Object.entries(U).map(([name, g]) => ({ name, ops: [{ op: 'grid', x: 1, y: 1, rows: g.map(r => r.padEnd(10, '.').slice(0, 10)) }] }));
-writeJSON('art/recipes/ui.json', { version: 1, name: 'ui', width: 12, height: 10, palette: paletteFor(Object.values(U)), frames: uiFrames }, force);
+writeJSON('art/recipes/ui.json', { version: 1, name: 'ui', width: 12, height: 10, palette: linkedPalette(), frames: uiFrames }, force);
 const box = {
   tl: ['..kkkkkk', '.kMMMMMM', 'kMvvvvvv', 'kMvVVVVV', 'kMvVVVVV', 'kMvVVVVV', 'kMvVVVVV', 'kMvVVVVV'],
   t: ['kkkkkkkk', 'MMMMMMMM', 'vvvvvvvv', 'VVVVVVVV', 'VVVVVVVV', 'VVVVVVVV', 'VVVVVVVV', 'VVVVVVVV'],
@@ -137,5 +137,5 @@ const box = {
 };
 const rot = g => g[0].split('').map((_, x) => g.map(r => r[x]).reverse().join(''));
 const boxFrames = { tl: box.tl, t: box.t, tr: rot(box.tl), r: rot(box.t), br: rot(rot(box.tl)), b: rot(rot(box.t)), bl: rot(rot(rot(box.tl))), l: rot(rot(rot(box.t))), c: box.c };
-writeJSON('art/recipes/dialog.json', { version: 1, name: 'dialog', width: 8, height: 8, palette: paletteFor(Object.values(boxFrames)), frames: Object.entries(boxFrames).map(([name, g]) => ({ name: `box-${name}`, ops: [{ op: 'grid', x: 0, y: 0, rows: g }] })), sheet: { columns: 9 } }, force);
+writeJSON('art/recipes/dialog.json', { version: 1, name: 'dialog', width: 8, height: 8, palette: linkedPalette(), frames: Object.entries(boxFrames).map(([name, g]) => ({ name: `box-${name}`, ops: [{ op: 'grid', x: 0, y: 0, rows: g }] })), sheet: { columns: 9 } }, force);
 console.log('fx, slash, pickups, ui and dialog written');

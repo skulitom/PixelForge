@@ -4,10 +4,7 @@
   "width": 8,
   "height": 8,
   "palette": {
-    "k": "#1b1528",
-    "V": "#272c55",
-    "M": "#b7c2d6",
-    "v": "#727d98"
+    "$ref": "../palette.json"
   },
   "frames": [
     {

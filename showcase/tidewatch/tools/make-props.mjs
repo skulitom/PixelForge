@@ -1,5 +1,5 @@
 // One-time scaffold for 16x16 props. art/recipes/props.json is the authoritative, editable source afterwards.
-import { paletteFor, writeJSON } from './common.mjs';
+import { linkedPalette, writeJSON } from './common.mjs';
 const G = {};
 G['bush'] = [
   '................',
@@ -224,7 +224,9 @@ G['sign'] = [
   '................',
   '................'
 ];
-const frames = Object.entries(G).map(([name, rows]) => ({ name, ops: [{ op: 'grid', x: 0, y: 0, rows }] }));
+// Ground anchors: most props stand on row 12; taller grass, the pot and cut bushes on row 13, flowers on row 11.
+const ANCHORS = { 'bush-cut': [8, 13], 'grass-a': [8, 13], 'grass-b': [8, 13], 'grass-cut': [8, 13], pot: [8, 13], 'flower-red': [8, 11], 'flower-violet': [8, 11], 'flower-white': [8, 11] };
+const frames = Object.entries(G).map(([name, rows]) => ({ name, ...(ANCHORS[name] && { anchor: ANCHORS[name] }), ops: [{ op: 'grid', x: 0, y: 0, rows }] }));
 // Tall grass and flowers sway by alternating authored poses; cut variants are separate frames.
 const animations = {
   'grass-sway': { frames: ['grass-a', 'grass-b'] },
@@ -232,5 +234,5 @@ const animations = {
 };
 frames.find(f => f.name === 'grass-a').duration = 700;
 frames.find(f => f.name === 'grass-b').duration = 500;
-writeJSON('art/recipes/props.json', { version: 1, name: 'props', width: 16, height: 16, palette: paletteFor(Object.values(G)), frames, animations, sheet: { columns: 8 } }, { force: process.argv.includes('--force') });
+writeJSON('art/recipes/props.json', { version: 1, name: 'props', width: 16, height: 16, palette: linkedPalette(), anchor: [8, 12], frames, animations, sheet: { columns: 8, trim: true } }, { force: process.argv.includes('--force') });
 console.log('frames', frames.length);

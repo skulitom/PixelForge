@@ -1,5 +1,6 @@
 // Draws atlas frames into three aligned low-resolution buffers (colour, normal, emissive) and composites them
 // with banded point lights, a rotating lighthouse beam and an ambient tint. Output stays at native 240x160.
+import { drawFrame } from './pixelforge/runtime.js';
 export const VIEW_W = 240, VIEW_H = 160;
 const makeCanvas = () => { const c = document.createElement('canvas'); c.width = VIEW_W; c.height = VIEW_H; return c; };
 export class Renderer {
@@ -18,17 +19,17 @@ export class Renderer {
     this.c.fillStyle = '#213f7a'; this.c.fillRect(0, 0, VIEW_W, VIEW_H);
     if (lighting) { this.n.fillStyle = '#8080ff'; this.n.fillRect(0, 0, VIEW_W, VIEW_H); this.e.clearRect(0, 0, VIEW_W, VIEW_H); this.e.fillStyle = '#000'; this.e.fillRect(0, 0, VIEW_W, VIEW_H); }
   }
-  // (x, y) is the frame's top-left corner in world pixels. Offscreen draws are culled.
+  // (x, y) is where the frame's atlas anchor lands in world pixels (its top-left corner for frames without an
+  // anchor, such as tiles). PixelForge's drawFrame restores trimmed frames and mirrors flips around the source
+  // canvas; offscreen draws are culled against that canvas.
   draw(atlas, name, x, y, { flip = false, alpha = 1, lightPasses = true } = {}) {
-    const f = atlas.lookup.get(name);
-    if (!f) throw new Error(`${atlas.name}: unknown frame ${name}`);
-    const sx = Math.round(x - this.cam.x), sy = Math.round(y - this.cam.y);
-    if (sx + f.w < 0 || sy + f.h < 0 || sx >= VIEW_W || sy >= VIEW_H) return;
+    const entry = atlas.frames[name];
+    if (!entry) throw new Error(`${atlas.name}: unknown frame ${name}`);
+    const sx = Math.round(x - this.cam.x), sy = Math.round(y - this.cam.y), source = entry.sourceSize, anchor = entry.anchor ?? { x: 0, y: 0 };
+    const left = sx - (flip ? source.w - anchor.x : anchor.x), top = sy - anchor.y;
+    if (left + source.w < 0 || top + source.h < 0 || left >= VIEW_W || top >= VIEW_H) return;
     this.draws++;
-    const blit = (g, img) => {
-      if (flip) { g.save(); g.translate(sx + f.w, sy); g.scale(-1, 1); g.drawImage(img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h); g.restore(); }
-      else g.drawImage(img, f.x, f.y, f.w, f.h, sx, sy, f.w, f.h);
-    };
+    const blit = (g, image) => drawFrame(g, { image, atlas: atlas.meta }, name, sx, sy, { flipX: flip });
     if (alpha !== 1) this.c.globalAlpha = alpha;
     blit(this.c, atlas.color);
     this.c.globalAlpha = 1;

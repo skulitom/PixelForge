@@ -4,16 +4,16 @@
   "width": 16,
   "height": 16,
   "palette": {
-    "4": "#e5adf7",
-    "6": "#66429a",
-    "7": "#ffffff",
-    "k": "#1b1528",
+    "$ref": "../palette.json",
     "H": "#a266d6bb",
     "J": "#66429ae6",
     "Q": "#e5adf7dd",
-    "Y": "#633f9655",
-    "_": "#1b152866"
+    "Y": "#633f9655"
   },
+  "anchor": [
+    8,
+    13
+  ],
   "frames": [
     {
       "name": "rest-0",
@@ -244,6 +244,7 @@
     }
   },
   "sheet": {
-    "columns": 7
+    "columns": 7,
+    "trim": true
   }
 }

@@ -1,10 +1,12 @@
-// Tile review: repeats frames through PixelForge's own scene renderer and writes an enlarged PNG.
+// Tile review: repeats frames through PixelForge's own scene renderer, writes an enlarged PNG and prints each
+// frame's seam evidence (doubled edge lines and wrap steps, the same report as `inspect --view tile`).
 // Usage: node tools/mosaic.mjs <recipe.json> <out.png> [--frames a,b] [--grid 6x4] [--scale 3] [--map "ab/ba"]
 import { readFileSync, writeFileSync } from 'node:fs';
-import { prepareScene, renderScene, scalePixels, encodePNG, inspectTile, renderProject } from '../../../src/index.js';
+import path from 'node:path';
+import { prepareScene, renderScene, scalePixels, encodePNG, inspectTile, renderProject, resolveReferences } from '../../../src/index.js';
 const [file, out, ...rest] = process.argv.slice(2);
 const opt = {}; for (let i = 0; i < rest.length; i += 2) opt[rest[i].slice(2)] = rest[i + 1];
-const recipe = JSON.parse(readFileSync(file, 'utf8'));
+const recipe = (await resolveReferences(JSON.parse(readFileSync(file, 'utf8')), { baseDir: path.dirname(path.resolve(file)) })).document;
 const frames = (opt.frames ?? recipe.frames[0].name).split(',');
 const [cols, rows] = (opt.grid ?? '6x4').split('x').map(Number);
 const scale = Number(opt.scale ?? 3);
@@ -18,4 +20,4 @@ const scene = prepareScene({ format: 'pixelforge-scene', version: 1, name: 'mosa
 const view = renderScene(scene);
 writeFileSync(out, encodePNG(scalePixels(view.data, view.width, view.height, scale), view.width * scale, view.height * scale));
 const project = renderProject(recipe);
-for (const name of frames) { const t = inspectTile(project, name); console.log(name, 'edge mismatches', JSON.stringify(t.mismatches)); }
+for (const name of frames) { const { leftRight, topBottom } = inspectTile(project, name); console.log(name, JSON.stringify({ leftRight, topBottom })); }
