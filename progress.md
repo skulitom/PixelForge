@@ -49,3 +49,12 @@ Original prompt: Take a look at PixelForge folder. I would like to stress test t
 - User review of art direction and play feel before any publication.
 - Fix the two reported toolkit bugs as a separate follow-up; they remain reproducible in this snapshot.
 - Real-device touch ergonomics, Safari/Firefox testing, difficulty tuning and more levels are future work.
+
+## Art-quality review — 2026-09-27
+
+- User found the art too visibly assembled from basic shapes and asked for an Animal Well quality comparison, then clarified that the main objective is improving PixelForge itself.
+- Added `docs/reports/pixelforge-art-quality-roadmap.md`: seven prioritized toolkit proposals, existing capabilities, local evidence, first-party references, acceptance criteria and a controlled quality benchmark.
+- Reviewed source and rendered contact sheets. Audit in `docs/reports/emberfall-art-audit.json`: 220 frames, 44 animations, 181 distinct rendered RGBA images when counted within the nine recipes. Repetition may be intentional; these counts are not an art score.
+- Identified source-level studio onion-skin limitation: it selects the preceding recipe frame, which can differ from the preceding animation entry. Report marks this as source-inspected, not browser-reproduced.
+- Review recommends stronger craft examples and inspection first, then regional editing, pose structure, scene context, interchange and optional material passes. Features remain proposals; no toolkit or game behavior changed. Keep work local; no publishing or hosting.
+- Validation: checked report/document local links and recomputed source hashes and frame/animation counts for all nine recipes and 44 animations; `git diff --check` passed. No functional changes, so the gameplay suite was not rerun for this documentation review.

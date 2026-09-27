@@ -47,7 +47,7 @@ Open **http://127.0.0.1:4173** and choose **Begin adventure** or **Watch it play
 
 ![Emberfall's moonlit forest and spell effects](demo/preview.png)
 
-[Demo details and controls](demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md)
+[Demo details and controls](demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md) · [PixelForge art-quality roadmap](docs/reports/pixelforge-art-quality-roadmap.md)
 
 ## For agents
 

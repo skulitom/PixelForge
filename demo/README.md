@@ -72,3 +72,5 @@ QA checks keyboard and pointer movement, double jump, charge shots, elemental re
 For agent control, `window.render_game_to_text()` returns observable gameplay state and coordinates. `window.advanceTime(ms)` switches that page session to manual simulation stepping. Reload to resume ordinary real-time simulation after using it.
 
 Read [the full stress-test report](../docs/bugreports/emberfall-stress-test.md) for evidence, reproduction instructions, limitations and proposed fixes.
+
+Read [the PixelForge art-quality roadmap](../docs/reports/pixelforge-art-quality-roadmap.md) for what this demo reveals about authoring limitations and proposed toolkit improvements for more organic artwork and animation.

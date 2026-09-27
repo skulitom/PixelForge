@@ -6,6 +6,8 @@ Date: 2026-09-27. Toolkit baseline: `092b457` (0.1.0). Tested locally on Windows
 
 ## Verified results
 
+Visual quality is reviewed separately in the [PixelForge art-quality roadmap](../reports/pixelforge-art-quality-roadmap.md), with proposed improvements to the toolkit's authoring, inspection and animation workflows. Export correctness and frame counts do not establish artistic quality.
+
 | Workload | Observed result |
 | --- | --- |
 | Baseline toolkit suite | 46/46 passing |
