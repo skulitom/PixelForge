@@ -38,3 +38,16 @@ Raw notes kept while building the showcase. The final, verified write-up is `doc
 - F22 (missing) Pose part instances cannot be mirrored. Left-facing keeper parts are programmatic mirrors of the right-facing ones (anchors/points flipped by hand in the scaffold); frame-level `flipX` exists for recipes but not in pose sources.
 - F23 (evidence for S4) Untrimmed atlases: trimming each frame to its visible bounds would save 75% of the keeper atlas (64,000 → 16,226 px), 75% of slash arcs, 82% of effects, 46% of the crab.
 - F24 (API ergonomics) `compilePoses` returns null-prototype maps (`symbols`, `metadata.poses`), so `assert.deepStrictEqual(compiled, JSON.parse(file))` fails until the result is JSON-normalised.
+
+## Second pass: fixing PixelForge, then rebuilding Tidewatch on it
+
+Every item above was fixed or implemented in the toolkit (see the update at the top of the report). Then each scaffold in `tools/` was switched to the new features and rerun. The scaffolds first proved they still reproduce the committed sources exactly, so no hand edits were lost.
+
+- R1 (verified) All 528 rendered frames hash-identical before and after the migration: mirrored keeper poses and flipped arms/claws, compiled autotile terrain with palette-cycled surf, the `outline` op on the oak, linked palettes, anchors, points and trimmed sheets.
+- R2 (verified) The committed game (served from a HEAD copy) and the rebuilt game ran one scripted session through `advance()` with `requestAnimationFrame` stubbed and `performance.now` frozen: identical 240×160 output at all 34 checkpoints (walks, four-way attacks, crab fight, jelly, 16 prop kinds, grass cutting, held item, gulls, night lighting and beam).
+- R3 (friction, game) A first comparison differed at 6 checkpoints. The simulation state was identical tick for tick; the cause was the dialog's blinking "continue" marker, which uses wall-clock time. Freeze `performance.now` for screenshot comparisons.
+- F25 (bug, fixed) Scene lighting banded each colour channel separately, so a warm light crossed band thresholds at different distances per channel: rainbow rings (red on sand, green on water). Invisible while only lit buildings were shaded; `lighting.scope: "all"` exposed it on the terrain. Each light's brightness is now banded once and tinted; ambient is not banded.
+- F26 (missing, added) A tilemap for a window of a larger map had no way to see neighbours outside the window, so edge tiles drew false coastlines. A `null` legend entry now marks context cells: matched, never drawn.
+- F27 (friction, open) Compiled recipes are verbose: `shore.json` grew from 157 KB to 184 KB (four `copy` ops and a palette per frame, pretty-printed) while its template is 3 KB.
+- F28 (limit, open) Scene placements do not default to their frame's anchor; `make-scene.mjs` reads anchors from the recipes and passes them. An animated placement cannot follow per-frame anchors.
+- F29 (design note, open) The pose compiler's `mirror` reflects around the origin pixel column (c → 2·origin − c, matching the hand-mirrored art); the runtime's `drawFrame` flips around the anchor corner (x → width − anchor). They differ by one pixel, so pick one per asset.

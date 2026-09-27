@@ -2,6 +2,54 @@
 
 27 September 2026 · Baseline `1e47c22` (0.1.0) · Windows 11, Node v24.19.0 · Browser checks in the Chromium pane of the Claude desktop app.
 
+## Update: fixed, implemented and dogfooded
+
+After the first pass I fixed every bug and implemented every missing feature below in PixelForge itself, then rebuilt Tidewatch on them. The original findings follow unchanged, as the record of what was found.
+
+| ID | Status | What changed |
+| --- | --- | --- |
+| TW-B1 | Fixed | An oversized MCP line gets a JSON-RPC `-32600` error (with the request id when it can be read). The rest of the line is discarded and the server keeps serving. |
+| TW-B2 | Fixed | Requests may be 16 MiB (`MAX_REQUEST_BYTES`, shared by MCP and the preview server). PNG import keeps up to 256 visible colours as compact palette grids. The 2.3 MB validate call and the rich 256×256 import now fit. |
+| TW-B3 | Fixed | Seam evidence reports doubled edge lines (opposite edges equal to each other and unlike their inner neighbours) and wrap steps against the busiest interior boundary. Available as `inspect --view tile`, MCP `view: "tile"` and `inspectTile`. |
+| TW-B4 | Fixed | Recipe validation lists clipping by frame, operation path and pixel count; scene warnings name the placements. |
+| TW-B5 | Fixed | Runtime image loading resolves on `load`/`error` instead of `decode()`. |
+| TW-M1 | Implemented | Scene `tilemap` placements: legend, position-picked variants, `autotile: "blob"`/`"cardinal"`, `match`, and context cells. `pixelforge autotile` compiles a 2×3-tile template into 47 or 16 tiles, with palette variants and per-mask animations. New `copy` op. |
+| TW-M2 | Implemented | Recipe and frame `anchor`, frame `points`. Atlases export `anchor`, `pivot` and `points`; compiled poses export their origins and markers this way. |
+| TW-M3 | Implemented | `sheet.trim` packs visible pixels and records `spriteSourceSize`. Untrimmed output is byte-identical to before. |
+| TW-M4 | Implemented | Shared palette files (`"palette": { "$ref": … }`, resolved by the CLI and MCP; `patch --out` keeps the link), per-frame `palette` overrides for cycling, and `remap` on grids, stamps and copies. |
+| TW-M5 | Implemented | `outline` op, optionally with diagonals. |
+| TW-M6 | Implemented | `lighting.scope: "all"`, scene asset file and revision references, a viewer light picker that moves any light, named clipping. |
+| TW-M7 | Implemented | `pixel_compile`, `pixel_scene` and `pixel_import`; `pixel_help` topics; overlays through `pixel_patch`. Render responses list key files and counts (`listFiles` returns every file). |
+| TW-M8 | Implemented | Pose `mirror` and part `flipX`. Overlays fingerprint each frame they touch and rebase onto unrelated changes. |
+| TW-M9 | Implemented | Runtime `loadSpriteSheet`, `frameAt` and `drawFrame` (anchors, trim offsets, flips, integer scale). |
+| TW-M10 | Implemented | Frame `wrap` makes `translate` wrap around. |
+| Friction | Partly fixed | `compilePoses` returns plain objects, and the authoring guide notes integer-like key order. Case-insensitive unique names stay, by design. |
+
+**Tidewatch on the new features.** Every scaffold in `tools/` was switched over and rerun. Each scaffold was first shown to reproduce the committed sources exactly, so no hand edits were lost.
+
+- **Keeper.** The 10 left-facing poses are `mirror`s and the raised right arm is the left one with `flipX`. 16 hand-mirrored parts are gone; the source shrank from 48.8 KB to 37.3 KB.
+- **Crab.** The right claw is the left one with `flipX`. The origin is now the ground contact, with hops lifting the body, so the atlas anchor is the game's old hand-measured `[16, 19]`.
+- **Terrain.** `shore` and `grass` compile from two 32×48 templates, 5 KB in total, replacing 186 KB of hand-assembled recipes. The surf is four palette variants instead of marker colours and 564 `replace` ops.
+- **Oak and palettes.** One `outline` op replaces dilated copies of each leaf cluster. Every colour recipe links `art/palette.json`.
+- **Game.** The hand-measured `ANCHORS` table, the pixel-measured glyph widths and the pose-metadata file are gone. The game loads with `loadSpriteSheet`, times with `frameAt`, draws with `drawFrame` and masks terrain with `neighbourMask`. It reads reach, the held item and glyph advances from atlas points. Trimming cut the sprite atlases from 170,496 to 55,874 pixels (the keeper from 64,000 to 17,664).
+- **Scene review.** The manifest went from 544 KB of inlined recipes to 10.8 KB: file references, three tilemap placements and `lighting.scope: "all"`.
+
+**Evidence that nothing changed on screen.**
+
+- All 528 rendered frames hash-identical to the originals.
+- The committed game and the rebuilt game produced identical 240×160 frames at all 34 checkpoints of one scripted session. The session used `advance()` only, with the wall clock frozen, and covered walks, four-way attacks, the crab fight, the jelly, 16 prop kinds, grass cutting, the held item, gulls and night lighting with the beam.
+- The rewritten map-preview tool, now three tilemap placements, reproduces the old per-tile tool's output exactly.
+
+**New findings from the second pass.**
+
+- **TW-B6 — P3, fixed: banded scene lighting shifted hues.** Each colour channel was banded separately, so a warm light changed band at a different distance per channel, painting rainbow rings. This was barely visible while only lit buildings were shaded; `scope: "all"` exposed it across the terrain. Each light's brightness is now banded once and then tinted, and ambient light is no longer banded. The quality lab's lantern images were regenerated.
+- **TW-M11 — added: context cells.** A tilemap cut from a larger map could not see neighbours beyond its edge, so edge tiles drew false coastlines. A `null` legend entry now marks cells that count for matching but are never drawn.
+- **Open: verbose compiled recipes.** `shore.json` grew from 157 KB to 184 KB, because each frame spells out four `copy` ops and a palette, while its template is 3 KB.
+- **Open: scene placements ignore frame anchors.** `make-scene.mjs` reads anchors from the recipes and passes them explicitly. An animated placement cannot follow per-frame anchors.
+- **Open: two mirror conventions.** The pose compiler's `mirror` reflects around the origin pixel column, which matched the hand-mirrored art. The runtime's `drawFrame` flips around the anchor corner. They differ by one pixel, so use one or the other for a given asset.
+
+**Checks.** `npm test` passes 104/104. `check:quality`, `check:tidewatch`, the Emberfall stress run (0 findings) and the Pillow checks (`verify-exports.py`, `verify-quality.py`, `verify-trim.py`, `verify-emberfall.py`) all pass. I checked the scene viewer's light picker in the browser pane.
+
 ## Summary
 
 I built [Tidewatch](../../showcase/tidewatch/README.md), a small top-down action-adventure, to find where PixelForge helps and where it runs out. Everything visual is PixelForge output:
@@ -223,4 +271,4 @@ Raw notes, in the order I hit them, are in [findings-log.md](../../showcase/tide
 
 ## Not covered
 
-The browser pane was hidden for most of the session. `requestAnimationFrame` was throttled and screenshots could be stale, so gameplay checks used the game's deterministic `advance()` hook and canvas captures rather than real-time play. I did not test on a phone, in Safari or Firefox, or with a human playtester. No toolkit source was changed; every item above is reported, not fixed.
+The browser pane was hidden for most of the session. `requestAnimationFrame` was throttled and screenshots could be stale, so gameplay checks used the game's deterministic `advance()` hook and canvas captures rather than real-time play. I did not test on a phone, in Safari or Firefox, or with a human playtester. No toolkit source was changed during the first pass; the fixes are summarised in the update at the top.
