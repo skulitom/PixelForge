@@ -1,0 +1,561 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PixelForge project",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+      "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "palette": {
+      "type": "object",
+      "maxProperties": 256,
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(transparent|#([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8}))$"
+      }
+    },
+    "background": {
+      "type": "string",
+      "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+    },
+    "symbols": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+        "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/rows"
+      }
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/frame"
+      },
+      "maxItems": 256,
+      "minItems": 1
+    },
+    "animations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+        "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "frames": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "maxItems": 1024,
+            "minItems": 1
+          },
+          "direction": {
+            "enum": [
+              "forward",
+              "reverse",
+              "pingpong"
+            ]
+          },
+          "loop": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "frames"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sheet": {
+      "type": "object",
+      "properties": {
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "padding": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "name",
+    "width",
+    "height",
+    "frames"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "maxItems": 256,
+      "minItems": 1,
+      "description": "Equal-width text rows. Every character is a palette key; dot and space skip a pixel."
+    },
+    "frame": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+          "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000,
+          "description": "Frame duration in milliseconds; default 100."
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+          "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+        },
+        "translate": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": -4096,
+            "maximum": 4096
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "flipX": {
+          "type": "boolean"
+        },
+        "flipY": {
+          "type": "boolean"
+        },
+        "ops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/op"
+          },
+          "maxItems": 2048
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/layer"
+          },
+          "maxItems": 64
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "layer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+          "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "x": {
+          "type": "integer",
+          "minimum": -4096,
+          "maximum": 4096
+        },
+        "y": {
+          "type": "integer",
+          "minimum": -4096,
+          "maximum": 4096
+        },
+        "ops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/op"
+          },
+          "maxItems": 2048
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "op": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "pixel"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            }
+          },
+          "required": [
+            "op",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "rect"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "filled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "w",
+            "h",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "ellipse"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "filled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "w",
+            "h",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "line"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "x2": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y2": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            }
+          },
+          "required": [
+            "op",
+            "x2",
+            "y2",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "clear"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            }
+          },
+          "required": [
+            "op",
+            "w",
+            "h"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "fill"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            }
+          },
+          "required": [
+            "op",
+            "color"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "replace"
+            },
+            "from": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "to": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            }
+          },
+          "required": [
+            "op",
+            "from",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "grid"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "rows": {
+              "$ref": "#/$defs/rows"
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "rotate": {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "rows"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "stamp"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "symbol": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "rotate": {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "symbol"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

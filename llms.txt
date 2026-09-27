@@ -1,0 +1,34 @@
+# PixelForge
+
+> An MIT-licensed, zero-dependency pixel art and sprite animation toolkit for AI agents and game developers. Compile editable JSON recipes to PNG sprite sheets, APNG animations, texture atlases, CSS and a Canvas player through a CLI or local stdio MCP server.
+
+Requires Node.js 20 or newer. No build step, dependency installation, API key or hosted service is needed. Clone https://github.com/skulitom/PixelForge.git and run commands from the checkout. The package name is pixelforge-agent; the CLI command is pixelforge. Installation instructions use the GitHub checkout.
+
+## Start here
+
+- [README and setup](https://github.com/skulitom/PixelForge/blob/main/README.md): Quick start, CLI commands, MCP configuration, JavaScript API and exports.
+- [Pixel art skill](https://raw.githubusercontent.com/skulitom/PixelForge/main/skills/pixel-art/SKILL.md): A reusable workflow for authoring, inspecting and revising artwork.
+- [Authoring reference](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/agent-guide.md): Recipe fields, operations, frame inheritance, layers, inspection and resource limits.
+- [JSON Schema](https://raw.githubusercontent.com/skulitom/PixelForge/main/schema.json): Machine-readable recipe structure; the renderer also validates references and resource limits.
+
+## Workflow
+
+CLI: node bin/pixelforge.js validate <recipe.json>, then node bin/pixelforge.js inspect <recipe.json> --grid, then node bin/pixelforge.js render <recipe.json> --out <fresh-directory>. Add --out <new-file.png> to inspect for a contact sheet image. Read JSON from stdin by replacing the recipe filename with -. Results are JSON; errors go to stderr with exit code 1. Inspect every frame visually before final export.
+
+MCP: run node /absolute/path/to/PixelForge/bin/pixelforge.js mcp --out /absolute/path/to/output. Transport is newline-delimited stdio. Tools: pixel_help (guide, schema, example), pixel_validate (check a recipe), pixel_inspect (contact sheet and optional palette-key grids), pixel_render (export bundle and first-frame preview). Validate, inspect and render take { "project": <recipe> }; pixel_help needs no arguments. MCP rendering creates a unique output folder per call.
+
+Preserve editable source recipes. Existing CLI outputs are protected unless --force is explicitly selected. Coordinates are integer pixels; all exports are deterministic. The preview studio listens on loopback only. Image generation models, image import, GIF export and native Aseprite files are outside the current scope.
+
+## Complete recipes
+
+- [Forest spirit](https://raw.githubusercontent.com/skulitom/PixelForge/main/examples/forest-spirit.json): Character animation.
+- [Campfire](https://raw.githubusercontent.com/skulitom/PixelForge/main/examples/ember.json): Animated effect.
+- [Coin](https://raw.githubusercontent.com/skulitom/PixelForge/main/examples/coin.json): Collectible animation.
+
+## Integration and contributions
+
+- [Game integration](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/game-integration.md): Atlas, frame and runtime usage.
+- [Repository instructions](https://raw.githubusercontent.com/skulitom/PixelForge/main/AGENTS.md): Architecture, verification and contribution constraints.
+- [Contributing](https://raw.githubusercontent.com/skulitom/PixelForge/main/CONTRIBUTING.md): Development setup and pull request guidance.
+- [MIT license](https://raw.githubusercontent.com/skulitom/PixelForge/main/LICENSE): License for the toolkit and included original artwork.
+- [Issues](https://github.com/skulitom/PixelForge/issues): Bug reports and feature requests.

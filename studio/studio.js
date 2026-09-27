@@ -1,0 +1,182 @@
+import { renderProject, buildAtlas, parseColor } from '/core.js';
+
+const $ = id => document.getElementById(id);
+const source = $('source'), canvas = $('canvas'), context = canvas.getContext('2d');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let project, spec, atlas, frameImages = [], selected = 0, playing = !reducedMotion, mode = 'animation';
+let elapsed = 0, lastTime = 0, zoom = 12, dirty = false, valid = false, compileTimer, toastTimer, loadVersion = 0;
+const examples = [{ file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }];
+const title = name => name.replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
+function imageCanvas(data, width, height) {
+  const c = document.createElement('canvas'); c.width = width; c.height = height;
+  c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0); return c;
+}
+function thumbnail(c, description) {
+  const image = document.createElement('img'); image.src = c.toDataURL('image/png'); image.alt = description; return image;
+}
+function toast(message) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4000); }
+function download(data, filename, type = 'application/octet-stream') {
+  const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type }));
+  const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+function playState() { $('play').textContent = playing ? 'Ⅱ' : '▶'; $('play').setAttribute('aria-label', playing ? 'Pause animation' : 'Play animation'); }
+function render() {
+  if (!project) return;
+  const isSheet = mode === 'sheet';
+  const width = isSheet ? atlas.width : project.width, height = isSheet ? atlas.height : project.height;
+  canvas.width = width; canvas.height = height;
+  context.imageSmoothingEnabled = false;
+  if (!isSheet && $('onion').getAttribute('aria-pressed') === 'true' && selected > 0) { context.globalAlpha = .25; context.drawImage(frameImages[selected - 1], 0, 0); context.globalAlpha = 1; }
+  context.drawImage(isSheet ? atlas.image : frameImages[selected], 0, 0);
+  const fit = Math.max(1, Math.floor(($('artboard').clientWidth - 48) / width));
+  const displayScale = isSheet ? Math.min(zoom, fit) : zoom;
+  canvas.style.width = `${width * displayScale}px`; canvas.style.height = `${height * displayScale}px`;
+  $('canvas-wrap').style.setProperty('--pixel-size', `${displayScale}px`);
+  $('canvas-wrap').classList.toggle('grid', $('grid').getAttribute('aria-pressed') === 'true');
+  $('frame-counter').textContent = `${String(selected + 1).padStart(2, '0')} / ${String(project.frames.length).padStart(2, '0')}`;
+  $('canvas').setAttribute('aria-label', isSheet ? `${project.name} sprite sheet` : `${project.name}, frame ${project.frames[selected].name}`);
+  document.querySelectorAll('.frame').forEach((button, i) => { button.classList.toggle('active', i === selected); button.setAttribute('aria-pressed', String(i === selected)); });
+}
+function animationChanged() {
+  elapsed = 0;
+  const animation = project.animations[$('animation').value];
+  selected = animation.frames[0];
+  $('timing').textContent = `${(animation.duration / 1000).toFixed(2)}s ${animation.loop ? 'loop' : 'once'}`;
+  render();
+}
+function compile() {
+  clearTimeout(compileTimer);
+  try {
+    const nextSpec = JSON.parse(source.value.replace(/^\uFEFF/, ''));
+    const nextProject = renderProject(nextSpec), nextAtlas = buildAtlas(nextProject);
+    spec = nextSpec; project = nextProject; atlas = nextAtlas;
+    atlas.image = imageCanvas(atlas.data, atlas.width, atlas.height);
+    frameImages = project.frames.map(f => imageCanvas(f.data, project.width, project.height));
+    $('project-name').textContent = title(project.name);
+    $('dimensions').textContent = `${project.width} × ${project.height} px`;
+    $('source-filename').textContent = `${project.name}.json`;
+    $('frame-count').textContent = `${project.frames.length} frames`;
+    const oldAnimation = $('animation').value;
+    $('animation').replaceChildren(...Object.keys(project.animations).map(key => { const option = document.createElement('option'); option.value = key; option.textContent = title(key); return option; }));
+    if (project.animations[oldAnimation]) $('animation').value = oldAnimation;
+    $('timeline').replaceChildren(...project.frames.map((frame, index) => {
+      const button = document.createElement('button'); button.className = 'frame'; button.title = `${frame.name} · ${frame.duration}ms`; button.setAttribute('aria-label', `Select frame ${frame.name}`);
+      const block = document.createElement('div'); block.className = 'frame-image';
+      const number = document.createElement('span'); number.className = 'number'; number.textContent = String(index + 1).padStart(2, '0');
+      block.append(thumbnail(frameImages[index], ''), number);
+      const caption = document.createElement('small');
+      const label = document.createElement('span'); label.textContent = frame.name;
+      const time = document.createElement('span'); time.textContent = `${frame.duration}ms`; caption.append(label, time);
+      button.append(block, caption);
+      button.addEventListener('click', () => { selected = index; playing = false; elapsed = 0; playState(); setMode('animation'); render(); });
+      return button;
+    }));
+    $('color-count').textContent = `${Object.keys(project.palette).length} colors`;
+    $('palette').replaceChildren(...Object.entries(project.palette).map(([key, value]) => {
+      const button = document.createElement('button'); button.className = 'swatch'; button.style.background = value;
+      button.title = `${key}: ${value}`; button.setAttribute('aria-label', `Color ${key}: ${value}`);
+      const [r, g, b] = parseColor(value); button.style.color = r * .299 + g * .587 + b * .114 > 150 ? '#263b42' : '#fff';
+      button.textContent = key.length === 1 ? key : '';
+      button.addEventListener('click', () => { $('color-info').textContent = `${key}  ${value}`; });
+      return button;
+    }));
+    $('error').hidden = true;
+    $('compile-status').textContent = project.warnings.length ? project.warnings.join(' ') : '● All pixels accounted for';
+    $('export').disabled = false; valid = true; animationChanged();
+  } catch (error) {
+    valid = false; $('error').textContent = error.message; $('error').hidden = false;
+    $('compile-status').textContent = 'Fix the recipe to update the preview'; $('export').disabled = true;
+  }
+}
+function setSource(value, exampleFile) {
+  loadVersion++;
+  source.value = JSON.stringify(value, null, 2); dirty = false;
+  document.querySelectorAll('.example').forEach(button => button.classList.toggle('active', button.dataset.file === exampleFile));
+  compile(); playState();
+}
+async function loadExample(example) {
+  if (dirty && !confirm('Replace your edited recipe? Save JSON first if you want to keep it.')) return;
+  const version = ++loadVersion;
+  try {
+    const response = await fetch(`/examples/${example.file}.json`);
+    if (!response.ok) throw new Error(`Could not load example: HTTP ${response.status}`);
+    const value = await response.json();
+    if (version === loadVersion) setSource(value, example.file);
+  } catch (error) { toast(error.message); }
+}
+function setMode(next) {
+  mode = next;
+  for (const [id, value] of [['animation-view', 'animation'], ['sheet-view', 'sheet']]) { $(id).classList.toggle('active', value === mode); $(id).setAttribute('aria-pressed', String(value === mode)); }
+  $('artboard-caption').textContent = mode === 'sheet' ? 'Export layout · transparent padding' : 'Transparent background';
+  render();
+}
+source.addEventListener('input', () => { dirty = true; valid = false; $('export').disabled = true; clearTimeout(compileTimer); compileTimer = setTimeout(compile, 350); });
+source.addEventListener('keydown', event => {
+  if (event.key === 'Tab') { event.preventDefault(); const start = source.selectionStart; source.setRangeText('  ', start, source.selectionEnd, 'end'); source.dispatchEvent(new Event('input')); }
+});
+$('play').addEventListener('click', () => { if (!project) return; playing = !playing; if (playing) { elapsed = 0; setMode('animation'); } playState(); });
+$('animation').addEventListener('change', animationChanged);
+$('zoom').addEventListener('change', () => { zoom = Number($('zoom').value); render(); });
+for (const id of ['grid', 'onion']) $(id).addEventListener('click', () => { $(id).setAttribute('aria-pressed', String($(id).getAttribute('aria-pressed') !== 'true')); render(); });
+$('animation-view').addEventListener('click', () => setMode('animation'));
+$('sheet-view').addEventListener('click', () => setMode('sheet'));
+$('guide-toggle').addEventListener('click', () => $('guide').showModal());
+$('guide-close').addEventListener('click', () => $('guide').close());
+$('open').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', async () => {
+  const file = $('file').files[0]; if (!file) return;
+  try {
+    if (file.size > 2097152) throw new Error('Choose a project smaller than 2 MiB.');
+    const value = JSON.parse((await file.text()).replace(/^\uFEFF/, '')); renderProject(value);
+    if (dirty && !confirm('Replace your edited recipe? Save JSON first if you want to keep it.')) return;
+    setSource(value); toast(`Opened ${file.name}`);
+  } catch (error) { toast(error.message); } finally { $('file').value = ''; }
+});
+$('new').addEventListener('click', () => {
+  if (dirty && !confirm('Replace your edited recipe? Save JSON first if you want to keep it.')) return;
+  setSource({ version: 1, name: 'new-sprite', width: 16, height: 16, palette: { g: '#72b58d' }, frames: [{ name: 'idle', duration: 150, ops: [] }] });
+  source.focus();
+});
+$('save').addEventListener('click', () => { download(source.value, `${project?.name ?? 'sprite'}.pixel.json`, 'application/json'); dirty = false; toast('Project JSON saved'); });
+$('export').addEventListener('click', async () => {
+  compile(); if (!valid) return;
+  const button = $('export'), original = button.textContent; button.disabled = true; button.textContent = 'Packing assets…';
+  try {
+    const response = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) });
+    if (!response.ok) { const body = await response.text(); try { throw new Error(JSON.parse(body).error); } catch (error) { if (error instanceof SyntaxError) throw new Error(body); throw error; } }
+    download(await response.blob(), `${project.name}.zip`); toast('Your sprite bundle is ready');
+  } catch (error) { toast(error.message); }
+  finally { button.textContent = original; button.disabled = !valid; }
+});
+addEventListener('resize', render);
+addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
+document.addEventListener('visibilitychange', () => { lastTime = 0; });
+function tick(time) {
+  const delta = lastTime ? time - lastTime : 0; lastTime = time;
+  if (project && playing && mode === 'animation' && !document.hidden) {
+    const a = project.animations[$('animation').value]; elapsed += delta * Number($('speed').value);
+    let cursor = a.loop ? elapsed % a.duration : Math.min(elapsed, a.duration);
+    let next = a.frames.at(-1);
+    for (const i of a.frames) { if (cursor < project.frames[i].duration) { next = i; break; } cursor -= project.frames[i].duration; }
+    if (!a.loop && elapsed >= a.duration) { playing = false; playState(); }
+    if (selected !== next) { selected = next; render(); }
+  }
+  requestAnimationFrame(tick);
+}
+async function boot() {
+  try {
+    for (const example of examples) {
+      const response = await fetch(`/examples/${example.file}.json`); const value = await response.json(), preview = renderProject(value);
+      const button = document.createElement('button'); button.className = 'example'; button.dataset.file = example.file;
+      const label = document.createElement('span'), strong = document.createElement('strong'), small = document.createElement('small');
+      strong.textContent = example.title; small.textContent = example.type; label.append(strong, small);
+      button.append(thumbnail(imageCanvas(preview.frames[0].data, preview.width, preview.height), ''), label);
+      button.addEventListener('click', () => loadExample(example)); $('examples').append(button);
+    }
+    const initial = await (await fetch('/project.json')).json();
+    if (initial) setSource(initial); else await loadExample(examples[0]);
+    playState(); requestAnimationFrame(tick);
+  } catch (error) { $('error').hidden = false; $('error').textContent = error.message; $('export').disabled = true; }
+}
+boot();

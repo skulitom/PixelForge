@@ -1,0 +1,190 @@
+# PixelForge
+
+[![Tests](https://github.com/skulitom/PixelForge/actions/workflows/test.yml/badge.svg)](https://github.com/skulitom/PixelForge/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js: 20+](https://img.shields.io/badge/node.js-20%2B-43853d.svg)](package.json)
+
+**Text to pixels. A zero-dependency pixel art and sprite animation toolkit for AI agents and game developers.**
+
+Write a JSON recipe with palettes, text grids, reusable symbols and drawing operations. Get transparent PNGs, sprite sheets, animated PNGs, and the metadata and player needed to use them. Inspect and edit the recipe in a local browser studio.
+
+Zero runtime dependencies. No build step, API key, image model, network service or native graphics library. Requires **Node.js 20 or newer**. Works from a checkout on Windows, macOS and Linux.
+
+![PixelForge's local studio showing the forest spirit sprite, animation frames, editable JSON recipe and palette](docs/images/studio.png)
+
+[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
+
+## Start
+
+```sh
+git clone https://github.com/skulitom/PixelForge.git
+cd PixelForge
+node bin/pixelforge.js preview
+```
+
+Open **http://127.0.0.1:4747**. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open and live error messages. All assets and fonts are local.
+
+Or generate an asset without opening a browser:
+
+```sh
+node bin/pixelforge.js init hero.pixel.json
+node bin/pixelforge.js validate hero.pixel.json
+node bin/pixelforge.js inspect hero.pixel.json --out hero-frames.png
+node bin/pixelforge.js render hero.pixel.json --out output/hero
+```
+
+`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
+
+## For agents
+
+Use PixelForge to create or revise pixel sprites, tiles, icons, effects and short animations from editable JSON. Choose the **CLI** when you have shell access or the **Model Context Protocol (MCP) server** when your client supports tools. Both use the same renderer and work locally.
+
+| Entry point | Purpose |
+| --- | --- |
+| [llms.txt](llms.txt) | Compact documentation index with direct links for agents |
+| [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
+| [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
+| [JSON Schema](schema.json) | Machine-readable recipe structure |
+| [Examples](examples/) | Complete forest spirit, campfire and coin recipes |
+| [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
+
+Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
+
+## A tiny animation
+
+```json
+{
+  "version": 1,
+  "name": "slime",
+  "width": 8,
+  "height": 8,
+  "palette": { "g": "#72b58d", "e": "#20383f" },
+  "frames": [
+    {
+      "name": "rest",
+      "duration": 180,
+      "ops": [{ "op": "grid", "x": 1, "y": 3,
+        "rows": [".gggg.", "ggeegg", "gggggg", ".gggg."] }]
+    },
+    { "name": "up", "from": "rest", "translate": [0, -1], "duration": 180 }
+  ],
+  "animations": { "bounce": { "frames": ["rest", "up"] } }
+}
+```
+
+Each text-grid character selects a palette color; `.` and space leave pixels untouched. Frame inheritance makes small changes cheap to describe. Rendering is deterministic and uses integer pixel coordinates.
+
+## Export bundle
+
+| File | Use |
+| --- | --- |
+| `name.png` | RGBA PNG sprite sheet, with configurable columns, padding and integer scale |
+| `name.atlas.json` | TexturePacker-style JSON hash: rectangles, source sizes, frame durations and named animations |
+| `frames/*.png` | Each frame as a transparent PNG |
+| `animations/*.png` | APNG for each animation, retaining transparency, frame timing and loop behavior |
+| `name.css` | CSS animation classes; supports multi-row sheets and unequal frame durations |
+| `player.js` | Small, dependency-free Canvas player with play, pause, resume and named animations |
+| `name.pixel.json` | Editable source recipe |
+| `preview.html` | Standalone preview you can open directly in a browser |
+
+APNG files use the `.png` extension intentionally. GIF, Aseprite files and image import/quantization are outside this first version. Sources are JSON; this is an agent authoring tool with a preview studio, not a mouse-driven paint editor.
+
+## Connect an agent through MCP
+
+Clone the repository first, then add the server to your agent's MCP configuration. Replace `/absolute/path/to/PixelForge` with your checkout's absolute path; on Windows use forward slashes, for example `C:/DEV/PixelForge`:
+
+```json
+{
+  "mcpServers": {
+    "pixelforge": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/PixelForge/bin/pixelforge.js",
+        "mcp",
+        "--out",
+        "/absolute/path/to/PixelForge/output"
+      ]
+    }
+  }
+}
+```
+
+For clients that use TOML:
+
+```toml
+[mcp_servers.pixelforge]
+command = "node"
+args = ["/absolute/path/to/PixelForge/bin/pixelforge.js", "mcp", "--out", "/absolute/path/to/PixelForge/output"]
+```
+
+The four tools are:
+
+- **`pixel_help`**: authoring guide, full schema and a complete sample.
+- **`pixel_validate`**: validate `{ "project": ... }` without writing files.
+- **`pixel_inspect`**: return a contact sheet PNG of every frame, or one animation in playback order, without writing files. With `grid: true`, it also returns palette-key text grids with x/y rulers; `region` zooms in.
+- **`pixel_render`**: render `{ "project": ... }`, return a first-frame PNG preview plus output paths. Every call writes a fresh folder inside the configured output directory.
+
+The server implements newline-delimited stdio MCP with initialization, version negotiation, ping and tool discovery/calls. It supports protocol versions 2024-11-05, 2025-03-26, 2025-06-18 and 2025-11-25. It uses no HTTP transport or external services. See the [MCP stdio specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
+
+An agent can also use the CLI directly. The reusable [agent skill](skills/pixel-art/SKILL.md) and [authoring reference](docs/agent-guide.md) explain the complete format. [schema.json](schema.json) supports editor completion and structural validation; the rasterizer additionally validates references, matching row widths and resource limits.
+
+## Use in a web app
+
+Serve the exported folder with your application:
+
+```html
+<canvas id="sprite"></canvas>
+<script type="module">
+  import { SpritePlayer } from './assets/player.js';
+  const player = await SpritePlayer.load(
+    document.querySelector('#sprite'),
+    './assets/forest-spirit.atlas.json',
+    { scale: 4 }
+  );
+  player.play('idle');
+  // player.pause(); player.resume(); player.destroy();
+</script>
+```
+
+Or use CSS alone:
+
+```html
+<link rel="stylesheet" href="assets/forest-spirit.css">
+<span class="pf-forest-spirit pf-forest-spirit-idle" role="img" aria-label="Forest spirit"></span>
+```
+
+CSS honors reduced-motion preferences. The Canvas API leaves autoplay decisions to the application. Atlas paths in `SpritePlayer.load` resolve relative to the atlas URL.
+
+For a game engine, use the atlas rectangles or individual PNGs. For regular-grid importers, set `sheet.padding` to `0` and use the exported frame dimensions. Phaser accepts the JSON-hash frame layout via `load.atlas`; named animation sequences are in the extra `animations` field. See [game integration notes](docs/game-integration.md).
+
+## JavaScript API
+
+```js
+import { renderProject, inspectProject, createBundle, writeBundle } from './src/index.js';
+
+const project = renderProject(recipe); // RGBA buffers, durations, warnings
+const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
+const bundle = await createBundle(recipe);
+await writeBundle(bundle, './output/my-sprite');
+```
+
+`src/core.js` is browser-compatible and has no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+
+## Develop and verify
+
+```sh
+npm test
+npm run demo
+```
+
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, packing, timing, PNG/APNG structure, inspection sheets and grids, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
+
+The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
+
+## Contributing
+
+Bug reports, recipe examples, documentation improvements and focused pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before changing the toolkit. Report reproducible bugs through [GitHub Issues](https://github.com/skulitom/PixelForge/issues).
+
+## License
+
+[MIT licensed](LICENSE). Included artwork is original and covered by the same license.
