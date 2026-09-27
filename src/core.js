@@ -168,7 +168,7 @@ export function renderProject(spec) {
   }
   const frames = spec.frames.map((frame, index) => {
     const p = `project.frames[${index}]`;
-    object(frame, p, ['name', 'duration', 'from', 'translate', 'flipX', 'flipY', 'ops', 'layers']);
+    object(frame, p, ['name', 'duration', 'from', 'translate', 'flipX', 'flipY', 'ops', 'layers', 'pixels']);
     const frameName = name(frame.name, `${p}.name`);
     if (frameNames.has(frameName.toLowerCase())) fail(`${p}.name`, `duplicate frame ${frameName}; names must also be unique ignoring case`);
     frameNames.add(frameName.toLowerCase());
@@ -211,6 +211,15 @@ export function renderProject(spec) {
           else if (pixels[i + 3]) warnings.add('Some drawing falls outside the canvas and is clipped.');
         }
       }
+    }
+    // Final canvas-space corrections replace RGBA, including transparency, after all layers.
+    list(frame.pixels ?? [], `${p}.pixels`, 65536);
+    spend((frame.pixels ?? []).length);
+    for (const [i, pixel] of (frame.pixels ?? []).entries()) {
+      const pp = `${p}.pixels[${i}]`;
+      object(pixel, pp, ['x', 'y', 'color']);
+      const x = integer(pixel.x, `${pp}.x`, 0, width - 1), y = integer(pixel.y, `${pp}.y`, 0, height - 1);
+      data.set(color(pixel.color, `${pp}.color`), (y * width + x) * 4);
     }
     const result = { name: frameName, duration, data };
     rendered.set(frameName, result);
@@ -271,10 +280,88 @@ export function buildAtlas(project) {
   return { data, width: sheet.width, height: sheet.height, metadata: { frames: entries, animations, meta } };
 }
 
-// Inspection builds an in-memory contact sheet and optional palette-key grids. Nothing is written.
+// Inspection and comparison build in-memory contact sheets and palette-key text. Nothing is written.
 const gutterColor = [23, 25, 29, 255], checkerColors = [[143, 145, 151, 255], [131, 133, 139, 255]];
 const legendSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&*+-/:;<=>@^_~';
-const toHex = color => '#' + color.slice(0, color[3] === 255 ? 3 : 4).map(v => v.toString(16).padStart(2, '0')).join('');
+const toHex = color => '#' + [...color].slice(0, color[3] === 255 ? 3 : 4).map(v => v.toString(16).padStart(2, '0')).join('');
+const colorId = (data, at) => ((data[at] << 24) | (data[at + 1] << 16) | (data[at + 2] << 8) | data[at + 3]) >>> 0;
+
+// Names exact RGBA colors with single-character palette keys where possible. Other colors get legend symbols in a
+// stable order (multi-character palette names, then first use by frame), so every readback of a revision agrees.
+function colorNamer(project, others = []) {
+  const keys = new Map(), names = new Map(), entries = new Map(), used = new Set(), unnamed = new Set();
+  const symbols = [...legendSymbols].filter(symbol => !own(project.palette, symbol));
+  for (const [key, value] of Object.entries(project.palette)) {
+    const id = colorId(parseColor(value), 0);
+    if (key.length === 1 && !keys.has(id)) keys.set(id, key);
+    if (!names.has(id)) names.set(id, key);
+  }
+  const assign = (data, at) => {
+    const id = colorId(data, at);
+    if (!data[at + 3] || keys.has(id) || !symbols.length) return;
+    const symbol = symbols.shift();
+    keys.set(id, symbol);
+    entries.set(symbol, { color: toHex(data.slice(at, at + 4)), ...(names.has(id) ? { palette: names.get(id) } : {}) });
+  };
+  for (const value of Object.values(project.palette)) assign(parseColor(value), 0);
+  for (const source of [project, ...others]) for (const frame of source.frames) for (let at = 0; at < frame.data.length; at += 4) assign(frame.data, at);
+  return {
+    char(data, at) {
+      if (!data[at + 3]) return '.';
+      const id = colorId(data, at), char = keys.get(id);
+      if (char === undefined) { unnamed.add(id); return '?'; }
+      if (entries.has(char)) used.add(char);
+      return char;
+    },
+    legend() {
+      const legend = Object.fromEntries([...entries].filter(([symbol]) => used.has(symbol)));
+      if (unnamed.size) legend['?'] = { colors: unnamed.size };
+      return legend;
+    }
+  };
+}
+const readRegion = (data, width, region, namer) => Array.from({ length: region.h }, (_, y) =>
+  Array.from({ length: region.w }, (_, x) => namer.char(data, ((region.y + y) * width + region.x + x) * 4)).join(''));
+
+// Cells run left to right, top to bottom. The largest scale that keeps cells within 256px and the sheet within 1024px
+// wins, then fewer rows, then less area. Checker squares span whole source pixels so transparency never reads as dithering.
+function drawSheet(sources, width, region, { scale, background = null, columns, where = 'inspect' } = {}) {
+  const measure = (c, s) => {
+    const rows = Math.ceil(sources.length / c), gap = Math.max(2, s);
+    return { columns: c, rows, scale: s, gap, width: c * region.w * s + (c + 1) * gap, height: rows * region.h * s + (rows + 1) * gap };
+  };
+  const choices = columns ? [columns] : Array.from(sources, (_, i) => i + 1);
+  let layout = null;
+  for (let s = scale ?? Math.min(16, Math.max(1, Math.floor(256 / Math.max(region.w, region.h)))); s >= (scale ?? 1) && !layout; s--) {
+    for (const c of choices) {
+      const m = measure(c, s);
+      if (m.width <= 1024 && m.height <= 1024 && (!layout || m.rows < layout.rows || (m.rows === layout.rows && m.width * m.height < layout.width * layout.height))) layout = m;
+    }
+  }
+  if (!layout) for (const c of choices) {
+    const m = measure(c, scale ?? 1);
+    if (!layout || Math.max(m.width, m.height) < Math.max(layout.width, layout.height)) layout = m;
+  }
+  if (layout.width > 4096 || layout.height > 4096) fail(where, `the contact sheet would be ${layout.width}×${layout.height} pixels, above the 4096-pixel limit; select fewer frames, a smaller region or a lower scale`);
+  const data = new Uint8ClampedArray(layout.width * layout.height * 4), square = Math.max(2, Math.ceil(8 / layout.scale)), composed = new Map();
+  for (let i = 0; i < data.length; i += 4) data.set(gutterColor, i);
+  sources.forEach((source, n) => {
+    if (!composed.has(source)) {
+      const pixels = new Uint8ClampedArray(region.w * region.h * 4);
+      for (let y = 0; y < region.h; y++) for (let x = 0; x < region.w; x++) {
+        const at = (y * region.w + x) * 4, from = ((region.y + y) * width + region.x + x) * 4;
+        pixels.set(background ?? checkerColors[(Math.floor(x / square) + Math.floor(y / square)) % 2], at);
+        if (source) blend(pixels, at, source.subarray(from, from + 4));
+      }
+      composed.set(source, scalePixels(pixels, region.w, region.h, layout.scale));
+    }
+    const pixels = composed.get(source), w = region.w * layout.scale, h = region.h * layout.scale;
+    const left = layout.gap + (n % layout.columns) * (w + layout.gap), top = layout.gap + Math.floor(n / layout.columns) * (h + layout.gap);
+    for (let row = 0; row < h; row++) data.set(pixels.subarray(row * w * 4, (row + 1) * w * 4), ((top + row) * layout.width + left) * 4);
+  });
+  return { ...layout, data };
+}
+
 export function inspectProject(project, options = {}) {
   object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background']);
   const { width, height, frames } = project;
@@ -303,67 +390,65 @@ export function inspectProject(project, options = {}) {
   const background = (options.background ?? 'checker') === 'checker' ? null : parseColor(options.background, project.palette, 'inspect.background');
   const unique = [...new Set(cells)];
   if (grid && unique.length * region.w * region.h > 16384) fail('inspect.grid', `grids are limited to 16,384 pixels, not ${unique.length} × ${region.w}×${region.h}; select fewer frames or a smaller region`);
-
-  // Prefer the largest scale that keeps cells within 256px and the sheet within 1024px, then fewer rows, then less area.
-  const measure = (columns, s) => {
-    const rows = Math.ceil(cells.length / columns), gap = Math.max(2, s);
-    return { columns, rows, scale: s, gap, width: columns * region.w * s + (columns + 1) * gap, height: rows * region.h * s + (rows + 1) * gap };
-  };
-  let layout = null;
-  for (let s = scale ?? Math.min(16, Math.max(1, Math.floor(256 / Math.max(region.w, region.h)))); s >= (scale ?? 1) && !layout; s--) {
-    for (let columns = 1; columns <= cells.length; columns++) {
-      const m = measure(columns, s);
-      if (m.width <= 1024 && m.height <= 1024 && (!layout || m.rows < layout.rows || (m.rows === layout.rows && m.width * m.height < layout.width * layout.height))) layout = m;
-    }
-  }
-  if (!layout) for (let columns = 1; columns <= cells.length; columns++) {
-    const m = measure(columns, scale ?? 1);
-    if (!layout || Math.max(m.width, m.height) < Math.max(layout.width, layout.height)) layout = m;
-  }
-  if (layout.width > 4096 || layout.height > 4096) fail('inspect', `the contact sheet would be ${layout.width}×${layout.height} pixels, above the 4096-pixel limit; select fewer frames, a smaller region or a lower scale`);
-
-  // Checker squares span whole source pixels so transparency never reads as dithering.
-  const data = new Uint8ClampedArray(layout.width * layout.height * 4), square = Math.max(2, Math.ceil(8 / layout.scale)), composed = new Map();
-  for (let i = 0; i < data.length; i += 4) data.set(gutterColor, i);
-  cells.forEach((index, n) => {
-    if (!composed.has(index)) {
-      const pixels = new Uint8ClampedArray(region.w * region.h * 4), source = frames[index].data;
-      for (let y = 0; y < region.h; y++) for (let x = 0; x < region.w; x++) {
-        const at = (y * region.w + x) * 4, from = ((region.y + y) * width + region.x + x) * 4;
-        pixels.set(background ?? checkerColors[(Math.floor(x / square) + Math.floor(y / square)) % 2], at);
-        blend(pixels, at, source.subarray(from, from + 4));
-      }
-      composed.set(index, scalePixels(pixels, region.w, region.h, layout.scale));
-    }
-    const pixels = composed.get(index), w = region.w * layout.scale, h = region.h * layout.scale;
-    const left = layout.gap + (n % layout.columns) * (w + layout.gap), top = layout.gap + Math.floor(n / layout.columns) * (h + layout.gap);
-    for (let row = 0; row < h; row++) data.set(pixels.subarray(row * w * 4, (row + 1) * w * 4), ((top + row) * layout.width + left) * 4);
-  });
-  const view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: { ...layout, data } };
+  const view = { cells: cells.map(i => ({ frame: frames[i].name, duration: frames[i].duration })), region, sheet: drawSheet(cells.map(i => frames[i].data), width, region, { scale, background }) };
   if (!grid) return view;
-
-  // Exact RGBA matches use single-character palette keys; other colors share one legend across every grid.
-  const keys = new Map(), names = new Map(), legend = {}, unnamed = new Set();
-  for (const [key, value] of Object.entries(project.palette)) {
-    const id = parseColor(value).join();
-    if (key.length === 1 && !keys.has(id)) keys.set(id, key);
-    if (!names.has(id)) names.set(id, key);
-  }
-  const symbols = [...legendSymbols].filter(symbol => !own(project.palette, symbol));
-  view.legend = legend;
-  view.grids = unique.map(index => ({ frame: frames[index].name, rows: Array.from({ length: region.h }, (_, y) => {
-    let row = '';
-    for (let x = 0; x < region.w; x++) {
-      const at = ((region.y + y) * width + region.x + x) * 4, color = [...frames[index].data.subarray(at, at + 4)], id = color.join();
-      if (!color[3]) { row += '.'; continue; }
-      if (!keys.has(id) && symbols.length) {
-        const symbol = symbols.shift();
-        keys.set(id, symbol); legend[symbol] = { color: toHex(color), ...(names.has(id) ? { palette: names.get(id) } : {}) };
-      }
-      if (keys.has(id)) row += keys.get(id); else { unnamed.add(id); row += '?'; }
-    }
-    return row;
-  }) }));
-  if (unnamed.size) legend['?'] = { colors: unnamed.size };
+  const namer = colorNamer(project);
+  view.grids = unique.map(index => ({ frame: frames[index].name, rows: readRegion(frames[index].data, width, region, namer) }));
+  view.legend = namer.legend();
   return view;
+}
+
+// Compares two rendered revisions, matching frames by name, so a patch can report every visible effect.
+export function compareProjects(before, after) {
+  const { width, height } = after, resized = before.width !== width || before.height !== height;
+  const namer = colorNamer(after, [before]), previous = new Map(before.frames.map(frame => [frame.name, frame]));
+  const kept = new Set(after.frames.map(frame => frame.name)), changed = [], unchanged = [], added = [], durations = [], shown = [];
+  for (const frame of after.frames) {
+    const old = previous.get(frame.name);
+    if (!old) { added.push(frame.name); shown.push({ frame: frame.name, status: 'added', before: null, after: frame.data }); continue; }
+    if (old.duration !== frame.duration) durations.push({ frame: frame.name, from: old.duration, to: frame.duration });
+    if (resized) { changed.push({ frame: frame.name }); continue; }
+    let pixels = 0, left = width, top = height, right = -1, bottom = -1;
+    const changes = [], transitions = new Map();
+    for (let at = 0; at < frame.data.length; at += 4) {
+      if (colorId(frame.data, at) === colorId(old.data, at) || (!frame.data[at + 3] && !old.data[at + 3])) continue;
+      const x = at / 4 % width, y = Math.floor(at / 4 / width), from = namer.char(old.data, at), to = namer.char(frame.data, at);
+      pixels++; left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+      if (changes.length < 16) changes.push({ x, y, from, to });
+      transitions.set(from + to, (transitions.get(from + to) ?? 0) + 1);
+    }
+    if (!pixels) { unchanged.push(frame.name); continue; }
+    const box = { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+    const detail = pixels <= 16 ? { changes } : { transitions: [...transitions].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([pair, count]) => ({ from: pair[0], to: pair[1], pixels: count })) };
+    changed.push({ frame: frame.name, pixels, box, ...detail });
+    shown.push({ frame: frame.name, status: 'changed', before: old.data, after: frame.data, box });
+  }
+  const removed = before.frames.filter(frame => !kept.has(frame.name)).map(frame => frame.name);
+  for (const name of removed) shown.push({ frame: name, status: 'removed', before: previous.get(name).data, after: null });
+  const sequence = (project, key) => project.animations[key].frames.map(i => project.frames[i].name);
+  const animations = { changed: [], added: [], removed: Object.keys(before.animations).filter(key => !own(after.animations, key)) };
+  for (const key of Object.keys(after.animations)) {
+    if (!own(before.animations, key)) { animations.added.push(key); continue; }
+    const from = sequence(before, key), to = sequence(after, key), loop = [before.animations[key].loop, after.animations[key].loop];
+    if (from.join() !== to.join() || loop[0] !== loop[1]) animations.changed.push({ animation: key, ...(from.join() !== to.join() && { frames: { from, to } }), ...(loop[0] !== loop[1] && { loop: { from: loop[0], to: loop[1] } }) });
+  }
+  const filled = value => Object.fromEntries(Object.entries(value).filter(([, list]) => list.length));
+  const report = {
+    ...(resized && { canvas: { from: { w: before.width, h: before.height }, to: { w: width, h: height } } }),
+    frames: { changed, unchanged, ...filled({ added, removed, durations }) },
+    ...(Object.keys(filled(animations)).length && { animations: filled(animations) })
+  };
+  // Before and after share one row per frame, cropped to the changed area plus 2 pixels unless frames were added or removed.
+  if (shown.length && !resized) {
+    let region = { x: 0, y: 0, w: width, h: height };
+    if (shown.every(row => row.box)) {
+      const x = Math.max(0, Math.min(...shown.map(row => row.box.x)) - 2), y = Math.max(0, Math.min(...shown.map(row => row.box.y)) - 2);
+      region = { x, y, w: Math.min(width, Math.max(...shown.map(row => row.box.x + row.box.w)) + 2) - x, h: Math.min(height, Math.max(...shown.map(row => row.box.y + row.box.h)) + 2) - y };
+    }
+    const rows = shown.slice(0, Math.max(1, Math.min(16, Math.floor(4094 / (region.h + 2)))));
+    report.image = { region, frames: rows.map(({ frame, status }) => ({ frame, status })), ...(rows.length < shown.length && { omitted: shown.length - rows.length }), sheet: drawSheet(rows.flatMap(row => [row.before, row.after]), width, region, { columns: 2, where: 'image' }) };
+  }
+  const legend = namer.legend();
+  if (Object.keys(legend).length) report.legend = legend;
+  return report;
 }

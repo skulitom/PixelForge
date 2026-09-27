@@ -184,10 +184,43 @@
             "$ref": "#/$defs/layer"
           },
           "maxItems": 64
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pixel"
+          },
+          "maxItems": 65536,
+          "description": "Final canvas-coordinate RGBA replacements after ops and layers. Coordinates must be inside this canvas. Later entries win; transparent erases."
         }
       },
       "required": [
         "name"
+      ],
+      "additionalProperties": false
+    },
+    "pixel": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "color": {
+          "type": "string",
+          "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "color"
       ],
       "additionalProperties": false
     },

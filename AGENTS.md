@@ -4,7 +4,9 @@ To **use** PixelForge for artwork, start with [the pixel art skill](skills/pixel
 
 This is an agent-first pixel art toolkit. Keep the core and runtime free of dependencies. Use standard Node.js APIs for the CLI, PNG/APNG encoding, ZIP and the local server. No build step is required.
 
-- `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing and inspection (contact sheets, palette-key grids).
+- `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
+- `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
+- `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
@@ -15,3 +17,9 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 Run `npm test` after functional changes. Keep the schema, authoring reference and runtime validation aligned. Binary export changes should also be checked with an independent image decoder. Do not replace the text-first workflow with a UI-only drawing tool.
 
 Never silently overwrite source recipes or generated assets. MCP renders create unique folders. The preview server must stay on loopback with an explicit asset allowlist and no arbitrary file-writing endpoints.
+
+## Commit and push workflow
+
+The repository owner authorizes agents working on this project to commit completed changes and push directly to `main` by default. After reviewing the diff and passing the relevant checks (including `npm test` for functional changes), commit and push without asking for routine confirmation or opening a pull request. This is the standing workflow for this small project unless the user requests a different approach.
+
+Before committing, inspect existing uncommitted changes and preserve them. Include changes from other agents when the user has authorized combining that work; otherwise leave unrelated work untouched. Fetch before pushing and integrate upstream changes without discarding local work. Never force-push, rewrite published history, reset away changes or delete branches as part of this authorization. Report the resulting commit and push status; if pushing fails, explain the concrete blocker.

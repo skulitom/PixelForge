@@ -19,7 +19,7 @@ Read [AGENTS.md](AGENTS.md) for the architecture and project constraints. Agents
 
 Open an issue for substantial features or format changes so the scope can be discussed first. For a bug, include the Node.js version, operating system, exact command, expected result, actual result and a minimal recipe if relevant. Remove private paths and credentials from logs.
 
-Use a branch in your fork and submit a focused pull request. Explain the user-visible result and how you verified it. Documentation fixes and small bug fixes can go straight to a pull request.
+External contributors should use a branch in their fork and submit a focused pull request. Explain the user-visible result and how you verified it. Documentation fixes and small bug fixes can go straight to a pull request. Agents working for the repository owner follow the standing direct-to-`main` commit and push authorization in [AGENTS.md](AGENTS.md); routine confirmation or a pull request is not required after review and successful checks.
 
 ## Verify your work
 

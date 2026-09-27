@@ -19,13 +19,15 @@ Use `node bin/pixelforge.js schema` for the complete JSON Schema. Unknown fields
 
 ## Frames and layers
 
-A frame is `{name, duration?, from?, translate?, flipX?, flipY?, ops?, layers?}`.
+A frame is `{name, duration?, from?, translate?, flipX?, flipY?, ops?, layers?, pixels?}`.
 
-`duration` is 1–60000 milliseconds, default 100. `from` copies an **earlier** frame; otherwise the frame starts with the project background. Whole-frame flips happen first, then `translate: [dx, dy]`, then `ops`, then layers in array order. Translation leaves newly exposed pixels transparent and clips at the canvas boundary.
+`duration` is 1–60000 milliseconds, default 100. `from` copies an **earlier** frame; otherwise the frame starts with the project background. Whole-frame flips happen first, then `translate: [dx, dy]`, then `ops`, then layers in array order, then final `pixels` corrections. Translation leaves newly exposed pixels transparent and clips at the canvas boundary.
 
 Layers are `{name?, visible?, opacity?, x?, y?, ops?}`. They render to a transparent buffer of the **canvas size**, then translate by x/y, then composite in order with source-over alpha. `opacity` is 0–1, applied once to the flattened layer. Hidden layers are validated but not composited. Drawing outside a layer's own canvas is clipped **before** the layer is translated.
 
 Transparent drawing skips pixels. Use `clear` to erase. Clearing a layer erases only that layer's own pixels; it does not erase underlying layers. A `from` frame is already flattened, so later operations can edit or erase its pixels.
+
+`pixels` is an optional list of `{x, y, color}` corrections in **final canvas coordinates** (top-left origin). Each entry replaces the exact RGBA after all operations and layers: `transparent` erases even underlying layers; a semi-transparent color sets that exact alpha instead of blending. Coordinates are required integers inside the canvas, colors use palette names or hex, and later entries at the same coordinate win. At most 65,536 entries are allowed per frame. Original layer operations are preserved. Frames that inherit this frame also inherit its corrections before applying their own transforms. Remove a correction to reveal the original drawing beneath it. Use `pixel_patch`'s `paint` change to manage these corrections without knowing the layer structure.
 
 ## Operations
 
@@ -47,11 +49,36 @@ Rectangle/ellipse/clear w/h are integers 1–512. Grid and symbol rows must be r
 
 ## Inspecting
 
-Look at every frame before exporting. Inspection renders in memory and writes nothing; the CLI saves the contact sheet only when given `--out file.png`.
+Look at every frame before exporting. Inspection renders its images in memory; the CLI saves the contact sheet only when given `--out file.png`. MCP inspection also saves an immutable recipe revision for later calls, without exporting assets.
 
 - **Contact sheet**: one PNG with the selected frames left to right, top to bottom, on a neutral checkerboard with dark gutters. The response lists each cell's frame name and duration, plus the layout (`columns`, `rows`, `scale`, `gap`). The default is every frame in project order. `animation` shows one sequence in playback order, including reverse and pingpong. `frames` lists frame names in any order. The automatic scale is the largest, at most 16, that keeps each cell within 256px and the sheet within 1024px. `scale` (1–16) overrides it, up to a 4096px sheet. `background` is `checker` (default), `transparent`, a palette name or a hex color, such as your game's backdrop.
-- **Palette-key grids** (`grid: true`, CLI `--grid`): each distinct selected frame read back in the recipe's grid format. A pixel whose exact RGBA matches a single-character palette key shows that key; `.` is fully transparent. Any other color, whether a multi-character palette name, a literal hex color or a semi-transparent blend, gets a legend symbol: a digit, letter or punctuation mark that is not a palette key. One legend covers every grid in the response. `?` counts any colors left once the symbols run out. Grids are limited to 16,384 pixels in total. MCP prints them with x/y rulers; the CLI returns JSON `rows` that start at the region's top-left corner.
+- **Palette-key grids** (`grid: true`, CLI `--grid`): each distinct selected frame read back in the recipe's grid format. A pixel whose exact RGBA matches a single-character palette key shows that key; `.` is fully transparent. Any other color, whether a multi-character palette name, a literal hex color or a semi-transparent blend, gets a legend symbol: a digit, letter or punctuation mark that is not a palette key. Symbols belong to the recipe, not the request: multi-character palette names come first, in palette order, then other colors in the order frames use them. Every readback of the same recipe therefore agrees, and each response lists only the symbols it uses. `?` counts any colors left once the symbols run out. Grids are limited to 16,384 pixels in total. MCP prints them with x/y rulers; the CLI returns JSON `rows` that start at the region's top-left corner.
 - **Region** (`region: {x, y, w, h}`, CLI `--region x,y,w,h`): crops every cell and grid to a canvas rectangle. Smaller regions are shown larger, so you can compare a face across a blink or read the pixels around a joint without printing the whole canvas.
+
+## Patching
+
+Change a recipe with small edits instead of rewriting it. Over MCP, send the full recipe once: every successful response from `pixel_validate`, `pixel_inspect`, `pixel_patch` and `pixel_render` includes a `revision` id, and those tools accept `revision` in place of `project`. Revisions are immutable recipe snapshots saved in `<MCP --out directory>/.revisions/`, including edits that have never been exported. Restart with the same output directory to keep using earlier ids as undo points. Use an absolute `--out` path so changing the working directory does not change the store. Older ids can also be recovered from recipes in existing render folders under that directory. Unknown or damaged revisions produce an error; stored snapshots are never silently replaced. Snapshots are retained until you explicitly remove their files; keep the output directory backed up. The CLI patches files instead.
+
+`changes` apply in order:
+
+| Change | Effect |
+| --- | --- |
+| `{"set": path, "value": v}` | Replace a value, or add an object field |
+| `{"insert": path, "value": v}` | Insert into a list before the selected item; `[-]` appends |
+| `{"remove": path}` | Delete an object field or list item |
+| `{"paint": "frames[blink]", "value": [{"x": 9, "y": 7, "color": "k"}]}` | Set exact pixels in final canvas coordinates after all layers; `transparent` erases |
+
+Paths use the same form as error paths, with an optional `project.` prefix: `frames[3].duration`, `palette.k`, `symbols.mossling[9]`, `sheet.padding`. In a list, `[name]` selects the item whose `name`, or string value, matches, and `[-]` is the end: `frames[blink].layers[body].ops[2].x2`, `animations.idle.frames[-]`. Quote unusual keys: `palette["dark.green"]`. Intermediate fields must exist, except that an insert can create the list it inserts into; `set` may add the final object field. Frame `ops` draw before the frame's layers. Use `paint` to correct the visible result directly; use `set` or `insert` inside layer `ops` when changing how that layer is drawn.
+
+`paint` accepts a frame path by name or index and 1–65,536 `{x, y, color}` entries. Coordinates match inspection grids, with no layer-offset conversion. It updates the frame's `pixels` corrections, retaining only the last correction at each coordinate. Palette references stay editable. Remove `frames[blink].pixels` to reveal that frame's original drawing, or use an earlier revision to undo the whole patch.
+
+A patch is atomic: if any change fails, or the result does not validate, the source and earlier revisions stay unchanged and no result revision is saved. MCP saves successful base and result revisions; the CLI saves only the outputs requested by flags. Patching reports:
+
+- `edits`: each change with its resolved index path (`at`) and the value it replaced (`before`), or `created`. Paint edits report the number of submitted pixels; the comparison below reports their visible effects.
+- `frames.changed`: every frame whose pixels differ, including frames that inherit from an edited frame, with a pixel count and bounding box. Up to 16 changed pixels are listed with canvas coordinates and palette-key characters (`from`, `to`); larger changes are summarized as color transitions. `unchanged`, `added`, `removed` and `durations` complete the picture, and `animations` lists changed sequences and loop settings.
+- A before/after PNG (MCP) with one row per changed, added or removed frame: before on the left, after on the right. It is cropped to the changed area plus 2 pixels when no frames were added or removed.
+
+CLI: `node bin/pixelforge.js patch sprite.json --changes fix.json` previews the report. `--changes -` reads the changes from stdin as a JSON list. Add `--out sprite-v2.json` to save the patched recipe and `--image diff.png` for the before/after image; existing files are kept unless you pass `--force`.
 
 ## Efficient workflow
 
@@ -59,14 +86,14 @@ Look at every frame before exporting. Inspection renders in memory and writes no
 2. Save repeated components as symbols. Name colors semantically for shape operations; use one-character palette keys in grids.
 3. Build one good resting pose. Create frames with `from` for small changes, or stamp body parts in separate layers for movement.
 4. Start at 80–200ms per frame. Add holds intentionally by increasing a pose's duration. Group sequences by behavior: idle, walk, jump, impact.
-5. Validate, inspect, fix, repeat; render when the art is right. A valid JSON document can still have a bad silhouette, wrong facing or a jerky loop. Check each animation's contact sheet, and read a region grid before editing exact pixels.
+5. Validate, inspect, patch, repeat; render when the art is right. A valid JSON document can still have a bad silhouette, wrong facing or a jerky loop. Check each animation's contact sheet, read a region grid before editing exact pixels, and confirm each patch changed only the pixels you meant to change.
 6. Save the JSON source with the output bundle. Inherit poses instead of repainting the entire image where possible.
 
 ## Calling the tool
 
-CLI: `node bin/pixelforge.js inspect sprite.json --out sprite-frames.png`, optionally with `--animation idle` or `--grid --region 4,6,8,6`; then `node bin/pixelforge.js render sprite.json --out output/sprite`.
+CLI: `node bin/pixelforge.js inspect sprite.json --out sprite-frames.png`, optionally with `--animation idle` or `--grid --region 4,6,8,6`; `node bin/pixelforge.js patch sprite.json --changes fix.json --out sprite-v2.json` for targeted edits; then `node bin/pixelforge.js render sprite.json --out output/sprite`.
 
-MCP: call `pixel_help` once. While iterating, call `pixel_inspect` with `{ "project": <recipe> }` plus any inspection options; `pixel_validate` is a cheaper check without images. When the art is right, call `pixel_render` with `{ "project": <recipe> }`. Rendering returns output paths and a magnified first-frame PNG preview. Every render gets a unique output directory, so iterations do not overwrite earlier results.
+MCP: call `pixel_help` once. Send `{ "project": <recipe> }` to `pixel_inspect` (plus any inspection options) or `pixel_validate`, a cheaper check without images. Afterwards pass `{ "revision": <id> }` instead of the recipe, and use `pixel_patch` for edits. When the art is right, call `pixel_render` with the revision. Rendering returns output paths, including the recipe as `name.pixel.json`, and a PNG contact sheet of **every frame**. Its `preview` metadata gives the region, sheet layout and cell names/durations. Add `"animation": "idle"` to preview that sequence in expanded playback order, including repeated poses; all animations are still exported. The inline preview is static; exported APNGs and `preview.html` play the animation. Every render gets a unique output directory, so iterations do not overwrite earlier results.
 
 Exports include a TexturePacker-style RGBA atlas, named sequences, exact durations, individual frames, APNGs, CSS and a Canvas player. `sheet.scale` applies to every raster export and atlas coordinate. Metadata coordinates are already scaled; do not multiply them again. The browser player's optional `scale` is an additional display scale.
 

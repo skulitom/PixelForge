@@ -14,6 +14,9 @@ test('grids read pixels back as palette keys, transparency and one shared legend
   // Legend symbols skip the palette's own "0" key; repeated frames get one grid.
   assert.deepEqual(view.grids, [{ frame: 'a', rows: ['r01', '23.'] }, { frame: 'b', rows: ['r01', '232'] }]);
   assert.deepEqual(view.legend, { 1: { color: '#ffcc00', palette: 'gold' }, 2: { color: '#0000ff' }, 3: { color: '#ff000088' } });
+  // Symbols belong to the revision, not the selection: frame b alone still reads #00f as 2.
+  const alone = inspectProject(project, { frames: ['b'], region: { x: 0, y: 1, w: 3, h: 1 }, grid: true });
+  assert.deepEqual([alone.grids[0].rows, alone.legend], [['232'], { 2: { color: '#0000ff' }, 3: { color: '#ff000088' } }]);
 });
 test('inspection keeps frame order, crops regions and rejects bad options with paths', () => {
   const project = renderProject({ version: 1, name: 'probe', width: 4, height: 3, palette: { k: '#000' }, frames: [{ name: 'a', duration: 80, ops: [{ op: 'pixel', x: 3, y: 2, color: 'k' }] }, { name: 'b' }] });

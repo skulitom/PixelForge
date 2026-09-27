@@ -1,5 +1,6 @@
 node_modules/
 output/
+.revisions/
 *.tgz
 .DS_Store
 test-results/

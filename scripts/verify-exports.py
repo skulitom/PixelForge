@@ -4,6 +4,7 @@ import base64
 import io
 import json
 import subprocess
+import tempfile
 import zipfile
 from PIL import Image
 
@@ -72,4 +73,83 @@ for index, cell in enumerate(view['cells']):
     top = layout['gap'] + index // layout['columns'] * (cell_h + layout['gap'])
     crop = contact.crop((left, top, left + cell_w, top + cell_h)).resize(size, Image.Resampling.NEAREST)
     assert crop.tobytes() == base64.b64decode(view['frames'][cell['frame']]), cell['frame']
-print(f'Independent decode passed: sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, and a {len(view["cells"])}-cell contact sheet.')
+
+# Decode a patch comparison: each row's before and after cells must show their frames' opaque pixels.
+program = """
+import { readFile } from 'node:fs/promises';
+import { renderProject, compareProjects } from './src/core.js';
+import { patchRecipe } from './src/patch.js';
+import { encodePNG } from './src/png.js';
+const recipe = JSON.parse(await readFile('examples/forest-spirit.json', 'utf8'));
+const before = renderProject(recipe), after = renderProject(patchRecipe(recipe, [{ set: 'palette.k', value: '#5a2d3c' }]).recipe);
+const { image: { region, frames, sheet: { data, ...layout } } } = compareProjects(before, after);
+const raw = project => Object.fromEntries(project.frames.map(f => [f.name, Buffer.from(f.data).toString('base64')]));
+process.stdout.write(JSON.stringify({ width: after.width, region, frames, layout, before: raw(before), after: raw(after), png: encodePNG(data, layout.width, layout.height).toString('base64') }));
+"""
+diff = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', program], cwd=root))
+layout, region = diff['layout'], diff['region']
+comparison = Image.open(io.BytesIO(base64.b64decode(diff['png']))).convert('RGBA')
+assert comparison.size == (layout['width'], layout['height']) and layout['columns'] == 2
+cell_w, cell_h = region['w'] * layout['scale'], region['h'] * layout['scale']
+for row, entry in enumerate(diff['frames']):
+    for column, side in enumerate(('before', 'after')):
+        left, top = layout['gap'] + column * (cell_w + layout['gap']), layout['gap'] + row * (cell_h + layout['gap'])
+        cell = comparison.crop((left, top, left + cell_w, top + cell_h)).resize((region['w'], region['h']), Image.Resampling.NEAREST)
+        raw = base64.b64decode(diff[side][entry['frame']])
+        for y in range(region['h']):
+            for x in range(region['w']):
+                at = ((region['y'] + y) * diff['width'] + region['x'] + x) * 4
+                if raw[at + 3] == 255:
+                    assert cell.getpixel((x, y)) == tuple(raw[at:at + 4]), (entry['frame'], side, x, y)
+
+# Exercise actual MCP responses and decode canvas corrections after a real server restart.
+with tempfile.TemporaryDirectory(prefix='pixelforge-decode-') as temporary:
+    assert Path(temporary).resolve().is_relative_to(Path(tempfile.gettempdir()).resolve())
+    recipe = {
+        'version': 1, 'name': 'painted', 'width': 3, 'height': 2,
+        'frames': [
+            {'name': 'a', 'duration': 70, 'layers': [{'x': 1, 'y': 1, 'ops': [{'op': 'pixel', 'color': '#f00'}]}]},
+            {'name': 'b', 'duration': 130, 'from': 'a'}
+        ]
+    }
+
+    def mcp(name, arguments):
+        messages = [
+            {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize', 'params': {'protocolVersion': '2025-11-25'}},
+            {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': name, 'arguments': arguments}}
+        ]
+        response = subprocess.check_output(['node', 'bin/pixelforge.js', 'mcp', '--out', temporary],
+                                           input=''.join(json.dumps(m) + '\n' for m in messages).encode(), cwd=root)
+        result = json.loads(response.splitlines()[-1])['result']
+        assert not result.get('isError'), result
+        return result
+
+    patched = mcp('pixel_patch', {'project': recipe, 'changes': [{'paint': 'frames[a]', 'value': [
+        {'x': 1, 'y': 1, 'color': 'transparent'}, {'x': 2, 'y': 0, 'color': '#00ff0080'}
+    ]}]})
+    revision = json.loads(patched['content'][0]['text'])['revision']
+    result = mcp('pixel_render', {'revision': revision})
+    info = json.loads(result['content'][0]['text'])
+    preview = info['preview']
+    assert preview['cells'] == [{'frame': 'a', 'duration': 70}, {'frame': 'b', 'duration': 130}]
+    image = Image.open(io.BytesIO(base64.b64decode(result['content'][1]['data']))).convert('RGBA')
+    layout = preview['sheet']
+    assert image.size == (layout['width'], layout['height'])
+    for index, entry in enumerate(preview['cells']):
+        raw = Image.open(Path(info['directory']) / 'frames' / (entry['frame'] + '.png')).convert('RGBA')
+        assert raw.getpixel((1, 1)) == (0, 0, 0, 0)
+        assert raw.getpixel((2, 0)) == (0, 255, 0, 128)
+        left = layout['gap'] + index % layout['columns'] * (3 * layout['scale'] + layout['gap'])
+        top = layout['gap'] + index // layout['columns'] * (2 * layout['scale'] + layout['gap'])
+        cell = image.crop((left, top, left + 3 * layout['scale'], top + 2 * layout['scale'])).resize((3, 2), Image.Resampling.NEAREST)
+        assert cell.getpixel((1, 1)) == (143, 145, 151, 255)
+        assert cell.getpixel((2, 0)) == (65, 194, 69, 255)
+    with Image.open(Path(info['directory']) / 'animations' / 'default.png') as animated:
+        assert animated.n_frames == 2
+        for index, duration in enumerate((70, 130)):
+            animated.seek(index)
+            assert animated.info['duration'] == duration
+            assert animated.convert('RGBA').getpixel((1, 1)) == (0, 0, 0, 0)
+            assert animated.convert('RGBA').getpixel((2, 0)) == (0, 255, 0, 128)
+
+print(f'Independent decode passed: sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')

@@ -1,11 +1,14 @@
 import { readFile, mkdir, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, scalePixels, inspectProject } from './core.js';
+import { PixelError, renderProject, inspectProject, compareProjects } from './core.js';
+import { patchRecipe } from './patch.js';
+import { createRevisionStore } from './revisions.js';
 import { encodePNG } from './png.js';
 import { createBundle, writeBundle } from './export.js';
 
 const versions = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 const textContent = value => ({ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value) });
+const imageContent = ({ data, width, height }) => ({ type: 'image', mimeType: 'image/png', data: encodePNG(data, width, height).toString('base64') });
 // Rulers let an agent read grid coordinates without counting characters.
 function gridText({ region, legend, grids }) {
   const label = String(region.y + region.h - 1).length, xs = Array.from({ length: region.w }, (_, i) => region.x + i);
@@ -18,10 +21,12 @@ function gridText({ region, legend, grids }) {
 export async function startMCP({ directory = 'output', input = process.stdin, output = process.stdout } = {}) {
   const schema = JSON.parse(await readFile(new URL('../schema.json', import.meta.url), 'utf8'));
   const { $schema, $defs, ...projectSchema } = schema;
-  const projectInput = { type: 'object', properties: { project: projectSchema }, required: ['project'], additionalProperties: false, $defs };
+  const source = { project: projectSchema, revision: { type: 'string', pattern: '^[a-f0-9]{12}$', description: 'Revision id from an earlier PixelForge response. Send it instead of project to reuse that recipe, including after restarting with the same MCP --out directory.' } };
+  const projectInput = { type: 'object', properties: source, additionalProperties: false, $defs };
+  const renderInput = { ...projectInput, properties: { ...source, animation: { type: 'string', description: 'Preview this animation in playback order. Default: preview every frame in project order. All animations are always exported.' } } };
   const coordinate = (minimum, maximum) => ({ type: 'integer', minimum, maximum });
   const inspectInput = { ...projectInput, properties: {
-    project: projectSchema,
+    ...source,
     frames: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 1024, description: 'Frame names to show, in this order. Default: every frame.' },
     animation: { type: 'string', description: 'Show one animation in playback order instead of frames.' },
     region: { type: 'object', properties: { x: coordinate(0, 255), y: coordinate(0, 255), w: coordinate(1, 256), h: coordinate(1, 256) }, required: ['x', 'y', 'w', 'h'], additionalProperties: false, description: 'Crop every frame to this canvas rectangle. Smaller regions are shown larger.' },
@@ -29,12 +34,29 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
     scale: { type: 'integer', minimum: 1, maximum: 16, description: 'Contact sheet scale. Default: the largest that fits about 1024px.' },
     background: { type: 'string', description: 'Cell background: checker (default), transparent, a palette name or a hex color.' }
   } };
+  const patchInput = { ...projectInput, required: ['changes'], properties: {
+    ...source,
+    changes: { type: 'array', minItems: 1, maxItems: 1024, description: 'Edits applied in order. Paths match error paths, such as frames[3].duration; lists also accept [name] and [-] to append.', items: { type: 'object', properties: {
+      set: { type: 'string', description: 'Path to replace, or an object field to add.' },
+      insert: { type: 'string', description: 'List position to insert before; [-] appends.' },
+      remove: { type: 'string', description: 'Object field or list item to delete.' },
+      paint: { type: 'string', description: 'Frame path, such as frames[blink]. Replaces pixels in final canvas coordinates, after all layers, preserving source operations. Use transparent to erase.' },
+      value: { description: 'JSON value for set or insert; for paint, a list of {x, y, color} pixels inside the canvas (palette names or hex colors, exact RGBA replacement).' }
+    }, additionalProperties: false } }
+  } };
   const tools = [
     { name: 'pixel_help', description: 'Get the PixelForge authoring guide, JSON Schema, and a complete editable example. Start here.', inputSchema: { type: 'object', properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true } },
-    { name: 'pixel_validate', description: 'Validate a pixel project and return dimensions, frame timing, animations, and clipping warnings without writing files.', inputSchema: projectInput, annotations: { readOnlyHint: true } },
-    { name: 'pixel_inspect', description: 'See a project without writing files. Returns one PNG contact sheet of every frame (or the chosen frames, or one animation in playback order), read left to right and top to bottom, with each cell\'s frame name and duration. With grid: true it also returns palette-key text grids with x/y rulers for exact pixel checks. Use region to zoom in. Use this while iterating; call pixel_render to export.', inputSchema: inspectInput, annotations: { readOnlyHint: true } },
-    { name: 'pixel_render', description: 'Render a project into PNG sprite sheet, atlas JSON, individual PNGs, APNG animations, CSS, and Canvas player. Writes a new unique folder inside the configured export directory and returns paths plus a PNG preview.', inputSchema: projectInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } }
+    { name: 'pixel_validate', description: 'Validate a pixel project and return its revision id, dimensions, frame timing, animations, and clipping warnings. Saves an immutable recipe revision; no asset export.', inputSchema: projectInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+    { name: 'pixel_inspect', description: 'See a project without exporting assets. Returns one PNG contact sheet of every frame (or the chosen frames, or one animation in playback order), read left to right and top to bottom, with each cell\'s frame name and duration. With grid: true it also returns palette-key text grids with x/y rulers for exact pixel checks. Use region to zoom in. Saves an immutable recipe revision. Use this while iterating; call pixel_render to export.', inputSchema: inspectInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+    { name: 'pixel_patch', description: 'Change a recipe with targeted edits instead of resending it. Pass revision or project, plus changes applied in order: {"set": path, "value": v}, {"insert": path, "value": v}, {"remove": path}, or {"paint": "frames[blink]", "value": [{"x": 9, "y": 7, "color": "k"}]}. Paint replaces exact RGBA in canvas coordinates after all layers; transparent erases. Other paths look like frames[blink].layers[body].ops[2].x2, palette.k or animations.idle.frames[-]. The patch is atomic and the result must validate. Returns the new revision, edit details, every frame whose pixels changed (exact pixels for small changes), timing and animation changes, and a before/after PNG with one row per frame. Saves immutable base and result revisions; render the revision to export assets.', inputSchema: patchInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+    { name: 'pixel_render', description: 'Render a project into PNG sprite sheet, atlas JSON, individual PNGs, APNG animations, CSS, and Canvas player. Writes a new unique folder inside the configured export directory and saves an immutable recipe revision. Returns paths and a PNG contact sheet preview of every frame with cell names, timing and layout. Optionally select an animation to preview in playback order.', inputSchema: renderInput, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false } }
   ];
+  const { remember, read } = createRevisionStore(directory);
+  const recipeFrom = async (project, revision) => {
+    if ((project === undefined) === (revision === undefined)) throw new PixelError('arguments', 'send either project or revision');
+    if (project !== undefined) return project;
+    return read(revision);
+  };
   const send = value => output.write(JSON.stringify(value) + '\n');
   let initialized = false;
   async function handle(line) {
@@ -50,7 +72,7 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
     if (method === 'initialize') {
       if (!params || typeof params.protocolVersion !== 'string') { error(-32602, 'protocolVersion is required'); return; }
       initialized = true;
-      result({ protocolVersion: versions.includes(params.protocolVersion) ? params.protocolVersion : versions[0], capabilities: { tools: {} }, serverInfo: { name: 'pixelforge', version: '0.1.0' }, instructions: 'Call pixel_help for the JSON format. Use small grids and reusable symbols. Call pixel_inspect to see every frame, and grid: true to read exact pixels, without writing files; call pixel_render to export game-ready files.' }); return;
+      result({ protocolVersion: versions.includes(params.protocolVersion) ? params.protocolVersion : versions[0], capabilities: { tools: {} }, serverInfo: { name: 'pixelforge', version: '0.1.0' }, instructions: 'Call pixel_help for the JSON format. Use small grids and reusable symbols. Send a full recipe once; every response returns a revision id to use instead of project afterwards. Call pixel_inspect to see every frame (grid: true reads exact pixels), pixel_patch to make targeted edits and check what changed, and pixel_render to export game-ready files.' }); return;
     }
     if (method === 'ping') { result({}); return; }
     if (!initialized) { error(-32000, 'Initialize the server first'); return; }
@@ -61,31 +83,31 @@ export async function startMCP({ directory = 'output', input = process.stdin, ou
     const args = params.arguments ?? {};
     if (args === null || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).some(k => !Object.hasOwn(tool.inputSchema.properties, k))) { error(-32602, 'Invalid tool arguments'); return; }
     try {
+      const { project: spec, revision, changes, ...options } = args;
       if (params.name === 'pixel_help') {
         const guide = await readFile(new URL('../docs/agent-guide.md', import.meta.url), 'utf8');
         const example = JSON.parse(await readFile(new URL('../examples/forest-spirit.json', import.meta.url), 'utf8'));
         result({ content: [textContent(guide), textContent({ schema, example })] });
       } else if (params.name === 'pixel_validate') {
-        const project = renderProject(args.project);
-        result({ content: [textContent({ ok: true, width: project.width, height: project.height, frames: project.frames.map(({ name, duration }) => ({ name, duration })), animations: project.animations, warnings: project.warnings })] });
+        const recipe = await recipeFrom(spec, revision), project = renderProject(recipe);
+        result({ content: [textContent({ ok: true, revision: await remember(recipe), width: project.width, height: project.height, frames: project.frames.map(({ name, duration }) => ({ name, duration })), animations: project.animations, warnings: project.warnings })] });
       } else if (params.name === 'pixel_inspect') {
-        const { project: spec, ...options } = args;
-        const project = renderProject(spec), view = inspectProject(project, options), { data, ...sheet } = view.sheet;
-        const content = [
-          textContent({ ok: true, name: project.name, width: project.width, height: project.height, region: view.region, sheet, cells: view.cells, warnings: project.warnings }),
-          { type: 'image', mimeType: 'image/png', data: encodePNG(data, sheet.width, sheet.height).toString('base64') }
-        ];
+        const recipe = await recipeFrom(spec, revision), project = renderProject(recipe), view = inspectProject(project, options), { data, ...sheet } = view.sheet;
+        const content = [textContent({ ok: true, revision: await remember(recipe), name: project.name, width: project.width, height: project.height, region: view.region, sheet, cells: view.cells, warnings: project.warnings }), imageContent(view.sheet)];
         if (view.grids) content.push(textContent(gridText(view)));
         result({ content });
+      } else if (params.name === 'pixel_patch') {
+        const base = await recipeFrom(spec, revision), before = renderProject(base), { recipe, edits } = patchRecipe(base, changes), after = renderProject(recipe);
+        const { image, ...report } = compareProjects(before, after), baseId = await remember(base);
+        const summary = { ok: true, revision: await remember(recipe), base: baseId, edits, ...report, ...(image && { image: { region: image.region, frames: image.frames, ...(image.omitted && { omitted: image.omitted }), scale: image.sheet.scale } }), warnings: after.warnings };
+        result({ content: [textContent(summary), ...(image ? [imageContent(image.sheet)] : [])] });
       } else {
-        const bundle = await createBundle(args.project);
+        const recipe = await recipeFrom(spec, revision), bundle = await createBundle(recipe), view = inspectProject(bundle.project, options), { data, ...sheet } = view.sheet;
+        const savedRevision = await remember(recipe);
         await mkdir(path.resolve(directory), { recursive: true });
         const out = await mkdtemp(path.join(path.resolve(directory), `${bundle.project.name}-`));
         const files = await writeBundle(bundle, out);
-        const { width, height, frames } = bundle.project;
-        const scale = Math.max(1, Math.min(8, Math.floor(256 / Math.max(width, height))));
-        const image = encodePNG(scalePixels(frames[0].data, width, height, scale), width * scale, height * scale);
-        result({ content: [textContent({ ok: true, directory: out, files, warnings: bundle.project.warnings }), { type: 'image', mimeType: 'image/png', data: image.toString('base64') }] });
+        result({ content: [textContent({ ok: true, revision: savedRevision, directory: out, files, preview: { region: view.region, sheet, cells: view.cells }, warnings: bundle.project.warnings }), imageContent(view.sheet)] });
       }
     } catch (cause) { result({ isError: true, content: [textContent({ error: cause.message, ...(cause.path ? { path: cause.path } : {}) })] }); }
   }

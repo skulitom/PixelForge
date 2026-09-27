@@ -22,7 +22,8 @@ const schema = {
   }, ['version', 'name', 'width', 'height', 'frames']),
   $defs: {
     rows: { ...array({ type: 'string', minLength: 1, maxLength: 256 }, 256), minItems: 1, description: 'Equal-width text rows. Every character is a palette key; dot and space skip a pixel.' },
-    frame: object({ name: id, duration: int(1, 60000, 'Frame duration in milliseconds; default 100.'), from: id, translate: { ...array(int(-4096, 4096), 2), minItems: 2 }, flipX: bool, flipY: bool, ops: array(ref('op')), layers: array(ref('layer'), 64) }, ['name']),
+    frame: object({ name: id, duration: int(1, 60000, 'Frame duration in milliseconds; default 100.'), from: id, translate: { ...array(int(-4096, 4096), 2), minItems: 2 }, flipX: bool, flipY: bool, ops: array(ref('op')), layers: array(ref('layer'), 64), pixels: { ...array(ref('pixel'), 65536), description: 'Final canvas-coordinate RGBA replacements after ops and layers. Coordinates must be inside this canvas. Later entries win; transparent erases.' } }, ['name']),
+    pixel: object({ x: int(0, 255), y: int(0, 255), color }, ['x', 'y', 'color']),
     layer: object({ name: id, visible: bool, opacity: { type: 'number', minimum: 0, maximum: 1 }, ...xy, ops: array(ref('op')) }),
     op: { oneOf: [
       operation('pixel', { ...xy, color }, ['color']),

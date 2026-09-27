@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, createBundle, writeBundle, inspectProject, encodePNG } from '../src/index.js';
+import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -9,6 +9,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge validate <file.json|->        Validate and describe a project
   pixelforge inspect <file.json|-> [--out sheet.png] [--grid]
                                            See every frame; writes only --out
+  pixelforge patch <file.json|-> --changes <changes.json|-> [--out new.json] [--image diff.png]
+                                           Preview edits; writes only --out and --image
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
   pixelforge preview [file.json] [--port 4747]
   pixelforge mcp [--out directory]         Run the MCP server over stdio
@@ -25,7 +27,7 @@ function parseArgs(args) {
   const positional = [], options = {};
   for (let i = 0; i < args.length; i++) {
     if (['--force', '--grid'].includes(args[i])) options[args[i].slice(2)] = true;
-    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background'].includes(args[i])) {
+    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image'].includes(args[i])) {
       const key = args[i].slice(2);
       if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`--${key} requires a value`);
       options[key] = args[++i];
@@ -46,6 +48,19 @@ function inspectOptions({ frames, animation, region, grid, scale, background }) 
   const [x, y, w, h] = region?.split(',').map(Number) ?? [];
   return { ...(frames !== undefined && { frames: frames.split(',') }), ...(animation !== undefined && { animation }), ...(region !== undefined && { region: { x, y, w, h } }), ...(grid && { grid }), ...(scale !== undefined && { scale: Number(scale) }), ...(background !== undefined && { background }) };
 }
+// Checks every target before writing any, so a refused overwrite leaves nothing half-written.
+async function writeOutputs(targets, force) {
+  const entries = Object.entries(targets).map(([label, [file, data]]) => [label, path.resolve(file), data]);
+  if (!force) for (const [, target] of entries) {
+    try { await access(target); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+    throw new Error(`Output already exists: ${target}. Choose a new file or pass --force.`);
+  }
+  for (const [, target, data] of entries) {
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, data, { flag: force ? 'w' : 'wx' });
+  }
+  return Object.fromEntries(entries.map(([label, target]) => [label, target]));
+}
 const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings });
 try {
   const [command = 'help', ...rest] = process.argv.slice(2);
@@ -53,7 +68,7 @@ try {
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force'], render: ['out', 'force'], preview: ['port'], mcp: ['out'], schema: [] };
+    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], preview: ['port'], mcp: ['out'], schema: [] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -72,15 +87,24 @@ try {
     } else if (command === 'inspect') {
       const project = renderProject(await readProject(positional[0]));
       const view = inspectProject(project, inspectOptions(options)), { data, ...sheet } = view.sheet;
-      const image = options.out && path.resolve(options.out);
-      if (image) {
-        if (!/\.png$/i.test(image)) throw new Error('inspect --out must name a .png file');
-        await mkdir(path.dirname(image), { recursive: true });
-        try { await writeFile(image, encodePNG(data, sheet.width, sheet.height), { flag: options.force ? 'w' : 'wx' }); }
-        catch (error) { throw error.code === 'EEXIST' ? new Error(`Output already exists: ${image}. Choose a new file or pass --force.`) : error; }
-      }
+      if (options.out && !/\.png$/i.test(options.out)) throw new Error('inspect --out must name a .png file');
+      const { image } = await writeOutputs(options.out ? { image: [options.out, encodePNG(data, sheet.width, sheet.height)] } : {}, options.force);
       // Pretty-printed so grid rows line up for reading.
       console.log(JSON.stringify({ ok: true, ...summary(project), region: view.region, sheet, cells: view.cells, ...(view.grids && { legend: view.legend, grids: view.grids }), ...(image && { image }) }, null, 2));
+    } else if (command === 'patch') {
+      if (!options.changes) throw new Error('patch requires --changes <file.json|->');
+      if (positional[0] === '-' && options.changes === '-') throw new Error('Only one of the project and --changes can be read from stdin');
+      if (options.out && !/\.json$/i.test(options.out)) throw new Error('patch --out must name a .json file');
+      if (options.image && !/\.png$/i.test(options.image)) throw new Error('patch --image must name a .png file');
+      const base = await readProject(positional[0]), changes = await readProject(options.changes);
+      const { recipe, edits } = patchRecipe(base, Array.isArray(changes) ? changes : changes?.changes);
+      const after = renderProject(recipe), { image, ...report } = compareProjects(renderProject(base), after);
+      const written = await writeOutputs({
+        ...(options.out && { recipe: [options.out, Buffer.from(JSON.stringify(recipe, null, 2) + '\n')] }),
+        ...(options.image && image && { image: [options.image, encodePNG(image.sheet.data, image.sheet.width, image.sheet.height)] })
+      }, options.force);
+      const { sheet, ...drawn } = image ?? {};
+      console.log(JSON.stringify({ ok: true, name: after.name, edits, ...report, ...(written.image && { image: { ...drawn, scale: sheet.scale, file: written.image } }), ...(written.recipe && { recipe: written.recipe }), warnings: after.warnings }, null, 2));
     } else {
       const spec = await readProject(positional[0]);
       if (command === 'validate') console.log(JSON.stringify({ ok: true, ...summary(renderProject(spec)) }));

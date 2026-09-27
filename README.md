@@ -33,7 +33,7 @@ node bin/pixelforge.js inspect hero.pixel.json --out hero-frames.png
 node bin/pixelforge.js render hero.pixel.json --out output/hero
 ```
 
-`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
+`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
 
 ## For agents
 
@@ -48,7 +48,7 @@ Use PixelForge to create or revise pixel sprites, tiles, icons, effects and shor
 | [Examples](examples/) | Complete forest spirit, campfire and coin recipes |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
-Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
+Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
 
 ## A tiny animation
 
@@ -117,12 +117,15 @@ command = "node"
 args = ["/absolute/path/to/PixelForge/bin/pixelforge.js", "mcp", "--out", "/absolute/path/to/PixelForge/output"]
 ```
 
-The four tools are:
+The five tools are:
 
 - **`pixel_help`**: authoring guide, full schema and a complete sample.
-- **`pixel_validate`**: validate `{ "project": ... }` without writing files.
-- **`pixel_inspect`**: return a contact sheet PNG of every frame, or one animation in playback order, without writing files. With `grid: true`, it also returns palette-key text grids with x/y rulers; `region` zooms in.
-- **`pixel_render`**: render `{ "project": ... }`, return a first-frame PNG preview plus output paths. Every call writes a fresh folder inside the configured output directory.
+- **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets.
+- **`pixel_inspect`**: return a contact sheet PNG of every frame, or one animation in playback order, and save its recipe revision. With `grid: true`, it also returns palette-key text grids with x/y rulers; `region` zooms in.
+- **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
+- **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus output paths. Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
+
+Send a recipe once. Each successful recipe-tool response includes a `revision` id that the other tools accept in place of `project`, so later calls, including patches, need not resend the recipe. Validate, inspect, patch and render save immutable snapshots in `<MCP --out directory>/.revisions/`; they survive restarts when you use the same directory, even before an asset export. Prefer an absolute `--out` path. Earlier revisions remain undo points. Older rendered revisions can be recovered from saved bundle recipes. Render also saves the recipe beside the assets.
 
 The server implements newline-delimited stdio MCP with initialization, version negotiation, ping and tool discovery/calls. It supports protocol versions 2024-11-05, 2025-03-26, 2025-06-18 and 2025-11-25. It uses no HTTP transport or external services. See the [MCP stdio specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
 
@@ -160,15 +163,17 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, createBundle, writeBundle } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
+const { recipe: next, edits } = patchRecipe(recipe, [{ set: 'frames[idle].duration', value: 120 }]);
+const report = compareProjects(project, renderProject(next)); // changed pixels, timing, before/after RGBA
 const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
 ```
 
-`src/core.js` is browser-compatible and has no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+`src/core.js` and `src/patch.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
 
 ## Develop and verify
 
@@ -177,7 +182,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, packing, timing, PNG/APNG structure, inspection sheets and grids, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 
