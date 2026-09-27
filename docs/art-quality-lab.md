@@ -50,7 +50,7 @@ There are twelve source frames. Idle and recovery intentionally reuse a resting 
 
 ![Persistent aftermath](images/quality/aftermath.png)
 
-The reaction changes shape and timing: a 65 ms flash, 100 ms split, then settled fragments. A scene cue keeps the fallen state after the once-only sequence. Water uses elongated downward ribbons and pool ripples rather than the same geometry in another palette. The study does not yet demonstrate burned plants, freezing water, fluid displacement or broad interactive environmental behavior.
+The reaction changes shape and timing: a 65 ms flash, 100 ms split, then settled fragments. A final contact review caught unsupported debris and an unconnected cast. The corrected intact crystal and fragments share the same support ledge; a short crescent travels from the character's release point at 1320 ms to the crystal at 1400 ms. At impact the traveling effect disappears and the crystal reaction begins. A scene cue keeps the fallen state afterward. Water uses elongated downward ribbons and pool ripples rather than the same geometry in another palette. The study does not yet demonstrate burned plants, freezing water, fluid displacement or broad interactive environmental behavior.
 
 The lantern includes authored normal and emissive passes, with two light directions below. They share frame names, timing, animation order and atlas rectangles. Disabling lighting preserves the useful ordinary-color sprite.
 

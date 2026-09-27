@@ -43,7 +43,7 @@
     ],
     "errors": [],
     "cpuSceneBenchmark": {
-      "medianMs": 1.2999999970197678,
+      "medianMs": 1.3999999910593033,
       "p95Ms": 1.7999999970197678,
       "samples": 100,
       "note": "CPU scene renderer after 20 warm-up samples, one desktop Chromium; not game FPS or mobile performance."
@@ -53,7 +53,7 @@
     "bundles": 8,
     "frames": 26,
     "animation_frames": 26,
-    "material_passes": 13,
+    "material_passes": 15,
     "png_filters": 5,
     "zip_boundary_entries": 65535
   },

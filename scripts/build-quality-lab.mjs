@@ -71,7 +71,7 @@ const crystal=project('hush-crystal',16,24,[
   {name:'whole',duration:700,ops:[grid(['......h','.....hcc','....hccdd','....hccdd','...hccddd','...hcdddd','..hccdddd','..hcddddb','..cddddbb','..cdddbb','...ddbb','....bb'],2,7)]},
   {name:'impact',duration:65,ops:[grid(['....w....','...www...','...w.w...','.wwwww.w.','www.w.www','.wwwww.w.','...w.w...','...www...','....w....'],3,7)]},
   {name:'split',duration:100,ops:[grid(['....c.....h','...cc.....cd','...cd.....dd','..cd......db','..dd......bb','...b','.......c','.......db','......cdb'],1,7)]},
-  {name:'fallen',duration:150,ops:[grid(['..hc......','..cdb.....','...b..cc..','......dbb.','.hcdb.bbb.','..bbb.....'],3,17)]}
+  {name:'fallen',duration:150,ops:[grid(['..hc......','..cdb.....','...b..cc..','......dbb.','.hcdb.bbb.','..bbb.....'],3,13)]}
 ],{break:{frames:['impact','split','fallen'],loop:false}});
 
 const backdropOps=[{op:'rect',w:224,h:128,color:'k'},
@@ -207,6 +207,15 @@ const spring=project('spring-ribbons',12,78,[0,1,2,3].map(i=>({name:`flow-${i}`,
  ...stroke([[1,75],[4+i%2,74],[8,75],[11,75]],i%2?'s':'c')
 ]})),{flow:{frames:['flow-0','flow-1','flow-2','flow-3']}});
 scene.assets.spring=spring;scene.instances.splice(1,0,{asset:'spring',at:[123,28],animation:'flow'});
+// Contact review: put intact crystal and debris on the same ledge; connect the release cue to impact.
+const crystalLedge=project('spring-ledge',18,7,[{name:'still',ops:[grid(['...gghhggg.....','..ssstttssss...','.ssssbbbbbssss.','..bbbbbbbbbbbb.','...bbbvvvvbbb..','....vvvvvvvv...'])]}]);
+scene.assets.ledge=crystalLedge;
+const crystalIndex=scene.instances.findIndex(instance=>instance.name==='crystal');
+scene.instances[crystalIndex].at=[107,85];
+scene.instances.splice(crystalIndex,0,{asset:'ledge',at:[110,104],frame:'still'});
+const spell=project('spoken-spark',8,8,[{name:'empty',duration:100},{name:'crescent',duration:40,ops:[grid(['...y...','..yay..','.ya.y..','..yw...','...y...'],0,1)]},{name:'turn',duration:40,ops:[grid(['...y...','..wy...','.ya.y..','..yay..','...y...'],0,1)]}],{flight:{frames:['crescent','turn'],loop:false}});
+scene.assets.spell=spell;
+scene.instances.push({name:'spoken-spark',asset:'spell',at:[97,84],anchor:[3,3],frame:'empty',sequence:[{time:1320,animation:'flight'},{time:1400,frame:'empty'}],trajectory:[{time:0,at:[97,84]},{time:1320,at:[97,84]},{time:1400,at:[115,96]}]});
 
 json('examples/quality/fern-before.json',fernBase);json('examples/quality/fern-base.json',fern);json('examples/quality/fern-correction.json',fernCorrection);json('examples/quality/fern.json',correctedFern);
 json('examples/quality/stride.scene.json',{format:'pixelforge-scene',version:1,name:'skink-stride-study',width:192,height:72,duration:3000,background:palette.v,assets:{skink:character.recipe,ground:soil},instances:[{asset:'ground',at:[0,48],frame:'a',repeat:[6,1]},{asset:'skink',at:[20,30],animation:'run',trajectory:[{time:0,at:[20,30]},{time:3000,at:[116,30]}]}]});

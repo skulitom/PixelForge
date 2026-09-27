@@ -69,7 +69,26 @@ export function importPNG(bytes, { name = 'imported', atlas } = {}) {
     }
     return { name: frameName, duration: entry.duration ?? 100, pixels };
   });
-  const recipe = { version: 1, name, width, height, frames, ...(atlas?.animations && { animations: Object.fromEntries(Object.entries(atlas.animations).map(([key, value]) => [key, { frames: value.frames, loop: value.loop ?? true }])) }) };
+  // Typical pixel art should return as compact, palette-editable grids, not thousands of literal overrides.
+  const symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&*+-/:;<=>@^_~';
+  const colors = new Map(); let compact = true;
+  for (const frame of frames) {
+    for (const pixel of frame.pixels) if (!pixel.color.endsWith('00') && !colors.has(pixel.color)) {
+      if (colors.size === symbols.length) { compact = false; break; }
+      colors.set(pixel.color, symbols[colors.size]);
+    }
+    if (!compact) break;
+  }
+  if (compact) for (const frame of frames) {
+    const rows = Array.from({ length: height }, () => Array(width).fill('.')), hidden = [];
+    for (const pixel of frame.pixels) {
+      if (!pixel.color.endsWith('00')) rows[pixel.y][pixel.x] = colors.get(pixel.color);
+      else if (pixel.color !== '#00000000') hidden.push(pixel); // Preserve meaningful RGB even under alpha zero.
+    }
+    frame.ops = [{ op: 'grid', rows: rows.map(row => row.join('')) }];
+    if (hidden.length) frame.pixels = hidden; else delete frame.pixels;
+  }
+  const recipe = { version: 1, name, width, height, ...(compact && { palette: Object.fromEntries([...colors].map(([color, key]) => [key, color])) }), frames, ...(atlas?.animations && { animations: Object.fromEntries(Object.entries(atlas.animations).map(([key, value]) => [key, { frames: value.frames, loop: value.loop ?? true }])) }) };
   renderProject(recipe);
-  return { recipe, provenance: { format: 'pixelforge-raster-import', version: 1, sha256: createHash('sha256').update(bytes).digest('hex'), width: image.width, height: image.height, lossless: true, authoritative: 'The imported recipe. Original drawing operations cannot be reconstructed; rebuild generators must explicitly incorporate it.' } };
+  return { recipe, provenance: { format: 'pixelforge-raster-import', version: 1, sha256: createHash('sha256').update(bytes).digest('hex'), width: image.width, height: image.height, lossless: true, representation: compact ? 'palette grids with hidden-RGB corrections' : 'exact RGBA pixels', authoritative: 'The imported recipe. Original drawing operations cannot be reconstructed; rebuild generators must explicitly incorporate it.' } };
 }

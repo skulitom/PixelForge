@@ -11030,7 +11030,7 @@
             {
               "op": "grid",
               "x": 3,
-              "y": 17,
+              "y": 13,
               "rows": [
                 "..hc......",
                 "..cdb.....",
@@ -11741,6 +11741,121 @@
           ]
         }
       }
+    },
+    "ledge": {
+      "version": 1,
+      "name": "spring-ledge",
+      "width": 18,
+      "height": 7,
+      "palette": {
+        "k": "#0b1020",
+        "v": "#182239",
+        "b": "#26354c",
+        "s": "#3d5364",
+        "t": "#477975",
+        "g": "#72967d",
+        "h": "#afc4a0",
+        "y": "#e7ce89",
+        "w": "#f7edc4",
+        "a": "#cc8762",
+        "r": "#8d5260",
+        "p": "#573b57",
+        "c": "#75bfbc",
+        "d": "#3a8eaa"
+      },
+      "frames": [
+        {
+          "name": "still",
+          "ops": [
+            {
+              "op": "grid",
+              "x": 0,
+              "y": 0,
+              "rows": [
+                "...gghhggg.....",
+                "..ssstttssss...",
+                ".ssssbbbbbssss.",
+                "..bbbbbbbbbbbb.",
+                "...bbbvvvvbbb..",
+                "....vvvvvvvv..."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "spell": {
+      "version": 1,
+      "name": "spoken-spark",
+      "width": 8,
+      "height": 8,
+      "palette": {
+        "k": "#0b1020",
+        "v": "#182239",
+        "b": "#26354c",
+        "s": "#3d5364",
+        "t": "#477975",
+        "g": "#72967d",
+        "h": "#afc4a0",
+        "y": "#e7ce89",
+        "w": "#f7edc4",
+        "a": "#cc8762",
+        "r": "#8d5260",
+        "p": "#573b57",
+        "c": "#75bfbc",
+        "d": "#3a8eaa"
+      },
+      "frames": [
+        {
+          "name": "empty",
+          "duration": 100
+        },
+        {
+          "name": "crescent",
+          "duration": 40,
+          "ops": [
+            {
+              "op": "grid",
+              "x": 0,
+              "y": 1,
+              "rows": [
+                "...y...",
+                "..yay..",
+                ".ya.y..",
+                "..yw...",
+                "...y..."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "turn",
+          "duration": 40,
+          "ops": [
+            {
+              "op": "grid",
+              "x": 0,
+              "y": 1,
+              "rows": [
+                "...y...",
+                "..wy...",
+                ".ya.y..",
+                "..yay..",
+                "...y..."
+              ]
+            }
+          ]
+        }
+      ],
+      "animations": {
+        "flight": {
+          "frames": [
+            "crescent",
+            "turn"
+          ],
+          "loop": false
+        }
+      }
     }
   },
   "instances": [
@@ -11830,11 +11945,19 @@
       ]
     },
     {
+      "asset": "ledge",
+      "at": [
+        110,
+        104
+      ],
+      "frame": "still"
+    },
+    {
       "name": "crystal",
       "asset": "crystal",
       "at": [
         107,
-        80
+        85
       ],
       "frame": "whole",
       "sequence": [
@@ -11879,6 +12002,52 @@
       "at": [
         -4,
         0
+      ]
+    },
+    {
+      "name": "spoken-spark",
+      "asset": "spell",
+      "at": [
+        97,
+        84
+      ],
+      "anchor": [
+        3,
+        3
+      ],
+      "frame": "empty",
+      "sequence": [
+        {
+          "time": 1320,
+          "animation": "flight"
+        },
+        {
+          "time": 1400,
+          "frame": "empty"
+        }
+      ],
+      "trajectory": [
+        {
+          "time": 0,
+          "at": [
+            97,
+            84
+          ]
+        },
+        {
+          "time": 1320,
+          "at": [
+            97,
+            84
+          ]
+        },
+        {
+          "time": 1400,
+          "at": [
+            115,
+            96
+          ]
+        }
       ]
     }
   ],

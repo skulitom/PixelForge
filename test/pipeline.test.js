@@ -15,6 +15,8 @@ test('native RGBA PNG and atlas roundtrip preserve hidden RGB, alpha, order, tim
   const again = renderProject(imported.recipe);
   assert.deepEqual(again.frames, rendered.frames); assert.deepEqual(again.animations, rendered.animations);
   assert.equal(imported.provenance.lossless, true);
+  assert.ok(imported.recipe.frames[0].ops[0].rows);
+  assert.equal(imported.recipe.frames[0].pixels.length, 1); // Hidden RGB remains exact despite the compact grid.
   assert.throws(() => importPNG(bytes, { atlas: { ...atlas.metadata, meta: { scale: '2' } } }), /unscaled/);
   const corrupt = Buffer.from(bytes); corrupt[30] ^= 1; assert.throws(() => decodePNG(corrupt), /CRC/);
   assert.throws(() => decodePNG(bytes.subarray(0, bytes.length - 5)), /truncated/);
@@ -58,4 +60,7 @@ test('quality examples validate, preserve source poses and create deterministic 
   const scene = prepareScene(source);
   assert.deepEqual(renderScene(scene, { time: 1500 }).data, renderScene(prepareScene(source), { time: 1500 }).data);
   assert.equal(renderScene(scene, { time: 2000 }).placements.find(p => p.name === 'crystal').frame, 'fallen');
+  assert.equal(renderScene(scene, { time: 1320 }).placements.find(p => p.name === 'spoken-spark').frame, 'crescent');
+  assert.equal(renderScene(scene, { time: 1400 }).placements.find(p => p.name === 'spoken-spark').frame, 'empty');
+  assert.equal(renderScene(scene, { time: 1400 }).placements.find(p => p.name === 'crystal').frame, 'impact');
 });
