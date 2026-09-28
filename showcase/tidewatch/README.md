@@ -34,10 +34,10 @@ Touch controls appear on narrow and touch screens; the game only scales by whole
 | Creatures | `poses/crab.poses.json` → `crab`, `jelly`, `gull`, `fisher` | 11 + 7 + 5 + 4 | Crab claws and eyestalks attach to the shell (the right claw is the left one with `flipX`); the crab's origin is its ground contact and hops lift the body above it; the jelly is deliberately translucent; squash/stretch hop. |
 | Scenery | `flora`, `props`, `rocks`, `boat` | 4 + 16 + 2 + 2 | Palm fronds and oak leaf clusters are reusable symbols; one `outline` op traces the oak canopy's silhouette. Every prop carries its ground anchor (per frame where cut or taller variants stand differently). |
 | Lit buildings | `lighthouse`, `cottage`, `lamp` (+ `-normal`, `-emissive`) | 5 + 2 + 3 per pass | Hand-authored normal and emissive passes aligned frame for frame. |
-| Effects | `fx`, `slash` | 34 + 12 | Leaves flutter, shards bounce, water splashes then rings, smoke puffs rise; slash arcs thicken at the blade. |
+| Effects | `effects/fx.fx.json` → `fx`, `slash` | 34 + 12 | `fx` compiles from a `pixelforge-fx` source: leaves flutter, shards bounce and settle, water splashes then rings, and smoke puffs rise and dissolve, all as seeded particle emitters. Hit and sparkle keep their hand-drawn frames, played by one particle. Slash arcs thicken at the blade. |
 | Interface | `pickups` (+ emissive), `ui`, `dialog`, `font` | 8 + 8 + 6 + 9 + 76 | 5×7 font with lowercase and an `advance` point per glyph; 9-slice dialog frame. |
 
-That is 29 game recipes (plus 2 pose sources, 2 autotile templates and a palette swatch), 527 frames and 122 named animations. Authoritative sources live in `art/`: `art/recipes/*.json`, `art/poses/*.poses.json`, `art/terrain/*.autotile.json` and `art/palette.json`, which every colour recipe links with `"palette": { "$ref": "../palette.json" }` instead of copying it. `keeper`, `crab`, `shore` and `grass` are compiled outputs; edit their sources and recompile. The scripts in `tools/make-*.mjs` are the scaffolds that first wrote those sources; they still reproduce them exactly.
+That is 29 game recipes (plus 2 pose sources, 2 autotile templates, an effects source and a palette swatch), 527 frames and 122 named animations. Authoritative sources live in `art/`: `art/recipes/*.json`, `art/poses/*.poses.json`, `art/terrain/*.autotile.json`, `art/effects/fx.fx.json` and `art/palette.json`, which every colour recipe links with `"palette": { "$ref": "../palette.json" }` instead of copying it. `keeper`, `crab`, `shore`, `grass` and `fx` are compiled outputs; edit their sources and recompile. The scripts in `tools/make-*.mjs` are the scaffolds that first wrote those sources; they still reproduce them exactly.
 
 ## Pipeline
 
@@ -46,6 +46,7 @@ node bin/pixelforge.js validate showcase/tidewatch/art/recipes/keeper.json
 node bin/pixelforge.js inspect showcase/tidewatch/art/recipes/keeper.json --animation walk-r --view onion --native --out walk.png
 node bin/pixelforge.js compile showcase/tidewatch/art/poses/keeper.poses.json --out showcase/tidewatch/art/recipes/keeper.json --metadata showcase/tidewatch/art/recipes/keeper.meta.json --force
 node bin/pixelforge.js autotile showcase/tidewatch/art/terrain/shore.autotile.json --out showcase/tidewatch/art/recipes/shore.json --force
+node bin/pixelforge.js compile showcase/tidewatch/art/effects/fx.fx.json --out showcase/tidewatch/art/recipes/fx.json --force
 node bin/pixelforge.js preview showcase/tidewatch/art/scenes/tidewatch-headland-night.scene.json
 npm run art:tidewatch      # re-export every atlas, pass and gallery APNG into game/
 npm run check:tidewatch    # verify the committed exports still match the recipes

@@ -37,6 +37,8 @@ Reviewed 28 September 2026 against its source at version 1.22. Both PixelForge s
 
 Not adopted: the node graph and editor (AGENTS.md keeps the workflow text-first), float filters that invent colours, physics, fluid and 3D simulation, and expression or Lua scripting (the agent already is the scripting layer).
 
+Validation: Tidewatch's effects recipe was rebuilt from a `pixelforge-fx` source ([report](reports/tidewatch-showcase-report.md#update-2-effects-rebuilt-with-the-particle-compiler)). The source is about the size of the particle code it replaced, but it is declarative, validated and tested for freshness, and it compiles to a recipe 43% smaller that reuses symbols. Hand-drawn frames (hit, sparkle) passed through unchanged.
+
 ## Where PixelForge is already behind
 
 The toolkit now has deterministic JSON recipes, palettes, text grids, symbols, frame inheritance, layers, PNG/APNG/atlas/CSS exports, a Canvas player, a local studio and five MCP tools. Inspection supports region readback; targeted patches include exact canvas-coordinate painting. Immutable MCP recipe revisions survive restarts, and render previews show all frames or a selected animation's playback order. Remaining gaps include image import, palette quantization, rig interpolation, artistic linting, persistent browser editing history and native Aseprite interchange. Inline MCP contact sheets are static; exported APNGs and the HTML preview provide actual playback.

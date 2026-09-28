@@ -2,6 +2,16 @@
 
 27 September 2026 · Baseline `1e47c22` (0.1.0) · Windows 11, Node v24.19.0 · Browser checks in the Chromium pane of the Claude desktop app.
 
+## Update 2: effects rebuilt with the particle compiler
+
+28 September 2026. After PixelForge gained `pixelforge-fx` (seeded particle emitters compiled to ordinary recipes), Tidewatch's `fx` recipe was rebuilt from a source file, `art/effects/fx.fx.json`, instead of the hand-written particle code in `tools/make-fx.mjs`.
+
+- **Leaves, shards, splash, poof and dust** are now emitters with sampled launch angles and speeds, gravity, drag, a floor with bounce, sway, trails and dithered dissolves. The poof keeps its placed six-puff cluster (one emitter per puff) and its diagonal dissolve, now a custom dither matrix. Seeds were chosen for balanced spreads.
+- **Hit and sparkle** keep their hand-drawn frames, played by a single particle. A test proves every one of those frames is pixel-identical to the original placement.
+- **Unchanged for the game:** the seven animation names, frame counts, durations, loop flags and the `[16, 20]` anchor are the same, so the game needed no code change. The effects were checked in the running game through `window.__tidewatch.advance`.
+- **Size:** the particle code was 5.8 KB of JavaScript producing a 60 KB recipe of one full grid per frame. The source is 5.8 KB of data when minified (3 KB of emitters, 2.6 KB of symbols) and compiles to a 34 KB recipe of 209 stamp, grid and line operations on shared symbols, so editing a leaf symbol updates every leaf. `tools/make-effects.mjs` is the scaffold that first wrote the source.
+- **Checks:** `test/tidewatch.test.js` now also fails if `recipes/fx.json` is stale relative to its source. Only the four effects exports changed (`fx.png`, `fx.json` and the gallery's `fx` sheet and APNGs); the other 84 exported files are byte-identical.
+
 ## Update: fixed, implemented and dogfooded
 
 After the first pass I fixed every bug and implemented every missing feature below in PixelForge itself, then rebuilt Tidewatch on them. The original findings follow unchanged, as the record of what was found.

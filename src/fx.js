@@ -92,8 +92,17 @@ function readEmitter(emitter, path, context) {
     sway = { amplitude: pair(emitter.sway.amplitude, `${path}.sway.amplitude`, 0, 32), period: number(emitter.sway.period ?? 8, `${path}.sway.period`, 1, 256) };
   }
   if (emitter.bounce !== undefined && emitter.floor === undefined) fail(`${path}.bounce`, 'bounce applies at a floor');
+  // The dissolve pattern takes the same forms as the dither operation: a Bayer name or a matrix of ranks.
   const pattern = emitter.pattern ?? 'bayer4';
-  if (!DITHER_PATTERNS.includes(pattern)) fail(`${path}.pattern`, `expected ${DITHER_PATTERNS.join(', ')}`);
+  if (typeof pattern === 'string') { if (!DITHER_PATTERNS.includes(pattern)) fail(`${path}.pattern`, `expected ${DITHER_PATTERNS.join(', ')} or a matrix of ranks`); }
+  else {
+    const columns = Array.isArray(pattern) && Array.isArray(pattern[0]) ? pattern[0].length : 0;
+    if (!pattern.length || pattern.length > 16 || columns < 1 || columns > 16) fail(`${path}.pattern`, `expected ${DITHER_PATTERNS.join(', ')} or 1–16 rows of 1–16 ranks`);
+    pattern.forEach((row, r) => {
+      if (!Array.isArray(row) || row.length !== columns) fail(`${path}.pattern[${r}]`, `all rows must have ${columns} ranks`);
+      row.forEach((rank, k) => integer(rank, `${path}.pattern[${r}][${k}]`, 0, pattern.length * columns - 1));
+    });
+  }
   if (emitter.pattern !== undefined && emitter.dissolve === undefined) fail(`${path}.pattern`, 'pattern shapes the dissolve; set dissolve too');
   const area = emitter.area === undefined ? [1, 1] : point(emitter.area, `${path}.area`);
   if (area.some(n => n < 1 || n > 256)) fail(`${path}.area`, 'expected a spawn box from 1 to 256 pixels per side');

@@ -73,6 +73,11 @@ test('effect sources fail early with paths an agent can act on', () => {
   bad({ burst: 1, bounce: 0.5 }, 'fx.effects.burst.emitters[0].bounce');
   bad({ burst: 1, remaps: [{ g: 'nope' }] }, 'fx.effects.burst.emitters[0].remaps[0].g');
   bad({ burst: 1, speed: [3, 1] }, 'fx.effects.burst.emitters[0].speed');
+  bad({ burst: 1, life: 4, dissolve: 0.5, pattern: [[0, 9]] }, 'fx.effects.burst.emitters[0].pattern[0][1]');
+  bad({ burst: 1, life: 4, pattern: 'bayer4' }, 'fx.effects.burst.emitters[0].pattern');
+  // A custom rank matrix shapes the dissolve like the dither operation: diagonal stripes drop one diagonal in three.
+  const striped = compileEffects(effects({ frames: 2, emitters: [{ at: [12, 12], burst: 1, life: 2, dissolve: 0.5, pattern: [[0, 1, 2], [1, 2, 0], [2, 0, 1]], shapes: [['chip'], ['chip']] }], }, { symbols: { chip: ['yyy', 'yyy', 'yyy'] } }));
+  assert.deepEqual(opsOf(striped.recipe)[1], [{ op: 'grid', x: 11, y: 11, rows: ['yy.', 'y.y', '.yy'] }]);
   assert.throws(() => compileEffects(effects({ frames: 4, loop: true, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] })), /finite life/);
   assert.throws(() => compileEffects(effects({ frames: 4, duration: [1, 2], emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] })), /one duration or 4/);
   assert.throws(() => compileEffects({ ...effects({ frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }), effects: { a: { frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }, b: { frames: 100, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] } } }), /at most 256/);

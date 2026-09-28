@@ -1,5 +1,5 @@
-// One-time scaffold for effects, pickups and UI. Effects use small, explicit particle layouts (hand-placed
-// starting points and velocities) so each material moves differently; the resulting grids are ordinary frames.
+// One-time scaffold for slash arcs, pickups and UI. The particle effects moved to a pixelforge-fx source
+// (make-effects.mjs); the grids written here are ordinary frames.
 import { linkedPalette, writeJSON } from './common.mjs';
 const force = { force: process.argv.includes('--force') };
 const canvas = (w, h) => Array.from({ length: h }, () => Array(w).fill('.'));
@@ -23,81 +23,7 @@ function slash(dir, frame) {
   }
   return rows(g);
 }
-// ---------------- particle effects (32x32) ----------------
-function particles(steps, list, shapeAt) {
-  return Array.from({ length: steps }, (_, f) => {
-    const g = canvas(32, 32);
-    for (const p of list) {
-      const t = f, x = p.x + p.vx * t + (p.sway ?? 0) * Math.sin(t * 1.3 + p.x), y = p.y + p.vy * t + 0.5 * (p.g ?? 0.6) * t * t;
-      if (p.life !== undefined && f > p.life) continue;
-      stamp(g, x, Math.min(y, p.floor ?? 99), shapeAt(p, f));
-    }
-    return rows(g);
-  });
-}
-const leafShapes = { l: [['jl', 'hj'], ['.l', 'jh', 'g.']], j: [['jj', 'hg'], ['hj', '.g']], h: [['hj', 'g.'], ['.h', 'hg']] };
-const leaves = particles(7, [
-  { x: 14, y: 18, vx: -1.8, vy: -3.4, g: 1.1, sway: 1.2, c: 'l' }, { x: 17, y: 17, vx: 2.1, vy: -3.8, g: 1.1, sway: 1.2, c: 'j' },
-  { x: 12, y: 20, vx: -3, vy: -1.8, g: 0.9, sway: 1, c: 'h' }, { x: 19, y: 20, vx: 3.1, vy: -2.2, g: 0.9, sway: 1, c: 'j' },
-  { x: 15, y: 16, vx: 0.4, vy: -4.4, g: 1.2, sway: 1.6, c: 'l' }, { x: 11, y: 19, vx: -1.4, vy: -2.6, g: 1, sway: 0.8, c: 'h' },
-  { x: 20, y: 19, vx: 1.5, vy: -3, g: 1, sway: 0.8, c: 'j' }, { x: 16, y: 21, vx: -0.6, vy: -2, g: 0.8, sway: 1.4, c: 'l' },
-  { x: 13, y: 22, vx: -2.2, vy: -1, g: 0.7, sway: 0.6, c: 'j', life: 5 }, { x: 18, y: 22, vx: 2.4, vy: -1.2, g: 0.7, sway: 0.6, c: 'h', life: 5 }
-], (p, f) => leafShapes[p.c][(f + Math.round(p.x)) % 2]);
-const shards = particles(6, [
-  { x: 13, y: 17, vx: -2.6, vy: -2.6, g: 1.3, floor: 24, s: ['kOk', 'kuk'] }, { x: 17, y: 16, vx: 2.4, vy: -3.2, g: 1.3, floor: 25, s: ['kkk', 'Ouk'] },
-  { x: 14, y: 20, vx: -1.2, vy: -1.6, g: 1.1, floor: 26, s: ['kOuk', '.kk.'] }, { x: 18, y: 20, vx: 3.2, vy: -1.4, g: 1, floor: 26, s: ['kO', 'uk'] },
-  { x: 15, y: 18, vx: 0.6, vy: -3.8, g: 1.4, floor: 24, s: ['kOk'] }, { x: 12, y: 21, vx: -3.3, vy: -0.8, g: 0.8, floor: 27, s: ['ku', 'kk'] },
-  { x: 19, y: 21, vx: 1.2, vy: -2.2, g: 1.2, floor: 26, s: ['Uk'] }, { x: 16, y: 22, vx: -0.3, vy: -1, g: 0.9, floor: 27, s: ['kuUk'] }
-], p => p.s);
-const splash = Array.from({ length: 5 }, (_, f) => {
-  const g = canvas(32, 32), rise = [3, 7, 8, 5, 0][f];
-  const ring = f >= 2 ? 3 + f * 2 : 0;
-  for (let i = -ring; i <= ring; i++) { if (ring && Math.abs(i) >= ring - 1) { put(g, 16 + i, 24, 'w'); } }
-  if (ring) { put(g, 16 - ring, 23, 'W'); put(g, 16 + ring, 23, 'W'); put(g, 16 - ring + 1, 25, 'W'); put(g, 16 + ring - 1, 25, 'W'); }
-  if (rise) for (const [dx, h, c] of [[-3, 0.6, 'W'], [-1, 1, 'w'], [1, 0.9, 'w'], [3, 0.55, 'W']]) {
-    const top = 24 - Math.round(rise * h); for (let y = top; y < 24; y++) put(g, 16 + dx + (y < top + 2 ? Math.sign(dx) : 0), y, y === top ? 'w' : c);
-  }
-  if (f === 1 || f === 2) [[-5, 16], [5, 15], [-2, 13], [3, 12]].forEach(([dx, y]) => put(g, 16 + dx * (f === 2 ? 1.3 : 1), y - (f === 2 ? 2 : 0), 'w'));
-  return rows(g);
-});
-const poof = Array.from({ length: 6 }, (_, f) => {
-  const g = canvas(32, 32);
-  const puffs = [[16, 18, 4], [11, 17, 3], [21, 17, 3], [14, 13, 3], [19, 13, 3], [16, 21, 3]];
-  for (const [px, py, r0] of puffs) {
-    const r = r0 * [0.6, 1, 1.25, 1.35, 1.2, 0.8][f], y0 = py - f * 1.2 - (px === 16 ? 0.5 * f : 0);
-    for (let y = Math.floor(y0 - r); y <= y0 + r; y++) for (let x = Math.floor(px - r); x <= px + r; x++) {
-      const d = Math.hypot(x - px, (y - y0) * 1.1); if (d > r) continue;
-      if (f >= 4 && (x + y + f) % 3 === 0) continue;
-      const light = (x - px) + (y - y0) < -r * 0.3;
-      put(g, x, y, d > r - 1 ? (f >= 4 ? '9' : 't') : light ? (f >= 3 ? '8' : 'r') : f >= 3 ? '9' : 'R');
-    }
-  }
-  return rows(g);
-});
-const hit = [
-  ['................', '.......x........', '.......x........', '...x...x...x....', '....x..W..x.....', '.....xWWWx......', '..xxxWW7WWxxx...', '.....xWWWx......', '....x..W..x.....', '...x...x...x....', '.......x........', '.......x........'],
-  ['................', '................', '.......W........', '....W..x..W.....', '.....x.x.x......', '......x7x.......', '...WxxxWxxxW....', '......x7x.......', '.....x.x.x......', '....W..x..W.....', '.......W........', '................'],
-  ['................', '................', '................', '................', '.......M........', '.....M.W.M......', '....M.W.W.M.....', '.....M.W.M......', '.......M........', '................', '................', '................']
-].map(r => { const g = canvas(32, 32); stamp(g, 8, 10, r); return rows(g); });
-const sparkle = [
-  ['.......', '...x...', '..xWx..', '.xW7Wx.', '..xWx..', '...x...', '.......'],
-  ['...x...', '...x...', '..xWx..', 'xxW7Wxx', '..xWx..', '...x...', '...x...'],
-  ['.......', '...W...', '...x...', '.Wx7xW.', '...x...', '...W...', '.......'],
-  ['.......', '.......', '...W...', '..W7W..', '...W...', '.......', '.......']
-].map(r => { const g = canvas(32, 32); stamp(g, 12, 12, r); return rows(g); });
-const dust = [
-  ['.......', '.......', '..RR...', '.RrRt..', '..tt...'],
-  ['.......', '.R..R..', 'RrR.RR.', '.tt..tt', '.......'],
-  ['R.....R', '.......', 'R.....t', '.......', '.......']
-].map(r => { const g = canvas(32, 32); stamp(g, 13, 24, r); return rows(g); });
-const fxGroups = { leaves: [leaves, 70], shards: [shards, 70], splash: [splash, 80], poof: [poof, 70], hit: [hit, 50], sparkle: [sparkle, 90], dust: [dust, 70] };
-const fxFrames = [], fxAnimations = {};
-for (const [key, [list, duration]] of Object.entries(fxGroups)) {
-  const names = list.map((g, i) => { const name = `${key}-${i}`; fxFrames.push({ name, duration, ops: [{ op: 'grid', x: 0, y: 0, rows: g }] }); return name; });
-  fxAnimations[key] = { frames: names, loop: false };
-}
-fxAnimations.sparkle.loop = true;
-writeJSON('art/recipes/fx.json', { version: 1, name: 'fx', width: 32, height: 32, palette: linkedPalette(), anchor: [16, 20], frames: fxFrames, animations: fxAnimations, sheet: { columns: 8, trim: true } }, force);
+// Particle effects (fx.json) are compiled from art/effects/fx.fx.json, a pixelforge-fx source scaffolded by make-effects.mjs.
 const slashFrames = [], slashAnimations = {};
 for (const dir of 'durl') {
   slashAnimations[`slash-${dir}`] = { frames: [0, 1, 2].map(f => { const name = `slash-${dir}-${f}`; slashFrames.push({ name, duration: [50, 70, 70][f], ops: [{ op: 'grid', x: 0, y: 0, rows: slash(dir, f) }] }); return name; }), loop: false };
@@ -138,4 +64,4 @@ const box = {
 const rot = g => g[0].split('').map((_, x) => g.map(r => r[x]).reverse().join(''));
 const boxFrames = { tl: box.tl, t: box.t, tr: rot(box.tl), r: rot(box.t), br: rot(rot(box.tl)), b: rot(rot(box.t)), bl: rot(rot(rot(box.tl))), l: rot(rot(rot(box.t))), c: box.c };
 writeJSON('art/recipes/dialog.json', { version: 1, name: 'dialog', width: 8, height: 8, palette: linkedPalette(), frames: Object.entries(boxFrames).map(([name, g]) => ({ name: `box-${name}`, ops: [{ op: 'grid', x: 0, y: 0, rows: g }] })), sheet: { columns: 9 } }, force);
-console.log('fx, slash, pickups, ui and dialog written');
+console.log('slash, pickups, ui and dialog written');

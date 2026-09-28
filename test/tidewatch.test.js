@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { renderProject, compilePoses, compileAutotile, resolveReferences, neighbourMask, BLOB_MASKS } from '../src/index.js';
+import { renderProject, compilePoses, compileAutotile, compileEffects, resolveReferences, neighbourMask, BLOB_MASKS } from '../src/index.js';
 import { World } from '../showcase/tidewatch/game/src/world.js';
 import { TERRAIN, isSand, isGrass } from '../showcase/tidewatch/game/src/map.js';
 
@@ -21,7 +21,7 @@ test('Tidewatch: every recipe validates without clipping warnings', async () => 
   }
 });
 
-test('Tidewatch: compiled recipes and metadata match their authoritative pose and autotile sources', async () => {
+test('Tidewatch: compiled recipes and metadata match their authoritative pose, autotile and effect sources', async () => {
   for (const name of ['keeper', 'crab']) {
     // compilePoses uses null-prototype maps; compare the JSON a file would contain.
     const { recipe, metadata } = JSON.parse(JSON.stringify(compilePoses(await resolved(`poses/${name}.poses.json`))));
@@ -31,6 +31,20 @@ test('Tidewatch: compiled recipes and metadata match their authoritative pose an
   for (const name of ['shore', 'grass']) {
     const { recipe } = JSON.parse(JSON.stringify(compileAutotile(await resolved(`terrain/${name}.autotile.json`))));
     assert.deepEqual(recipe, await resolved(`recipes/${name}.json`), `${name} recipe is stale; run pixelforge autotile`);
+  }
+  assert.deepEqual(compileEffects(await resolved('effects/fx.fx.json')).recipe, await resolved('recipes/fx.json'), 'fx recipe is stale; run pixelforge compile');
+});
+
+test('Tidewatch: particle effects keep the animations, anchor and hand-drawn frames the game uses', async () => {
+  const fx = renderProject(await resolved('recipes/fx.json'));
+  assert.deepEqual(Object.keys(fx.animations), ['leaves', 'shards', 'splash', 'poof', 'hit', 'sparkle', 'dust']);
+  assert.deepEqual(Object.entries(fx.animations).map(([name, a]) => [name, a.frames.length, a.loop]), [['leaves', 7, false], ['shards', 6, false], ['splash', 5, false], ['poof', 6, false], ['hit', 3, false], ['sparkle', 4, true], ['dust', 3, false]]);
+  assert.deepEqual(fx.frames[0].anchor, [16, 20]);
+  // Hit and sparkle are the original hand-drawn frames, played by one particle at the positions the old scaffold used.
+  const source = await resolved('effects/fx.fx.json');
+  const drawn = (symbol, x, y) => renderProject({ version: 1, name: 'ref', width: 32, height: 32, palette: source.palette, frames: [{ name: 'a', ops: [{ op: 'grid', x, y, rows: source.symbols[symbol] }] }] }).frames[0].data;
+  for (const [name, count, x, y] of [['hit', 3, 8, 10], ['sparkle', 4, 12, 12]]) for (let i = 0; i < count; i++) {
+    assert.deepEqual(fx.frames.find(f => f.name === `${name}-${i}`).data, drawn(`${name}-${i}`, x, y), `${name}-${i}`);
   }
 });
 

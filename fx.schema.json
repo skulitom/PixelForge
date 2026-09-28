@@ -388,12 +388,31 @@
                   "description": "Share of the life, at its end, during which the particle thins out through an ordered-dither pattern."
                 },
                 "pattern": {
-                  "enum": [
-                    "bayer2",
-                    "bayer4",
-                    "bayer8"
+                  "oneOf": [
+                    {
+                      "enum": [
+                        "bayer2",
+                        "bayer4",
+                        "bayer8"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "maxItems": 16,
+                        "minItems": 1
+                      },
+                      "maxItems": 16,
+                      "minItems": 1
+                    }
                   ],
-                  "description": "Dissolve pattern; default bayer4."
+                  "description": "Dissolve pattern, as for the dither operation: bayer2, bayer4 (default), bayer8 or a matrix of ranks, e.g. [[0, 1, 2], [1, 2, 0], [2, 0, 1]] for diagonal stripes."
                 }
               },
               "required": [
