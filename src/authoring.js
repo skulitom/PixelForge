@@ -97,9 +97,9 @@ export function compilePoses(source) {
         if (a.parts.length !== b.parts.length || a.parts.some((part, i) => part.name !== b.parts[i].name)) fail(`${path}.tween`, 'both poses must list the same part instances in the same order');
         const e = ease(easing, t), mix = (u, v) => Math.round(u + (v - u) * e);
         spec = { origin: a.origin.map((v, axis) => mix(v, b.origin[axis])), parts: a.parts.map((p, i) => {
-          const q = b.parts[i], near = e < 0.5 ? p : q;
+          const q = b.parts[i], near = e < 0.5 ? p : q, rotate = mix(p.rotate, q.rotate);
           if ((p.attach?.part ?? null) !== (q.attach?.part ?? null) || (p.attach?.point ?? null) !== (q.attach?.point ?? null)) fail(`${path}.tween`, `part ${p.name} must attach the same way in both poses`);
-          return { name: p.name, part: near.part, ...(p.attach && { attach: p.attach }), at: p.at.map((v, axis) => mix(v, q.at[axis])), ...(near.flipX && { flipX: true }), ...(mix(p.rotate, q.rotate) && { rotate: mix(p.rotate, q.rotate) }), ...(!near.cleanup && { cleanup: false }) };
+          return { name: p.name, part: near.part, ...(p.attach && { attach: p.attach }), at: p.at.map((v, axis) => mix(v, q.at[axis])), ...(near.flipX && { flipX: true }), ...(rotate && { rotate }), ...(!near.cleanup && { cleanup: false }) };
         }) };
         partsPath = `${path}.tween`; tween = { from: pose.tween.from, to: pose.tween.to, t, ...(pose.tween.ease !== undefined && { ease: easing }) };
       }

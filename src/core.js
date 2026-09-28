@@ -1,5 +1,5 @@
 // Browser-compatible, deterministic rasterizer. No I/O and no dependencies.
-import { DITHER_PATTERNS, ditherThreshold, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
+import { patternProblem, ditherThreshold, traceLine, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
 export class PixelError extends Error {
   constructor(path, message) { super(`${path}: ${message}`); this.name = 'PixelError'; this.path = path; }
 }
@@ -193,12 +193,9 @@ export function renderProject(spec, options = {}) {
           if (draw) put(x + i, y + j, c, op.op === 'clear');
         }
       } else if (op.op === 'line') {
-        let px = x, py = y;
         const x2 = integer(op.x2, `${p}.x2`), y2 = integer(op.y2, `${p}.y2`), c = color(op.color, `${p}.color`);
-        const dx = Math.abs(x2 - px), sx = px < x2 ? 1 : -1, dy = -Math.abs(y2 - py), sy = py < y2 ? 1 : -1;
-        let error = dx + dy;
-        spend(Math.max(dx, -dy) + 1);
-        while (true) { put(px, py, c); if (px === x2 && py === y2) break; const e = 2 * error; if (e >= dy) { error += dy; px += sx; } if (e <= dx) { error += dx; py += sy; } }
+        spend(Math.max(Math.abs(x2 - x), Math.abs(y2 - y)) + 1);
+        traceLine(x, y, x2, y2, (px, py) => put(px, py, c));
       } else if (op.op === 'grid' || op.op === 'stamp') {
         if (op.op === 'stamp' && typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a symbol');
         const grid = op.op === 'grid' ? readRows(op.rows, `${p}.rows`, palette) : symbols[op.symbol];
@@ -264,7 +261,8 @@ export function renderProject(spec, options = {}) {
         for (let i = 0; i < paint.length; i++) if (paint[i]) blend(data, i * 4, c);
       } else if (op.op === 'dither') {
         // Ordered dither: draws `color` (or erases) where the canvas-anchored pattern's threshold is below the density.
-        const w = integer(op.w ?? width, `${p}.w`, 1, 512), h = integer(op.h ?? height, `${p}.h`, 1, 512);
+        // The region runs from x/y to the canvas edge unless w/h say otherwise.
+        const w = integer(op.w ?? Math.max(1, width - x), `${p}.w`, 1, 512), h = integer(op.h ?? Math.max(1, height - y), `${p}.h`, 1, 512);
         const erase = boolean(op.erase ?? false, `${p}.erase`);
         if (erase === (op.color !== undefined)) fail(p, 'dither needs a color, or erase: true to clear pixels');
         const c = erase ? null : color(op.color, `${p}.color`), ramp = Array.isArray(op.density);
@@ -274,16 +272,8 @@ export function renderProject(spec, options = {}) {
         if (op.direction !== undefined && !ramp) fail(`${p}.direction`, 'direction applies to a density ramp such as [0, 1]');
         const direction = op.direction ?? 'down';
         if (!['down', 'up', 'right', 'left', 'radial'].includes(direction)) fail(`${p}.direction`, 'expected down, up, right, left or radial');
-        const pattern = op.pattern ?? 'bayer4';
-        if (typeof pattern === 'string') { if (!DITHER_PATTERNS.includes(pattern)) fail(`${p}.pattern`, 'expected bayer2, bayer4, bayer8 or a matrix of ranks'); }
-        else {
-          const rows = list(pattern, `${p}.pattern`, 16), columns = Array.isArray(rows[0]) ? rows[0].length : 0;
-          if (!rows.length || columns < 1 || columns > 16) fail(`${p}.pattern`, 'expected bayer2, bayer4, bayer8 or 1–16 rows of 1–16 ranks');
-          rows.forEach((row, r) => {
-            if (!Array.isArray(row) || row.length !== columns) fail(`${p}.pattern[${r}]`, `all rows must have ${columns} ranks`);
-            row.forEach((rank, k) => integer(rank, `${p}.pattern[${r}][${k}]`, 0, rows.length * columns - 1));
-          });
-        }
+        const pattern = op.pattern ?? 'bayer4', problem = patternProblem(pattern);
+        if (problem) fail(`${p}.pattern${problem[0]}`, problem[1]);
         const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`));
         const over = op.over === undefined ? null : new Set((typeof op.over === 'string' ? [op.over] : list(op.over, `${p}.over`, 64)).map((value, i) => pixelId(color(value, typeof op.over === 'string' ? `${p}.over` : `${p}.over[${i}]`), 0)));
         spend(w * h);
@@ -768,7 +758,7 @@ export function onionPixels(project, animation, position) {
 
 // Advisory evidence, not an aesthetic score. Never changes artwork or invalidates holds/sparks.
 export function analyzeProject(project) {
-  const { width, height, frames } = project, findings = [], hashes = new Map();
+  const { width, height, frames } = project, findings = [], hashes = new Map(), cleanup = new Map();
   const known = new Set(Object.values(project.palette).map(color => colorId(parseColor(color), 0)));
   const stats = frames.map(frame => {
     const colors = new Set(), outside = new Set(), isolated = [], unlisted = [];
@@ -795,14 +785,13 @@ export function analyzeProject(project) {
     if (!visible) findings.push({ code: 'empty', frame: frame.name, note: 'An empty effect/transition frame may be intentional.' });
     if (isolatedCount) findings.push({ code: 'isolated', frame: frame.name, count: isolatedCount, coordinates: isolated, omitted: isolatedCount - isolated.length, note: 'No visible 8-connected neighbor. Exempt intentional sparks, stars and detached accents.' });
     if (outside.size) findings.push({ code: 'palette', frame: frame.name, count: outside.size, coordinates: unlisted, omitted: outside.size - unlisted.length, note: 'Colors outside the declared palette; literal colors and alpha blends may be intentional.' });
-    // Cleanup proposals, with the patch change that previews them. Strays that would become transparent are the
-    // isolated pixels already reported above.
-    const fixes = visible ? cleanupIds(idsOf(frame.data), width, height, { corners: true, strays: true }) : [];
-    for (const [code, kind, note] of [['corners', 'corner', 'Doubled L-shaped steps in one-pixel lines. The fix is a proposal: preview it with pixel_patch or patch and keep deliberate corners.'], ['strays', 'stray', 'Pixels whose eight neighbours share one other colour (noise or pinholes). Exempt eyes, sparks and deliberate accents; the fix also erases isolated pixels.']]) {
-      const found = fixes.filter(fix => fix.kind === kind && (kind === 'corner' || fix.id !== 0));
-      if (found.length) findings.push({ code, frame: frame.name, count: found.length, coordinates: found.slice(0, 32).map(({ x, y }) => ({ x, y })), omitted: Math.max(0, found.length - 32), fix: { cleanup: `frames[${frame.name}]`, value: { [code]: true } }, note });
-    }
-    return { frame: frame.name, visible, colors: colors.size };
+    // How many pixels a `cleanup` patch change would alter with corners or strays alone. Counts, not findings: in
+    // finished art most L-steps and specks are deliberate (highlight strokes, small rounded corners, texture).
+    if (!cleanup.has(same?.name)) {
+      const ids = visible ? idsOf(frame.data) : null;
+      cleanup.set(frame.name, ids ? { corners: cleanupIds(ids, width, height, { corners: true }).length, strays: cleanupIds(ids, width, height, { strays: true }).length } : { corners: 0, strays: 0 });
+    } else cleanup.set(frame.name, cleanup.get(same.name));
+    return { frame: frame.name, visible, colors: colors.size, ...cleanup.get(frame.name) };
   });
   const difference = (a, b) => {
     let pixels = 0, left = width, top = height, right = -1, bottom = -1;

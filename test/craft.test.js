@@ -18,6 +18,9 @@ test('dither draws a canvas-anchored ordered pattern, ramps density and respects
   assert.deepEqual(rows(draw([{ op: 'dither', color: 'r' }])), Array.from({ length: 8 }, (_, y) => (y % 2 ? '.r' : 'r.').repeat(4)));
   // The pattern follows canvas coordinates: a region starting at x = 1 continues the same checkerboard.
   assert.deepEqual(rows(draw([{ op: 'dither', x: 1, y: 0, w: 3, h: 1, color: 'r' }]))[0], '..r.....');
+  // Without w/h the region runs from x/y to the canvas edge, so an offset region never overhangs.
+  const lower = draw([{ op: 'dither', y: 4, color: 'r' }]);
+  assert.deepEqual([lower.warnings, count(rows(lower).slice(0, 4), 'r'), count(rows(lower), 'r')], [[], 0, 16]);
   const ramp = rows(draw([{ op: 'dither', color: 'r', density: [0, 1], direction: 'right' }]));
   assert.equal(ramp.filter(line => line[0] === 'r').length, 2);
   assert.equal(ramp.filter(line => line[7] === 'r').length, 8);
@@ -66,6 +69,8 @@ test('rewrite rules grow, clean and decorate deterministically', () => {
   assert.equal(count([rows(draw([{ op: 'rect', x: 0, y: 3, w: 8, h: 3, color: 's' }, { op: 'rewrite', empty: '_', rules: [{ match: ['_', 's'], replace: ['m', '.'] }], chance: 0 }]))[2]], 'm'), 0);
   // The region limits where whole matches may sit.
   assert.equal(rows(draw([{ op: 'rect', x: 0, y: 3, w: 8, h: 3, color: 's' }, { op: 'rewrite', x: 2, y: 2, w: 3, h: 2, empty: '_', rules: [{ match: ['_', 's'], replace: ['m', '.'] }] }]))[2], '..mmm...');
+  // Matches whose replacement is already in place do not use up the limit.
+  assert.equal(count(rows(draw([{ op: 'rect', x: 0, y: 0, w: 8, h: 8, color: 'b' }, { op: 'pixel', x: 3, y: 3, color: 'r' }, { op: 'rewrite', rules: [{ match: ['.'], replace: ['b'] }], limit: 1 }])), 'b'), 64);
   // Mirror adds the reflected rule: both sides of a peak.
   assert.deepEqual(rows(draw([{ op: 'pixel', x: 3, y: 3, color: 'r' }, { op: 'rewrite', empty: '_', rules: [{ match: ['r_'], replace: ['.r'] }], mirror: true }]))[3], '..rrr...');
   assert.throws(() => draw([{ op: 'rewrite', rules: [{ match: ['r_'], replace: ['.r'] }] }]), /set empty/);
@@ -86,27 +91,30 @@ test('cleanup finds doubled corners and strays without touching filled areas or 
   assert.equal(cleanupIds(grid(['ggg', 'gbg', 'ggg']), 3, 3, { strays: true, allowed: index => index !== 4 }).length, 0);
 });
 
-test('a cleanup patch proposes corrections with a report, and diagnostics hand the agent that change', () => {
+test('a cleanup patch proposes corrections with a report, and diagnostics count what it would change', () => {
   const recipe = { version: 1, name: 'fix', width: 8, height: 6, palette: { k: '#111', g: '#6a6', b: '#248' }, frames: [
     { name: 'idle', ops: [{ op: 'rect', x: 4, y: 0, w: 4, h: 3, color: 'g' }, { op: 'pixel', x: 5, y: 1, color: 'b' }, { op: 'grid', x: 0, y: 1, rows: ['k...', 'kk..', '.kk.', '..k.'] }] },
-    { name: 'next', from: 'idle', translate: [0, 1] }
+    { name: 'next', from: 'idle', translate: [0, 1] }, { name: 'hold', from: 'idle' }
   ] };
-  const report = analyzeProject(renderProject(recipe)).findings.filter(f => ['corners', 'strays'].includes(f.code) && f.frame === 'idle');
-  assert.deepEqual(report.map(f => [f.code, f.count, f.fix]), [['corners', 2, { cleanup: 'frames[idle]', value: { corners: true } }], ['strays', 1, { cleanup: 'frames[idle]', value: { strays: true } }]]);
-  const { recipe: fixed, edits } = patchRecipe(recipe, [report[0].fix, report[1].fix]);
+  // Counts, not findings: deliberate L-steps and specks are common in finished art. Duplicate frames reuse the count.
+  const report = analyzeProject(renderProject(recipe));
+  assert.deepEqual(report.frames.map(({ frame, corners, strays }) => [frame, corners, strays]), [['idle', 2, 1], ['next', 2, 1], ['hold', 2, 1]]);
+  assert.equal(report.findings.filter(f => ['corners', 'strays'].includes(f.code)).length, 0);
+  const { recipe: fixed, edits } = patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: { corners: true } }, { cleanup: 'frames[idle]', value: { strays: true } }]);
   assert.deepEqual(edits.map(({ pixels, corners, strays }) => [pixels, corners, strays]), [[2, 2, 0], [1, 0, 1]]);
   assert.deepEqual(fixed.frames[0].pixels, [{ x: 0, y: 2, color: 'transparent' }, { x: 1, y: 3, color: 'transparent' }, { x: 5, y: 1, color: 'g' }]);
-  assert.equal(analyzeProject(renderProject(fixed)).findings.filter(f => f.frame === 'idle' && ['corners', 'strays'].includes(f.code)).length, 0);
+  const after = analyzeProject(renderProject(fixed)).frames[0];
+  assert.deepEqual([after.corners, after.strays], [0, 0]);
   // Region, mask and colour limits keep a deliberate accent; frame scope protects inheriting frames.
   assert.equal(patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: { strays: true, colors: ['k'] } }]).edits[0].pixels, 0);
   assert.equal(patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: { corners: true, x: 0, y: 0, w: 2, h: 3 } }]).edits[0].pixels, 1);
   const scoped = patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: { corners: true }, scope: 'frame' }]);
-  assert.deepEqual(scoped.edits[0].protected, [{ frame: 'next', pixels: 2 }]);
+  assert.deepEqual(scoped.edits[0].protected, [{ frame: 'next', pixels: 2 }, { frame: 'hold', pixels: 2 }]);
   assert.throws(() => patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: {} }]), /corners: true, strays: true or both/);
   assert.throws(() => patchRecipe(recipe, [{ cleanup: 'frames[idle]', value: { corners: true, w: 9 } }]), /value\.w/);
   // Overlays carry cleanup changes through rebuilds that leave the frame unchanged.
   const overlay = createOverlay(recipe, [{ cleanup: 'frames[idle]', value: { corners: true } }]);
-  const rebuilt = { ...recipe, frames: [recipe.frames[0], { ...recipe.frames[1], duration: 150 }] };
+  const rebuilt = { ...recipe, frames: [recipe.frames[0], { ...recipe.frames[1], duration: 150 }, recipe.frames[2]] };
   assert.equal(applyOverlay(rebuilt, overlay).rebased, true);
 });
 

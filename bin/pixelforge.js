@@ -12,14 +12,15 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge patch <file.json|-> --changes <changes.json|-> [--out new.json] [--image diff.png]
                                            Preview edits; writes only --out and --image
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
-  pixelforge compile <poses.json|effects.fx.json> --out recipe.json [--metadata meta.json]
-                                           Build a recipe from authored poses or seeded particle effects
+  pixelforge compile <source.json> --out recipe.json [--metadata meta.json]
+                                           Build a recipe from authored poses, an autotile template or particle effects
   pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
                                            Build a 47-tile blob or 16-tile cardinal set
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
   pixelforge overlay <recipe.json> --changes edits.json --out fixes.json [--selections regions.json]
   pixelforge import <image.png> --out recipe.json [--atlas atlas.json] [--name imported]
   pixelforge preview [file.json] [--port 4747]
+                                           Studio for a recipe or scene; sources open as their compiled recipe
   pixelforge mcp [--out directory] [--root directory]  Run the MCP server over stdio
   pixelforge schema                       Print the JSON Schema
 
@@ -31,7 +32,7 @@ Inspect: --frames a,b or --animation name picks cells; --region x,y,w,h crops;
 --max-cells 1-256 samples long sequences with explicit omission metadata.
 Patch accepts correction overlays as --changes; a changed base fails with a fingerprint conflict.
 A cleanup change ({"cleanup": "frames[run-2]", "value": {"corners": true, "strays": true}}) previews
-proposed fixes for doubled corners and stray pixels; --diagnostics lists them with the change to use.
+proposed fixes for doubled corners and stray pixels; --diagnostics counts both per frame.
 All command results except the preview server are JSON. Errors exit with code 1.
 No installation needed: node bin/pixelforge.js <command>
 `;
@@ -89,6 +90,8 @@ async function writeOutputs(targets, force) {
   }
   return Object.fromEntries(entries.map(([label, target]) => [label, target]));
 }
+// Sidecar sources compile by their format; `autotile` remains a dedicated command for templates.
+const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': compileAutotile, 'pixelforge-fx': compileEffects };
 const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings, ...(project.clipping && { clipping: project.clipping }) });
 const referenced = input => input.resolution.files.length ? { resolved: input.resolution.files } : {};
 try {
@@ -112,13 +115,17 @@ try {
       const { startStudio } = await import('../src/server.js');
       const port = options.port === undefined ? 4747 : Number(options.port);
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be an integer from 0 to 65535');
-      await startStudio({ port, project: positional[0] ? (await readResolved(positional[0])).document : undefined });
+      let project = positional[0] ? (await readResolved(positional[0])).document : undefined;
+      // Pose, autotile and effect sources open as the recipe they compile to.
+      if (project && Object.hasOwn(COMPILERS, project.format ?? '')) project = COMPILERS[project.format](project).recipe;
+      await startStudio({ port, project });
     } else if (['compile', 'autotile', 'overlay', 'import'].includes(command)) {
       if (!options.out || !/\.json$/i.test(options.out)) throw new Error(`${command} requires --out <new.json>`);
       let value, metadata, input;
       if (command === 'compile' || command === 'autotile') {
         input = await readResolved(positional[0]);
-        const compiled = command === 'autotile' ? compileAutotile(input.document) : input.document?.format === 'pixelforge-fx' ? compileEffects(input.document) : compilePoses(input.document);
+        const compile = command === 'autotile' ? compileAutotile : COMPILERS[input.document?.format] ?? compilePoses;
+        const compiled = compile(input.document);
         value = linkPalette(compiled.recipe, input, options.out); metadata = compiled.metadata;
       } else if (command === 'overlay') {
         if (!options.changes) throw new Error('overlay requires --changes <edits.json>');

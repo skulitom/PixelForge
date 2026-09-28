@@ -18,6 +18,20 @@ function bayer(size) {
   }
   return matrix;
 }
+// Checks a pattern: a Bayer name, or 1–16 rows of 1–16 integer ranks from 0 to cells − 1. Returns null, or
+// [path suffix, message] so each caller reports its own error path.
+export function patternProblem(pattern) {
+  const names = DITHER_PATTERNS.join(', ');
+  if (typeof pattern === 'string') return DITHER_PATTERNS.includes(pattern) ? null : ['', `expected ${names} or a matrix of ranks`];
+  const columns = Array.isArray(pattern) && Array.isArray(pattern[0]) ? pattern[0].length : 0;
+  if (!Array.isArray(pattern) || !pattern.length || pattern.length > 16 || columns < 1 || columns > 16) return ['', `expected ${names} or 1–16 rows of 1–16 ranks`];
+  const cells = pattern.length * columns;
+  for (const [r, row] of pattern.entries()) {
+    if (!Array.isArray(row) || row.length !== columns) return [`[${r}]`, `all rows must have ${columns} ranks`];
+    for (const [k, rank] of row.entries()) if (!Number.isInteger(rank) || rank < 0 || rank >= cells) return [`[${r}][${k}]`, `expected an integer from 0 to ${cells - 1}`];
+  }
+  return null;
+}
 // Returns threshold(x, y) in (0, 1) for a named Bayer pattern or a custom matrix of ranks. A matrix whose highest rank
 // is n has n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5. A pixel is on when its threshold is below the
 // density. Thresholds follow canvas coordinates, so neighbouring areas line up.
@@ -74,6 +88,21 @@ export function ease(name, t) {
     const u = t - 2.625 / 2.75; return 7.5625 * u * u + 0.984375;
   }
   return t;
+}
+
+// ---- Lines ---------------------------------------------------------------------------------------------------------
+// Visits the pixels of a one-pixel Bresenham line, both endpoints included: the renderer's `line` operation and
+// effect trails share it, so a cropped trail keeps exactly the pixels a drawn one would have.
+export function traceLine(x, y, x2, y2, visit) {
+  const dx = Math.abs(x2 - x), sx = x < x2 ? 1 : -1, dy = -Math.abs(y2 - y), sy = y < y2 ? 1 : -1;
+  let error = dx + dy;
+  while (true) {
+    visit(x, y);
+    if (x === x2 && y === y2) return;
+    const e = 2 * error;
+    if (e >= dy) { error += dy; x += sx; }
+    if (e <= dx) { error += dx; y += sy; }
+  }
 }
 
 // ---- Colour ids --------------------------------------------------------------------------------------------------
@@ -207,14 +236,15 @@ export function ruleVariants(rule, { rotate = false, mirror = false } = {}) {
 // Markov-style rewriting (after Pixel Composer's Markov node and MarkovJunior). Each step applies every rule in order.
 // A rule's matches are found on the pixels as they were when the rule started, ordered by a seeded hash, and applied
 // unless they read or write a cell this rule already rewrote in this step (so two overlapping fixes never both apply),
-// fail their seeded chance, or exceed the limit. Stops early when a step changes nothing. Updates `ids` in place and
-// returns the changed indices.
+// fail their seeded chance, or exceed the limit. Matches whose replacement is already in place change nothing and
+// count toward nothing. Stops early when a step changes nothing. Updates `ids` in place and returns the changed indices.
 export function rewriteIds(ids, width, height, rules, { x = 0, y = 0, w = width, h = height, steps = 1, chance = 1, limit = Infinity, seed = 0, spend = () => {} } = {}) {
-  const changed = new Set();
+  const changed = new Set(), snapshot = new Uint32Array(ids.length), written = new Uint8Array(width * height);
   for (let step = 0; step < steps; step++) {
     let effective = 0;
     rules.forEach((variants, rule) => {
-      const snapshot = ids.slice(), candidates = [];
+      const candidates = [];
+      snapshot.set(ids); written.fill(0);
       variants.forEach((v, variant) => {
         spend(Math.max(0, w - v.w + 1) * Math.max(0, h - v.h + 1) * v.w * v.h);
         for (let top = y; top + v.h <= y + h; top++) for (let left = x; left + v.w <= x + w; left++) {
@@ -227,18 +257,18 @@ export function rewriteIds(ids, width, height, rules, { x = 0, y = 0, w = width,
         }
       });
       candidates.sort((a, b) => a.key - b.key || a.top - b.top || a.left - b.left || a.variant - b.variant);
-      const written = new Uint8Array(width * height);
       let count = 0;
       for (const c of candidates) {
         if (count >= limit) break;
         if (chance < 1 && random(seed, step, rule, c.variant, c.left, c.top, 1) >= chance) continue;
         const { v } = c;
-        let clash = false;
+        let clash = false, alters = false;
         for (let j = 0; j < v.h && !clash; j++) for (let i = 0; i < v.w; i++) {
-          const k = j * v.w + i;
-          if ((v.match[k] >= 0 || v.replace[k] >= 0) && written[(c.top + j) * width + c.left + i]) { clash = true; break; }
+          const k = j * v.w + i, at = (c.top + j) * width + c.left + i;
+          if ((v.match[k] >= 0 || v.replace[k] >= 0) && written[at]) { clash = true; break; }
+          if (v.replace[k] >= 0 && ids[at] !== v.replace[k]) alters = true;
         }
-        if (clash) continue;
+        if (clash || !alters) continue;
         for (let j = 0; j < v.h; j++) for (let i = 0; i < v.w; i++) {
           const k = j * v.w + i, at = (c.top + j) * width + c.left + i;
           if (v.replace[k] < 0) continue;

@@ -65,7 +65,7 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
     background: { type: 'string', description: 'Cell background: checker (default), transparent, a palette name or a hex color.' },
     view: { enum: ['color', 'silhouette', 'grayscale', 'onion', 'tile'], description: 'Onion uses pink previous/cyan next poses in animation playback order (requires animation). Tile repeats each frame 3x3 and reports doubled edges and wrap steps.' },
     native: { type: 'boolean', description: 'Also return a native-size contact sheet beside the enlarged view.' },
-    diagnostics: { type: 'boolean', description: 'Advisory duplicate, empty, isolated-pixel, palette and loop-boundary evidence, plus original animation timing.' },
+    diagnostics: { type: 'boolean', description: 'Advisory duplicate, empty, isolated-pixel, palette and loop-boundary evidence, original animation timing, and per-frame counts of pixels a cleanup change would alter (corners, strays).' },
     maxCells: { type: 'integer', minimum: 1, maximum: 256, description: 'Bound the preview with evenly spaced samples; returns omitted count and original positions. Does not alter exported animation.' }
   } };
   const patchInput = { ...projectInput, properties: {
@@ -78,7 +78,7 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
       grid: { type: 'string', description: 'Frame path. Value: {x,y,rows,erase?,mask?}. Dots/spaces preserve; explicit erase character clears; mask x selects and dot preserves.' },
       move: { type: 'string', description: 'Frame path. Value: {x,y,w,h,dx,dy,mask?}. Moves exact pixels including corrections; erases selected source. Destination must fit.' },
       recolor: { type: 'string', description: 'Frame path. Value: {x,y,w,h,from,to,mask?}. Replaces only matching selected colors.' },
-      cleanup: { type: 'string', description: 'Frame path. Value: {corners?, strays?, x?, y?, w?, h?, mask?, colors?}. Proposes fixes as canvas corrections: corners removes doubled L-shaped steps in one-pixel lines; strays gives a pixel the colour all eight neighbours share (noise, pinholes, isolated specks). Check the report and keep deliberate corners, eyes and sparks. Diagnostics list these with a ready change.' },
+      cleanup: { type: 'string', description: 'Frame path. Value: {corners?, strays?, x?, y?, w?, h?, mask?, colors?}. Proposes fixes as canvas corrections: corners removes doubled L-shaped steps in one-pixel lines; strays gives a pixel the colour all eight neighbours share (noise, pinholes, isolated specks). Check the report and keep deliberate corners, eyes and sparks. Inspection diagnostics count both per frame.' },
       scope: { enum: ['frame', 'inherited'], description: 'Canvas edits: inherited is default. frame preserves other poses by recording compensating canvas corrections, reported in edits.protected.' },
       value: { description: 'JSON value for set or insert; for paint, a list of {x, y, color} pixels inside the canvas (palette names or hex colors, exact RGBA replacement).' }
     }, additionalProperties: false } },

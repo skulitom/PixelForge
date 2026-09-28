@@ -5,7 +5,7 @@
   "homepage": "https://github.com/skulitom/PixelForge#readme",
   "repository": { "type": "git", "url": "git+https://github.com/skulitom/PixelForge.git" },
   "bugs": { "url": "https://github.com/skulitom/PixelForge/issues" },
-  "keywords": ["pixel-art", "pixelart", "sprites", "sprite-sheet", "sprite-animation", "texture-atlas", "game-assets", "gamedev", "mcp", "mcp-server", "model-context-protocol", "ai-agents", "agent-skills", "png", "apng", "cli", "zero-dependencies"],
+  "keywords": ["pixel-art", "pixelart", "sprites", "dithering", "particle-effects", "sprite-sheet", "sprite-animation", "texture-atlas", "game-assets", "gamedev", "mcp", "mcp-server", "model-context-protocol", "ai-agents", "agent-skills", "png", "apng", "cli", "zero-dependencies"],
   "type": "module",
   "license": "MIT",
   "engines": { "node": ">=20" },

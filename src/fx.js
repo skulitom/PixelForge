@@ -5,7 +5,7 @@
 // seeded hashing and polynomial trigonometry, no Math.random.
 import { PixelError, parseColor, renderProject } from './core.js';
 import { fields, point } from './authoring.js';
-import { DITHER_PATTERNS, ditherThreshold, random, sinDeg, cosDeg } from './craft.js';
+import { patternProblem, ditherThreshold, traceLine, random, sinDeg, cosDeg } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -93,16 +93,8 @@ function readEmitter(emitter, path, context) {
   }
   if (emitter.bounce !== undefined && emitter.floor === undefined) fail(`${path}.bounce`, 'bounce applies at a floor');
   // The dissolve pattern takes the same forms as the dither operation: a Bayer name or a matrix of ranks.
-  const pattern = emitter.pattern ?? 'bayer4';
-  if (typeof pattern === 'string') { if (!DITHER_PATTERNS.includes(pattern)) fail(`${path}.pattern`, `expected ${DITHER_PATTERNS.join(', ')} or a matrix of ranks`); }
-  else {
-    const columns = Array.isArray(pattern) && Array.isArray(pattern[0]) ? pattern[0].length : 0;
-    if (!pattern.length || pattern.length > 16 || columns < 1 || columns > 16) fail(`${path}.pattern`, `expected ${DITHER_PATTERNS.join(', ')} or 1–16 rows of 1–16 ranks`);
-    pattern.forEach((row, r) => {
-      if (!Array.isArray(row) || row.length !== columns) fail(`${path}.pattern[${r}]`, `all rows must have ${columns} ranks`);
-      row.forEach((rank, k) => integer(rank, `${path}.pattern[${r}][${k}]`, 0, pattern.length * columns - 1));
-    });
-  }
+  const pattern = emitter.pattern ?? 'bayer4', problem = patternProblem(pattern);
+  if (problem) fail(`${path}.pattern${problem[0]}`, problem[1]);
   if (emitter.pattern !== undefined && emitter.dissolve === undefined) fail(`${path}.pattern`, 'pattern shapes the dissolve; set dissolve too');
   const area = emitter.area === undefined ? [1, 1] : point(emitter.area, `${path}.area`);
   if (area.some(n => n < 1 || n > 256)) fail(`${path}.area`, 'expected a spawn box from 1 to 256 pixels per side');
@@ -121,12 +113,6 @@ function readEmitter(emitter, path, context) {
   };
 }
 
-// The pixels of a one-pixel line, identical to the renderer's `line` operation.
-function linePixels(x, y, x2, y2) {
-  const pixels = [], dx = Math.abs(x2 - x), sx = x < x2 ? 1 : -1, dy = -Math.abs(y2 - y), sy = y < y2 ? 1 : -1;
-  let error = dx + dy;
-  while (true) { pixels.push([x, y]); if (x === x2 && y === y2) return pixels; const e = 2 * error; if (e >= dy) { error += dy; x += sx; } if (e <= dx) { error += dx; y += sy; } }
-}
 // Simulates one effect and returns its frames' operations plus counts for the metadata.
 function simulate(effect, context) {
   const { frames, loop, seed, emitters } = effect, { width, height, symbols } = context;
@@ -172,7 +158,9 @@ function simulate(effect, context) {
       const symbol = sequence[step], rows = symbols[symbol], w = rows[0].length, h = rows.length, left = X - Math.floor(w / 2), top = Y - Math.floor(h / 2);
       if (e.trail) {
         const [fromX, fromY] = p.trail[Math.max(0, p.trail.length - 1 - e.trail.length)];
-        const pixels = fromX === X && fromY === Y ? [] : linePixels(fromX, fromY, X, Y), visible = pixels.filter(([x, y]) => inside(x, y));
+        const pixels = [];
+        if (fromX !== X || fromY !== Y) traceLine(fromX, fromY, X, Y, (x, y) => pixels.push([x, y]));
+        const visible = pixels.filter(([x, y]) => inside(x, y));
         if (visible.length === pixels.length && pixels.length) ops.push({ op: 'line', x: fromX, y: fromY, x2: X, y2: Y, color: e.trail.color });
         else ops.push(...visible.map(([x, y]) => ({ op: 'pixel', x, y, color: e.trail.color })));
         operations += visible.length === pixels.length ? Math.min(1, pixels.length) : visible.length;
@@ -218,10 +206,13 @@ export function compileEffects(source) {
     if (!Array.isArray(rows) || !rows.length || rows.length > 256 || typeof rows[0] !== 'string' || !rows[0].length || rows.some(row => typeof row !== 'string' || row.length !== rows[0].length)) fail(`fx.symbols.${name}`, 'expected 1–256 equal-width text rows');
   }
   if (!isObject(source.effects) || !Object.keys(source.effects).length || Object.keys(source.effects).length > LIMITS.effects) fail('fx.effects', `expected 1–${LIMITS.effects} named effects`);
-  const frames = [], animations = {}, metadata = { format: 'pixelforge-fx-metadata', version: 1, effects: {} };
+  const frames = [], animations = {}, metadata = { format: 'pixelforge-fx-metadata', version: 1, effects: {} }, seen = new Set();
   for (const [name, effect] of Object.entries(source.effects)) {
     const path = `fx.effects.${name}`;
     identifier(name, path);
+    // Effect names become animation and frame names, which must be unique ignoring case for portable bundles.
+    if (seen.has(name.toLowerCase())) fail(path, 'effect names must be unique ignoring case; they name animations and frames');
+    seen.add(name.toLowerCase());
     fields(effect, ['frames', 'duration', 'loop', 'seed', 'emitters'], path);
     const count = integer(effect.frames, `${path}.frames`, 1, 256), loop = effect.loop ?? false;
     if (typeof loop !== 'boolean') fail(`${path}.loop`, 'expected a boolean');

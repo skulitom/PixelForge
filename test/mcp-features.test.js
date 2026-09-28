@@ -128,9 +128,8 @@ test('MCP compiles particle effects, explains the fx topic and previews cleanup 
   assert.equal(JSON.parse(topic.content[0].text).title, 'PixelForge particle effects');
   const stair = { version: 1, name: 'stair', width: 5, height: 4, palette: { k: '#000' }, frames: [{ name: 'a', ops: [{ op: 'grid', rows: ['k....', 'kk...', '.kk..', '..k..'] }] }] };
   const inspected = await mcp.call('pixel_inspect', { project: stair, diagnostics: true });
-  const finding = inspected.info.diagnostics.findings.find(f => f.code === 'corners');
-  assert.deepEqual([finding.count, finding.fix], [2, { cleanup: 'frames[a]', value: { corners: true } }]);
-  const fixed = await mcp.call('pixel_patch', { revision: inspected.info.revision, changes: [finding.fix] });
+  assert.deepEqual(inspected.info.diagnostics.frames[0], { frame: 'a', visible: 6, colors: 1, corners: 2, strays: 0 });
+  const fixed = await mcp.call('pixel_patch', { revision: inspected.info.revision, changes: [{ cleanup: 'frames[a]', value: { corners: true } }] });
   assert.deepEqual(fixed.info.edits, [{ cleanup: 'frames[a]', at: 'frames[0]', pixels: 2, corners: 2, strays: 0 }]);
   assert.equal(fixed.info.frames.changed[0].pixels, 2);
   mcp.input.end(); await mcp.running;

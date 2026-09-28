@@ -79,6 +79,8 @@ test('effect sources fail early with paths an agent can act on', () => {
   const striped = compileEffects(effects({ frames: 2, emitters: [{ at: [12, 12], burst: 1, life: 2, dissolve: 0.5, pattern: [[0, 1, 2], [1, 2, 0], [2, 0, 1]], shapes: [['chip'], ['chip']] }], }, { symbols: { chip: ['yyy', 'yyy', 'yyy'] } }));
   assert.deepEqual(opsOf(striped.recipe)[1], [{ op: 'grid', x: 11, y: 11, rows: ['yy.', 'y.y', '.yy'] }]);
   assert.throws(() => compileEffects(effects({ frames: 4, loop: true, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] })), /finite life/);
+  const one = { frames: 1, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] };
+  assert.throws(() => compileEffects({ ...effects(one), effects: { spark: one, Spark: one } }), error => error.path === 'fx.effects.Spark' && /ignoring case/.test(error.message));
   assert.throws(() => compileEffects(effects({ frames: 4, duration: [1, 2], emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] })), /one duration or 4/);
   assert.throws(() => compileEffects({ ...effects({ frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }), effects: { a: { frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }, b: { frames: 100, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] } } }), /at most 256/);
 });
@@ -144,4 +146,9 @@ test('the CLI compiles effect sources and keeps their shared palette link', asyn
   assert.equal(JSON.parse(await readFile(path.join(dir, 'out/burst.meta.json'), 'utf8')).format, 'pixelforge-fx-metadata');
   const validate = spawnSync(process.execPath, [path.join(root, 'bin/pixelforge.js'), 'validate', path.join(dir, 'out/burst.json')], { encoding: 'utf8' });
   assert.equal(JSON.parse(validate.stdout).frames, 3);
+  // compile dispatches on the source format, so it also builds autotile templates.
+  await writeFile(path.join(dir, 'turf.autotile.json'), JSON.stringify({ format: 'pixelforge-autotile', version: 1, name: 'turf', tile: 2, mode: 'cardinal', palette: { g: '#0a0' }, template: Array(6).fill('gggg'), frame: 'turf-{mask}' }));
+  const tiles = spawnSync(process.execPath, [path.join(root, 'bin/pixelforge.js'), 'compile', path.join(dir, 'turf.autotile.json'), '--out', path.join(dir, 'out/turf.json')], { encoding: 'utf8' });
+  assert.equal(tiles.status, 0, tiles.stderr);
+  assert.equal(JSON.parse(await readFile(path.join(dir, 'out/turf.json'), 'utf8')).frames.length, 16);
 });

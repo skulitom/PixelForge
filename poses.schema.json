@@ -1174,7 +1174,7 @@
               ]
             }
           ],
-          "description": "Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density. x/y default to 0 and w/h to the canvas."
+          "description": "Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density. x/y default to 0 and w/h reach the canvas edge."
         },
         {
           "type": "object",
