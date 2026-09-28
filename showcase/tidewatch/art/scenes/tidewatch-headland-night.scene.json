@@ -130,10 +130,7 @@
         168,
         64
       ],
-      "anchor": [
-        7,
-        29
-      ],
+      "anchor": "frame",
       "animation": "on"
     },
     {
@@ -143,10 +140,7 @@
         56,
         64
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "rock"
     },
     {
@@ -156,10 +150,7 @@
         200,
         64
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "rock"
     },
     {
@@ -169,10 +160,7 @@
         72,
         96
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -182,10 +170,7 @@
         184,
         96
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -195,10 +180,7 @@
         168,
         96
       ],
-      "anchor": [
-        8,
-        11
-      ],
+      "anchor": "frame",
       "frame": "flower-violet"
     },
     {
@@ -208,10 +190,7 @@
         120,
         96
       ],
-      "anchor": [
-        8,
-        11
-      ],
+      "anchor": "frame",
       "frame": "flower-red"
     },
     {
@@ -221,10 +200,7 @@
         36,
         96
       ],
-      "anchor": [
-        16,
-        20
-      ],
+      "anchor": "frame",
       "frame": "boulder-b"
     },
     {
@@ -234,10 +210,7 @@
         88,
         112
       ],
-      "anchor": [
-        8,
-        11
-      ],
+      "anchor": "frame",
       "frame": "flower-red"
     },
     {
@@ -247,10 +220,7 @@
         232,
         112
       ],
-      "anchor": [
-        16,
-        23
-      ],
+      "anchor": "frame",
       "frame": "boulder-a"
     },
     {
@@ -260,10 +230,7 @@
         72,
         128
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -273,10 +240,7 @@
         88,
         128
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -286,10 +250,7 @@
         168,
         128
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -299,10 +260,7 @@
         184,
         128
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -312,10 +270,7 @@
         128,
         144
       ],
-      "anchor": [
-        32,
-        125
-      ],
+      "anchor": "frame",
       "animation": "night"
     },
     {
@@ -325,10 +280,7 @@
         40,
         160
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "rock"
     },
     {
@@ -338,10 +290,7 @@
         168,
         208
       ],
-      "anchor": [
-        7,
-        29
-      ],
+      "anchor": "frame",
       "animation": "on"
     },
     {
@@ -351,10 +300,7 @@
         72,
         208
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "frame": "pot"
     },
     {
@@ -364,10 +310,7 @@
         -8,
         224
       ],
-      "anchor": [
-        23,
-        55
-      ],
+      "anchor": "frame",
       "frame": "oak-0"
     },
     {
@@ -377,10 +320,7 @@
         264,
         224
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -390,10 +330,7 @@
         88,
         224
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -403,10 +340,7 @@
         200,
         224
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -416,10 +350,7 @@
         248,
         240
       ],
-      "anchor": [
-        8,
-        12
-      ],
+      "anchor": "frame",
       "frame": "bush"
     },
     {
@@ -429,10 +360,7 @@
         24,
         256
       ],
-      "anchor": [
-        7,
-        29
-      ],
+      "anchor": "frame",
       "animation": "on"
     },
     {
@@ -442,10 +370,7 @@
         232,
         256
       ],
-      "anchor": [
-        23,
-        55
-      ],
+      "anchor": "frame",
       "frame": "oak-0"
     },
     {
@@ -455,10 +380,7 @@
         104,
         256
       ],
-      "anchor": [
-        8,
-        11
-      ],
+      "anchor": "frame",
       "frame": "flower-violet"
     },
     {
@@ -468,10 +390,7 @@
         184,
         272
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -481,10 +400,7 @@
         200,
         272
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -494,10 +410,7 @@
         216,
         272
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -507,10 +420,7 @@
         8,
         272
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "frame": "pot"
     },
     {
@@ -520,10 +430,7 @@
         24,
         272
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "frame": "pot"
     },
     {
@@ -533,10 +440,7 @@
         24,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -546,10 +450,7 @@
         40,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -559,10 +460,7 @@
         56,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -572,10 +470,7 @@
         200,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -585,10 +480,7 @@
         216,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -598,10 +490,7 @@
         232,
         288
       ],
-      "anchor": [
-        8,
-        13
-      ],
+      "anchor": "frame",
       "animation": "grass-sway"
     },
     {
@@ -611,10 +500,7 @@
         -24,
         288
       ],
-      "anchor": [
-        8,
-        11
-      ],
+      "anchor": "frame",
       "frame": "flower-red"
     },
     {
@@ -625,10 +511,7 @@
         136,
         148
       ],
-      "anchor": [
-        20,
-        31
-      ]
+      "anchor": "frame"
     }
   ],
   "lighting": {

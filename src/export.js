@@ -4,6 +4,33 @@ import { readFile, mkdir, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 
 const json = value => JSON.stringify(value, null, 2) + '\n';
+// Compact, deterministic JSON for generated recipes: any object or array that fits within `width` columns stays on one
+// line and larger ones open one entry per line, so frames and operations read as single lines. Pixel grids (symbol
+// rows, grid and rule rows, templates, masks) always keep one row per line, so the art stays visible as text. Parses
+// back to the same value as JSON.stringify.
+const GRID_KEYS = new Set(['rows', 'template', 'match', 'replace', 'mask', 'directions']);
+export function formatJSON(value, width = 120) {
+  const entries = object => Object.entries(object).filter(([, v]) => v !== undefined);
+  const inline = v => Array.isArray(v) ? `[${v.map(inline).join(', ')}]`
+    : v !== null && typeof v === 'object' ? (entries(v).length ? `{ ${entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${inline(x)}`).join(', ')} }` : '{}')
+    : JSON.stringify(v);
+  // A grid is an array of several strings under a grid key, or any value of a `symbols` map. `key` is the value's own
+  // key and `parent` its container's key.
+  const hasGrid = (v, key, parent) => {
+    if (v === null || typeof v !== 'object') return false;
+    if (Array.isArray(v)) return ((GRID_KEYS.has(key) || parent === 'symbols') && v.length > 1 && v.every(row => typeof row === 'string')) || v.some(x => hasGrid(x, null, key));
+    return entries(v).some(([k, x]) => hasGrid(x, k, key));
+  };
+  const format = (v, indent, lead, key, parent) => {
+    if (v === null || typeof v !== 'object') return JSON.stringify(v);
+    const flat = inline(v);
+    if (!hasGrid(v, key, parent) && indent.length + lead + flat.length <= width) return flat;
+    const inner = `${indent}  `;
+    if (Array.isArray(v)) return v.length ? `[\n${v.map(x => inner + format(x, inner, 0, null, key)).join(',\n')}\n${indent}]` : '[]';
+    return `{\n${entries(v).map(([k, x]) => { const label = `${JSON.stringify(k)}: `; return inner + label + format(x, inner, label.length, k, key); }).join(',\n')}\n${indent}}`;
+  };
+  return format(value, '', 0, null, null) + '\n';
+}
 export function generateCSS(project, atlas) {
   // A trimmed atlas cannot back a fixed-size element without showing neighbouring frames, so trimmed recipes
   // switch between the full-canvas frame PNGs instead of sliding a background position.

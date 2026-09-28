@@ -1,6 +1,6 @@
 // Optional authoring compilers. All output is ordinary, editable version-1 recipe data.
 import { PixelError, renderProject } from './core.js';
-import { BLOB_MASKS, CARDINAL_MASKS, quadrantPieces, templatePiece } from './autotile.js';
+import { BLOB_MASKS, CARDINAL_MASKS } from './autotile.js';
 import { EASINGS, ease, rotateRows } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
@@ -168,7 +168,7 @@ export function compilePoses(source) {
 // Compiles a small template into an autotile set. The template is two tiles wide and three tall:
 //   [ unused preview ][ inner corners ]
 //   [ 2x2 island whose quadrants give outer corners, edges and fill ]
-// Every output frame is four `copy` operations from the template symbol, so editing the template updates the set.
+// Every output frame is one `autotile` operation naming its neighbour mask, so editing the template updates the set.
 export function compileAutotile(source) {
   fields(source, ['format', 'version', 'name', 'tile', 'mode', 'palette', 'template', 'frame', 'variants', 'animation', 'sheet'], 'autotile');
   if (source.format !== 'pixelforge-autotile' || source.version !== 1) fail('autotile', 'expected version-1 pixelforge-autotile');
@@ -187,16 +187,13 @@ export function compileAutotile(source) {
     if (typeof variant.name !== 'string' || (source.variants !== undefined && !/^[A-Za-z0-9_-]{1,16}$/.test(variant.name))) fail(`autotile.variants[${i}].name`, 'expected 1–16 letters, digits, hyphens or underscores');
   });
   if (source.animation !== undefined && (typeof source.animation !== 'string' || !source.animation.includes('{mask}'))) fail('autotile.animation', 'expected an animation name template containing {mask}');
-  const q = tile / 2, frames = [], animations = {};
+  const frames = [], animations = {};
   for (const mask of mode === 'cardinal' ? CARDINAL_MASKS : BLOB_MASKS) {
-    const pieces = quadrantPieces(mode, mask), names = [];
+    const names = [];
     for (const variant of variants) {
       const name = source.frame.replaceAll('{mask}', String(mask)).replaceAll('{variant}', variant.name);
       names.push(name);
-      frames.push({ name, ...(variant.duration !== undefined && { duration: variant.duration }), ...(variant.palette !== undefined && { palette: variant.palette }), ops: Object.entries({ tl: [0, 0], tr: [q, 0], bl: [0, q], br: [q, q] }).map(([position, [x, y]]) => {
-        const [sx, sy] = templatePiece(tile, position, pieces[position]);
-        return { op: 'copy', symbol: 'template', sx, sy, w: q, h: q, x, y };
-      }) });
+      frames.push({ name, ...(variant.duration !== undefined && { duration: variant.duration }), ...(variant.palette !== undefined && { palette: variant.palette }), ops: [{ op: 'autotile', symbol: 'template', mask, ...(mode === 'cardinal' && { mode }) }] });
     }
     if (source.animation !== undefined) animations[source.animation.replaceAll('{mask}', String(mask))] = { frames: names };
   }

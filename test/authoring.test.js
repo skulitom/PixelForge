@@ -94,6 +94,22 @@ test('autotile variants become palette-cycled frames with one animation per mask
   assert.throws(() => compileAutotile({ format: 'pixelforge-autotile', version: 1, name: 'x', tile: 2, palette, template: rows, frame: 'x-{mask}', variants: [{ name: 'a' }] }), /\{variant\}/);
 });
 
+test('the autotile op draws the quarters a mask selects, exactly like four copies, and the compiler emits one per frame', () => {
+  const { rows, palette } = tracerTemplate(4);
+  const draw = (ops, symbols = { template: rows }) => renderProject({ version: 1, name: 't', width: 4, height: 4, palette, symbols, frames: [{ name: 'a', ops }] }).frames[0].data;
+  for (const [mode, masks] of [['blob', BLOB_MASKS], ['cardinal', Array.from({ length: 16 }, (_, m) => m)]]) for (const mask of masks) {
+    const pieces = quadrantPieces(mode, mask);
+    const copies = Object.entries({ tl: [0, 0], tr: [2, 0], bl: [0, 2], br: [2, 2] }).map(([position, [x, y]]) => { const [sx, sy] = templatePiece(4, position, pieces[position]); return { op: 'copy', symbol: 'template', sx, sy, w: 2, h: 2, x, y }; });
+    assert.deepEqual(draw([{ op: 'autotile', symbol: 'template', mask, mode }]), draw(copies), `${mode} ${mask}`);
+  }
+  // Raw blob masks reduce: a diagonal without both of its sides does not count.
+  assert.deepEqual(draw([{ op: 'autotile', symbol: 'template', mask: 2 }]), draw([{ op: 'autotile', symbol: 'template', mask: 0 }]));
+  const { recipe } = compileAutotile({ format: 'pixelforge-autotile', version: 1, name: 'sand', tile: 4, palette, template: rows, frame: 'sand-{mask}' });
+  assert.deepEqual(recipe.frames[5].ops, [{ op: 'autotile', symbol: 'template', mask: BLOB_MASKS[5] }]);
+  assert.throws(() => draw([{ op: 'autotile', symbol: 'template', mask: 16, mode: 'cardinal' }]), /mask: expected an integer from 0 to 15/);
+  assert.throws(() => draw([{ op: 'autotile', symbol: 'odd', mask: 0 }], { odd: ['AAA'] }), /two tiles wide and three tall/);
+});
+
 test('canvas-only overlays survive unrelated base edits but refuse changes to the frames they touch', () => {
   const base = { version: 1, name: 'fern', width: 4, height: 4, palette: { g: '#0a0', h: '#6c6', k: '#000' }, frames: [
     { name: 'still', ops: [{ op: 'rect', x: 1, y: 1, w: 2, h: 2, color: 'g' }] }, { name: 'sway', from: 'still', translate: [1, 0] }, { name: 'other', duration: 90 }

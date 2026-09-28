@@ -18,18 +18,10 @@
     "Q": "#6b6888"
   },
   "symbols": {
-    "hot": [
-      "W"
-    ],
-    "warm": [
-      "y"
-    ],
-    "cool": [
-      "o"
-    ],
-    "ash": [
-      "r"
-    ],
+    "hot": ["W"],
+    "warm": ["y"],
+    "cool": ["o"],
+    "ash": ["r"],
     "flash-0": [
       "..W..",
       ".WyW.",
@@ -48,15 +40,9 @@
       "yW",
       "oy"
     ],
-    "ember": [
-      "y"
-    ],
-    "ember-dim": [
-      "o"
-    ],
-    "ember-end": [
-      "r"
-    ],
+    "ember": ["y"],
+    "ember-dim": ["o"],
+    "ember-end": ["r"],
     "puff-big": [
       ".sss.",
       "ssssS",
@@ -66,9 +52,7 @@
       ".sS",
       "sSu"
     ],
-    "puff-small": [
-      "sS"
-    ],
+    "puff-small": ["sS"],
     "leaf-a": [
       "lg.",
       ".gG"
@@ -93,2161 +77,487 @@
       ".q",
       "qQ"
     ],
-    "chip-d": [
-      "q"
-    ]
+    "chip-d": ["q"]
   },
-  "anchor": [
-    24,
-    36
-  ],
+  "anchor": [24, 36],
   "frames": [
     {
       "name": "sparks-0",
       "duration": 55,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "flash-0",
-          "x": 22,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 24,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 23,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 24,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 23,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 23,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 23,
-          "y": 30
-        }
+        { "op": "stamp", "symbol": "flash-0", "x": 22, "y": 28 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 30 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 30 }
       ]
     },
     {
       "name": "sparks-1",
       "duration": 55,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "flash-1",
-          "x": 22,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 26,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 26,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 30,
-          "x2": 24,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 24,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 23,
-          "y": 30,
-          "x2": 25,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 25,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 26,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 26,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 30,
-          "x2": 24,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 24,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 23,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 23,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 23,
-          "y": 30,
-          "x2": 21,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 21,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 26,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 26,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 26,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 26,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 30,
-          "x2": 26,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 26,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 23,
-          "y": 30,
-          "x2": 22,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 22,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 23,
-          "y": 30,
-          "x2": 24,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 24,
-          "y": 27
-        }
+        { "op": "stamp", "symbol": "flash-1", "x": 22, "y": 28 },
+        { "op": "line", "x": 25, "y": 30, "x2": 26, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 26, "y": 29 },
+        { "op": "line", "x": 24, "y": 30, "x2": 24, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 29 },
+        { "op": "line", "x": 23, "y": 30, "x2": 25, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 28 },
+        { "op": "line", "x": 25, "y": 30, "x2": 26, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 26, "y": 28 },
+        { "op": "line", "x": 24, "y": 30, "x2": 24, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 27 },
+        { "op": "line", "x": 25, "y": 30, "x2": 23, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 28 },
+        { "op": "line", "x": 23, "y": 30, "x2": 21, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 21, "y": 29 },
+        { "op": "line", "x": 25, "y": 30, "x2": 26, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 26, "y": 27 },
+        { "op": "line", "x": 25, "y": 30, "x2": 26, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 26, "y": 29 },
+        { "op": "line", "x": 25, "y": 30, "x2": 26, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 26, "y": 29 },
+        { "op": "line", "x": 23, "y": 30, "x2": 22, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 22, "y": 28 },
+        { "op": "line", "x": 23, "y": 30, "x2": 24, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 27 }
       ]
     },
     {
       "name": "sparks-2",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 26,
-          "y": 29,
-          "x2": 27,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 27,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 29,
-          "x2": 25,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 25,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 28,
-          "x2": 27,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 27,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 28,
-          "x2": 28,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 28,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 27,
-          "x2": 24,
-          "y2": 24,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 24,
-          "y": 24
-        },
-        {
-          "op": "line",
-          "x": 23,
-          "y": 28,
-          "x2": 22,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 22,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 21,
-          "y": 29,
-          "x2": 19,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 19,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 27,
-          "x2": 27,
-          "y2": 25,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 27,
-          "y": 25
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 29,
-          "x2": 27,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 27,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 29,
-          "x2": 27,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "hot",
-          "x": 27,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 22,
-          "y": 28,
-          "x2": 20,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 20,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 27,
-          "x2": 25,
-          "y2": 25,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 25,
-          "y": 25
-        }
+        { "op": "line", "x": 26, "y": 29, "x2": 27, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 27, "y": 28 },
+        { "op": "line", "x": 24, "y": 29, "x2": 25, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 25, "y": 28 },
+        { "op": "line", "x": 25, "y": 28, "x2": 27, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 27, "y": 26 },
+        { "op": "line", "x": 26, "y": 28, "x2": 28, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 28, "y": 26 },
+        { "op": "line", "x": 24, "y": 27, "x2": 24, "y2": 24, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 24, "y": 24 },
+        { "op": "line", "x": 23, "y": 28, "x2": 22, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 22, "y": 26 },
+        { "op": "line", "x": 21, "y": 29, "x2": 19, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 19, "y": 28 },
+        { "op": "line", "x": 26, "y": 27, "x2": 27, "y2": 25, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 27, "y": 25 },
+        { "op": "line", "x": 26, "y": 29, "x2": 27, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 27, "y": 28 },
+        { "op": "line", "x": 26, "y": 29, "x2": 27, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 27, "y": 27 },
+        { "op": "line", "x": 22, "y": 28, "x2": 20, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 20, "y": 26 },
+        { "op": "line", "x": 24, "y": 27, "x2": 25, "y2": 25, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 25, "y": 25 }
       ]
     },
     {
       "name": "sparks-3",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 27,
-          "y": 28,
-          "x2": 28,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 28,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 28,
-          "x2": 26,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 26,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 26,
-          "x2": 29,
-          "y2": 25,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 29,
-          "y": 25
-        },
-        {
-          "op": "line",
-          "x": 28,
-          "y": 26,
-          "x2": 29,
-          "y2": 24,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 29,
-          "y": 24
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 24,
-          "x2": 24,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 24,
-          "y": 22
-        },
-        {
-          "op": "line",
-          "x": 22,
-          "y": 26,
-          "x2": 20,
-          "y2": 24,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 20,
-          "y": 24
-        },
-        {
-          "op": "line",
-          "x": 19,
-          "y": 28,
-          "x2": 17,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 17,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 25,
-          "x2": 28,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 28,
-          "y": 23
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 28,
-          "x2": 29,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 29,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 27,
-          "x2": 28,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 28,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 20,
-          "y": 26,
-          "x2": 19,
-          "y2": 24,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 19,
-          "y": 24
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 25,
-          "x2": 26,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 26,
-          "y": 23
-        }
+        { "op": "line", "x": 27, "y": 28, "x2": 28, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 28, "y": 27 },
+        { "op": "line", "x": 25, "y": 28, "x2": 26, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 26, "y": 28 },
+        { "op": "line", "x": 27, "y": 26, "x2": 29, "y2": 25, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 29, "y": 25 },
+        { "op": "line", "x": 28, "y": 26, "x2": 29, "y2": 24, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 29, "y": 24 },
+        { "op": "line", "x": 24, "y": 24, "x2": 24, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 24, "y": 22 },
+        { "op": "line", "x": 22, "y": 26, "x2": 20, "y2": 24, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 20, "y": 24 },
+        { "op": "line", "x": 19, "y": 28, "x2": 17, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 17, "y": 28 },
+        { "op": "line", "x": 27, "y": 25, "x2": 28, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 28, "y": 23 },
+        { "op": "line", "x": 27, "y": 28, "x2": 29, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 29, "y": 28 },
+        { "op": "line", "x": 27, "y": 27, "x2": 28, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 28, "y": 26 },
+        { "op": "line", "x": 20, "y": 26, "x2": 19, "y2": 24, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 19, "y": 24 },
+        { "op": "line", "x": 25, "y": 25, "x2": 26, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 26, "y": 23 }
       ]
     },
     {
       "name": "sparks-4",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 28,
-          "y": 27,
-          "x2": 29,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 29,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 28,
-          "x2": 27,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 27,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 29,
-          "y": 25,
-          "x2": 31,
-          "y2": 24,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 31,
-          "y": 24
-        },
-        {
-          "op": "line",
-          "x": 29,
-          "y": 24,
-          "x2": 31,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 31,
-          "y": 23
-        },
-        {
-          "op": "line",
-          "x": 24,
-          "y": 22,
-          "x2": 25,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 25,
-          "y": 21
-        },
-        {
-          "op": "line",
-          "x": 20,
-          "y": 24,
-          "x2": 18,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 18,
-          "y": 23
-        },
-        {
-          "op": "line",
-          "x": 17,
-          "y": 28,
-          "x2": 15,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 15,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 28,
-          "y": 23,
-          "x2": 29,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 29,
-          "y": 22
-        },
-        {
-          "op": "line",
-          "x": 29,
-          "y": 28,
-          "x2": 30,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 30,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 28,
-          "y": 26,
-          "x2": 29,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "warm",
-          "x": 29,
-          "y": 26
-        },
-        {
-          "op": "line",
-          "x": 19,
-          "y": 24,
-          "x2": 17,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 17,
-          "y": 23
-        },
-        {
-          "op": "line",
-          "x": 26,
-          "y": 23,
-          "x2": 27,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 27,
-          "y": 22
-        }
+        { "op": "line", "x": 28, "y": 27, "x2": 29, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 29, "y": 27 },
+        { "op": "line", "x": 26, "y": 28, "x2": 27, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 27, "y": 27 },
+        { "op": "line", "x": 29, "y": 25, "x2": 31, "y2": 24, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 31, "y": 24 },
+        { "op": "line", "x": 29, "y": 24, "x2": 31, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 31, "y": 23 },
+        { "op": "line", "x": 24, "y": 22, "x2": 25, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 25, "y": 21 },
+        { "op": "line", "x": 20, "y": 24, "x2": 18, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 18, "y": 23 },
+        { "op": "line", "x": 17, "y": 28, "x2": 15, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 15, "y": 27 },
+        { "op": "line", "x": 28, "y": 23, "x2": 29, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 29, "y": 22 },
+        { "op": "line", "x": 29, "y": 28, "x2": 30, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 30, "y": 28 },
+        { "op": "line", "x": 28, "y": 26, "x2": 29, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 29, "y": 26 },
+        { "op": "line", "x": 19, "y": 24, "x2": 17, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 17, "y": 23 },
+        { "op": "line", "x": 26, "y": 23, "x2": 27, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 27, "y": 22 }
       ]
     },
     {
       "name": "sparks-5",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 29,
-          "y": 27,
-          "x2": 30,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 30,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 27,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 31,
-          "y": 24,
-          "x2": 33,
-          "y2": 23,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 33,
-          "y": 23
-        },
-        {
-          "op": "line",
-          "x": 31,
-          "y": 23,
-          "x2": 32,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 32,
-          "y": 22
-        },
-        {
-          "op": "line",
-          "x": 25,
-          "y": 21,
-          "x2": 25,
-          "y2": 20,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 25,
-          "y": 20
-        },
-        {
-          "op": "line",
-          "x": 18,
-          "y": 23,
-          "x2": 17,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 17,
-          "y": 22
-        },
-        {
-          "op": "line",
-          "x": 15,
-          "y": 27,
-          "x2": 14,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 14,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 29,
-          "y": 22,
-          "x2": 31,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 31,
-          "y": 21
-        },
-        {
-          "op": "line",
-          "x": 30,
-          "y": 28,
-          "x2": 31,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 31,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 29,
-          "y": 26,
-          "x2": 30,
-          "y2": 25,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 30,
-          "y": 25
-        },
-        {
-          "op": "line",
-          "x": 17,
-          "y": 23,
-          "x2": 16,
-          "y2": 22,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 16,
-          "y": 22
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 22,
-          "x2": 28,
-          "y2": 20,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 28,
-          "y": 20
-        }
+        { "op": "line", "x": 29, "y": 27, "x2": 30, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 30, "y": 27 },
+        { "op": "stamp", "symbol": "cool", "x": 27, "y": 27 },
+        { "op": "line", "x": 31, "y": 24, "x2": 33, "y2": 23, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 33, "y": 23 },
+        { "op": "line", "x": 31, "y": 23, "x2": 32, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 32, "y": 22 },
+        { "op": "line", "x": 25, "y": 21, "x2": 25, "y2": 20, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 25, "y": 20 },
+        { "op": "line", "x": 18, "y": 23, "x2": 17, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 17, "y": 22 },
+        { "op": "line", "x": 15, "y": 27, "x2": 14, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 14, "y": 28 },
+        { "op": "line", "x": 29, "y": 22, "x2": 31, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 31, "y": 21 },
+        { "op": "line", "x": 30, "y": 28, "x2": 31, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 31, "y": 28 },
+        { "op": "line", "x": 29, "y": 26, "x2": 30, "y2": 25, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 30, "y": 25 },
+        { "op": "line", "x": 17, "y": 23, "x2": 16, "y2": 22, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 16, "y": 22 },
+        { "op": "line", "x": 27, "y": 22, "x2": 28, "y2": 20, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 28, "y": 20 }
       ]
     },
     {
       "name": "sparks-6",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 30,
-          "y": 27,
-          "x2": 31,
-          "y2": 27,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 31,
-          "y": 27
-        },
-        {
-          "op": "line",
-          "x": 27,
-          "y": 27,
-          "x2": 28,
-          "y2": 28,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 28,
-          "y": 28
-        },
-        {
-          "op": "line",
-          "x": 32,
-          "y": 22,
-          "x2": 33,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 33,
-          "y": 21
-        },
-        {
-          "op": "line",
-          "x": 31,
-          "y": 21,
-          "x2": 32,
-          "y2": 20,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 32,
-          "y": 20
-        },
-        {
-          "op": "line",
-          "x": 31,
-          "y": 28,
-          "x2": 32,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 32,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "cool",
-          "x": 30,
-          "y": 25
-        },
-        {
-          "op": "line",
-          "x": 16,
-          "y": 22,
-          "x2": 15,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 15,
-          "y": 21
-        }
+        { "op": "line", "x": 30, "y": 27, "x2": 31, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 31, "y": 27 },
+        { "op": "line", "x": 27, "y": 27, "x2": 28, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 28, "y": 28 },
+        { "op": "line", "x": 32, "y": 22, "x2": 33, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 33, "y": 21 },
+        { "op": "line", "x": 31, "y": 21, "x2": 32, "y2": 20, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 32, "y": 20 },
+        { "op": "line", "x": 31, "y": 28, "x2": 32, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 32, "y": 29 },
+        { "op": "stamp", "symbol": "cool", "x": 30, "y": 25 },
+        { "op": "line", "x": 16, "y": 22, "x2": 15, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 15, "y": 21 }
       ]
     },
     {
       "name": "sparks-7",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 33,
-          "y": 21,
-          "x2": 34,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 34,
-          "y": 21
-        },
-        {
-          "op": "line",
-          "x": 32,
-          "y": 20,
-          "x2": 33,
-          "y2": 19,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 33,
-          "y": 19
-        },
-        {
-          "op": "line",
-          "x": 32,
-          "y": 29,
-          "x2": 33,
-          "y2": 29,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 33,
-          "y": 29
-        },
-        {
-          "op": "line",
-          "x": 30,
-          "y": 25,
-          "x2": 31,
-          "y2": 25,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 31,
-          "y": 25
-        },
-        {
-          "op": "line",
-          "x": 15,
-          "y": 21,
-          "x2": 14,
-          "y2": 21,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 14,
-          "y": 21
-        }
+        { "op": "line", "x": 33, "y": 21, "x2": 34, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 34, "y": 21 },
+        { "op": "line", "x": 32, "y": 20, "x2": 33, "y2": 19, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 33, "y": 19 },
+        { "op": "line", "x": 32, "y": 29, "x2": 33, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 33, "y": 29 },
+        { "op": "line", "x": 30, "y": 25, "x2": 31, "y2": 25, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 31, "y": 25 },
+        { "op": "line", "x": 15, "y": 21, "x2": 14, "y2": 21, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 14, "y": 21 }
       ]
     },
     {
       "name": "sparks-8",
       "duration": 55,
       "ops": [
-        {
-          "op": "line",
-          "x": 33,
-          "y": 19,
-          "x2": 34,
-          "y2": 19,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 34,
-          "y": 19
-        },
-        {
-          "op": "line",
-          "x": 33,
-          "y": 29,
-          "x2": 34,
-          "y2": 31,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 34,
-          "y": 31
-        },
-        {
-          "op": "line",
-          "x": 31,
-          "y": 25,
-          "x2": 32,
-          "y2": 26,
-          "color": "r"
-        },
-        {
-          "op": "stamp",
-          "symbol": "ash",
-          "x": 32,
-          "y": 26
-        }
+        { "op": "line", "x": 33, "y": 19, "x2": 34, "y2": 19, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 34, "y": 19 },
+        { "op": "line", "x": 33, "y": 29, "x2": 34, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 34, "y": 31 },
+        { "op": "line", "x": 31, "y": 25, "x2": 32, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 32, "y": 26 }
       ]
     },
     {
       "name": "embers-0",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 22,
-          "y": 27,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 23,
-          "y": 27
-        },
-        {
-          "op": "grid",
-          "x": 22,
-          "y": 29,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 23,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 29,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 24,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 20,
-          "y": 33
-        }
+        { "op": "grid", "x": 22, "y": 27, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 23, "y": 27 },
+        { "op": "grid", "x": 22, "y": 29, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember", "x": 23, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 29, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 24, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 20, "y": 33 }
       ]
     },
     {
       "name": "embers-1",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 24,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 29,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 24,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 20,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 26,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember", "x": 24, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 29, "y": 30 },
+        { "op": "stamp", "symbol": "ember-big", "x": 24, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 20, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 26, "y": 34 }
       ]
     },
     {
       "name": "embers-2",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 22,
-          "y": 25,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 22,
-          "y": 27,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 24,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 28,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 25,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 21,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 26,
-          "y": 34
-        }
+        { "op": "grid", "x": 22, "y": 25, "rows": ["r"] },
+        { "op": "grid", "x": 22, "y": 27, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 24, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 28, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 25, "y": 31 },
+        { "op": "stamp", "symbol": "ember", "x": 21, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 26, "y": 34 }
       ]
     },
     {
       "name": "embers-3",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 25,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 28,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 26,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 20,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 25,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 20,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 28 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 28, "y": 28 },
+        { "op": "stamp", "symbol": "ember", "x": 26, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 20, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 25, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 20, "y": 34 }
       ]
     },
     {
       "name": "embers-4",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 25,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 27,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 27,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 20,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 24,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 21,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 27 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 27, "y": 27 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 20, "y": 30 },
+        { "op": "stamp", "symbol": "ember-big", "x": 24, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 21, "y": 34 }
       ]
     },
     {
       "name": "embers-5",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 25,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 28,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 27,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 20,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 24,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 21,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 21,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 26 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 28, "y": 26 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 29 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 20, "y": 29 },
+        { "op": "stamp", "symbol": "ember-big", "x": 24, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 21, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 21, "y": 34 }
       ]
     },
     {
       "name": "embers-6",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 24,
-          "y": 26,
-          "rows": [
-            "o"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 29,
-          "y": 26,
-          "rows": [
-            "o"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 27,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 21,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 26,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 22,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 21,
-          "y": 33
-        }
+        { "op": "grid", "x": 24, "y": 26, "rows": ["o"] },
+        { "op": "grid", "x": 29, "y": 26, "rows": ["o"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 27, "y": 28 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 21, "y": 28 },
+        { "op": "stamp", "symbol": "ember", "x": 26, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 22, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 21, "y": 33 }
       ]
     },
     {
       "name": "embers-7",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 24,
-          "y": 25,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 26,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 22,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 27,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 23,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 22,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 19,
-          "y": 34
-        }
+        { "op": "grid", "x": 24, "y": 25, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 26, "y": 27 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 22, "y": 27 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 23, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 22, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 19, "y": 34 }
       ]
     },
     {
       "name": "embers-8",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 26,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 27,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 23,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 22,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 19,
-          "y": 33
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 26, "y": 26 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 23, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 22, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 19, "y": 33 }
       ]
     },
     {
       "name": "embers-9",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 26,
-          "y": 26
-        },
-        {
-          "op": "grid",
-          "x": 22,
-          "y": 25,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 27,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 22,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 20,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 21,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 26, "y": 26 },
+        { "op": "grid", "x": 22, "y": 25, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 22, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 20, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 21, "y": 34 }
       ]
     },
     {
       "name": "embers-10",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 26,
-          "y": 23,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 27,
-          "y": 25,
-          "rows": [
-            "o"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 26,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 22,
-          "y": 33
-        }
+        { "op": "grid", "x": 26, "y": 23, "rows": ["r"] },
+        { "op": "grid", "x": 27, "y": 25, "rows": ["o"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 26, "y": 28 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 31 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 31 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 22, "y": 33 }
       ]
     },
     {
       "name": "embers-11",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 25,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 22,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 23,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 27,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 27 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 22, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 27, "y": 34 }
       ]
     },
     {
       "name": "embers-12",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 28,
-          "y": 23,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 25,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 23,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 21,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 23,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 26,
-          "y": 33
-        }
+        { "op": "grid", "x": 28, "y": 23, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 26 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 23, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 21, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 26, "y": 33 }
       ]
     },
     {
       "name": "embers-13",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 28,
-          "y": 23,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 26,
-          "y": 25,
-          "rows": [
-            "o"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 23,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 22,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 21,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 23,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 26,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 25,
-          "y": 34
-        }
+        { "op": "grid", "x": 28, "y": 23, "rows": ["r"] },
+        { "op": "grid", "x": 26, "y": 25, "rows": ["o"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 23, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 22, "y": 29 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 21, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 26, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 25, "y": 34 }
       ]
     },
     {
       "name": "embers-14",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 23,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 20,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 24,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 26,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 25,
-          "y": 33
-        }
+        { "op": "stamp", "symbol": "ember-dim", "x": 23, "y": 28 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 20, "y": 30 },
+        { "op": "stamp", "symbol": "ember", "x": 24, "y": 31 },
+        { "op": "stamp", "symbol": "ember-big", "x": 26, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 25, "y": 33 }
       ]
     },
     {
       "name": "embers-15",
       "duration": 70,
       "ops": [
-        {
-          "op": "grid",
-          "x": 27,
-          "y": 24,
-          "rows": [
-            "r"
-          ]
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 24,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-dim",
-          "x": 21,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 23,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember",
-          "x": 28,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 25,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "ember-big",
-          "x": 19,
-          "y": 34
-        }
+        { "op": "grid", "x": 27, "y": 24, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 24, "y": 27 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 21, "y": 29 },
+        { "op": "stamp", "symbol": "ember", "x": 23, "y": 31 },
+        { "op": "stamp", "symbol": "ember", "x": 28, "y": 32 },
+        { "op": "stamp", "symbol": "ember-big", "x": 25, "y": 33 },
+        { "op": "stamp", "symbol": "ember-big", "x": 19, "y": 34 }
       ]
     },
     {
       "name": "dust-0",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 19,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 19,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 21,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 20,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 24,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 25,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 24,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 24,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "puff-big", "x": 19, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 19, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 21, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 20, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 24, "y": 34 }
       ]
     },
     {
       "name": "dust-1",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 17,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 18,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 20,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 18,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 25,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 26,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 25,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 25,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "puff-big", "x": 17, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 18, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 20, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 18, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 26, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 25, "y": 34 }
       ]
     },
     {
       "name": "dust-2",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 16,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 17,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 18,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 17,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 25,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 27,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 26,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff-big",
-          "x": 26,
-          "y": 34
-        }
+        { "op": "stamp", "symbol": "puff-big", "x": 16, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 17, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 18, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 17, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 27, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 26, "y": 34 },
+        { "op": "stamp", "symbol": "puff-big", "x": 26, "y": 34 }
       ]
     },
     {
       "name": "dust-3",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 17,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 17,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 18,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 17,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 27,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 28,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 28,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 28,
-          "y": 33
-        }
+        { "op": "stamp", "symbol": "puff", "x": 17, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 17, "y": 33 },
+        { "op": "stamp", "symbol": "puff", "x": 18, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 17, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 27, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 28, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 28, "y": 34 },
+        { "op": "stamp", "symbol": "puff", "x": 28, "y": 33 }
       ]
     },
     {
       "name": "dust-4",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "puff",
-          "x": 16,
-          "y": 34
-        },
+        { "op": "stamp", "symbol": "puff", "x": 16, "y": 34 },
         {
           "op": "grid",
           "x": 16,
@@ -2335,22 +645,8 @@
             ".S."
           ]
         },
-        {
-          "op": "grid",
-          "x": 17,
-          "y": 34,
-          "rows": [
-            "s."
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 16,
-          "y": 34,
-          "rows": [
-            ".S"
-          ]
-        },
+        { "op": "grid", "x": 17, "y": 34, "rows": ["s."] },
+        { "op": "grid", "x": 16, "y": 34, "rows": [".S"] },
         {
           "op": "grid",
           "x": 28,
@@ -2360,564 +656,120 @@
             ".S."
           ]
         },
-        {
-          "op": "grid",
-          "x": 29,
-          "y": 34,
-          "rows": [
-            "s."
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 28,
-          "y": 34,
-          "rows": [
-            ".S"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 28,
-          "y": 34,
-          "rows": [
-            ".S"
-          ]
-        }
+        { "op": "grid", "x": 29, "y": 34, "rows": ["s."] },
+        { "op": "grid", "x": 28, "y": 34, "rows": [".S"] },
+        { "op": "grid", "x": 28, "y": 34, "rows": [".S"] }
       ]
     },
     {
       "name": "dust-6",
       "duration": 70,
-      "ops": [
-        {
-          "op": "grid",
-          "x": 15,
-          "y": 35,
-          "rows": [
-            ".S"
-          ]
-        },
-        {
-          "op": "grid",
-          "x": 28,
-          "y": 34,
-          "rows": [
-            ".S"
-          ]
-        }
-      ]
+      "ops": [{ "op": "grid", "x": 15, "y": 35, "rows": [".S"] }, { "op": "grid", "x": 28, "y": 34, "rows": [".S"] }]
     },
-    {
-      "name": "dust-7",
-      "duration": 70,
-      "ops": [
-        {
-          "op": "grid",
-          "x": 15,
-          "y": 35,
-          "rows": [
-            ".S"
-          ]
-        }
-      ]
-    },
+    { "name": "dust-7", "duration": 70, "ops": [{ "op": "grid", "x": 15, "y": 35, "rows": [".S"] }] },
     {
       "name": "leaves-0",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 21,
-          "y": 17,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 22,
-          "y": 18,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 26,
-          "y": 16,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 28,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 23,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 22,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 18,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 22,
-          "y": 18
-        }
+        { "op": "stamp", "symbol": "leaf-a", "x": 21, "y": 17, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 22, "y": 18, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 26, "y": 16, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 28, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 23, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 22, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 18, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 22, "y": 18 }
       ]
     },
     {
       "name": "leaves-1",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 21,
-          "y": 16,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 20,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 24,
-          "y": 15,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 29,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 24,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 20,
-          "y": 15
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 18,
-          "y": 15
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 21,
-          "y": 18
-        }
+        { "op": "stamp", "symbol": "leaf-b", "x": 21, "y": 16, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 20, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 24, "y": 15, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 29, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 24, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 20, "y": 15 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 18, "y": 15 },
+        { "op": "stamp", "symbol": "leaf-c", "x": 21, "y": 18 }
       ]
     },
     {
       "name": "leaves-2",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 22,
-          "y": 16,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 20,
-          "y": 16,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 23,
-          "y": 13,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 29,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 24,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 18,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 19,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 19,
-          "y": 18
-        }
+        { "op": "stamp", "symbol": "leaf-a", "x": 22, "y": 16, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 20, "y": 16, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 23, "y": 13, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 29, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 24, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 18, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 19, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 19, "y": 18 }
       ]
     },
     {
       "name": "leaves-3",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 21,
-          "y": 15,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 20,
-          "y": 16,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 23,
-          "y": 13,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 30,
-          "y": 16,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 24,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 17,
-          "y": 13
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 20,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 17,
-          "y": 18
-        }
+        { "op": "stamp", "symbol": "leaf-b", "x": 21, "y": 15, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 20, "y": 16, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 23, "y": 13, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 30, "y": 16, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 24, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 17, "y": 13 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 20, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-c", "x": 17, "y": 18 }
       ]
     },
     {
       "name": "leaves-4",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 20,
-          "y": 15,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 19,
-          "y": 15,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 24,
-          "y": 12,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 32,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 25,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 17,
-          "y": 13
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 22,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 17,
-          "y": 18
-        }
+        { "op": "stamp", "symbol": "leaf-a", "x": 20, "y": 15, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 19, "y": 15, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 24, "y": 12, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 32, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 25, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 17, "y": 13 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 22, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 17, "y": 18 }
       ]
     },
     {
       "name": "leaves-5",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 18,
-          "y": 15,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 17,
-          "y": 15,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 25,
-          "y": 12,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 35,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 27,
-          "y": 16
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 18,
-          "y": 13
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 22,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 18,
-          "y": 19
-        }
+        { "op": "stamp", "symbol": "leaf-b", "x": 18, "y": 15, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 17, "y": 15, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 25, "y": 12, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-c", "x": 35, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 27, "y": 16 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 18, "y": 13 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 22, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-c", "x": 18, "y": 19 }
       ]
     },
     {
       "name": "leaves-6",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 19,
-          "y": 15,
-          "remap": {
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 15,
-          "y": 15,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 24,
-          "y": 12,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 35,
-          "y": 17,
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 29,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 17,
-          "y": 13
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 21,
-          "y": 14
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 19,
-          "y": 19
-        }
+        { "op": "stamp", "symbol": "leaf-a", "x": 19, "y": 15, "remap": { "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 15, "y": 15, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 24, "y": 12, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-a", "x": 35, "y": 17, "remap": { "G": "g", "g": "l" } },
+        { "op": "stamp", "symbol": "leaf-b", "x": 29, "y": 17 },
+        { "op": "stamp", "symbol": "leaf-b", "x": 17, "y": 13 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 21, "y": 14 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 19, "y": 19 }
       ]
     },
     {
       "name": "leaves-7",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 20,
-          "y": 15,
-          "remap": {
-            "g": "l"
-          }
-        },
+        { "op": "stamp", "symbol": "leaf-b", "x": 20, "y": 15, "remap": { "g": "l" } },
         {
           "op": "grid",
           "x": 14,
@@ -2926,10 +778,7 @@
             ".l",
             "G."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -2939,10 +788,7 @@
             ".l",
             "gG"
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -2952,23 +798,10 @@
             "g.",
             "G."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 29,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 15,
-          "y": 13
-        },
+        { "op": "stamp", "symbol": "leaf-a", "x": 29, "y": 17 },
+        { "op": "stamp", "symbol": "leaf-a", "x": 15, "y": 13 },
         {
           "op": "grid",
           "x": 20,
@@ -2978,27 +811,14 @@
             "gG"
           ]
         },
-        {
-          "op": "stamp",
-          "symbol": "leaf-c",
-          "x": 18,
-          "y": 20
-        }
+        { "op": "stamp", "symbol": "leaf-c", "x": 18, "y": 20 }
       ]
     },
     {
       "name": "leaves-8",
       "duration": 70,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 20,
-          "y": 16,
-          "remap": {
-            "g": "l"
-          }
-        },
+        { "op": "stamp", "symbol": "leaf-a", "x": 20, "y": 16, "remap": { "g": "l" } },
         {
           "op": "grid",
           "x": 15,
@@ -3007,10 +827,7 @@
             "..",
             ".G"
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -3020,10 +837,7 @@
             "l..",
             ".g."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -3033,17 +847,9 @@
             ".g.",
             "..G"
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
-        {
-          "op": "stamp",
-          "symbol": "leaf-b",
-          "x": 28,
-          "y": 18
-        },
+        { "op": "stamp", "symbol": "leaf-b", "x": 28, "y": 18 },
         {
           "op": "grid",
           "x": 14,
@@ -3062,12 +868,7 @@
             "..G"
           ]
         },
-        {
-          "op": "stamp",
-          "symbol": "leaf-a",
-          "x": 17,
-          "y": 20
-        }
+        { "op": "stamp", "symbol": "leaf-a", "x": 17, "y": 20 }
       ]
     },
     {
@@ -3082,9 +883,7 @@
             ".l",
             "gG"
           ],
-          "remap": {
-            "g": "l"
-          }
+          "remap": { "g": "l" }
         },
         {
           "op": "grid",
@@ -3094,10 +893,7 @@
             "g.",
             ".."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -3107,10 +903,7 @@
             "..",
             "g."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -3120,10 +913,7 @@
             ".l",
             ".."
           ],
-          "remap": {
-            "G": "g",
-            "g": "l"
-          }
+          "remap": { "G": "g", "g": "l" }
         },
         {
           "op": "grid",
@@ -3166,9 +956,7 @@
             "l..",
             ".g."
           ],
-          "remap": {
-            "g": "l"
-          }
+          "remap": { "g": "l" }
         },
         {
           "op": "grid",
@@ -3211,9 +999,7 @@
             ".l",
             ".."
           ],
-          "remap": {
-            "g": "l"
-          }
+          "remap": { "g": "l" }
         },
         {
           "op": "grid",
@@ -3239,660 +1025,165 @@
       "name": "shatter-0",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 22,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 25,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 25,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 22,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 22,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 25,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 25,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 22,
-          "y": 26
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 25 },
+        { "op": "stamp", "symbol": "chip-d", "x": 22, "y": 27 },
+        { "op": "stamp", "symbol": "chip-d", "x": 25, "y": 26 },
+        { "op": "stamp", "symbol": "chip-d", "x": 25, "y": 27 },
+        { "op": "stamp", "symbol": "chip-c", "x": 22, "y": 26 },
+        { "op": "stamp", "symbol": "chip-a", "x": 22, "y": 24 },
+        { "op": "stamp", "symbol": "chip-b", "x": 25, "y": 26 },
+        { "op": "stamp", "symbol": "chip-a", "x": 25, "y": 25 },
+        { "op": "stamp", "symbol": "chip-d", "x": 22, "y": 26 }
       ]
     },
     {
       "name": "shatter-1",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 21,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 20,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 26,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 24,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 24,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 23,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 26,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 20,
-          "y": 25
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 21, "y": 24 },
+        { "op": "stamp", "symbol": "chip-d", "x": 20, "y": 26 },
+        { "op": "stamp", "symbol": "chip-d", "x": 26, "y": 23 },
+        { "op": "stamp", "symbol": "chip-d", "x": 24, "y": 26 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 23 },
+        { "op": "stamp", "symbol": "chip-a", "x": 24, "y": 22 },
+        { "op": "stamp", "symbol": "chip-b", "x": 23, "y": 24 },
+        { "op": "stamp", "symbol": "chip-a", "x": 26, "y": 23 },
+        { "op": "stamp", "symbol": "chip-d", "x": 20, "y": 25 }
       ]
     },
     {
       "name": "shatter-2",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 18,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 18,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 27,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 22,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 25,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 21,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 28,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 19,
-          "y": 25
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 18, "y": 23 },
+        { "op": "stamp", "symbol": "chip-d", "x": 18, "y": 25 },
+        { "op": "stamp", "symbol": "chip-d", "x": 27, "y": 21 },
+        { "op": "stamp", "symbol": "chip-d", "x": 22, "y": 25 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 21 },
+        { "op": "stamp", "symbol": "chip-a", "x": 25, "y": 21 },
+        { "op": "stamp", "symbol": "chip-b", "x": 21, "y": 22 },
+        { "op": "stamp", "symbol": "chip-a", "x": 28, "y": 21 },
+        { "op": "stamp", "symbol": "chip-d", "x": 19, "y": 25 }
       ]
     },
     {
       "name": "shatter-3",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 16,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 15,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 29,
-          "y": 19
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 21,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 26,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 19,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 30,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 17,
-          "y": 25
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 16, "y": 23 },
+        { "op": "stamp", "symbol": "chip-d", "x": 15, "y": 25 },
+        { "op": "stamp", "symbol": "chip-d", "x": 29, "y": 19 },
+        { "op": "stamp", "symbol": "chip-d", "x": 21, "y": 24 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 20 },
+        { "op": "stamp", "symbol": "chip-a", "x": 26, "y": 20 },
+        { "op": "stamp", "symbol": "chip-b", "x": 19, "y": 22 },
+        { "op": "stamp", "symbol": "chip-a", "x": 30, "y": 20 },
+        { "op": "stamp", "symbol": "chip-d", "x": 17, "y": 25 }
       ]
     },
     {
       "name": "shatter-4",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 14,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 13,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 30,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 19,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 19
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 27,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 17,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 31,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 15,
-          "y": 26
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 14, "y": 23 },
+        { "op": "stamp", "symbol": "chip-d", "x": 13, "y": 26 },
+        { "op": "stamp", "symbol": "chip-d", "x": 30, "y": 18 },
+        { "op": "stamp", "symbol": "chip-d", "x": 19, "y": 24 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 19 },
+        { "op": "stamp", "symbol": "chip-a", "x": 27, "y": 20 },
+        { "op": "stamp", "symbol": "chip-b", "x": 17, "y": 21 },
+        { "op": "stamp", "symbol": "chip-a", "x": 31, "y": 20 },
+        { "op": "stamp", "symbol": "chip-d", "x": 15, "y": 26 }
       ]
     },
     {
       "name": "shatter-5",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 12,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 11,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 31,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 18,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 29,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 14,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 33,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 14,
-          "y": 27
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 12, "y": 24 },
+        { "op": "stamp", "symbol": "chip-d", "x": 11, "y": 26 },
+        { "op": "stamp", "symbol": "chip-d", "x": 31, "y": 17 },
+        { "op": "stamp", "symbol": "chip-d", "x": 18, "y": 24 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 18 },
+        { "op": "stamp", "symbol": "chip-a", "x": 29, "y": 20 },
+        { "op": "stamp", "symbol": "chip-b", "x": 14, "y": 21 },
+        { "op": "stamp", "symbol": "chip-a", "x": 33, "y": 20 },
+        { "op": "stamp", "symbol": "chip-d", "x": 14, "y": 27 }
       ]
     },
     {
       "name": "shatter-6",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 10,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 9,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 32,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 16,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 23,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 30,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 12,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 34,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 12,
-          "y": 28
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 10, "y": 25 },
+        { "op": "stamp", "symbol": "chip-d", "x": 9, "y": 28 },
+        { "op": "stamp", "symbol": "chip-d", "x": 32, "y": 17 },
+        { "op": "stamp", "symbol": "chip-d", "x": 16, "y": 25 },
+        { "op": "stamp", "symbol": "chip-c", "x": 23, "y": 18 },
+        { "op": "stamp", "symbol": "chip-a", "x": 30, "y": 20 },
+        { "op": "stamp", "symbol": "chip-b", "x": 12, "y": 21 },
+        { "op": "stamp", "symbol": "chip-a", "x": 34, "y": 20 },
+        { "op": "stamp", "symbol": "chip-d", "x": 12, "y": 28 }
       ]
     },
     {
       "name": "shatter-7",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 7,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 7,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 33,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 15,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 24,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 31,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 10,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 36,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 11,
-          "y": 30
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 7, "y": 27 },
+        { "op": "stamp", "symbol": "chip-d", "x": 7, "y": 29 },
+        { "op": "stamp", "symbol": "chip-d", "x": 33, "y": 17 },
+        { "op": "stamp", "symbol": "chip-d", "x": 15, "y": 26 },
+        { "op": "stamp", "symbol": "chip-c", "x": 24, "y": 18 },
+        { "op": "stamp", "symbol": "chip-a", "x": 31, "y": 21 },
+        { "op": "stamp", "symbol": "chip-b", "x": 10, "y": 22 },
+        { "op": "stamp", "symbol": "chip-a", "x": 36, "y": 21 },
+        { "op": "stamp", "symbol": "chip-d", "x": 11, "y": 30 }
       ]
     },
     {
       "name": "shatter-8",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 5,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 5,
-          "y": 32
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 34,
-          "y": 17
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 14,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 24,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 32,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 8,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 37,
-          "y": 22
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 10,
-          "y": 32
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 5, "y": 29 },
+        { "op": "stamp", "symbol": "chip-d", "x": 5, "y": 32 },
+        { "op": "stamp", "symbol": "chip-d", "x": 34, "y": 17 },
+        { "op": "stamp", "symbol": "chip-d", "x": 14, "y": 28 },
+        { "op": "stamp", "symbol": "chip-c", "x": 24, "y": 18 },
+        { "op": "stamp", "symbol": "chip-a", "x": 32, "y": 22 },
+        { "op": "stamp", "symbol": "chip-b", "x": 8, "y": 24 },
+        { "op": "stamp", "symbol": "chip-a", "x": 37, "y": 22 },
+        { "op": "stamp", "symbol": "chip-d", "x": 10, "y": 32 }
       ]
     },
     {
       "name": "shatter-9",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 3,
-          "y": 31
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 3,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 35,
-          "y": 18
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 12,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 24,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 33,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 6,
-          "y": 25
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 39,
-          "y": 24
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 8,
-          "y": 35
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 3, "y": 31 },
+        { "op": "stamp", "symbol": "chip-d", "x": 3, "y": 34 },
+        { "op": "stamp", "symbol": "chip-d", "x": 35, "y": 18 },
+        { "op": "stamp", "symbol": "chip-d", "x": 12, "y": 30 },
+        { "op": "stamp", "symbol": "chip-c", "x": 24, "y": 20 },
+        { "op": "stamp", "symbol": "chip-a", "x": 33, "y": 24 },
+        { "op": "stamp", "symbol": "chip-b", "x": 6, "y": 25 },
+        { "op": "stamp", "symbol": "chip-a", "x": 39, "y": 24 },
+        { "op": "stamp", "symbol": "chip-d", "x": 8, "y": 35 }
       ]
     },
     {
       "name": "shatter-10",
       "duration": 60,
       "ops": [
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 1,
-          "y": 34
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 1,
-          "y": 35
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 36,
-          "y": 20
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 11,
-          "y": 33
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 24,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 34,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 5,
-          "y": 27
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 40,
-          "y": 26
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 7,
-          "y": 35
-        }
+        { "op": "stamp", "symbol": "chip-c", "x": 1, "y": 34 },
+        { "op": "stamp", "symbol": "chip-d", "x": 1, "y": 35 },
+        { "op": "stamp", "symbol": "chip-d", "x": 36, "y": 20 },
+        { "op": "stamp", "symbol": "chip-d", "x": 11, "y": 33 },
+        { "op": "stamp", "symbol": "chip-c", "x": 24, "y": 21 },
+        { "op": "stamp", "symbol": "chip-a", "x": 34, "y": 26 },
+        { "op": "stamp", "symbol": "chip-b", "x": 5, "y": 27 },
+        { "op": "stamp", "symbol": "chip-a", "x": 40, "y": 26 },
+        { "op": "stamp", "symbol": "chip-d", "x": 7, "y": 35 }
       ]
     },
     {
@@ -3908,48 +1199,13 @@
             "Q"
           ]
         },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 37,
-          "y": 21
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 10,
-          "y": 35
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-c",
-          "x": 24,
-          "y": 23
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 35,
-          "y": 29
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-b",
-          "x": 3,
-          "y": 30
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-a",
-          "x": 41,
-          "y": 28
-        },
-        {
-          "op": "stamp",
-          "symbol": "chip-d",
-          "x": 6,
-          "y": 35
-        }
+        { "op": "stamp", "symbol": "chip-d", "x": 37, "y": 21 },
+        { "op": "stamp", "symbol": "chip-d", "x": 10, "y": 35 },
+        { "op": "stamp", "symbol": "chip-c", "x": 24, "y": 23 },
+        { "op": "stamp", "symbol": "chip-a", "x": 35, "y": 29 },
+        { "op": "stamp", "symbol": "chip-b", "x": 3, "y": 30 },
+        { "op": "stamp", "symbol": "chip-a", "x": 41, "y": 28 },
+        { "op": "stamp", "symbol": "chip-d", "x": 6, "y": 35 }
       ]
     }
   ],
@@ -3989,16 +1245,7 @@
       ]
     },
     "dust": {
-      "frames": [
-        "dust-0",
-        "dust-1",
-        "dust-2",
-        "dust-3",
-        "dust-4",
-        "dust-5",
-        "dust-6",
-        "dust-7"
-      ],
+      "frames": ["dust-0", "dust-1", "dust-2", "dust-3", "dust-4", "dust-5", "dust-6", "dust-7"],
       "loop": false
     },
     "leaves": {

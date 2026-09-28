@@ -1,7 +1,7 @@
 export { PixelError, MAX_REQUEST_BYTES, parseColor, renderProject, buildAtlas, scalePixels, inspectProject, compareProjects, analyzeProject, reviewPixels, animationPosition, animationNeighbors, onionPixels, tileRepeat, tileReport } from './core.js';
 export { patchRecipe } from './patch.js';
 export { encodePNG, encodeAPNG } from './png.js';
-export { createBundle, writeBundle, createZip, generateCSS } from './export.js';
+export { createBundle, writeBundle, createZip, generateCSS, formatJSON } from './export.js';
 export { compilePoses, compileAutotile } from './authoring.js';
 export { compileEffects } from './fx.js';
 export { DITHER_PATTERNS, EASINGS, ease, ditherThreshold, cleanupIds, rotateRows, ruleVariants, rewriteIds } from './craft.js';

@@ -3,13 +3,8 @@
   "name": "crab",
   "width": 32,
   "height": 24,
-  "palette": {
-    "$ref": "../palette.json"
-  },
-  "anchor": [
-    16,
-    19
-  ],
+  "palette": { "$ref": "../palette.json" },
+  "anchor": [16, 19],
   "symbols": {
     "shell": [
       "....kkkkkkkk....",
@@ -91,725 +86,130 @@
       "name": "idle-0",
       "duration": 900,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "idle-1",
       "duration": 140,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-blink",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-blink", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "idle-2",
       "duration": 500,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "walk-0",
       "duration": 110,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "walk-1",
       "duration": 110,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-b",
-              "x": 5,
-              "y": 15
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 9
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 6
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 2,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 23,
-              "y": 7,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-b", "x": 5, "y": 15 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 9 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 6 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 2, "y": 7 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 23, "y": 7, "flipX": true }] }
       ]
     },
     {
       "name": "walk-2",
       "duration": 110,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "walk-3",
       "duration": 110,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-b",
-              "x": 5,
-              "y": 15
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 9
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-open",
-              "x": 11,
-              "y": 6
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 2,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 23,
-              "y": 7,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-b", "x": 5, "y": 15 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 9 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-open", "x": 11, "y": 6 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 2, "y": 7 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 23, "y": 7, "flipX": true }] }
       ]
     },
     {
       "name": "snap-0",
       "duration": 220,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 15
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 9
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-angry",
-              "x": 11,
-              "y": 6
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-raised",
-              "x": 2,
-              "y": 5
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-raised",
-              "x": 23,
-              "y": 5,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 15 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 9 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-angry", "x": 11, "y": 6 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-raised", "x": 2, "y": 5 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-raised", "x": 23, "y": 5, "flipX": true }] }
       ]
     },
     {
       "name": "snap-1",
       "duration": 90,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 14
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-angry",
-              "x": 11,
-              "y": 5
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 2,
-              "y": 6
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 23,
-              "y": 6,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 14 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 8 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-angry", "x": 11, "y": 5 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 2, "y": 6 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 23, "y": 6, "flipX": true }] }
       ]
     },
     {
       "name": "snap-2",
       "duration": 160,
-      "points": {
-        "hit": [
-          3,
-          8
-        ]
-      },
+      "points": { "hit": [3, 8] },
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 16
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 10
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-angry",
-              "x": 11,
-              "y": 7
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 2,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-closed",
-              "x": 23,
-              "y": 8,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 16 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 10 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-angry", "x": 11, "y": 7 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 2, "y": 8 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-closed", "x": 23, "y": 8, "flipX": true }] }
       ]
     },
     {
       "name": "hurt",
       "duration": 200,
       "layers": [
-        {
-          "name": "legs",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "legs-a",
-              "x": 5,
-              "y": 14
-            }
-          ]
-        },
-        {
-          "name": "shell",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "shell",
-              "x": 8,
-              "y": 8
-            }
-          ]
-        },
-        {
-          "name": "eyes",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "eyes-blink",
-              "x": 11,
-              "y": 5
-            }
-          ]
-        },
-        {
-          "name": "clawL",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 2,
-              "y": 6
-            }
-          ]
-        },
-        {
-          "name": "clawR",
-          "ops": [
-            {
-              "op": "stamp",
-              "symbol": "claw-l-open",
-              "x": 23,
-              "y": 6,
-              "flipX": true
-            }
-          ]
-        }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-a", "x": 5, "y": 14 }] },
+        { "name": "shell", "ops": [{ "op": "stamp", "symbol": "shell", "x": 8, "y": 8 }] },
+        { "name": "eyes", "ops": [{ "op": "stamp", "symbol": "eyes-blink", "x": 11, "y": 5 }] },
+        { "name": "clawL", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 2, "y": 6 }] },
+        { "name": "clawR", "ops": [{ "op": "stamp", "symbol": "claw-l-open", "x": 23, "y": 6, "flipX": true }] }
       ]
     }
   ],
   "animations": {
-    "idle": {
-      "frames": [
-        "idle-0",
-        "idle-1",
-        "idle-0",
-        "idle-2"
-      ]
-    },
-    "walk": {
-      "frames": [
-        "walk-0",
-        "walk-1",
-        "walk-2",
-        "walk-3"
-      ]
-    },
-    "snap": {
-      "frames": [
-        "snap-0",
-        "snap-1",
-        "snap-2"
-      ],
-      "loop": false
-    },
-    "hurt": {
-      "frames": [
-        "hurt"
-      ],
-      "loop": false
-    }
+    "idle": { "frames": ["idle-0", "idle-1", "idle-0", "idle-2"] },
+    "walk": { "frames": ["walk-0", "walk-1", "walk-2", "walk-3"] },
+    "snap": { "frames": ["snap-0", "snap-1", "snap-2"], "loop": false },
+    "hurt": { "frames": ["hurt"], "loop": false }
   },
-  "sheet": {
-    "columns": 6,
-    "trim": true
-  }
+  "sheet": { "columns": 6, "trim": true }
 }

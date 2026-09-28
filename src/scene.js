@@ -100,11 +100,15 @@ export function prepareScene(source) {
     if (instance.name !== undefined && typeof instance.name !== 'string') fail(`${path}.name`, 'expected a string label');
     if (typeof instance.asset !== 'string' || !Object.hasOwn(assets, instance.asset)) fail(`${path}.asset`, 'unknown asset');
     const project = assets[instance.asset].recipe;
-    const at = point(instance.at, `${path}.at`), anchor = point(instance.anchor ?? [0, 0], `${path}.anchor`);
+    // `anchor: "frame"` places every drawn frame by its own atlas anchor (per-frame or recipe-level), so an animated
+    // placement follows anchors that change between poses. Otherwise the anchor is one fixed [x, y] in asset pixels.
+    const at = point(instance.at, `${path}.at`), anchor = instance.anchor === 'frame' ? 'frame' : point(instance.anchor ?? [0, 0], `${path}.anchor`);
+    if (anchor === 'frame' && !project.frames.some(frame => frame.anchor)) warnings.push(`${instance.name ?? i}: anchor "frame" but ${instance.asset} declares no anchors; its frames are placed by their top-left corner.`);
     if (instance.scale !== undefined && !Number.isInteger(instance.scale)) fail(`${path}.scale`, 'fractional sprite scaling creates inconsistent pixel sizes; use an integer or author a smaller asset');
     const scale = int(instance.scale ?? 1, 1, 16, `${path}.scale`);
     if (instance.tilemap !== undefined) {
       for (const key of ['frame', 'animation', 'repeat', 'step', 'sequence', 'trajectory']) if (instance[key] !== undefined) fail(`${path}.${key}`, 'tilemap placements choose frames through their legend');
+      if (anchor === 'frame') fail(`${path}.anchor`, 'a tilemap is placed by one [x, y] anchor in map pixels, not per frame');
       const tilemap = expandTilemap(instance.tilemap, project, `${path}.tilemap`);
       count += tilemap.cells.length; work += tilemap.cells.length * project.width * project.height * scale ** 2;
       if (count > MAX_DRAWS || work > MAX_WORK) fail(path, 'scene exceeds 4,096 draws or 4,194,304 drawing pixels');
@@ -220,8 +224,9 @@ export function renderScene(scene, { time = 0, lit = true, density = false } = {
         if (time <= b.time) { const fraction = ease(a.ease ?? 'linear', (time - a.time) / (b.time - a.time)); position = a.at.map((v, axis) => Math.round(v + (b.at[axis] - v) * fraction)); break; }
       }
     }
+    const anchor = instance.anchor === 'frame' ? frame.anchor ?? [0, 0] : instance.anchor;
     for (let ry = 0; ry < instance.repeat[1]; ry++) for (let rx = 0; rx < instance.repeat[0]; rx++) {
-      const left = position[0] - instance.anchor[0] * s + rx * instance.step[0], top = position[1] - instance.anchor[1] * s + ry * instance.step[1];
+      const left = position[0] - anchor[0] * s + rx * instance.step[0], top = position[1] - anchor[1] * s + ry * instance.step[1];
       placements.push({ name: instance.name ?? instance.asset, frame: frame.name, x: left, y: top, w: project.width * s, h: project.height * s, scale: s });
       drawFrame(asset, index, left, top, s, label);
     }

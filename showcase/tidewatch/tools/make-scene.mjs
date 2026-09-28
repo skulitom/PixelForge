@@ -2,26 +2,15 @@
 // PixelForge scene viewer can review it (native size, grayscale, density, lighting). Assets are file references and
 // the terrain is three tilemap placements, so the manifest stays small and always shows the current recipes.
 // Usage: node tools/make-scene.mjs <name> <tileX> <tileY> [--night]
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { renderProject, resolveReferences } from '../../../src/index.js';
-import { root, writeJSON } from './common.mjs';
+import { writeJSON } from './common.mjs';
 import { OBJECTS, isSand, isGrass } from '../game/src/map.js';
 const [name = 'headland', tx = '12', ty = '0'] = process.argv.slice(2), night = process.argv.includes('--night');
 const X0 = Number(tx), Y0 = Number(ty), COLS = 15, ROWS = 10;
-// Scene asset paths are relative to art/scenes/. Placement anchors are read from the recipes themselves.
+// Scene asset paths are relative to art/scenes/. Sprites use `anchor: "frame"`, so the scene places every drawn frame
+// by its own atlas anchor, as the game does, including animations whose anchors change between frames.
 const file = recipe => `../recipes/${recipe}.json`;
 const lit = recipe => ({ recipe: file(recipe), normal: file(`${recipe}-normal`), emissive: file(`${recipe}-emissive`) });
 const assets = { water: file('water'), shore: file('shore'), grass: file('grass'), props: file('props'), flora: file('flora'), rocks: file('rocks'), keeper: file('keeper'), lighthouse: lit('lighthouse'), lamp: lit('lamp') };
-const projects = {};
-for (const id of Object.keys(assets)) {
-  const source = path.join(root, 'art/recipes', `${id}.json`);
-  projects[id] = renderProject((await resolveReferences(JSON.parse(readFileSync(source, 'utf8')), { baseDir: path.dirname(source) })).document);
-}
-const anchorOf = (asset, { frame, animation }) => {
-  const project = projects[asset], index = frame !== undefined ? project.frames.findIndex(f => f.name === frame) : project.animations[animation].frames[0];
-  return project.frames[index].anchor ?? [0, 0];
-};
 // Terrain tilemaps carry a one-tile ring of context cells (legend null) so edge tiles see the map beyond the window.
 const framed = (inside, outside) => Array.from({ length: ROWS + 2 }, (_, j) => Array.from({ length: COLS + 2 }, (_, i) => {
   const x = X0 + i - 1, y = Y0 + j - 1, edge = i === 0 || j === 0 || i === COLS + 1 || j === ROWS + 1;
@@ -42,9 +31,9 @@ const visible = OBJECTS.map(([kind, x, y, extra = {}]) => ({ kind, x: x * 16 + 8
   .sort((a, b) => a.y - b.y);
 for (const o of visible) {
   const asset = ASSET[o.kind] ?? 'props', anim = night || o.kind === 'grass' ? ANIM[o.kind] : undefined, pick = anim ? { animation: anim } : { frame: FRAME[o.kind] ?? o.kind };
-  instances.push({ name: o.kind, asset, at: [o.x, o.y], anchor: anchorOf(asset, pick), ...pick });
+  instances.push({ name: o.kind, asset, at: [o.x, o.y], anchor: 'frame', ...pick });
 }
-instances.push({ name: 'keeper', asset: 'keeper', animation: 'idle-u', at: [8 * 16 + 8, 9 * 16 + 4], anchor: anchorOf('keeper', { animation: 'idle-u' }) });
+instances.push({ name: 'keeper', asset: 'keeper', animation: 'idle-u', at: [8 * 16 + 8, 9 * 16 + 4], anchor: 'frame' });
 const lighthouse = visible.find(o => o.kind === 'lighthouse'), lamps = visible.filter(o => o.kind === 'lamp');
 // scope "all" lights the terrain and props as flat surfaces too, so the night preview darkens the whole island.
 const scene = { format: 'pixelforge-scene', version: 1, name: `tidewatch-${name}${night ? '-night' : ''}`, width: COLS * 16, height: ROWS * 16, duration: 2400, background: '#213f7a', assets, instances,

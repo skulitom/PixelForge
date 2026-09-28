@@ -108,7 +108,7 @@ The metadata exports each pose origin, resolved part anchors/points, markers, an
 
 ## Scene and tile review
 
-Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to recipes (inline or file references) or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame`, `animation` or a `tilemap`. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at,ease?}]` starts at time 0, interpolates between authored positions and rounds to whole pixels; it holds the last position. Each key's `ease` shapes the segment that starts at it: `linear` (default), `hold` (stay, then jump at the next key), `in`, `out`, `inOut`, `overshoot` or `bounce`. This is an explicit preview path, not inferred movement or physics.
+Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to recipes (inline or file references) or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame`, `animation` or a `tilemap`. The anchor is one `[x, y]` in asset pixels (default `[0, 0]`), or `"frame"` to place every drawn frame by its own atlas anchor (per-frame or recipe-level), so an animated placement follows anchors that change between poses, as `drawFrame` does in a game. Tilemaps take `[x, y]` only. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at,ease?}]` starts at time 0, interpolates between authored positions and rounds to whole pixels; it holds the last position. Each key's `ease` shapes the segment that starts at it: `linear` (default), `hold` (stay, then jump at the next key), `in`, `out`, `inOut`, `overshoot` or `bounce`. This is an explicit preview path, not inferred movement or physics.
 
 ```sh
 node bin/pixelforge.js preview examples/quality/hollow.scene.json
@@ -150,7 +150,7 @@ Draw it like a tiny island in the sea: the island's four corner quadrants are ou
 node bin/pixelforge.js autotile shore.autotile.json --out shore.json
 ```
 
-Every compiled frame is four `copy` operations from the `template` symbol, so editing the template in the compiled recipe updates the whole set. Use the same masks in a scene `tilemap` legend (`"autotile": "blob"`) or in a game.
+Every compiled frame is one `autotile` operation naming its neighbour mask, drawn from the `template` symbol, so a frame reads as `{"op": "autotile", "symbol": "template", "mask": 23}` and editing the template in the compiled recipe updates the whole set. Use the same masks in a scene `tilemap` legend (`"autotile": "blob"`) or in a game.
 
 ## Particle effects
 

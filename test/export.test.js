@@ -5,7 +5,7 @@ import { readFile, mkdtemp, rm, access } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { encodePNG, encodeAPNG } from '../src/png.js';
-import { createBundle, writeBundle, createZip } from '../src/export.js';
+import { createBundle, writeBundle, createZip, formatJSON } from '../src/export.js';
 
 export function pngChunks(buffer) {
   const result = []; let at = 8;
@@ -55,4 +55,45 @@ test('all bundled examples validate and produce complete exports', async () => {
     const bundle = await createBundle(project); assert.equal(bundle.project.warnings.length, 0);
     assert.equal(bundle.files.get(`${name}.png`).subarray(1,4).toString(), 'PNG');
   }
+});
+
+test('formatJSON keeps short records on one line and grids one row per line, and parses back to the same value', () => {
+  const recipe = { version: 1, name: 'x', width: 8, height: 8, palette: { a: '#fff' }, symbols: { dot: ['a'], box: ['aa', 'aa'] },
+    frames: [{ name: 'f', duration: 100, ops: [{ op: 'stamp', symbol: 'box', x: 1, y: 1 }, { op: 'grid', rows: ['a.', '.a'] }] }], animations: { idle: { frames: ['f'] } } };
+  const text = formatJSON(recipe);
+  assert.deepEqual(JSON.parse(text), recipe);
+  assert.equal(text, `{
+  "version": 1,
+  "name": "x",
+  "width": 8,
+  "height": 8,
+  "palette": { "a": "#fff" },
+  "symbols": {
+    "dot": ["a"],
+    "box": [
+      "aa",
+      "aa"
+    ]
+  },
+  "frames": [
+    {
+      "name": "f",
+      "duration": 100,
+      "ops": [
+        { "op": "stamp", "symbol": "box", "x": 1, "y": 1 },
+        {
+          "op": "grid",
+          "rows": [
+            "a.",
+            ".a"
+          ]
+        }
+      ]
+    }
+  ],
+  "animations": { "idle": { "frames": ["f"] } }
+}
+`);
+  assert.equal(formatJSON({ a: [], b: {}, c: undefined }), '{ "a": [], "b": {} }\n');
+  assert.ok(formatJSON({ frames: Array.from({ length: 40 }, (_, i) => `frame-${i}`) }).split('\n').every(line => line.length <= 120));
 });

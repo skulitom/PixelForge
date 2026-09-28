@@ -169,15 +169,23 @@
             "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
           },
           "anchor": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": -4096,
-              "maximum": 4096
-            },
-            "maxItems": 2,
-            "minItems": 2,
-            "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -4096,
+                  "maximum": 4096
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+              },
+              {
+                "const": "frame"
+              }
+            ],
+            "description": "[x, y] in asset pixels placed at `at` (default [0, 0]), or \"frame\" to place every drawn frame by its own atlas anchor, so animated placements follow per-frame anchors. Tilemaps take [x, y] only."
           },
           "scale": {
             "type": "integer",
@@ -1090,6 +1098,61 @@
             }
           ],
           "description": "Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA)."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "autotile"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "symbol": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+              "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+            },
+            "mask": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255,
+              "description": "Neighbour mask. Blob: N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128, reduced so a diagonal counts only with both of its sides. Cardinal: N=1, E=2, S=4, W=8."
+            },
+            "mode": {
+              "enum": [
+                "blob",
+                "cardinal"
+              ],
+              "description": "blob (default) or cardinal."
+            },
+            "remap": {
+              "type": "object",
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+              },
+              "description": "Recolor grid characters for this operation only: character → palette name or colour."
+            }
+          },
+          "required": [
+            "op",
+            "symbol",
+            "mask"
+          ],
+          "additionalProperties": false,
+          "description": "Draw one autotile tile from a template symbol two tiles wide and three tall: the four quarters the mask selects (see the autotile template format). The autotile compiler emits one per frame, so editing the template redraws every tile."
         },
         {
           "type": "object",

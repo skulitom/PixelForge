@@ -2,6 +2,13 @@
 
 27 September 2026 · Baseline `1e47c22` (0.1.0) · Windows 11, Node v24.19.0 · Browser checks in the Chromium pane of the Claude desktop app.
 
+## Update 3: compact compiled terrain and frame anchors in scenes
+
+28 September 2026. Two of the open items below are fixed.
+
+- **Compiled terrain.** A new `autotile` drawing operation draws one tile from the template symbol for a neighbour mask, and the autotile compiler emits one per frame instead of four `copy` operations. Every shore and grass frame renders pixel-identical, and all 91 game exports are unchanged. Separately, files the CLI generates (`compile`, `autotile`, `import`, `overlay`) now use compact formatting: records that fit in 120 columns stay on one line and grids keep one row per line. Together these took `shore.json` from 184 KB to 44 KB and `grass.json` from 40 KB to 6.6 KB. With the recompiled keeper, crab and effects recipes and their metadata, the compiled Tidewatch sources went from 399 KB to 151 KB, with identical contents apart from the terrain ops.
+- **Frame anchors in scenes.** A scene instance may set `anchor: "frame"` to place every drawn frame by its own atlas anchor, so animated placements follow per-frame anchors. `make-scene.mjs` now uses it instead of rendering each recipe to copy its first frame's anchor. The headland manifest dropped from 10.8 KB to 9.8 KB and renders identically at all 48 sampled times, because Tidewatch's props keep one anchor per animation.
+
 ## Update 2: effects rebuilt with the particle compiler
 
 28 September 2026. After PixelForge gained `pixelforge-fx` (seeded particle emitters compiled to ordinary recipes), Tidewatch's `fx` recipe was rebuilt from a source file, `art/effects/fx.fx.json`, instead of the hand-written particle code in `tools/make-fx.mjs`.
@@ -54,8 +61,8 @@ After the first pass I fixed every bug and implemented every missing feature bel
 
 - **TW-B6 — P3, fixed: banded scene lighting shifted hues.** Each colour channel was banded separately, so a warm light changed band at a different distance per channel, painting rainbow rings. This was barely visible while only lit buildings were shaded; `scope: "all"` exposed it across the terrain. Each light's brightness is now banded once and then tinted, and ambient light is no longer banded. The quality lab's lantern images were regenerated.
 - **TW-M11 — added: context cells.** A tilemap cut from a larger map could not see neighbours beyond its edge, so edge tiles drew false coastlines. A `null` legend entry now marks cells that count for matching but are never drawn.
-- **Open: verbose compiled recipes.** `shore.json` grew from 157 KB to 184 KB, because each frame spells out four `copy` ops and a palette, while its template is 3 KB.
-- **Open: scene placements ignore frame anchors.** `make-scene.mjs` reads anchors from the recipes and passes them explicitly. An animated placement cannot follow per-frame anchors.
+- **Fixed in Update 3: verbose compiled recipes.** `shore.json` grew from 157 KB to 184 KB, because each frame spells out four `copy` ops and a palette, while its template is 3 KB.
+- **Fixed in Update 3: scene placements ignore frame anchors.** `make-scene.mjs` reads anchors from the recipes and passes them explicitly. An animated placement cannot follow per-frame anchors.
 - **Open: two mirror conventions.** The pose compiler's `mirror` reflects around the origin pixel column, which matched the hand-mirrored art. The runtime's `drawFrame` flips around the anchor corner. They differ by one pixel, so use one or the other for a given asset.
 
 **Checks.** `npm test` passes 104/104. `check:quality`, `check:tidewatch`, the Emberfall stress run (0 findings) and the Pillow checks (`verify-exports.py`, `verify-quality.py`, `verify-trim.py`, `verify-emberfall.py`) all pass. I checked the scene viewer's light picker in the browser pane.

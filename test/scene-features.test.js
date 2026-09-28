@@ -74,3 +74,19 @@ test('scene file and revision references must be resolved before rendering', () 
   assert.throws(() => prepareScene(scene([], { assets: { tiles: 'tiles.json' } })), /resolved by the CLI and MCP/);
   assert.throws(() => prepareScene(scene([], { assets: { tiles: { revision: 'abc123abc123' } } })), /resolved by the CLI and MCP/);
 });
+
+test('anchor "frame" places each drawn frame by its own anchor, so animated placements follow per-frame anchors', () => {
+  const hopper = { version: 1, name: 'hopper', width: 4, height: 4, palette: { a: '#f00' }, anchor: [1, 3], frames: [
+    { name: 'stand', duration: 100, ops: [{ op: 'pixel', x: 1, y: 3, color: 'a' }] },
+    { name: 'lean', duration: 100, anchor: [2, 3], ops: [{ op: 'pixel', x: 2, y: 3, color: 'a' }] }
+  ], animations: { step: { frames: ['stand', 'lean'] } } };
+  const placed = (anchor, time) => renderScene(prepareScene({ format: 'pixelforge-scene', version: 1, name: 'anchors', width: 8, height: 6, background: '#000', assets: { hopper },
+    instances: [{ asset: 'hopper', at: [4, 4], animation: 'step', ...(anchor !== undefined && { anchor }) }] }), { time }).placements[0];
+  // Each frame's anchor pixel lands on `at`, even though the anchor moves between frames.
+  assert.deepEqual([placed('frame', 0).x, placed('frame', 150).x], [3, 2]);
+  assert.deepEqual([placed([1, 3], 0).x, placed([1, 3], 150).x], [3, 3]);
+  assert.deepEqual([placed(undefined, 0).x, placed(undefined, 0).y], [4, 4]);
+  const plain = prepareScene(scene([{ name: 'loose', asset: 'tiles', at: [2, 2], frame: 'red', anchor: 'frame' }]));
+  assert.match(plain.warnings.join(), /declares no anchors/);
+  assert.throws(() => prepareScene(scene([{ asset: 'tiles', at: [0, 0], anchor: 'frame', tilemap: { rows: ['r'], legend: { r: 'red' } } }])), /tilemap is placed by one \[x, y\] anchor/);
+});

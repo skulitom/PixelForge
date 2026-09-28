@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -138,7 +138,8 @@ try {
         value = imported.recipe; metadata = imported.provenance;
       }
       if (options.metadata && !/\.json$/i.test(options.metadata)) throw new Error('--metadata must name a .json file');
-      const written = await writeOutputs({ recipe: [options.out, JSON.stringify(value, null, 2) + '\n'], ...(options.metadata && { metadata: [options.metadata, JSON.stringify(metadata, null, 2) + '\n'] }) }, options.force);
+      // Generated files use compact formatting: one line per frame, operation or short grid when it fits.
+      const written = await writeOutputs({ recipe: [options.out, formatJSON(value)], ...(options.metadata && { metadata: [options.metadata, formatJSON(metadata)] }) }, options.force);
       console.log(JSON.stringify({ ok: true, ...written, ...(metadata && !options.metadata && { metadata }), ...(input && referenced(input)) }, null, 2));
     } else if (command === 'scene') {
       if (!options.out) throw new Error('scene requires --out <directory>');

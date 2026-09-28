@@ -1,5 +1,5 @@
 import { writeFile, mkdir } from 'node:fs/promises';
-import { compileEffects, compilePoses } from '../src/index.js';
+import { compileEffects, compilePoses, formatJSON } from '../src/index.js';
 const rows = source => source.map(row => row.padEnd(16, '.'));
 const spirit = rows([
   '........dd',
@@ -104,5 +104,8 @@ const swing = { format: 'pixelforge-poses', version: 1, name: 'swing', width: 40
   animations: { swing: { frames: ['raise', 'swing-1', 'swing-2', 'strike', 'follow'], loop: false } } };
 
 await mkdir(new URL('../examples/', import.meta.url), { recursive: true });
-const files = { 'forest-spirit': forest, ember, coin, shrine, 'effects.fx': effects, effects: compileEffects(effects).recipe, 'swing.poses': swing, swing: compilePoses(swing).recipe };
-for (const [name, value] of Object.entries(files)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
+// Authored sources are pretty-printed; compiled recipes use the CLI's compact formatting.
+const authored = { 'forest-spirit': forest, ember, coin, shrine, 'effects.fx': effects, 'swing.poses': swing };
+const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe };
+for (const [name, value] of Object.entries(authored)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
+for (const [name, value] of Object.entries(compiled)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), formatJSON(value));

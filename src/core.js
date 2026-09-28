@@ -1,5 +1,6 @@
 // Browser-compatible, deterministic rasterizer. No I/O and no dependencies.
 import { patternProblem, ditherThreshold, traceLine, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
+import { reduceBlobMask, quadrantPieces, templatePiece } from './autotile.js';
 export class PixelError extends Error {
   constructor(path, message) { super(`${path}: ${message}`); this.name = 'PixelError'; this.path = path; }
 }
@@ -134,6 +135,7 @@ export function renderProject(spec, options = {}) {
         grid: ['x', 'y', 'rows', ...transform, 'remap'],
         stamp: ['x', 'y', 'symbol', ...transform, 'remap'], replace: ['from', 'to'],
         copy: ['x', 'y', 'from', 'symbol', 'sx', 'sy', 'w', 'h', ...transform, 'remap'],
+        autotile: ['x', 'y', 'symbol', 'mask', 'mode', 'remap'],
         outline: ['color', 'diagonal', 'position', 'width', 'directions'],
         dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'over'],
         rewrite: ['x', 'y', 'w', 'h', 'rules', 'empty', 'steps', 'chance', 'limit', 'seed', 'rotate', 'mirror']
@@ -221,6 +223,24 @@ export function renderProject(spec, options = {}) {
         const sx = integer(op.sx ?? 0, `${p}.sx`, 0, sourceWidth - 1), sy = integer(op.sy ?? 0, `${p}.sy`, 0, sourceHeight - 1);
         const w = integer(op.w ?? sourceWidth - sx, `${p}.w`, 1, sourceWidth - sx), h = integer(op.h ?? sourceHeight - sy, `${p}.h`, 1, sourceHeight - sy);
         drawCells(w, h, (gx, gy) => read(sx + gx, sy + gy));
+      } else if (op.op === 'autotile') {
+        // One tile of an autotile set: the four quarters a neighbour mask selects from a template symbol two tiles wide
+        // and three tall (see autotile.js). The autotile compiler emits one per frame, so editing the template
+        // redraws every tile. Blob masks are reduced (a diagonal counts only with both of its sides).
+        if (typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a template symbol');
+        const grid = symbols[op.symbol];
+        if (!grid) fail(`${p}.symbol`, `unknown symbol ${JSON.stringify(op.symbol)}`);
+        const tile = grid.width / 2;
+        if (!Number.isInteger(tile) || tile % 2 || grid.height !== tile * 3) fail(`${p}.symbol`, 'an autotile template is two tiles wide and three tall, with an even tile size');
+        const mode = op.mode ?? 'blob';
+        if (!['blob', 'cardinal'].includes(mode)) fail(`${p}.mode`, 'expected blob or cardinal');
+        const mask = integer(op.mask, `${p}.mask`, 0, mode === 'cardinal' ? 15 : 255);
+        const pieces = quadrantPieces(mode, mode === 'cardinal' ? mask : reduceBlobMask(mask)), q = tile / 2, sample = paletteSampler();
+        spend(tile * tile);
+        for (const [position, [ox, oy]] of [['tl', [0, 0]], ['tr', [q, 0]], ['bl', [0, q]], ['br', [q, q]]]) {
+          const [sx, sy] = templatePiece(tile, position, pieces[position]);
+          for (let gy = 0; gy < q; gy++) for (let gx = 0; gx < q; gx++) { const c = sample(grid.rows[sy + gy][sx + gx]); if (c) put(x + ox + gx, y + oy + gy, c); }
+        }
       } else if (op.op === 'outline') {
         // Outside rings surround the visible pixels drawn so far in this buffer (frame or layer); inside rings recolor
         // its edge pixels. `directions` marks, on a 3×3 grid centred on a visible pixel, the sides that get the line:
