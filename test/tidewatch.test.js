@@ -81,7 +81,8 @@ test('Tidewatch: the game places sprites from atlas anchors and reads reach, hel
   assert.equal(keeper.frames['idle-d'].trimmed, true);
   // Mirrored left-facing strikes carry mirrored blade tips.
   const right = keeper.frames['attack-r-2'].points.hit, left = keeper.frames['attack-l-2'].points.hit;
-  assert.equal(right.x + left.x, 2 * 20); assert.equal(right.y, left.y);
+  // Pixels reflect around the anchor corner x = 20: column c becomes 39 - c, as drawFrame flips.
+  assert.equal(right.x + left.x, 2 * 20 - 1); assert.equal(right.y, left.y);
   assert.ok(keeper.frames['hold-up'].points.item);
   assert.deepEqual([props.frames.pot.anchor, props.frames['flower-red'].anchor, props.frames.chest.anchor], [{ x: 8, y: 13 }, { x: 8, y: 11 }, { x: 8, y: 12 }]);
   assert.deepEqual([font.frames.uM.points.advance.x, font.frames.period.points.advance.x], [6, 2]);

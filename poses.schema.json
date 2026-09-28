@@ -118,7 +118,7 @@
           "mirror": {
             "type": "string",
             "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
-            "description": "Reflect an earlier pose around its origin column (parts, points and markers); omit parts, markers and origin."
+            "description": "Reflect an earlier pose (parts, points and markers) around its origin corner: pixel column c becomes 2 × originX − 1 − c, as drawFrame's flipX does. Omit parts, markers and origin."
           },
           "tween": {
             "type": "object",

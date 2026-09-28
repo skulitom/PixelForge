@@ -62,13 +62,15 @@ export function compilePoses(source) {
     if (Object.hasOwn(compiled, pose.name)) fail(`${path}.name`, 'duplicate pose');
     let origin, placed, layers, markers, inputs = null, tween = null;
     if (pose.mirror !== undefined) {
-      // A horizontal mirror of an earlier pose around its origin column: pixel column c maps to 2 * originX - c.
+      // A horizontal mirror of an earlier pose around its origin, the anchor corner between pixel columns originX - 1
+      // and originX: pixel column c maps to 2 * originX - 1 - c. This is the same reflection as drawFrame's flipX and
+      // engines that flip around the atlas pivot, so a compiled mirror and a runtime flip draw identical pixels.
       for (const key of ['parts', 'markers', 'origin', 'tween']) if (pose[key] !== undefined) fail(`${path}.${key}`, 'mirrored poses reuse the source pose, its markers and its origin');
       identifier(pose.mirror, `${path}.mirror`);
       const from = compiled[pose.mirror];
       if (!from) fail(`${path}.mirror`, 'must name an earlier pose');
       origin = from.origin;
-      const reflect = x => 2 * origin[0] - x;
+      const reflect = x => 2 * origin[0] - 1 - x;
       placed = Object.create(null); layers = [];
       for (const layer of from.layers) {
         const instance = from.placed[layer.name], stamp = layer.ops[0], width = symbols[stamp.symbol][0].length;

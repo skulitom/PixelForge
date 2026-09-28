@@ -560,56 +560,56 @@
       "name": "idle-l",
       "duration": 600,
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 16, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 15, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] }
       ]
     },
     {
       "name": "breathe-l",
       "duration": 400,
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pass", "x": 17, "y": 29, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 16, "y": 22, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 9, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pass", "x": 16, "y": 29, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 15, "y": 22, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 9, "flipX": true }] }
       ]
     },
     {
       "name": "walk-l-1",
       "duration": 140,
-      "points": { "step": [16, 31] },
+      "points": { "step": [15, 31] },
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-c1", "x": 14, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-back", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-c1", "x": 13, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-back", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] }
       ]
     },
     {
       "name": "walk-l-2",
       "duration": 120,
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pb", "x": 17, "y": 29, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 16, "y": 22, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 9, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pb", "x": 16, "y": 29, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 15, "y": 22, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 9, "flipX": true }] }
       ]
     },
     {
       "name": "walk-l-3",
       "duration": 140,
-      "points": { "step": [16, 31] },
+      "points": { "step": [15, 31] },
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-c2", "x": 14, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-fwd", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-c2", "x": 13, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-fwd", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] }
       ]
     },
     {
       "name": "walk-l-4",
       "duration": 120,
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pa", "x": 17, "y": 29, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 16, "y": 22, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 9, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r-pa", "x": 16, "y": 29, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 15, "y": 22, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 9, "flipX": true }] }
       ]
     },
     {
@@ -634,9 +634,9 @@
       "name": "hurt-l",
       "duration": 300,
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 16, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r-hurt", "x": 11, "y": 10, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 15, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r-hurt", "x": 10, "y": 10, "flipX": true }] }
       ]
     },
     {
@@ -741,34 +741,34 @@
     {
       "name": "attack-l-1",
       "duration": 70,
-      "points": { "blade": [34, 24] },
+      "points": { "blade": [33, 24] },
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 16, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] },
-        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-windup", "x": 19, "y": 22, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 15, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] },
+        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-windup", "x": 18, "y": 22, "flipX": true }] }
       ]
     },
     {
       "name": "attack-l-2",
       "duration": 150,
-      "points": { "hit": [4, 24] },
+      "points": { "hit": [3, 24] },
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 16, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] },
-        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-strike", "x": 3, "y": 22, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 15, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] },
+        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-strike", "x": 2, "y": 22, "flipX": true }] }
       ]
     },
     {
       "name": "attack-l-3",
       "duration": 90,
-      "points": { "blade": [14, 31] },
+      "points": { "blade": [13, 31] },
       "layers": [
-        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 16, "y": 30, "flipX": true }] },
-        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 16, "y": 23, "flipX": true }] },
-        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 11, "y": 10, "flipX": true }] },
-        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-recover", "x": 13, "y": 24, "flipX": true }] }
+        { "name": "legs", "ops": [{ "op": "stamp", "symbol": "legs-r", "x": 15, "y": 30, "flipX": true }] },
+        { "name": "body", "ops": [{ "op": "stamp", "symbol": "body-r-noarm", "x": 15, "y": 23, "flipX": true }] },
+        { "name": "head", "ops": [{ "op": "stamp", "symbol": "head-r", "x": 10, "y": 10, "flipX": true }] },
+        { "name": "sword", "ops": [{ "op": "stamp", "symbol": "sa-r-recover", "x": 12, "y": 24, "flipX": true }] }
       ]
     },
     {

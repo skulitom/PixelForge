@@ -49,7 +49,7 @@ test('MCP compiles pose sources and autotile templates into revisions it can ren
     poses: [{ name: 'right', origin: [2, 3], parts: [{ name: 'body', part: 'body' }], markers: [{ name: 'hand', part: 'body', point: 'hand' }] }, { name: 'left', mirror: 'right' }] };
   const compiled = await mcp.call('pixel_compile', { source: poses, metadata: true });
   assert.ok(!compiled.result.isError, JSON.stringify(compiled.info)); assert.equal(compiled.result.content[1].mimeType, 'image/png');
-  assert.equal(compiled.info.frames, 2); assert.deepEqual(compiled.info.metadata.poses.left.markers[0].at, [1, 3]); // hand (3, 3) reflected around origin column 2
+  assert.equal(compiled.info.frames, 2); assert.deepEqual(compiled.info.metadata.poses.left.markers[0].at, [0, 3]); // hand (3, 3) reflected around the origin corner x = 2
   const template = Array.from({ length: 6 }, () => 'gggg');
   const tiles = await mcp.call('pixel_compile', { source: { format: 'pixelforge-autotile', version: 1, name: 'turf', tile: 2, palette: { g: '#0a0' }, template, frame: 'turf-{mask}' } });
   assert.equal(tiles.info.frames, 47);

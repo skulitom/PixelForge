@@ -94,7 +94,7 @@ test('rotated pose parts bake into editable symbols and carry their points', () 
   assert.deepEqual([recipe.symbols['upper-r90'], recipe.symbols['blade-r45']], [['a', 'a', 'a', 'a'], ['b...', '.b..', '..b.', '...c']]);
   assert.deepEqual(metadata.poses.down.parts.sword.points.tip, [4, 15]);
   assert.deepEqual(recipe.frames.find(f => f.name === 'slant').points, { tip: [9, 13] });
-  assert.deepEqual(metadata.poses.back.parts.arm, { definition: 'upper', symbol: 'upper-r90', flipX: true, rotate: -90, topLeft: [4, 8], anchor: [4, 8], points: { elbow: [4, 11] } });
+  assert.deepEqual(metadata.poses.back.parts.arm, { definition: 'upper', symbol: 'upper-r90', flipX: true, rotate: -90, topLeft: [3, 8], anchor: [3, 8], points: { elbow: [3, 11] } });
   assert.deepEqual(recipe.frames.find(f => f.name === 'down').layers[1].ops, [{ op: 'stamp', symbol: 'blade-r90', x: 4, y: 11 }]);
   // Unrotated parts compile exactly as before: plain stamps of the definition.
   assert.deepEqual(recipe.frames[0].layers[0].ops, [{ op: 'stamp', symbol: 'upper', x: 4, y: 8 }]);

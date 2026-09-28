@@ -202,18 +202,18 @@
         "legs": {
           "definition": "legs-r",
           "flipX": true,
-          "topLeft": [16, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29] }
+          "topLeft": [15, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29] }
         },
         "body": {
           "definition": "body-r",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} }
       },
       "markers": []
     },
@@ -224,18 +224,18 @@
         "legs": {
           "definition": "legs-r-pass",
           "flipX": true,
-          "topLeft": [17, 29],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 28] }
+          "topLeft": [16, 29],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 28] }
         },
         "body": {
           "definition": "body-r",
           "flipX": true,
-          "topLeft": [16, 22],
-          "anchor": [20, 28],
-          "points": { "neck": [20, 21] }
+          "topLeft": [15, 22],
+          "anchor": [19, 28],
+          "points": { "neck": [19, 21] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 9], "anchor": [20, 21], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 9], "anchor": [19, 21], "points": {} }
       },
       "markers": []
     },
@@ -246,20 +246,20 @@
         "legs": {
           "definition": "legs-r-c1",
           "flipX": true,
-          "topLeft": [14, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29], "foot": [16, 31] }
+          "topLeft": [13, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29], "foot": [15, 31] }
         },
         "body": {
           "definition": "body-r-back",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} }
       },
-      "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [16, 31] }]
+      "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [15, 31] }]
     },
     "walk-l-2": {
       "origin": [20, 31],
@@ -268,18 +268,18 @@
         "legs": {
           "definition": "legs-r-pb",
           "flipX": true,
-          "topLeft": [17, 29],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 28] }
+          "topLeft": [16, 29],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 28] }
         },
         "body": {
           "definition": "body-r",
           "flipX": true,
-          "topLeft": [16, 22],
-          "anchor": [20, 28],
-          "points": { "neck": [20, 21] }
+          "topLeft": [15, 22],
+          "anchor": [19, 28],
+          "points": { "neck": [19, 21] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 9], "anchor": [20, 21], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 9], "anchor": [19, 21], "points": {} }
       },
       "markers": []
     },
@@ -290,20 +290,20 @@
         "legs": {
           "definition": "legs-r-c2",
           "flipX": true,
-          "topLeft": [14, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29], "foot": [16, 31] }
+          "topLeft": [13, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29], "foot": [15, 31] }
         },
         "body": {
           "definition": "body-r-fwd",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} }
       },
-      "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [16, 31] }]
+      "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [15, 31] }]
     },
     "walk-l-4": {
       "origin": [20, 31],
@@ -312,18 +312,18 @@
         "legs": {
           "definition": "legs-r-pa",
           "flipX": true,
-          "topLeft": [17, 29],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 28] }
+          "topLeft": [16, 29],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 28] }
         },
         "body": {
           "definition": "body-r",
           "flipX": true,
-          "topLeft": [16, 22],
-          "anchor": [20, 28],
-          "points": { "neck": [20, 21] }
+          "topLeft": [15, 22],
+          "anchor": [19, 28],
+          "points": { "neck": [19, 21] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 9], "anchor": [20, 21], "points": {} }
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 9], "anchor": [19, 21], "points": {} }
       },
       "markers": []
     },
@@ -352,18 +352,18 @@
         "legs": {
           "definition": "legs-r",
           "flipX": true,
-          "topLeft": [16, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29] }
+          "topLeft": [15, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29] }
         },
         "body": {
           "definition": "body-r",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22] }
         },
-        "head": { "definition": "head-r-hurt", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} }
+        "head": { "definition": "head-r-hurt", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} }
       },
       "markers": []
     },
@@ -519,27 +519,27 @@
         "legs": {
           "definition": "legs-r",
           "flipX": true,
-          "topLeft": [16, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29] }
+          "topLeft": [15, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29] }
         },
         "body": {
           "definition": "body-r-noarm",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22], "shoulder": [19, 24] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22], "shoulder": [18, 24] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} },
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} },
         "sword": {
           "definition": "sa-r-windup",
           "flipX": true,
-          "topLeft": [19, 22],
-          "anchor": [19, 24],
-          "points": { "tip": [34, 24] }
+          "topLeft": [18, 22],
+          "anchor": [18, 24],
+          "points": { "tip": [33, 24] }
         }
       },
-      "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [34, 24] }]
+      "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [33, 24] }]
     },
     "attack-l-2": {
       "origin": [20, 31],
@@ -548,27 +548,27 @@
         "legs": {
           "definition": "legs-r",
           "flipX": true,
-          "topLeft": [16, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29] }
+          "topLeft": [15, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29] }
         },
         "body": {
           "definition": "body-r-noarm",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22], "shoulder": [19, 24] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22], "shoulder": [18, 24] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} },
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} },
         "sword": {
           "definition": "sa-r-strike",
           "flipX": true,
-          "topLeft": [3, 22],
-          "anchor": [19, 24],
-          "points": { "tip": [4, 24] }
+          "topLeft": [2, 22],
+          "anchor": [18, 24],
+          "points": { "tip": [3, 24] }
         }
       },
-      "markers": [{ "name": "hit", "part": "sword", "point": "tip", "at": [4, 24] }]
+      "markers": [{ "name": "hit", "part": "sword", "point": "tip", "at": [3, 24] }]
     },
     "attack-l-3": {
       "origin": [20, 31],
@@ -577,27 +577,27 @@
         "legs": {
           "definition": "legs-r",
           "flipX": true,
-          "topLeft": [16, 30],
-          "anchor": [20, 31],
-          "points": { "hip": [20, 29] }
+          "topLeft": [15, 30],
+          "anchor": [19, 31],
+          "points": { "hip": [19, 29] }
         },
         "body": {
           "definition": "body-r-noarm",
           "flipX": true,
-          "topLeft": [16, 23],
-          "anchor": [20, 29],
-          "points": { "neck": [20, 22], "shoulder": [19, 24] }
+          "topLeft": [15, 23],
+          "anchor": [19, 29],
+          "points": { "neck": [19, 22], "shoulder": [18, 24] }
         },
-        "head": { "definition": "head-r", "flipX": true, "topLeft": [11, 10], "anchor": [20, 22], "points": {} },
+        "head": { "definition": "head-r", "flipX": true, "topLeft": [10, 10], "anchor": [19, 22], "points": {} },
         "sword": {
           "definition": "sa-r-recover",
           "flipX": true,
-          "topLeft": [13, 24],
-          "anchor": [19, 24],
-          "points": { "tip": [14, 31] }
+          "topLeft": [12, 24],
+          "anchor": [18, 24],
+          "points": { "tip": [13, 31] }
         }
       },
-      "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [14, 31] }]
+      "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [13, 31] }]
     },
     "hold-up": {
       "origin": [20, 31],
@@ -724,7 +724,7 @@
           "frame": "walk-l-1",
           "start": 0,
           "duration": 140,
-          "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [16, 31] }]
+          "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [15, 31] }]
         },
         { "position": 1, "frame": "walk-l-2", "start": 140, "duration": 120, "markers": [] },
         {
@@ -732,7 +732,7 @@
           "frame": "walk-l-3",
           "start": 260,
           "duration": 140,
-          "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [16, 31] }]
+          "markers": [{ "name": "step", "part": "legs", "point": "foot", "at": [15, 31] }]
         },
         { "position": 3, "frame": "walk-l-4", "start": 400, "duration": 120, "markers": [] }
       ]
@@ -827,21 +827,21 @@
           "frame": "attack-l-1",
           "start": 0,
           "duration": 70,
-          "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [34, 24] }]
+          "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [33, 24] }]
         },
         {
           "position": 1,
           "frame": "attack-l-2",
           "start": 70,
           "duration": 150,
-          "markers": [{ "name": "hit", "part": "sword", "point": "tip", "at": [4, 24] }]
+          "markers": [{ "name": "hit", "part": "sword", "point": "tip", "at": [3, 24] }]
         },
         {
           "position": 2,
           "frame": "attack-l-3",
           "start": 220,
           "duration": 90,
-          "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [14, 31] }]
+          "markers": [{ "name": "blade", "part": "sword", "point": "tip", "at": [13, 31] }]
         }
       ]
     },

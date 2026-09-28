@@ -11,10 +11,10 @@ const actor = (poses, extra = {}) => ({ format: 'pixelforge-poses', version: 1, 
   parts: { body: { rows: ['aab', 'a..'], anchor: [0, 1], points: { hand: [2, 0] } }, blade: { rows: ['bb'], anchor: [0, 0], points: { tip: [1, 0] } } }, poses, ...extra });
 const pixelsOf = (project, frame) => { const f = project.frames.find(x => x.name === frame); return [...f.data]; };
 const mirrored = (data, width, height, originX) => {
-  // Reflect pixel columns around the origin column: c -> 2 * originX - c.
+  // Reflect pixel columns around the origin corner: c -> 2 * originX - 1 - c, as drawFrame flips.
   const out = new Array(data.length).fill(0);
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    const tx = 2 * originX - x;
+    const tx = 2 * originX - 1 - x;
     if (tx >= 0 && tx < width) for (let c = 0; c < 4; c++) out[(y * width + tx) * 4 + c] = data[(y * width + x) * 4 + c];
   }
   return out;
@@ -31,16 +31,16 @@ test('pose instances flip their grid, anchor and points inside the part', () => 
   assert.equal(Object.getPrototypeOf(recipe.symbols), Object.prototype);
 });
 
-test('mirrored poses reflect parts, points and markers around the origin column and inherit timing', () => {
+test('mirrored poses reflect parts, points and markers around the origin corner and inherit timing', () => {
   const source = actor([
     { name: 'right', duration: 140, origin: [5, 6], parts: [{ name: 'torso', part: 'body' }, { name: 'held', part: 'blade', attach: { part: 'torso', point: 'hand' } }], markers: [{ name: 'hit', part: 'held', point: 'tip' }] },
     { name: 'left', mirror: 'right' }
   ]);
   const { recipe, metadata } = compilePoses(source), project = renderProject(recipe);
   assert.deepEqual(pixelsOf(project, 'left'), mirrored(pixelsOf(project, 'right'), 12, 8, 5));
-  assert.deepEqual([metadata.poses.right.markers[0].at, metadata.poses.left.markers[0].at], [[8, 5], [2, 5]]);
+  assert.deepEqual([metadata.poses.right.markers[0].at, metadata.poses.left.markers[0].at], [[8, 5], [1, 5]]);
   assert.deepEqual(project.frames.map(f => [f.name, f.duration]), [['right', 140], ['left', 140]]);
-  assert.deepEqual([recipe.anchor, recipe.frames[1].points], [[5, 6], { hit: [2, 5] }]);
+  assert.deepEqual([recipe.anchor, recipe.frames[1].points], [[5, 6], { hit: [1, 5] }]);
   assert.throws(() => compilePoses(actor([{ name: 'left', mirror: 'right' }, { name: 'right', origin: [0, 0], parts: [] }])), /earlier pose/);
   assert.throws(() => compilePoses(actor([{ name: 'right', parts: [] }, { name: 'left', mirror: 'right', origin: [1, 1] }])), /its origin/);
 });
@@ -134,4 +134,37 @@ test('PNG import keeps up to 256 colours as compact, lossless palette grids', ()
   assert.equal(imported.provenance.representation, 'palette grids with hidden-RGB corrections');
   assert.equal(Object.keys(imported.recipe.palette).length, 256);
   assert.deepEqual([...renderProject(imported.recipe).frames[0].data], [...data]);
+});
+
+// A 2D context stand-in that rasterizes drawImage through translate/scale(-1, 1), sampling pixel centres.
+function rasterContext(width, height) {
+  const out = new Uint8ClampedArray(width * height * 4), stack = [];
+  let tx = 0, ty = 0, sx = 1;
+  return {
+    out, imageSmoothingEnabled: true,
+    save() { stack.push([tx, ty, sx]); }, restore() { [tx, ty, sx] = stack.pop(); },
+    translate(x, y) { tx += x * sx; ty += y; }, scale(a) { sx *= a; },
+    drawImage(image, srcX, srcY, srcW, srcH, dx, dy, dw, dh) {
+      for (let j = 0; j < dh; j++) for (let i = 0; i < dw; i++) {
+        const u = srcX + Math.floor(i * srcW / dw), v = srcY + Math.floor(j * srcH / dh), from = (v * image.width + u) * 4;
+        const X = Math.floor(tx + sx * (dx + i + 0.5)), Y = Math.floor(ty + dy + j + 0.5);
+        if (X >= 0 && Y >= 0 && X < width && Y < height && image.data[from + 3]) out.set(image.data.subarray(from, from + 4), (Y * width + X) * 4);
+      }
+    }
+  };
+}
+test('a compiled mirror placed by its anchor draws exactly what drawFrame draws when flipping the original', async () => {
+  const { drawFrame } = await import('../src/runtime.js');
+  for (const trim of [false, true]) {
+    const { recipe } = compilePoses(actor([
+      { name: 'right', origin: [5, 6], parts: [{ name: 'torso', part: 'body' }, { name: 'held', part: 'blade', attach: { part: 'torso', point: 'hand' } }] },
+      { name: 'left', mirror: 'right' }
+    ], { sheet: { trim } }));
+    const atlas = buildAtlas(renderProject(recipe)), sheet = { image: { data: atlas.data, width: atlas.width }, atlas: atlas.metadata };
+    const flipped = rasterContext(32, 24), mirrored = rasterContext(32, 24);
+    drawFrame(flipped, sheet, 'right', 16, 12, { flipX: true });
+    drawFrame(mirrored, sheet, 'left', 16, 12);
+    assert.ok(flipped.out.some(v => v), 'something was drawn');
+    assert.deepEqual(mirrored.out, flipped.out, `trim ${trim}`);
+  }
 });

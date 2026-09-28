@@ -2,6 +2,12 @@
 
 27 September 2026 · Baseline `1e47c22` (0.1.0) · Windows 11, Node v24.19.0 · Browser checks in the Chromium pane of the Claude desktop app.
 
+## Update 4: one mirror convention
+
+28 September 2026. The pose compiler's `mirror` now reflects around the origin corner (pixel column c becomes 2 × originX − 1 − c), the same reflection as `drawFrame`'s `flipX` and engines that flip around the atlas pivot. A new test places a compiled mirror by its anchor and flips the original with `drawFrame` through a rasterizing context: the pixels are identical for trimmed and untrimmed sheets, and the test fails under the old rule.
+
+The keeper's front and back views are symmetric around that corner (columns 12–27 around x 20, centroid 20.0), and its right-facing side views sit just right of it (centroid 20.25). The old pixel-column rule put the left-facing views at 20.75, a pixel right of a true mirror. They are now at 19.75. Only the ten mirrored poses moved, by one pixel. The trimmed keeper atlas image is unchanged; its metadata records the new offsets. Left-facing blade tips now mirror the right-facing ones exactly around the anchor. Crabs and gulls already flipped at runtime and are unchanged.
+
 ## Update 3: compact compiled terrain and frame anchors in scenes
 
 28 September 2026. Two of the open items below are fixed.
@@ -63,7 +69,7 @@ After the first pass I fixed every bug and implemented every missing feature bel
 - **TW-M11 — added: context cells.** A tilemap cut from a larger map could not see neighbours beyond its edge, so edge tiles drew false coastlines. A `null` legend entry now marks cells that count for matching but are never drawn.
 - **Fixed in Update 3: verbose compiled recipes.** `shore.json` grew from 157 KB to 184 KB, because each frame spells out four `copy` ops and a palette, while its template is 3 KB.
 - **Fixed in Update 3: scene placements ignore frame anchors.** `make-scene.mjs` reads anchors from the recipes and passes them explicitly. An animated placement cannot follow per-frame anchors.
-- **Open: two mirror conventions.** The pose compiler's `mirror` reflects around the origin pixel column, which matched the hand-mirrored art. The runtime's `drawFrame` flips around the anchor corner. They differ by one pixel, so use one or the other for a given asset.
+- **Fixed in Update 4: two mirror conventions.** The pose compiler's `mirror` reflects around the origin pixel column, which matched the hand-mirrored art. The runtime's `drawFrame` flips around the anchor corner. They differ by one pixel, so use one or the other for a given asset.
 
 **Checks.** `npm test` passes 104/104. `check:quality`, `check:tidewatch`, the Emberfall stress run (0 findings) and the Pillow checks (`verify-exports.py`, `verify-quality.py`, `verify-trim.py`, `verify-emberfall.py`) all pass. I checked the scene viewer's light picker in the browser pane.
 
