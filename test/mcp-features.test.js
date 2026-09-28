@@ -114,3 +114,24 @@ test('CLI resolves shared palettes, keeps the link when writing edits, builds au
   const tiled = JSON.parse(run('inspect', path.join(dir, 'art', 'rock.json'), '--view', 'tile', '--frames', 'rock-15', '--out', path.join(dir, 'tile.png')).stdout);
   assert.equal(tiled.tiles[0].frame, 'rock-15'); assert.deepEqual(await readdir(dir).then(files => files.includes('tile.png')), true);
 });
+
+test('MCP compiles particle effects, explains the fx topic and previews cleanup patches', async t => {
+  const dir = await temp(t, 'fx'), mcp = session({ directory: dir, root: dir });
+  await mcp.init();
+  const source = { format: 'pixelforge-fx', version: 1, name: 'sparks', width: 16, height: 16, palette: { w: '#fff', o: '#e83' }, symbols: { hot: ['w'], cool: ['o'] },
+    effects: { pop: { frames: 4, seed: 5, emitters: [{ at: [8, 8], burst: 5, speed: [1, 2], life: 4, shapes: ['hot', 'cool'], trail: { color: 'o', length: 1 } }] } } };
+  const compiled = await mcp.call('pixel_compile', { source, metadata: true });
+  assert.ok(!compiled.result.isError, JSON.stringify(compiled.info));
+  assert.deepEqual([compiled.info.frames, compiled.info.animations, compiled.info.metadata.effects.pop.emitters[0].spawned], [4, ['pop'], 5]);
+  assert.equal(compiled.result.content[1].mimeType, 'image/png');
+  const topic = (await mcp.request('tools/call', { name: 'pixel_help', arguments: { topic: 'fx' } })).result;
+  assert.equal(JSON.parse(topic.content[0].text).title, 'PixelForge particle effects');
+  const stair = { version: 1, name: 'stair', width: 5, height: 4, palette: { k: '#000' }, frames: [{ name: 'a', ops: [{ op: 'grid', rows: ['k....', 'kk...', '.kk..', '..k..'] }] }] };
+  const inspected = await mcp.call('pixel_inspect', { project: stair, diagnostics: true });
+  const finding = inspected.info.diagnostics.findings.find(f => f.code === 'corners');
+  assert.deepEqual([finding.count, finding.fix], [2, { cleanup: 'frames[a]', value: { corners: true } }]);
+  const fixed = await mcp.call('pixel_patch', { revision: inspected.info.revision, changes: [finding.fix] });
+  assert.deepEqual(fixed.info.edits, [{ cleanup: 'frames[a]', at: 'frames[0]', pixels: 2, corners: 2, strays: 0 }]);
+  assert.equal(fixed.info.frames.changed[0].pixels, 2);
+  mcp.input.end(); await mcp.running;
+});

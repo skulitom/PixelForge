@@ -85,7 +85,7 @@ Use PixelForge to create or revise pixel sprites, tiles, icons, effects and shor
 | [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
 | [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
 | [JSON Schema](schema.json) | Machine-readable recipe structure |
-| [Examples](examples/) | Complete forest spirit, campfire and coin recipes |
+| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a rotated sword swing and a particle effects source |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
 Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
@@ -127,7 +127,9 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 | `name.pixel.json` | Editable source recipe |
 | `preview.html` | Standalone preview you can open directly in a browser |
 
-APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers, and compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer or custom patterns, and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
+
+Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, which inspection diagnostics find. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`. See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
 ## Connect an agent through MCP
 
@@ -159,16 +161,16 @@ args = ["/absolute/path/to/PixelForge/bin/pixelforge.js", "mcp", "--out", "/abso
 
 The eight tools are:
 
-- **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes or autotile schemas.
+- **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes, autotile or fx schemas.
 - **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location.
 - **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
 - **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
-- **`pixel_compile`**: compile a `pixelforge-poses` source or a `pixelforge-autotile` template into a recipe revision, with a contact sheet and optional metadata.
+- **`pixel_compile`**: compile a `pixelforge-poses` source (including rotated parts and tweened in-betweens), a `pixelforge-autotile` template or a `pixelforge-fx` particle source into a recipe revision, with a contact sheet and optional metadata.
 - **`pixel_scene`**: render a `pixelforge-scene` manifest (tilemaps with autotile legends, sequences, trajectories, lighting) at any time, or export it; assets may be revisions.
 - **`pixel_import`**: import a native-resolution PNG, given as base64 or a file inside the server root, as a lossless recipe revision.
 
-`pixel_patch` also supports compact `grid`, masked `move` and regional `recolor`, with explicit `frame` or `inherited` scope, and applies saved correction overlays (`overlay`). Large `pixel_render` previews are sampled with total/shown/omitted metadata instead of blocking a valid export; exported animations remain complete. Palette and scene file references resolve inside the server's `--root` (default: its working directory); requests may be up to 16 MiB, and an oversized request is answered with an error without stopping the server.
+`pixel_patch` also supports compact `grid`, masked `move`, regional `recolor` and proposed `cleanup` of doubled corners and stray pixels, with explicit `frame` or `inherited` scope, and applies saved correction overlays (`overlay`). Large `pixel_render` previews are sampled with total/shown/omitted metadata instead of blocking a valid export; exported animations remain complete. Palette and scene file references resolve inside the server's `--root` (default: its working directory); requests may be up to 16 MiB, and an oversized request is answered with an error without stopping the server.
 
 Send a recipe once. Each successful recipe-tool response includes a `revision` id that the other tools accept in place of `project`, so later calls, including patches, need not resend the recipe. Validate, inspect, patch and render save immutable snapshots in `<MCP --out directory>/.revisions/`; they survive restarts when you use the same directory, even before an asset export. Prefer an absolute `--out` path. Earlier revisions remain undo points. Older rendered revisions can be recovered from saved bundle recipes. Render also saves the recipe beside the assets.
 
@@ -222,7 +224,7 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
@@ -230,9 +232,10 @@ const { recipe: next, edits } = patchRecipe(recipe, [{ set: 'frames[idle].durati
 const report = compareProjects(project, renderProject(next)); // changed pixels, timing, before/after RGBA
 const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
+const { recipe: effects } = compileEffects(fxSource); // seeded particles baked into an ordinary recipe
 ```
 
-`src/core.js` and `src/patch.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+`src/core.js`, `src/craft.js`, `src/patch.js` and `src/fx.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
 
 ## Develop and verify
 
@@ -241,7 +244,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 

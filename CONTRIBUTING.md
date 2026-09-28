@@ -24,7 +24,7 @@ External contributors should use a branch in their fork and submit a focused pul
 ## Verify your work
 
 - Run `npm test` after functional changes. Add a regression test when fixing behavior that the existing tests do not cover.
-- Keep runtime validation, [schema.json](schema.json) and [the authoring reference](docs/agent-guide.md) aligned. Regenerate the schemas (`schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`) with `node scripts/generate-schema.js` when intentionally changing a format, and review the diff.
+- Keep runtime validation, [schema.json](schema.json) and [the authoring reference](docs/agent-guide.md) aligned. Regenerate the schemas (`schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`) with `node scripts/generate-schema.js` when intentionally changing a format, and review the diff.
 - When intentionally changing bundled examples, use `node scripts/generate-examples.js` and review the recipes and rendered artwork.
 - For changes to binary exports, also check with an independent decoder. The optional `scripts/verify-exports.py` check uses Python and Pillow after `npm run demo`. If `output/forest-spirit` already exists, preserve or move that output before running the demo again. `scripts/verify-trim.py` checks trimmed atlases the same way and needs no prior output.
 - For studio changes, check the preview at narrow and wide sizes, keyboard access, and animation playback. For artwork changes, inspect every frame, not just recipe validity.

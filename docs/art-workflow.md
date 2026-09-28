@@ -37,7 +37,7 @@ With `--out review.png --native`, the CLI also writes `review.native.png`, check
 
 `--layers body,head` / `layers: ["body","head"]` isolates named layers through frame inheritance and transforms. It respects layer visibility/opacity and omits background, frame-level operations and final canvas corrections: those pixels have no layer identity. The original recipe is validated before isolating. `--reference earlier.json` / `reference: "revision-id"` adds a same-origin changed-pixel comparison; the CLI writes `review.reference.png` when a diff image exists and `--out` is supplied.
 
-Diagnostics report duplicate images, empty frames, isolated visible pixels with no 8-connected neighbor, colors outside the declared palette and unusually large loop-boundary changes. Coordinates/bounds are provided, with bounded lists and omission counts. Loop warnings compare the boundary with the median nonzero adjacent change, using a minimum threshold of four pixels. These are advisory heuristics: exempt intentional holds, sparks, transparent effects, literal colors or cuts in the brief. They neither score beauty nor alter artwork. Animation timing includes expanded positions, original start times, durations and neighbor positions. Foot sliding needs authored contact points and scene movement; pixel differences alone cannot diagnose it.
+Diagnostics report duplicate images, empty frames, isolated visible pixels with no 8-connected neighbor, colors outside the declared palette, unusually large loop-boundary changes, and cleanup proposals: `corners` (doubled L-shaped steps in one-pixel lines) and `strays` (pixels whose eight neighbours share one other colour). Each cleanup finding carries a `fix`, the exact `cleanup` patch change that previews it. Coordinates/bounds are provided, with bounded lists and omission counts. Loop warnings compare the boundary with the median nonzero adjacent change, using a minimum threshold of four pixels. These are advisory heuristics: exempt intentional holds, sparks, transparent effects, literal colors or cuts in the brief. They neither score beauty nor alter artwork. Animation timing includes expanded positions, original start times, durations and neighbor positions. Foot sliding needs authored contact points and scene movement; pixel differences alone cannot diagnose it.
 
 ## Regional corrections and scope
 
@@ -50,6 +50,8 @@ Diagnostics report duplicate images, empty frames, isolated visible pixels with 
   {"recolor":"frames[still]", "value":{"x":7,"y":3,"w":4,"h":3,"from":"g","to":"h"}}
 ]
 ```
+
+Another canvas change, `{"cleanup":"frames[still]", "value":{"corners":true, "strays":true}}`, proposes pixel-art cleanup as ordinary corrections, after Pixel Composer's De-Corner and De-Stray filters. It accepts the same optional region, `mask` and `scope`, plus `colors` to limit which original colours may change, and reports how many corners and strays it fixed. It is never applied on its own: preview it, read the changed pixels, and keep eyes, sparks and deliberate right angles.
 
 Grid dots/spaces preserve pixels. Erasure needs an explicit non-palette character such as `~`; it may not be a dot or space. Masks match region size: `x` selects, `.` preserves. Move captures selected RGBA before clearing, so overlapping moves carry highlights and existing corrections. Selected transparent pixels also move and replace destination pixels. Every selected destination must fit; moves do not silently clip.
 
@@ -89,7 +91,11 @@ Use a `pixelforge-poses` version-1 sidecar, described by [poses.schema.json](../
 }
 ```
 
-`parts` define palette grids, local anchors and local named points. Each pose's `origin` is a source-canvas point (often the ground anchor). Instances draw in listed back-to-front order. Without `attach`, `at` offsets the instance's anchor from the pose origin. With `attach`, it offsets the anchor from a named point on an **earlier** instance. Definition points use the part grid's upper-left origin. A pose can use a different part definition under the same instance name, such as an open versus curled hand. An instance with `"flipX": true` mirrors its grid, anchor and points inside the part. A pose written as `{ "name": "walk-l-1", "mirror": "walk-r-1" }` reflects an earlier pose around its origin column (pixel column c becomes 2 × originX − c), including parts, points and markers, and inherits its duration; it takes no parts, markers or origin of its own. No rotation, smoothing or automatic in-betweens are imposed.
+`parts` define palette grids, local anchors and local named points. Each pose's `origin` is a source-canvas point (often the ground anchor). Instances draw in listed back-to-front order. Without `attach`, `at` offsets the instance's anchor from the pose origin. With `attach`, it offsets the anchor from a named point on an **earlier** instance. Definition points use the part grid's upper-left origin. A pose can use a different part definition under the same instance name, such as an open versus curled hand. An instance with `"flipX": true` mirrors its grid, anchor and points inside the part. A pose written as `{ "name": "walk-l-1", "mirror": "walk-r-1" }` reflects an earlier pose around its origin column (pixel column c becomes 2 × originX − c), including parts, points and markers, and inherits its duration; it takes no parts, markers or origin of its own. No rotation, smoothing or automatic in-betweens are imposed unless you ask for them.
+
+An instance with `"rotate": 30` turns its part clockwise by whole degrees (−360 to 360) around the centre of the part's anchor pixel, after any flip, and its points turn with it, so a held item stays in the hand. The rotated grid is baked into the compiled recipe as an ordinary, editable symbol named `<part>-r<degrees>` (`-fr` when flipped). Rotation never invents colours: three Scale2x passes enlarge the grid eight times, which rounds staircase edges, and each output pixel samples the enlarged grid where its rotated centre lands (the RotSprite approach). Right angles are exact. A cleanup pass then removes doubled corners the resampling leaves; set `"cleanup": false` to keep the raw result (`<part>-r<degrees>-raw`). Small parts lose detail at odd angles, so inspect the symbol and correct it by patching the compiled recipe or drawing a replacement part for key poses.
+
+A pose written as `{ "name": "swing-1", "tween": { "from": "raise", "to": "strike", "t": 0.33, "ease": "in" } }` is an in-between of two earlier authored or tweened poses with the same part instances in the same order and the same attachments. Its origin, each instance's `at` offset and each `rotate` interpolate by the eased `t` and round to whole pixels and degrees; part definitions, flips and cleanup switch at the eased halfway point. Easing presets are `linear` (default), `hold`, `in`, `out`, `inOut`, `overshoot` and `bounce`. A tween takes no parts or origin, does not inherit markers (add its own if it needs cues) and cannot start from a mirrored pose; mirror the finished tween instead. [examples/swing.poses.json](../examples/swing.poses.json) rotates one sword through an eased swing. In-betweens are a starting point, not a substitute for authored contact, anticipation and recovery poses.
 
 Compiled recipes carry each pose origin as the frame anchor (one recipe-level `anchor` when every pose shares it), and each marker's position as a named frame point, so the atlas alone tells a game where the feet, hand or blade tip are. Marker names are unique within a pose.
 
@@ -102,7 +108,7 @@ The metadata exports each pose origin, resolved part anchors/points, markers, an
 
 ## Scene and tile review
 
-Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to recipes (inline or file references) or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame`, `animation` or a `tilemap`. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at}]` starts at time 0, linearly interpolates between authored positions and rounds to whole pixels; it holds the last position. This is an explicit preview path, not inferred movement or physics.
+Use a separate `pixelforge-scene` version-1 manifest ([scene.schema.json](../scene.schema.json)). `assets` maps ids to recipes (inline or file references) or `{recipe, normal?, emissive?}`. `instances` draws in array order. An instance has `asset`, `at:[x,y]`, optional local `anchor`, integer `scale`, and either `frame`, `animation` or a `tilemap`. `repeat:[columns,rows]` and `step:[dx,dy]` create tile arrangements. Optional `sequence:[{time,frame|animation}]` cues choose a new state and restart that animation; a nonlooping reaction holds its final pose. Times increase strictly and stay below scene duration. Optional `trajectory:[{time,at,ease?}]` starts at time 0, interpolates between authored positions and rounds to whole pixels; it holds the last position. Each key's `ease` shapes the segment that starts at it: `linear` (default), `hold` (stay, then jump at the next key), `in`, `out`, `inOut`, `overshoot` or `bounce`. This is an explicit preview path, not inferred movement or physics.
 
 ```sh
 node bin/pixelforge.js preview examples/quality/hollow.scene.json
@@ -145,6 +151,29 @@ node bin/pixelforge.js autotile shore.autotile.json --out shore.json
 ```
 
 Every compiled frame is four `copy` operations from the `template` symbol, so editing the template in the compiled recipe updates the whole set. Use the same masks in a scene `tilemap` legend (`"autotile": "blob"`) or in a game.
+
+## Particle effects
+
+A `pixelforge-fx` source ([fx.schema.json](../fx.schema.json)) describes seeded particle emitters, after Pixel Composer's particle system, and compiles them into an ordinary recipe: every frame becomes `stamp`, `grid` and `line` operations on the source's own symbols. Inspect, patch, overlay and export the result like any other recipe; editing a symbol in it redraws every particle that uses it.
+
+```json
+{ "format": "pixelforge-fx", "version": 1, "name": "fx", "width": 48, "height": 40,
+  "palette": { "W": "#fff4d6", "y": "#ffd166", "o": "#f4843c", "r": "#c2413a" },
+  "symbols": { "hot": ["W"], "warm": ["y"], "cool": ["o"], "ash": ["r"] },
+  "effects": { "sparks": { "frames": 9, "duration": 55, "seed": 11, "emitters": [
+    { "at": [24, 30], "burst": 12, "angle": [205, 335], "speed": [1.8, 3.4], "gravity": [0, 0.32], "life": [6, 9],
+      "floor": 36, "bounce": 0.35, "shapes": ["hot", "warm", "cool", "ash"], "trail": { "color": "r", "length": 1 } } ] } } }
+```
+
+```sh
+node bin/pixelforge.js compile examples/effects.fx.json --out output/effects.json --metadata output/effects.meta.json
+```
+
+Each effect becomes frames `<effect>-0`, `<effect>-1`… and an animation named after the effect. An emitter spawns a `burst` at frame `start` or a `rate` of particles per frame until `end`, inside an `area` box centred on `at`. Per-particle values are picked from `[min, max]` ranges: `angle` (degrees clockwise, 0 right, 90 down, 270 up), `speed` (pixels per frame) and `life` (frames). Each frame velocity gains `gravity` and an optional `attract` pull, loses `drag`, and moves the particle; a `floor` stops it, with optional `bounce`. `sway` adds a drawn wobble (x follows a sine, y a cosine). `shapes` is one symbol sequence, or several with one picked per particle; `play` spreads it over the life (`life`, default), steps one per frame from a random start (`loop`, for flutter) or steps and holds (`once`, for hand-drawn flashes). `remaps` gives colour variants, `trail` draws a one-pixel streak from an earlier position, and `dissolve` thins the last share of each life through an ordered-dither pattern.
+
+Randomness is a seeded hash keyed by effect seed, emitter, spawn frame and particle, with a separate salt per property, so changing one range does not reshuffle the others, and the same source always compiles to the same recipe. A looping effect (`loop: true`, which needs a finite `life`) warms up for whole cycles with spawns keyed by their frame in the cycle, so the particles in flight at frame 0 are exactly those alive at the end. Particles partly off the canvas are cropped into grids and trails keep only on-canvas pixels, so compiled effects never clip. Metadata reports spawned particles, the most alive at once, operations and culled particles per effect.
+
+The compiler makes behaviour cheap to try; it does not supply it. Give each material its own motion and shapes (fire rises and fades, stone chips arc and settle, leaves flutter), keep particle counts low enough to read at native size, and review playback. [examples/effects.fx.json](../examples/effects.fx.json) holds sparks, looping embers, landing dust, falling leaves and stone shards.
 
 ## Lossless raster return path
 

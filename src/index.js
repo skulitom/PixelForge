@@ -3,6 +3,8 @@ export { patchRecipe } from './patch.js';
 export { encodePNG, encodeAPNG } from './png.js';
 export { createBundle, writeBundle, createZip, generateCSS } from './export.js';
 export { compilePoses, compileAutotile } from './authoring.js';
+export { compileEffects } from './fx.js';
+export { DITHER_PATTERNS, EASINGS, ease, ditherThreshold, cleanupIds, rotateRows, ruleVariants, rewriteIds } from './craft.js';
 export { BLOB_MASKS, CARDINAL_MASKS, neighbourMask, quadrantPieces, templatePiece } from './autotile.js';
 export { prepareScene, renderScene, inspectTile } from './scene.js';
 export { createSceneBundle } from './scene-export.js';

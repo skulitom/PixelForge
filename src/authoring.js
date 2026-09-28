@@ -1,6 +1,7 @@
 // Optional authoring compilers. All output is ordinary, editable version-1 recipe data.
 import { PixelError, renderProject } from './core.js';
 import { BLOB_MASKS, CARDINAL_MASKS, quadrantPieces, templatePiece } from './autotile.js';
+import { EASINGS, ease, rotateRows } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 export function fields(value, keys, path) {
@@ -34,16 +35,35 @@ export function compilePoses(source) {
   }
   if (!Array.isArray(source.poses) || !source.poses.length || source.poses.length > 256) fail('poses.poses', 'expected 1–256 authored key poses');
   const metadata = { format: 'pixelforge-pose-metadata', version: 1, coordinates: 'unscaled source pixels; top-left origin; positive y down; marker times are milliseconds before playback-rate adjustment', poses: Object.create(null), animations: Object.create(null) };
-  const compiled = Object.create(null);
+  const compiled = Object.create(null), shapes = new Map();
+  // The drawn shape of a part instance. Flips alone stay a stamp flag; a rotation (after any flip) is baked into a new
+  // editable symbol named <part>-r<degrees> (-fr when flipped, -raw without cleanup) around the part's anchor pixel.
+  const shapeOf = (name, flipX, rotate, cleanup, where) => {
+    const definition = source.parts[name], width = definition.rows[0].length, anchor = definition.anchor ?? [0, 0];
+    const local = ([x, y]) => [flipX ? width - 1 - x : x, y];
+    const angle = ((rotate % 360) + 360) % 360;
+    if (!angle) return { symbol: name, width, flipX, anchor: local(anchor), point: local };
+    const tidy = cleanup && angle % 90 !== 0, key = `${name}\n${flipX}\n${angle}\n${tidy}`;
+    if (!shapes.has(key)) {
+      const symbol = `${name}-${flipX ? 'f' : ''}r${angle}${tidy || angle % 90 === 0 ? '' : '-raw'}`;
+      if (Object.hasOwn(source.parts, symbol) || symbol.length > 64) fail(where, `a rotated part needs the symbol name ${symbol}; rename that part definition or shorten ${name}`);
+      const rows = flipX ? definition.rows.map(row => [...row].reverse().join('')) : definition.rows;
+      const turned = rotateRows(rows, angle, local(anchor), { cleanup: tidy });
+      if (turned.rows.length > 256 || turned.rows[0].length > 256) fail(where, `rotating ${name} by ${angle}° exceeds 256×256 pixels`);
+      symbols[symbol] = turned.rows;
+      shapes.set(key, { symbol, width: turned.rows[0].length, flipX: false, anchor: turned.pivot, point: p => turned.map(local(p)) });
+    }
+    return shapes.get(key);
+  };
   const frames = source.poses.map((pose, index) => {
     const path = `poses.poses[${index}]`;
-    fields(pose, ['name', 'duration', 'origin', 'parts', 'markers', 'mirror'], path);
+    fields(pose, ['name', 'duration', 'origin', 'parts', 'markers', 'mirror', 'tween'], path);
     identifier(pose.name, `${path}.name`);
     if (Object.hasOwn(compiled, pose.name)) fail(`${path}.name`, 'duplicate pose');
-    let origin, placed, layers, markers;
+    let origin, placed, layers, markers, inputs = null, tween = null;
     if (pose.mirror !== undefined) {
       // A horizontal mirror of an earlier pose around its origin column: pixel column c maps to 2 * originX - c.
-      for (const key of ['parts', 'markers', 'origin']) if (pose[key] !== undefined) fail(`${path}.${key}`, 'mirrored poses reuse the source pose, its markers and its origin');
+      for (const key of ['parts', 'markers', 'origin', 'tween']) if (pose[key] !== undefined) fail(`${path}.${key}`, 'mirrored poses reuse the source pose, its markers and its origin');
       identifier(pose.mirror, `${path}.mirror`);
       const from = compiled[pose.mirror];
       if (!from) fail(`${path}.mirror`, 'must name an earlier pose');
@@ -51,25 +71,53 @@ export function compilePoses(source) {
       const reflect = x => 2 * origin[0] - x;
       placed = Object.create(null); layers = [];
       for (const layer of from.layers) {
-        const instance = from.placed[layer.name], definition = source.parts[instance.definition], width = definition.rows[0].length;
-        const x = reflect(instance.topLeft[0] + width - 1), y = instance.topLeft[1], flipX = !instance.flipX;
-        placed[layer.name] = { definition: instance.definition, ...(flipX && { flipX }), topLeft: [x, y], anchor: [reflect(instance.anchor[0]), instance.anchor[1]], points: Object.fromEntries(Object.entries(instance.points).map(([key, p]) => [key, [reflect(p[0]), p[1]]])) };
-        layers.push({ name: layer.name, ops: [{ op: 'stamp', symbol: instance.definition, x, y, ...(flipX && { flipX }) }] });
+        const instance = from.placed[layer.name], stamp = layer.ops[0], width = symbols[stamp.symbol][0].length;
+        const x = reflect(stamp.x + width - 1), y = stamp.y, flipX = !instance.flipX;
+        placed[layer.name] = { definition: instance.definition, ...(instance.symbol && { symbol: instance.symbol }), ...(flipX && { flipX }), ...(instance.rotate && { rotate: -instance.rotate }), topLeft: [x, y], anchor: [reflect(instance.anchor[0]), instance.anchor[1]], points: Object.fromEntries(Object.entries(instance.points).map(([key, p]) => [key, [reflect(p[0]), p[1]]])) };
+        layers.push({ name: layer.name, ops: [{ op: 'stamp', symbol: stamp.symbol, x, y, ...(!stamp.flipX && { flipX: true }) }] });
       }
       markers = from.markers.map(marker => ({ ...marker, at: [reflect(marker.at[0]), marker.at[1]] }));
     } else {
-      origin = point(pose.origin ?? [0, 0], `${path}.origin`); placed = Object.create(null);
-      if (!Array.isArray(pose.parts) || pose.parts.length > 64) fail(`${path}.parts`, 'expected at most 64 parts in back-to-front order');
-      layers = pose.parts.map((instance, i) => {
-        const ip = `${path}.parts[${i}]`;
-        fields(instance, ['name', 'part', 'at', 'attach', 'flipX'], ip);
+      let spec = pose, partsPath = `${path}.parts`;
+      if (pose.tween !== undefined) {
+        // An in-between: origin, offsets and angles interpolate (then round to whole pixels and degrees); part
+        // definitions and flips switch at the eased halfway point. Attachments must match, so held items follow.
+        for (const key of ['parts', 'origin']) if (pose[key] !== undefined) fail(`${path}.${key}`, 'tween poses interpolate the parts and origin of two earlier poses');
+        fields(pose.tween, ['from', 'to', 't', 'ease'], `${path}.tween`);
+        const [a, b] = ['from', 'to'].map(key => {
+          identifier(pose.tween[key], `${path}.tween.${key}`);
+          const end = compiled[pose.tween[key]];
+          if (!end) fail(`${path}.tween.${key}`, 'must name an earlier pose');
+          if (!end.inputs) fail(`${path}.tween.${key}`, 'tween between authored or tweened poses; mirror the finished tween instead');
+          return end.inputs;
+        });
+        const t = pose.tween.t, easing = pose.tween.ease ?? 'linear';
+        if (typeof t !== 'number' || !Number.isFinite(t) || t < 0 || t > 1) fail(`${path}.tween.t`, 'expected a number from 0 to 1');
+        if (!EASINGS.includes(easing)) fail(`${path}.tween.ease`, `expected one of ${EASINGS.join(', ')}`);
+        if (a.parts.length !== b.parts.length || a.parts.some((part, i) => part.name !== b.parts[i].name)) fail(`${path}.tween`, 'both poses must list the same part instances in the same order');
+        const e = ease(easing, t), mix = (u, v) => Math.round(u + (v - u) * e);
+        spec = { origin: a.origin.map((v, axis) => mix(v, b.origin[axis])), parts: a.parts.map((p, i) => {
+          const q = b.parts[i], near = e < 0.5 ? p : q;
+          if ((p.attach?.part ?? null) !== (q.attach?.part ?? null) || (p.attach?.point ?? null) !== (q.attach?.point ?? null)) fail(`${path}.tween`, `part ${p.name} must attach the same way in both poses`);
+          return { name: p.name, part: near.part, ...(p.attach && { attach: p.attach }), at: p.at.map((v, axis) => mix(v, q.at[axis])), ...(near.flipX && { flipX: true }), ...(mix(p.rotate, q.rotate) && { rotate: mix(p.rotate, q.rotate) }), ...(!near.cleanup && { cleanup: false }) };
+        }) };
+        partsPath = `${path}.tween`; tween = { from: pose.tween.from, to: pose.tween.to, t, ...(pose.tween.ease !== undefined && { ease: easing }) };
+      }
+      origin = point(spec.origin ?? [0, 0], `${path}.origin`); placed = Object.create(null);
+      if (!Array.isArray(spec.parts) || spec.parts.length > 64) fail(partsPath, 'expected at most 64 parts in back-to-front order');
+      inputs = { origin, parts: [] };
+      layers = spec.parts.map((instance, i) => {
+        const ip = spec === pose ? `${partsPath}[${i}]` : `${partsPath} (${instance.name})`;
+        fields(instance, ['name', 'part', 'at', 'attach', 'flipX', 'rotate', 'cleanup'], ip);
         identifier(instance.name, `${ip}.name`);
         if (Object.hasOwn(placed, instance.name)) fail(`${ip}.name`, 'duplicate part instance');
         if (typeof instance.part !== 'string' || !Object.hasOwn(source.parts, instance.part)) fail(`${ip}.part`, 'unknown part definition');
-        if (instance.flipX !== undefined && typeof instance.flipX !== 'boolean') fail(`${ip}.flipX`, 'expected a boolean');
-        const definition = source.parts[instance.part], width = definition.rows[0].length, flipX = instance.flipX === true;
-        // A flipped part mirrors its own grid, anchor and points inside the part's width.
-        const local = ([x, y]) => [flipX ? width - 1 - x : x, y], anchor = local(definition.anchor ?? [0, 0]);
+        for (const key of ['flipX', 'cleanup']) if (instance[key] !== undefined && typeof instance[key] !== 'boolean') fail(`${ip}.${key}`, 'expected a boolean');
+        if (instance.rotate !== undefined && (!Number.isInteger(instance.rotate) || Math.abs(instance.rotate) > 360)) fail(`${ip}.rotate`, 'expected whole degrees from -360 to 360, clockwise');
+        const definition = source.parts[instance.part], flipX = instance.flipX === true, rotate = instance.rotate ?? 0, cleanup = instance.cleanup !== false;
+        // A flipped part mirrors its own grid, anchor and points inside the part's width; a rotated one turns around
+        // its anchor pixel, carrying its points along.
+        const shape = shapeOf(instance.part, flipX, rotate, cleanup, ip);
         let parent = origin;
         if (instance.attach !== undefined) {
           fields(instance.attach, ['part', 'point'], `${ip}.attach`);
@@ -78,9 +126,10 @@ export function compilePoses(source) {
           if (!part || !Object.hasOwn(part.points, instance.attach.point)) fail(`${ip}.attach`, 'attachment must name a point on an earlier part in this pose');
           parent = part.points[instance.attach.point];
         }
-        const at = point(instance.at ?? [0, 0], `${ip}.at`), x = parent[0] + at[0] - anchor[0], y = parent[1] + at[1] - anchor[1];
-        placed[instance.name] = { definition: instance.part, ...(flipX && { flipX }), topLeft: [x, y], anchor: [x + anchor[0], y + anchor[1]], points: Object.fromEntries(Object.entries(definition.points ?? {}).map(([key, p]) => { const [px, py] = local(p); return [key, [x + px, y + py]]; })) };
-        return { name: instance.name, ops: [{ op: 'stamp', symbol: instance.part, x, y, ...(flipX && { flipX }) }] };
+        const at = point(instance.at ?? [0, 0], `${ip}.at`), x = parent[0] + at[0] - shape.anchor[0], y = parent[1] + at[1] - shape.anchor[1];
+        inputs.parts.push({ name: instance.name, part: instance.part, ...(instance.attach && { attach: { part: instance.attach.part, point: instance.attach.point } }), at, flipX, rotate, cleanup });
+        placed[instance.name] = { definition: instance.part, ...(shape.symbol !== instance.part && { symbol: shape.symbol }), ...(flipX && { flipX }), ...(rotate && { rotate }), topLeft: [x, y], anchor: [x + shape.anchor[0], y + shape.anchor[1]], points: Object.fromEntries(Object.entries(definition.points ?? {}).map(([key, p]) => { const [px, py] = shape.point(p); return [key, [x + px, y + py]]; })) };
+        return { name: instance.name, ops: [{ op: 'stamp', symbol: shape.symbol, x, y, ...(shape.flipX && { flipX: true }) }] };
       });
       if (pose.markers !== undefined && (!Array.isArray(pose.markers) || pose.markers.length > 64)) fail(`${path}.markers`, 'expected at most 64 markers');
       const seen = new Set();
@@ -96,8 +145,8 @@ export function compilePoses(source) {
       });
     }
     const duration = pose.duration ?? (pose.mirror !== undefined ? compiled[pose.mirror].duration : undefined);
-    compiled[pose.name] = { origin, placed, layers, markers, duration };
-    metadata.poses[pose.name] = { origin, ...(pose.mirror !== undefined && { mirror: pose.mirror }), parts: placed, markers };
+    compiled[pose.name] = { origin, placed, layers, markers, duration, inputs };
+    metadata.poses[pose.name] = { origin, ...(pose.mirror !== undefined && { mirror: pose.mirror }), ...(tween && { tween }), parts: placed, markers };
     // The pose origin becomes the frame anchor; marker positions become named frame points in the atlas.
     return { name: pose.name, ...(duration !== undefined && { duration }), anchor: origin, ...(markers.length && { points: Object.fromEntries(markers.map(m => [m.name, m.at])) }), layers };
   });

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -12,7 +12,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge patch <file.json|-> --changes <changes.json|-> [--out new.json] [--image diff.png]
                                            Preview edits; writes only --out and --image
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
-  pixelforge compile <poses.json> --out recipe.json [--metadata poses.meta.json]
+  pixelforge compile <poses.json|effects.fx.json> --out recipe.json [--metadata meta.json]
+                                           Build a recipe from authored poses or seeded particle effects
   pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
                                            Build a 47-tile blob or 16-tile cardinal set
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
@@ -29,6 +30,8 @@ Inspect: --frames a,b or --animation name picks cells; --region x,y,w,h crops;
 --view color|silhouette|grayscale|onion|tile; --native adds a 1x PNG; --diagnostics adds advisory evidence.
 --max-cells 1-256 samples long sequences with explicit omission metadata.
 Patch accepts correction overlays as --changes; a changed base fails with a fingerprint conflict.
+A cleanup change ({"cleanup": "frames[run-2]", "value": {"corners": true, "strays": true}}) previews
+proposed fixes for doubled corners and stray pixels; --diagnostics lists them with the change to use.
 All command results except the preview server are JSON. Errors exit with code 1.
 No installation needed: node bin/pixelforge.js <command>
 `;
@@ -61,7 +64,7 @@ async function readResolved(file) {
 }
 // Compiled output keeps a shared-palette link, rewritten relative to where the output is written.
 function linkPalette(recipe, input, outFile) {
-  const link = input.resolution.palettes.find(entry => ['poses', 'autotile', 'project'].includes(entry.where));
+  const link = input.resolution.palettes.find(entry => ['poses', 'autotile', 'fx', 'project'].includes(entry.where));
   if (!link) return recipe;
   const shared = path.resolve(input.baseDir, link.reference), reference = path.relative(path.dirname(path.resolve(outFile)), shared).split(path.sep).join('/');
   return restorePaletteReference({ palette: { $ref: reference } }, recipe, { palettes: [{ ...link, where: 'project' }] });
@@ -115,7 +118,7 @@ try {
       let value, metadata, input;
       if (command === 'compile' || command === 'autotile') {
         input = await readResolved(positional[0]);
-        const compiled = command === 'compile' ? compilePoses(input.document) : compileAutotile(input.document);
+        const compiled = command === 'autotile' ? compileAutotile(input.document) : input.document?.format === 'pixelforge-fx' ? compileEffects(input.document) : compilePoses(input.document);
         value = linkPalette(compiled.recipe, input, options.out); metadata = compiled.metadata;
       } else if (command === 'overlay') {
         if (!options.changes) throw new Error('overlay requires --changes <edits.json>');

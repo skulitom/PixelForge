@@ -2,6 +2,7 @@
 import { PixelError, renderProject, parseColor, animationPosition, tileRepeat, tileReport } from './core.js';
 import { fields, point } from './authoring.js';
 import { neighbourMask } from './autotile.js';
+import { EASINGS, ease } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 const int = (v, min, max, path) => { if (!Number.isInteger(v) || v < min || v > max) fail(path, `expected an integer from ${min} to ${max}`); return v; };
@@ -134,7 +135,8 @@ export function prepareScene(source) {
       if (!Array.isArray(instance.trajectory) || instance.trajectory.length < 2 || instance.trajectory.length > 256) fail(`${path}.trajectory`, 'expected 2–256 timed positions');
       let prior = -1;
       for (const [j, key] of instance.trajectory.entries()) {
-        fields(key, ['time', 'at'], `${path}.trajectory[${j}]`); int(key.time, 0, duration, `${path}.trajectory[${j}].time`); point(key.at, `${path}.trajectory[${j}].at`);
+        fields(key, ['time', 'at', 'ease'], `${path}.trajectory[${j}]`); int(key.time, 0, duration, `${path}.trajectory[${j}].time`); point(key.at, `${path}.trajectory[${j}].at`);
+        if (key.ease !== undefined && !EASINGS.includes(key.ease)) fail(`${path}.trajectory[${j}].ease`, `expected one of ${EASINGS.join(', ')}`);
         if (key.time <= prior || (j === 0 && key.time !== 0)) fail(`${path}.trajectory`, 'start at time 0, then strictly increase');
         prior = key.time;
       }
@@ -214,7 +216,8 @@ export function renderScene(scene, { time = 0, lit = true, density = false } = {
       position = instance.trajectory.at(-1).at;
       for (let t = 1; t < instance.trajectory.length; t++) {
         const a = instance.trajectory[t - 1], b = instance.trajectory[t];
-        if (time <= b.time) { const fraction = (time - a.time) / (b.time - a.time); position = a.at.map((v, axis) => Math.round(v + (b.at[axis] - v) * fraction)); break; }
+        // Each key's ease shapes the segment that starts at it; positions still round to whole pixels.
+        if (time <= b.time) { const fraction = ease(a.ease ?? 'linear', (time - a.time) / (b.time - a.time)); position = a.at.map((v, axis) => Math.round(v + (b.at[axis] - v) * fraction)); break; }
       }
     }
     for (let ry = 0; ry < instance.repeat[1]; ry++) for (let rx = 0; rx < instance.repeat[0]; rx++) {

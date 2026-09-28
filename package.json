@@ -10,8 +10,8 @@
   "license": "MIT",
   "engines": { "node": ">=20" },
   "bin": { "pixelforge": "./bin/pixelforge.js" },
-  "exports": { ".": "./src/index.js", "./core": "./src/core.js", "./runtime": "./src/runtime.js", "./authoring": "./src/authoring.js", "./scene": "./src/scene.js", "./autotile": "./src/autotile.js" },
-  "files": ["bin", "src", "studio", "examples", "schema.json", "poses.schema.json", "scene.schema.json", "autotile.schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
+  "exports": { ".": "./src/index.js", "./core": "./src/core.js", "./runtime": "./src/runtime.js", "./authoring": "./src/authoring.js", "./scene": "./src/scene.js", "./autotile": "./src/autotile.js", "./fx": "./src/fx.js", "./craft": "./src/craft.js" },
+  "files": ["bin", "src", "studio", "examples", "schema.json", "poses.schema.json", "scene.schema.json", "autotile.schema.json", "fx.schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
   "scripts": {
     "test": "node --test",
     "start": "node bin/pixelforge.js preview",

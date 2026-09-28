@@ -235,6 +235,18 @@
                   "maxItems": 2,
                   "minItems": 2,
                   "description": "[x, y] in unscaled canvas pixels; the top-left corner of that pixel."
+                },
+                "ease": {
+                  "enum": [
+                    "linear",
+                    "hold",
+                    "in",
+                    "out",
+                    "inOut",
+                    "overshoot",
+                    "bounce"
+                  ],
+                  "description": "Shape of the segment starting at this key: linear (default), hold (jump at the end), in, out, inOut, overshoot or bounce. Positions round to whole pixels."
                 }
               },
               "required": [
@@ -1091,6 +1103,30 @@
             },
             "diagonal": {
               "type": "boolean"
+            },
+            "position": {
+              "enum": [
+                "outside",
+                "inside",
+                "middle"
+              ],
+              "description": "outside (default) surrounds the visible pixels; inside recolors their edge pixels; middle splits the width, the odd pixel outside."
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8,
+              "description": "Rings of pixels; default 1."
+            },
+            "directions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[x.]{3}$"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "description": "3×3 grid centred on a visible pixel, with a dot in the centre: x marks the sides that get the line, e.g. [\"...\", \"...\", \"..x\"] for a drop shadow or [\".x.\", \"...\", \"...\"] for a top rim. Replaces diagonal."
             }
           },
           "required": [
@@ -1098,7 +1134,255 @@
             "color"
           ],
           "additionalProperties": false,
-          "description": "Draw a 1px outline around every visible pixel in this buffer (frame or layer); diagonal also fills corners."
+          "description": "Outline every visible pixel in this buffer (frame or layer): outside rings, inside edge rings or both, in chosen directions."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "dither"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "erase": {
+              "type": "boolean",
+              "description": "Clear the pattern pixels instead of drawing a color."
+            },
+            "density": {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "maxItems": 2,
+                  "minItems": 2
+                }
+              ],
+              "description": "Share of pixels drawn, 0–1 (default 0.5), or [from, to] ramping along direction."
+            },
+            "direction": {
+              "enum": [
+                "down",
+                "up",
+                "right",
+                "left",
+                "radial"
+              ],
+              "description": "Ramp direction for a [from, to] density; radial runs from the centre to the edge."
+            },
+            "pattern": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "bayer2",
+                    "bayer4",
+                    "bayer8"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "maxItems": 16,
+                    "minItems": 1
+                  },
+                  "maxItems": 16,
+                  "minItems": 1,
+                  "description": "Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5."
+                }
+              ],
+              "description": "bayer4 by default. Patterns follow canvas coordinates, so neighbouring areas line up."
+            },
+            "offset": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -4096,
+                "maximum": 4096
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "description": "Shift the pattern, for example to crawl it between frames."
+            },
+            "over": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+                  },
+                  "maxItems": 64,
+                  "minItems": 1
+                }
+              ],
+              "description": "Only change pixels whose exact current color is listed (transparent included)."
+            }
+          },
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": [
+                "color"
+              ]
+            },
+            {
+              "required": [
+                "erase"
+              ]
+            }
+          ],
+          "description": "Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density. x/y default to 0 and w/h to the canvas."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "rewrite"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "match": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 8
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "description": "Equal-width rows of palette keys; dot or space matches anything (match) or keeps the pixel (replace); the empty character stands for transparent."
+                  },
+                  "replace": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 8
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "description": "Equal-width rows of palette keys; dot or space matches anything (match) or keeps the pixel (replace); the empty character stands for transparent."
+                  }
+                },
+                "required": [
+                  "match",
+                  "replace"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 16,
+              "minItems": 1
+            },
+            "empty": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1,
+              "description": "A non-palette character meaning a transparent pixel in match and erasure in replace."
+            },
+            "steps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "description": "Passes over every rule; stops early when a pass changes nothing."
+            },
+            "chance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Seeded probability that each match is applied."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536,
+              "description": "Most replacements per rule per step."
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            "rotate": {
+              "type": "boolean",
+              "description": "Also match the rules turned 90°, 180° and 270°."
+            },
+            "mirror": {
+              "type": "boolean",
+              "description": "Also match the rules mirrored horizontally."
+            }
+          },
+          "required": [
+            "op",
+            "rules"
+          ],
+          "additionalProperties": false,
+          "description": "Markov-style rewrite rules on this buffer: each small match grid found on exact colors is replaced, in a seeded order, without overlapping rewrites. The region defaults to the whole canvas."
         }
       ]
     },

@@ -1,4 +1,5 @@
 // Browser-compatible, deterministic rasterizer. No I/O and no dependencies.
+import { DITHER_PATTERNS, ditherThreshold, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
 export class PixelError extends Error {
   constructor(path, message) { super(`${path}: ${message}`); this.name = 'PixelError'; this.path = path; }
 }
@@ -19,6 +20,10 @@ function integer(value, path, min = -4096, max = 4096) {
   return value;
 }
 function boolean(value, path) { if (typeof value !== 'boolean') fail(path, 'expected a boolean'); return value; }
+function number(value, path, min, max) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) fail(path, `expected a number from ${min} to ${max}`);
+  return value;
+}
 function list(value, path, max = 2048) {
   if (!Array.isArray(value) || value.length > max) fail(path, `expected an array with at most ${max} items`);
   return value;
@@ -129,7 +134,9 @@ export function renderProject(spec, options = {}) {
         grid: ['x', 'y', 'rows', ...transform, 'remap'],
         stamp: ['x', 'y', 'symbol', ...transform, 'remap'], replace: ['from', 'to'],
         copy: ['x', 'y', 'from', 'symbol', 'sx', 'sy', 'w', 'h', ...transform, 'remap'],
-        outline: ['color', 'diagonal']
+        outline: ['color', 'diagonal', 'position', 'width', 'directions'],
+        dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'over'],
+        rewrite: ['x', 'y', 'w', 'h', 'rules', 'empty', 'steps', 'chance', 'limit', 'seed', 'rotate', 'mirror']
       };
       if (typeof op.op !== 'string' || !own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
       object(op, p, ['op', ...fields[op.op]]);
@@ -218,16 +225,111 @@ export function renderProject(spec, options = {}) {
         const w = integer(op.w ?? sourceWidth - sx, `${p}.w`, 1, sourceWidth - sx), h = integer(op.h ?? sourceHeight - sy, `${p}.h`, 1, sourceHeight - sy);
         drawCells(w, h, (gx, gy) => read(sx + gx, sy + gy));
       } else if (op.op === 'outline') {
-        // Surrounds every visible pixel drawn so far in this buffer (frame or layer) with a 1px line.
-        const c = color(op.color, `${p}.color`), diagonal = boolean(op.diagonal ?? false, `${p}.diagonal`);
-        spend(width * height);
-        const solid = new Uint8Array(width * height);
-        for (let i = 0; i < solid.length; i++) solid[i] = data[i * 4 + 3] ? 1 : 0;
-        const around = diagonal ? [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]] : [[0, -1], [-1, 0], [1, 0], [0, 1]];
-        for (let py = 0; py < height; py++) for (let px = 0; px < width; px++) {
-          if (solid[py * width + px]) continue;
-          if (around.some(([dx, dy]) => { const nx = px + dx, ny = py + dy; return nx >= 0 && ny >= 0 && nx < width && ny < height && solid[ny * width + nx]; })) blend(data, (py * width + px) * 4, c);
+        // Outside rings surround the visible pixels drawn so far in this buffer (frame or layer); inside rings recolor
+        // its edge pixels. `directions` marks, on a 3×3 grid centred on a visible pixel, the sides that get the line:
+        // an outside line appears there, an inside line recolors pixels whose neighbour there is transparent.
+        const c = color(op.color, `${p}.color`);
+        if (op.diagonal !== undefined && op.directions !== undefined) fail(`${p}.directions`, 'use directions or diagonal, not both');
+        const diagonal = boolean(op.diagonal ?? false, `${p}.diagonal`), position = op.position ?? 'outside';
+        if (!['outside', 'inside', 'middle'].includes(position)) fail(`${p}.position`, 'expected outside, inside or middle');
+        const size = integer(op.width ?? 1, `${p}.width`, 1, 8);
+        let around = diagonal ? [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]] : [[0, -1], [-1, 0], [1, 0], [0, 1]];
+        if (op.directions !== undefined) {
+          const rows = list(op.directions, `${p}.directions`, 3);
+          if (rows.length !== 3 || rows.some(row => typeof row !== 'string' || !/^[x.]{3}$/.test(row)) || rows[1][1] !== '.' || !rows.join('').includes('x')) fail(`${p}.directions`, 'expected three rows of three x or . characters, with a . in the centre and at least one x');
+          around = rows.flatMap((row, dy) => [...row].flatMap((mark, dx) => (mark === 'x' ? [[dx - 1, dy - 1]] : [])));
         }
+        spend(width * height * size);
+        const solid = new Uint8Array(width * height), paint = new Uint8Array(width * height);
+        for (let i = 0; i < solid.length; i++) solid[i] = data[i * 4 + 3] ? 1 : 0;
+        const within = (px, py) => px >= 0 && py >= 0 && px < width && py < height;
+        const outer = position === 'inside' ? 0 : position === 'outside' ? size : Math.ceil(size / 2);
+        const inner = position === 'outside' ? 0 : position === 'inside' ? size : Math.floor(size / 2);
+        const grown = solid.slice(), open = solid.map(v => 1 - v);
+        for (let ring = 0; ring < outer; ring++) {
+          const next = [];
+          for (let py = 0; py < height; py++) for (let px = 0; px < width; px++) {
+            if (!grown[py * width + px] && around.some(([dx, dy]) => within(px - dx, py - dy) && grown[(py - dy) * width + px - dx])) next.push(py * width + px);
+          }
+          for (const i of next) { grown[i] = 1; paint[i] = 1; }
+        }
+        // The canvas edge does not count as transparent, so a shape cut by the canvas gets no line there.
+        for (let ring = 0; ring < inner; ring++) {
+          const next = [];
+          for (let py = 0; py < height; py++) for (let px = 0; px < width; px++) {
+            if (solid[py * width + px] && !open[py * width + px] && around.some(([dx, dy]) => within(px + dx, py + dy) && open[(py + dy) * width + px + dx])) next.push(py * width + px);
+          }
+          for (const i of next) { open[i] = 1; paint[i] = 1; }
+        }
+        for (let i = 0; i < paint.length; i++) if (paint[i]) blend(data, i * 4, c);
+      } else if (op.op === 'dither') {
+        // Ordered dither: draws `color` (or erases) where the canvas-anchored pattern's threshold is below the density.
+        const w = integer(op.w ?? width, `${p}.w`, 1, 512), h = integer(op.h ?? height, `${p}.h`, 1, 512);
+        const erase = boolean(op.erase ?? false, `${p}.erase`);
+        if (erase === (op.color !== undefined)) fail(p, 'dither needs a color, or erase: true to clear pixels');
+        const c = erase ? null : color(op.color, `${p}.color`), ramp = Array.isArray(op.density);
+        if (ramp && op.density.length !== 2) fail(`${p}.density`, 'expected a number from 0 to 1, or [from, to]');
+        const [from, to] = ramp ? op.density : [op.density ?? 0.5, op.density ?? 0.5];
+        number(from, `${p}.density${ramp ? '[0]' : ''}`, 0, 1); number(to, `${p}.density${ramp ? '[1]' : ''}`, 0, 1);
+        if (op.direction !== undefined && !ramp) fail(`${p}.direction`, 'direction applies to a density ramp such as [0, 1]');
+        const direction = op.direction ?? 'down';
+        if (!['down', 'up', 'right', 'left', 'radial'].includes(direction)) fail(`${p}.direction`, 'expected down, up, right, left or radial');
+        const pattern = op.pattern ?? 'bayer4';
+        if (typeof pattern === 'string') { if (!DITHER_PATTERNS.includes(pattern)) fail(`${p}.pattern`, 'expected bayer2, bayer4, bayer8 or a matrix of ranks'); }
+        else {
+          const rows = list(pattern, `${p}.pattern`, 16), columns = Array.isArray(rows[0]) ? rows[0].length : 0;
+          if (!rows.length || columns < 1 || columns > 16) fail(`${p}.pattern`, 'expected bayer2, bayer4, bayer8 or 1–16 rows of 1–16 ranks');
+          rows.forEach((row, r) => {
+            if (!Array.isArray(row) || row.length !== columns) fail(`${p}.pattern[${r}]`, `all rows must have ${columns} ranks`);
+            row.forEach((rank, k) => integer(rank, `${p}.pattern[${r}][${k}]`, 0, rows.length * columns - 1));
+          });
+        }
+        const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`));
+        const over = op.over === undefined ? null : new Set((typeof op.over === 'string' ? [op.over] : list(op.over, `${p}.over`, 64)).map((value, i) => pixelId(color(value, typeof op.over === 'string' ? `${p}.over` : `${p}.over[${i}]`), 0)));
+        spend(w * h);
+        for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+          let s = 0;
+          if (direction === 'radial') { const u = (i + 0.5) / w * 2 - 1, v = (j + 0.5) / h * 2 - 1; s = Math.min(1, Math.sqrt(u * u + v * v)); }
+          else s = direction === 'down' ? (j + 0.5) / h : direction === 'up' ? 1 - (j + 0.5) / h : direction === 'right' ? (i + 0.5) / w : 1 - (i + 0.5) / w;
+          const px = x + i, py = y + j;
+          if (!(threshold(px, py) < from + (to - from) * s)) continue;
+          if (px < 0 || py < 0 || px >= width || py >= height) { clip(p); continue; }
+          if (over && !over.has(pixelId(data, (py * width + px) * 4))) continue;
+          put(px, py, c, erase);
+        }
+      } else if (op.op === 'rewrite') {
+        // Markov-style rules: small palette grids matched against exact RGBA and replaced in place (see craft.js).
+        const rx = integer(op.x ?? 0, `${p}.x`, 0, width - 1), ry = integer(op.y ?? 0, `${p}.y`, 0, height - 1);
+        const rw = integer(op.w ?? width - rx, `${p}.w`, 1, width - rx), rh = integer(op.h ?? height - ry, `${p}.h`, 1, height - ry);
+        if (op.empty !== undefined && (typeof op.empty !== 'string' || op.empty.length !== 1 || op.empty === '.' || op.empty === ' ' || own(palette, op.empty))) fail(`${p}.empty`, 'choose one character that is not a dot, space or palette key to stand for transparent pixels');
+        list(op.rules, `${p}.rules`, 16);
+        if (!op.rules.length) fail(`${p}.rules`, 'expected 1–16 rules');
+        const turns = { rotate: boolean(op.rotate ?? false, `${p}.rotate`), mirror: boolean(op.mirror ?? false, `${p}.mirror`) };
+        const rules = op.rules.map((rule, r) => {
+          const rp = `${p}.rules[${r}]`;
+          object(rule, rp, ['match', 'replace']);
+          const cells = key => {
+            const rows = list(rule[key], `${rp}.${key}`, 8), w = typeof rows[0] === 'string' ? rows[0].length : 0;
+            if (!rows.length || w < 1 || w > 8) fail(`${rp}.${key}`, 'expected 1–8 rows of 1–8 characters');
+            return { w, h: rows.length, cells: rows.flatMap((row, j) => {
+              if (typeof row !== 'string' || row.length !== w) fail(`${rp}.${key}[${j}]`, `all rows must be ${w} characters wide`);
+              return [...row].map(char => {
+                if (char === '.' || char === ' ') return -1;
+                if (char === op.empty) return 0;
+                if (char.length !== 1 || !own(palette, char)) fail(`${rp}.${key}[${j}]`, `unknown palette character ${JSON.stringify(char)}${op.empty === undefined ? '; set empty to match or erase transparent pixels' : ''}`);
+                return pixelId(color(char, `${rp}.${key}[${j}]`), 0);
+              });
+            }) };
+          };
+          const match = cells('match'), replace = cells('replace');
+          if (match.w !== replace.w || match.h !== replace.h) fail(`${rp}.replace`, 'replace must be the same size as match');
+          if (replace.cells.every(v => v < 0)) fail(`${rp}.replace`, 'replace keeps every pixel; use palette keys or the empty character');
+          return ruleVariants({ w: match.w, h: match.h, match: match.cells, replace: replace.cells }, turns);
+        });
+        const steps = integer(op.steps ?? 1, `${p}.steps`, 1, 64), seed = integer(op.seed ?? 0, `${p}.seed`, 0, 2147483647);
+        const chance = op.chance === undefined ? 1 : number(op.chance, `${p}.chance`, 0, 1), limit = op.limit === undefined ? Infinity : integer(op.limit, `${p}.limit`, 1, 65536);
+        const ids = idsOf(data);
+        for (const index of rewriteIds(ids, width, height, rules, { x: rx, y: ry, w: rw, h: rh, steps, chance, limit, seed, spend })) data.set(colorOf(ids[index]), index * 4);
       } else if (op.op === 'replace') {
         const from = color(op.from, `${p}.from`), to = color(op.to, `${p}.to`);
         spend(width * height);
@@ -693,6 +795,13 @@ export function analyzeProject(project) {
     if (!visible) findings.push({ code: 'empty', frame: frame.name, note: 'An empty effect/transition frame may be intentional.' });
     if (isolatedCount) findings.push({ code: 'isolated', frame: frame.name, count: isolatedCount, coordinates: isolated, omitted: isolatedCount - isolated.length, note: 'No visible 8-connected neighbor. Exempt intentional sparks, stars and detached accents.' });
     if (outside.size) findings.push({ code: 'palette', frame: frame.name, count: outside.size, coordinates: unlisted, omitted: outside.size - unlisted.length, note: 'Colors outside the declared palette; literal colors and alpha blends may be intentional.' });
+    // Cleanup proposals, with the patch change that previews them. Strays that would become transparent are the
+    // isolated pixels already reported above.
+    const fixes = visible ? cleanupIds(idsOf(frame.data), width, height, { corners: true, strays: true }) : [];
+    for (const [code, kind, note] of [['corners', 'corner', 'Doubled L-shaped steps in one-pixel lines. The fix is a proposal: preview it with pixel_patch or patch and keep deliberate corners.'], ['strays', 'stray', 'Pixels whose eight neighbours share one other colour (noise or pinholes). Exempt eyes, sparks and deliberate accents; the fix also erases isolated pixels.']]) {
+      const found = fixes.filter(fix => fix.kind === kind && (kind === 'corner' || fix.id !== 0));
+      if (found.length) findings.push({ code, frame: frame.name, count: found.length, coordinates: found.slice(0, 32).map(({ x, y }) => ({ x, y })), omitted: Math.max(0, found.length - 32), fix: { cleanup: `frames[${frame.name}]`, value: { [code]: true } }, note });
+    }
     return { frame: frame.name, visible, colors: colors.size };
   });
   const difference = (a, b) => {

@@ -9,6 +9,7 @@ const routes = new Map([
   ['/studio.css', ['../studio/studio.css', 'text/css; charset=utf-8']],
   ['/studio.js', ['../studio/studio.js', 'text/javascript; charset=utf-8']],
   ['/core.js', ['./core.js', 'text/javascript; charset=utf-8']],
+  ['/craft.js', ['./craft.js', 'text/javascript; charset=utf-8']],
   ['/authoring.js', ['./authoring.js', 'text/javascript; charset=utf-8']],
   ['/autotile.js', ['./autotile.js', 'text/javascript; charset=utf-8']],
   ['/scene.js', ['./scene.js', 'text/javascript; charset=utf-8']],
@@ -17,7 +18,7 @@ const routes = new Map([
   ['/scene.html', ['../studio/scene.html', 'text/html; charset=utf-8']],
   ['/examples/quality/skink.json', ['../examples/quality/skink.json', 'application/json']],
   ['/schema.json', ['../schema.json', 'application/json']],
-  ...['forest-spirit', 'ember', 'coin'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
+  ...['forest-spirit', 'ember', 'coin', 'shrine', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
 ]);
 export async function startStudio({ port = 4747, project, quiet = false } = {}) {
   const scene = project?.format === 'pixelforge-scene';

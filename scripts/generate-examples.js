@@ -1,4 +1,5 @@
 import { writeFile, mkdir } from 'node:fs/promises';
+import { compileEffects, compilePoses } from '../src/index.js';
 const rows = source => source.map(row => row.padEnd(16, '.'));
 const spirit = rows([
   '........dd',
@@ -38,5 +39,70 @@ const coin = { version: 1, name: 'coin', width: 24, height: 24, palette: { edge:
   ...(w >= 5 ? [{ op: 'line', x: Math.floor((24-w)/2)+2, y: 8, x2: Math.floor((24-w)/2)+2, y2: 15, color: 'light' }] : []),
   ...(w > 8 ? [{ op: 'line', x: 12, y: 9, x2: 12, y2: 15, color: 'shade' }] : [])
 ] })), animations: { spin: { frames: widths.map((_, i) => `turn-${i}`) } }, sheet: { columns: 6, padding: 1 } };
+
+// Seeded particle effects: every frame compiles to stamps, grids and lines on these symbols.
+const emit = (at, extra) => ({ at, ...extra });
+const effects = { format: 'pixelforge-fx', version: 1, name: 'effects', width: 48, height: 40,
+  palette: { W: '#fff4d6', y: '#ffd166', o: '#f4843c', r: '#c2413a', s: '#d8c7a8', S: '#a38d74', u: '#6f5d52', l: '#b8dc7a', g: '#79b15a', G: '#3f7a4a', q: '#a9a6c4', Q: '#6b6888' },
+  symbols: { hot: ['W'], warm: ['y'], cool: ['o'], ash: ['r'], 'flash-0': ['..W..', '.WyW.', 'WyWyW', '.WyW.', '..W..'], 'flash-1': ['W...W', '..y..', '.y.y.', '..y..', 'W...W'],
+    'ember-big': ['yW', 'oy'], ember: ['y'], 'ember-dim': ['o'], 'ember-end': ['r'], 'puff-big': ['.sss.', 'ssssS', 'SSSSu'], puff: ['.sS', 'sSu'], 'puff-small': ['sS'],
+    'leaf-a': ['lg.', '.gG'], 'leaf-b': ['.l', 'gG'], 'leaf-c': ['gl', 'G.'], 'chip-a': ['qQ', 'Q.'], 'chip-b': ['q', 'Q'], 'chip-c': ['.q', 'qQ'], 'chip-d': ['q'] },
+  anchor: [24, 36],
+  effects: {
+    sparks: { frames: 9, duration: 55, seed: 11, emitters: [
+      emit([24, 30], { name: 'flash', burst: 1, life: 2, shapes: ['flash-0', 'flash-1'], play: 'once' }),
+      emit([24, 30], { name: 'burst', area: [3, 2], burst: 12, angle: [205, 335], speed: [1.8, 3.4], gravity: [0, 0.32], drag: 0.04, life: [6, 9], floor: 36, bounce: 0.35, shapes: ['hot', 'warm', 'cool', 'ash'], trail: { color: 'r', length: 1 } })] },
+    embers: { frames: 16, duration: 70, loop: true, seed: 4, emitters: [
+      emit([24, 35], { area: [12, 2], rate: 0.5, angle: [255, 285], speed: [0.6, 1.1], life: [12, 18], sway: { amplitude: [1, 0], period: 7 }, shapes: ['ember-big', 'ember', 'ember-dim', 'ember-end'], dissolve: 0.25 })] },
+    dust: { frames: 8, duration: 70, seed: 6, emitters: [[22, [178, 196], 'left'], [26, [344, 362], 'right']].map(([x, angle, name]) =>
+      emit([x, 35], { name, area: [4, 1], burst: 4, angle, speed: [1.2, 2.2], drag: 0.22, gravity: [0, -0.04], life: [7, 9], shapes: ['puff-big', 'puff', 'puff-small'], dissolve: 0.4 })) },
+    leaves: { frames: 12, duration: 70, seed: 9, emitters: [
+      emit([24, 18], { area: [10, 4], burst: 8, angle: [200, 340], speed: [1, 2.2], gravity: [0, 0.18], drag: 0.14, life: [10, 12], sway: { amplitude: [1.4, 0], period: 6 },
+        shapes: [['leaf-a', 'leaf-b'], ['leaf-b', 'leaf-c'], ['leaf-c', 'leaf-a']], play: 'loop', remaps: [{}, { g: 'l' }, { G: 'g', g: 'l' }], dissolve: 0.25 })] },
+    shatter: { frames: 12, duration: 60, seed: 3, emitters: [
+      emit([24, 26], { area: [6, 4], burst: 9, angle: [205, 335], speed: [2, 3.5], gravity: [0, 0.45], drag: 0.02, life: 12, floor: 35, bounce: 0.3, shapes: [['chip-a'], ['chip-b'], ['chip-c'], ['chip-d']] })] }
+  } };
+
+// Dithered sky bands, a shading band limited to one colour, an inside rim light, grown cracks and moss, a drop line.
+const band = (y, h, color, density) => ({ op: 'dither', x: 0, y, w: 48, h, color, density });
+const shrine = { version: 1, name: 'shrine', width: 48, height: 40,
+  palette: { a: '#2a2140', b: '#43305a', e: '#6b4668', f: '#a8606a', u: '#2c3b2f', v: '#3f5a3a', k: '#1d1a2b', s: '#6d6a8a', S: '#4d4a6a', h: '#9e9bbd', c: '#2f2b45', m: '#6fa34f', M: '#46703f', g: '#5fc7b8', G: '#d6fff1' },
+  symbols: { rune: ['..g..', '.g.g.', 'g.g.g', '.g.g.', '..g..'] },
+  frames: [
+    { name: 'idle', duration: 400, layers: [
+      { name: 'sky', ops: [
+        { op: 'rect', x: 0, y: 0, w: 48, h: 30, color: 'a' }, band(8, 10, 'b', [0, 1]), { op: 'rect', x: 0, y: 18, w: 48, h: 6, color: 'b' }, band(18, 8, 'e', [0, 1]),
+        { op: 'rect', x: 0, y: 26, w: 48, h: 4, color: 'e' }, band(26, 4, 'f', [0, 0.75]), { op: 'rect', x: 0, y: 30, w: 48, h: 10, color: 'v' }, band(30, 10, 'u', [0.25, 1])] },
+      { name: 'stone', ops: [
+        { op: 'ellipse', x: 16, y: 6, w: 16, h: 12, color: 's' }, { op: 'rect', x: 16, y: 12, w: 16, h: 22, color: 's' },
+        { op: 'pixel', x: 26, y: 13, color: 'c' },
+        { op: 'rewrite', x: 18, y: 12, w: 12, h: 20, rules: [{ match: ['c.', '.s'], replace: ['..', '.c'] }], mirror: true, limit: 1, steps: 9, seed: 7 },
+        { op: 'dither', x: 24, y: 6, w: 8, h: 28, color: 'S', density: [0, 1], direction: 'right', over: 's' },
+        { op: 'outline', color: 'h', position: 'inside', directions: ['xx.', 'x..', '...'] },
+        { op: 'outline', color: 'k' },
+        { op: 'rewrite', empty: '_', rules: [{ match: ['_', 'k'], replace: ['.', 'm'] }], chance: 0.7, seed: 2 },
+        { op: 'rewrite', rules: [{ match: ['m', 'h'], replace: ['.', 'M'] }, { match: ['m', 's'], replace: ['.', 'M'] }], chance: 0.6, seed: 3 },
+        { op: 'stamp', symbol: 'rune', x: 19, y: 20 },
+        { op: 'outline', color: 'k', directions: ['...', '...', '.x.'] }] }
+    ] },
+    { name: 'glow', from: 'idle', duration: 240, palette: { g: 'G' }, ops: [{ op: 'stamp', symbol: 'rune', x: 19, y: 20 }] }
+  ],
+  animations: { pulse: { frames: ['idle', 'glow'] } } };
+
+// One sword drawn once, rotated around its grip; eased tweens accelerate the swing into the strike.
+const tip = [{ name: 'tip', part: 'blade', point: 'tip' }], held = rotate => [{ name: 'blade', part: 'sword', rotate }];
+const swing = { format: 'pixelforge-poses', version: 1, name: 'swing', width: 40, height: 40,
+  palette: { k: '#1d1a2b', b: '#7a4a32', y: '#e8b04a', w: '#eef3ff', s: '#9aa7c7', S: '#5d6a8f' },
+  parts: { sword: { rows: ['....k............', '...kyk...........', 'kkkkykkkkkkkkkk..', 'kbbkykwwwwwwwwwkk', 'kkkkykssssssssSk.', '...kyk.kkkkkkkk..', '....k............'], anchor: [2, 3], points: { tip: [16, 3] } } },
+  poses: [
+    { name: 'raise', duration: 180, origin: [20, 24], parts: held(-135), markers: tip },
+    { name: 'strike', duration: 90, origin: [20, 24], parts: held(30), markers: tip },
+    { name: 'swing-1', duration: 50, tween: { from: 'raise', to: 'strike', t: 0.33, ease: 'in' } },
+    { name: 'swing-2', duration: 50, tween: { from: 'raise', to: 'strike', t: 0.67, ease: 'in' } },
+    { name: 'follow', duration: 160, origin: [20, 24], parts: held(50) }
+  ],
+  animations: { swing: { frames: ['raise', 'swing-1', 'swing-2', 'strike', 'follow'], loop: false } } };
+
 await mkdir(new URL('../examples/', import.meta.url), { recursive: true });
-for (const project of [forest, ember, coin]) await writeFile(new URL(`../examples/${project.name}.json`, import.meta.url), JSON.stringify(project, null, 2) + '\n');
+const files = { 'forest-spirit': forest, ember, coin, shrine, 'effects.fx': effects, effects: compileEffects(effects).recipe, 'swing.poses': swing, swing: compilePoses(swing).recipe };
+for (const [name, value] of Object.entries(files)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');

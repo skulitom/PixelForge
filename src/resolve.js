@@ -65,11 +65,12 @@ async function resolveScene(scene, baseDir, context) {
 }
 /**
  * Returns the document with references inlined, plus the files it read. Works for recipes, pose sources,
- * autotile templates and scenes. `revisions(id)` supplies saved recipes for `{ "revision": id }` scene assets.
+ * autotile templates, effect sources and scenes. `revisions(id)` supplies saved recipes for `{ "revision": id }` scene assets.
  */
 export async function resolveReferences(document, { baseDir = process.cwd(), root, revisions } = {}) {
   const context = { root, revisions, files: new Set(), palettes: [] };
-  const resolved = document?.format === 'pixelforge-scene' ? await resolveScene(document, baseDir, context) : await resolvePalette(document, baseDir, context, document?.format === 'pixelforge-poses' ? 'poses' : document?.format === 'pixelforge-autotile' ? 'autotile' : 'project');
+  const sidecars = { 'pixelforge-poses': 'poses', 'pixelforge-autotile': 'autotile', 'pixelforge-fx': 'fx' };
+  const resolved = document?.format === 'pixelforge-scene' ? await resolveScene(document, baseDir, context) : await resolvePalette(document, baseDir, context, sidecars[document?.format] ?? 'project');
   return { document: resolved, files: [...context.files], palettes: context.palettes };
 }
 /**

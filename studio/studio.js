@@ -6,7 +6,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let project, spec, atlas, frameImages = [], selected = 0, playing = !reducedMotion, mode = 'animation';
 let position = 0;
 let elapsed = 0, lastTime = 0, zoom = 12, dirty = false, valid = false, compileTimer, toastTimer, loadVersion = 0;
-const examples = [{ file: 'quality/skink', title: 'Lantern skink', type: 'Authored poses · 12 frames' }, { file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }];
+const examples = [{ file: 'quality/skink', title: 'Lantern skink', type: 'Authored poses · 12 frames' }, { file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }, { file: 'shrine', title: 'Moonlit shrine', type: 'Dither, rewrite, rim light · 2 frames' }, { file: 'swing', title: 'Sword swing', type: 'Rotated, tweened poses · 5 frames' }, { file: 'effects', title: 'Particle effects', type: 'Compiled fx · 57 frames' }];
 const title = name => name.replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
 function imageCanvas(data, width, height) {
   const c = document.createElement('canvas'); c.width = width; c.height = height;

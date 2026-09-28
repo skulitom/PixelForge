@@ -1,5 +1,6 @@
 // Browser-compatible recipe patching: targeted edits addressed by readable paths. No I/O.
 import { PixelError, parseColor, renderProject } from './core.js';
+import { pixelId, colorOf, idsOf, cleanupIds } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -9,6 +10,8 @@ const summarize = value => {
   return text === undefined || text.length <= 160 ? value : `${Array.isArray(value) ? 'list' : typeof value} of ${text.length} JSON characters`;
 };
 const segmentPattern = /\.([^.[\]"]+)|\[(\d+|-|[a-zA-Z][\w-]*)\]|\[("(?:[^"\\]|\\.)*")\]/y;
+// Canvas verbs change final pixels in canvas coordinates; the rest edit the recipe structure.
+const CANVAS = ['paint', 'grid', 'move', 'recolor', 'cleanup'], VERBS = ['set', 'insert', 'remove', ...CANVAS];
 
 const hex = data => '#' + [...data].map(v => v.toString(16).padStart(2, '0')).join('');
 function regionPixels(recipe, frameIndex, verb, value, where) {
@@ -48,6 +51,36 @@ function regionPixels(recipe, frameIndex, verb, value, where) {
     }
   }
   return [...pixels, ...moved]; // Capture before clearing so overlapping moves preserve every highlight.
+}
+// Names an exact colour as this frame draws it: a palette key (single characters first), transparent, or hex.
+function frameColorNamer(recipe, frameIndex) {
+  const palette = recipe.palette ?? {}, overrides = recipe.frames[frameIndex].palette ?? {}, names = new Map();
+  for (const key of Object.keys(palette).sort((a, b) => (a.length === 1 ? 0 : 1) - (b.length === 1 ? 0 : 1))) {
+    const id = pixelId(parseColor(overrides[key] ?? palette[key], palette), 0);
+    if (id && !names.has(id)) names.set(id, key);
+  }
+  return id => (id === 0 ? 'transparent' : names.get(id) ?? hex(colorOf(id)));
+}
+// Proposed De-Corner/De-Stray fixes for one rendered frame, as ordinary canvas corrections (see craft.js cleanupIds).
+function cleanupPixels(recipe, frameIndex, value, where) {
+  if (!isObject(value)) fail(where, 'expected {corners?, strays?, x?, y?, w?, h?, mask?, colors?}');
+  for (const key of Object.keys(value)) if (!['corners', 'strays', 'x', 'y', 'w', 'h', 'mask', 'colors'].includes(key) || value[key] === null) fail(`${where}.${key}`, 'unknown or null cleanup field');
+  for (const key of ['corners', 'strays']) if (value[key] !== undefined && typeof value[key] !== 'boolean') fail(`${where}.${key}`, 'expected a boolean');
+  if (!value.corners && !value.strays) fail(where, 'cleanup needs corners: true, strays: true or both');
+  const { width, height } = recipe, x = value.x ?? 0, y = value.y ?? 0;
+  for (const [key, number, max] of [['x', x, width - 1], ['y', y, height - 1]]) if (!Number.isInteger(number) || number < 0 || number > max) fail(`${where}.${key}`, 'expected an integer region inside the canvas');
+  const w = value.w ?? width - x, h = value.h ?? height - y;
+  for (const [key, number, max] of [['w', w, width - x], ['h', h, height - y]]) if (!Number.isInteger(number) || number < 1 || number > max) fail(`${where}.${key}`, 'region must fit inside the canvas');
+  if (value.mask !== undefined && (!Array.isArray(value.mask) || value.mask.length !== h || value.mask.some(row => typeof row !== 'string' || row.length !== w || /[^x.]/.test(row)))) fail(`${where}.mask`, 'mask must match the region: x selects, dot preserves');
+  if (value.colors !== undefined && (!Array.isArray(value.colors) || !value.colors.length || value.colors.length > 64)) fail(`${where}.colors`, 'expected 1–64 colors whose pixels may change');
+  const only = value.colors === undefined ? null : new Set(value.colors.map((color, i) => pixelId(parseColor(color, recipe.palette ?? {}, `${where}.colors[${i}]`), 0)));
+  const ids = idsOf(renderProject(recipe).frames[frameIndex].data);
+  const allowed = index => {
+    const px = index % width, py = Math.floor(index / width);
+    return px >= x && py >= y && px < x + w && py < y + h && (!value.mask || value.mask[py - y][px - x] === 'x') && (!only || only.has(ids[index]));
+  };
+  const fixes = cleanupIds(ids, width, height, { corners: value.corners === true, strays: value.strays === true, allowed }), name = frameColorNamer(recipe, frameIndex);
+  return { entries: fixes.map(fix => ({ x: fix.x, y: fix.y, color: name(fix.id) })), summary: { corners: fixes.filter(fix => fix.kind === 'corner').length, strays: fixes.filter(fix => fix.kind === 'stray').length } };
 }
 
 // Paths use the same form as error messages, such as frames[3].ops[0].x; "project." is optional.
@@ -109,8 +142,8 @@ export function patchRecipe(recipe, changes) {
   if (!isObject(recipe)) fail('project', 'expected an object');
   if (!Array.isArray(changes) || !changes.length || changes.length > 1024) fail('changes', 'expected a list of 1–1024 changes');
   const estimate = (source, change) => {
-    if (!change || !['paint', 'grid', 'move', 'recolor'].some(verb => change[verb] !== undefined)) return 0;
-    const renders = (change.scope === 'frame' ? 2 : 0) + (change.move !== undefined || change.recolor !== undefined ? 1 : 0);
+    if (!change || !CANVAS.some(verb => change[verb] !== undefined)) return 0;
+    const renders = (change.scope === 'frame' ? 2 : 0) + (change.move !== undefined || change.recolor !== undefined || change.cleanup !== undefined ? 1 : 0);
     return (source.width * source.height || 0) * (2 + renders * (source.frames?.length ?? 0));
   };
   const budget = 67108864;
@@ -120,14 +153,14 @@ export function patchRecipe(recipe, changes) {
   changes.forEach((change, i) => {
     const where = `changes[${i}]`;
     if (!isObject(change)) fail(where, 'expected an object such as {"set": "frames[idle].duration", "value": 120}');
-    for (const key of Object.keys(change)) if (!['set', 'insert', 'remove', 'paint', 'grid', 'move', 'recolor', 'scope', 'value'].includes(key)) fail(`${where}.${key}`, 'unknown field in patch');
-    const verbs = ['set', 'insert', 'remove', 'paint', 'grid', 'move', 'recolor'].filter(verb => change[verb] !== undefined);
-    if (verbs.length !== 1) fail(where, 'use exactly one of set, insert, remove, paint, grid, move or recolor');
+    for (const key of Object.keys(change)) if (![...VERBS, 'scope', 'value'].includes(key)) fail(`${where}.${key}`, 'unknown field in patch');
+    const verbs = VERBS.filter(verb => change[verb] !== undefined);
+    if (verbs.length !== 1) fail(where, 'use exactly one of set, insert, remove, paint, grid, move, recolor or cleanup');
     const [verb] = verbs, target = `${where}.${verb}`;
-    const painting = ['paint', 'grid', 'move', 'recolor'].includes(verb);
+    const painting = CANVAS.includes(verb);
     work += estimate(next, change);
     if (work > budget) fail(where, 'regional edit work exceeds 67,108,864 estimated pixels; split the batch');
-    if (change.scope !== undefined && (!painting || !['frame', 'inherited'].includes(change.scope))) fail(`${where}.scope`, 'paint/grid/move/recolor scope must be frame or inherited (default)');
+    if (change.scope !== undefined && (!painting || !['frame', 'inherited'].includes(change.scope))) fail(`${where}.scope`, 'paint/grid/move/recolor/cleanup scope must be frame or inherited (default)');
     if (verb === 'remove' && change.value !== undefined) fail(`${where}.value`, 'remove takes no value');
     if (verb !== 'remove' && change.value === undefined) fail(`${where}.value`, `${verb} needs a value`);
     if (change.value === null) fail(`${where}.value`, 'null is not supported; remove the field instead');
@@ -136,7 +169,8 @@ export function patchRecipe(recipe, changes) {
     if (painting) {
       if (parent !== next.frames || !isObject(parent[slot])) fail(target, `${verb} needs a frame path, such as frames[blink]`);
       const protectedFrames = change.scope === 'frame' ? renderProject(next).frames : null;
-      const entries = verb === 'paint' ? change.value : regionPixels(next, slot, verb, change.value, `${where}.value`);
+      const cleaned = verb === 'cleanup' ? cleanupPixels(next, slot, change.value, `${where}.value`) : null;
+      const entries = verb === 'paint' ? change.value : cleaned ? cleaned.entries : regionPixels(next, slot, verb, change.value, `${where}.value`);
       if (!Array.isArray(entries) || (verb === 'paint' && !entries.length) || entries.length > 131072) fail(`${where}.value`, verb === 'paint' ? 'paint needs 1–65,536 pixels with x, y and color' : 'expected a bounded pixel list');
       if (verb === 'paint' && entries.length > 65536) fail(`${where}.value`, 'paint needs 1–65,536 pixels with x, y and color');
       const frame = parent[slot];
@@ -153,8 +187,9 @@ export function patchRecipe(recipe, changes) {
         parseColor(pixel.color, next.palette ?? {}, `${pp}.color`);
         pixels.set(`${pixel.x},${pixel.y}`, structuredClone(pixel));
       });
-      frame.pixels = [...pixels.values()];
+      if (pixels.size) frame.pixels = [...pixels.values()];
       edit.pixels = entries.length;
+      if (cleaned) Object.assign(edit, cleaned.summary);
       if (change.scope !== undefined) edit.scope = change.scope;
       if (protectedFrames) {
         const current = renderProject(next); edit.protected = [];

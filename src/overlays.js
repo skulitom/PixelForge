@@ -6,7 +6,7 @@ import { patchRecipe } from './patch.js';
 // Key ordering/formatting changes are harmless; drawing/list order remains significant.
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 export const recipeFingerprint = recipe => createHash('sha256').update(JSON.stringify(canonical(recipe))).digest('hex');
-const CANVAS = ['paint', 'grid', 'move', 'recolor'];
+const CANVAS = ['paint', 'grid', 'move', 'recolor', 'cleanup'];
 const fail = message => { throw new PixelError('overlay', message); };
 const frameFingerprint = (project, frame) => createHash('sha256').update(`${project.width}x${project.height}:`).update(frame.data).digest('hex');
 const hex = rgba => '#' + rgba.map(v => v.toString(16).padStart(2, '0')).join('');
@@ -24,7 +24,7 @@ function expandSelections(overlay, recipe) {
     if (!change || typeof change !== 'object' || Array.isArray(change)) fail('each change must be an object');
     if (change.selection === undefined) return change;
     if (typeof change.selection !== 'string' || !Object.hasOwn(selections, change.selection)) fail(`unknown selection ${JSON.stringify(change.selection)}`);
-    if (!['grid', 'move', 'recolor'].some(verb => Object.hasOwn(change, verb))) fail('named selections apply to grid, move or recolor changes');
+    if (!['grid', 'move', 'recolor', 'cleanup'].some(verb => Object.hasOwn(change, verb))) fail('named selections apply to grid, move, recolor or cleanup changes');
     const { selection, ...edit } = change, { space, w, h, ...region } = selections[selection];
     return { ...edit, value: { ...region, ...(!change.grid && { w, h }), ...change.value } };
   });
@@ -46,6 +46,7 @@ function paletteKeys(recipe, changes) {
     if (change.paint !== undefined && Array.isArray(value)) value.forEach(pixel => add(pixel?.color));
     if (change.grid !== undefined) for (const row of value?.rows ?? []) for (const char of String(row)) add(char);
     if (change.recolor !== undefined) { add(value?.from); add(value?.to); }
+    if (change.cleanup !== undefined && Array.isArray(value?.colors)) value.colors.forEach(add);
   }
   return [...keys].sort();
 }
