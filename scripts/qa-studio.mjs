@@ -1,0 +1,322 @@
+// Walks the studio in a real browser, the way a person would use it: every sample, editing, a broken recipe, the
+// preview controls, downloads that really land on disk, draft recovery, keyboard access, narrow and wide windows and
+// the scene page. It drives an installed Chromium-based browser (Edge or Chrome) headless, with a throwaway profile,
+// over the DevTools protocol, using only Node's own WebSocket (Node.js 22 or newer). Nothing is installed.
+//   node scripts/qa-studio.mjs [--app <package folder>] [--browser <program>] [--browser-arg <flag>]... [--out <new folder>]
+// --app is the package to serve: this checkout by default, or the app folder of an extracted portable build.
+// Screenshots and the downloaded files are kept in --out (default: a new folder under output/studio-qa).
+// Exit code 3 means no browser was found, so nothing was checked.
+import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readZip } from './build-studio.mjs';
+
+const root = fileURLToPath(new URL('../', import.meta.url)), sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const options = { app: root, 'browser-arg': [] };
+for (let args = process.argv.slice(2), i = 0; i < args.length; i++) {
+  if (!['--app', '--browser', '--out', '--browser-arg'].includes(args[i]) || !args[i + 1]) { console.error(`Unknown or incomplete option: ${args[i]}`); process.exit(2); }
+  if (args[i] === '--browser-arg') options['browser-arg'].push(args[++i]); else options[args[i].slice(2)] = args[++i];
+}
+if (typeof WebSocket !== 'function') { console.error('This check needs Node.js 22 or newer, which has a WebSocket client built in.'); process.exit(2); }
+
+// Edge first on Windows, where it is always present; Chrome first elsewhere.
+const programs = base => [path.join(base, 'Microsoft', 'Edge', 'Application', 'msedge.exe'), path.join(base, 'Google', 'Chrome', 'Application', 'chrome.exe')];
+const installed = {
+  win32: [process.env['ProgramFiles(x86)'], process.env.ProgramFiles, process.env.LOCALAPPDATA].filter(Boolean).flatMap(programs).sort((a, b) => b.includes('Edge') - a.includes('Edge')),
+  darwin: ['Google Chrome', 'Microsoft Edge', 'Chromium'].map(name => `/Applications/${name}.app/Contents/MacOS/${name}`),
+  linux: ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'microsoft-edge'].flatMap(name => ['/usr/bin', '/usr/local/bin', '/snap/bin'].map(folder => `${folder}/${name}`))
+}[process.platform] ?? [];
+let program = options.browser ?? null;
+for (const candidate of program ? [] : installed) if (await access(candidate).then(() => true, () => false)) { program = candidate; break; }
+if (!program) { console.log('No Chromium-based browser (Edge or Chrome) was found, so the studio was not walked. Name one with --browser.'); process.exit(3); }
+
+const out = options.out ? path.resolve(options.out) : null, results = [], notes = [];
+if (out) await mkdir(out); else await mkdir(path.join(root, 'output', 'studio-qa'), { recursive: true });
+const kept = out ?? await mkdtemp(path.join(root, 'output', 'studio-qa', 'run-')), profile = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-browser-'));
+const check = async (name, run) => {
+  try { const detail = await run(); results.push({ name, ok: true }); console.log(`  ok    ${name}${detail ? ` (${detail})` : ''}`); }
+  catch (error) { results.push({ name, ok: false }); console.log(`  FAIL  ${name}\n        ${String(error.message).replace(/\n/g, '\n        ')}`); }
+};
+const note = text => { notes.push(text); console.log(`  note  ${text}`); };
+
+const { startStudio } = await import(pathToFileURL(path.join(path.resolve(options.app), 'src', 'server.js')));
+const server = await startStudio({ port: 0, quiet: true }), origin = `http://127.0.0.1:${server.address().port}`;
+const browser = spawn(program, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--mute-audio', '--window-size=1440,900', ...options['browser-arg'], 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+let exitCode = 1, closeBrowser = null;
+try {
+  // The browser writes its DevTools address into the profile. The program that was started may hand over to another
+  // process and exit at once (Edge does on Windows), so its exit says nothing; the file does.
+  let complaints = '';
+  browser.stderr.on('data', chunk => { complaints += chunk; }); browser.once('error', error => { complaints += error.message; });
+  const endpoint = await (async () => {
+    for (const start = Date.now(); Date.now() - start < 30000; await sleep(100)) {
+      const [port, address] = (await readFile(path.join(profile, 'DevToolsActivePort'), 'utf8').catch(() => '')).split('\n');
+      if (address) return `ws://127.0.0.1:${port}${address}`;
+    }
+    throw new Error(`the browser did not open its DevTools port within 30 seconds:\n${complaints}`);
+  })();
+  // One connection to the browser; each page is a session on it.
+  const socket = new WebSocket(endpoint), pending = new Map(), listeners = new Set();
+  let sequence = 0;
+  await new Promise((resolve, reject) => { socket.addEventListener('open', resolve); socket.addEventListener('error', () => reject(new Error('could not connect to the browser'))); });
+  socket.addEventListener('message', event => {
+    const message = JSON.parse(event.data);
+    if (!message.id) { for (const listener of listeners) listener(message); return; }
+    const waiting = pending.get(message.id); pending.delete(message.id);
+    if (message.error) waiting.reject(new Error(`${waiting.method}: ${message.error.message}`)); else waiting.resolve(message.result);
+  });
+  const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => { pending.set(++sequence, { resolve, reject, method }); socket.send(JSON.stringify({ id: sequence, method, params, ...(sessionId && { sessionId }) })); });
+  closeBrowser = () => Promise.race([send('Browser.close'), sleep(3000)]);
+  const version = await send('Browser.getVersion');
+  console.log(`Studio ${origin} from ${path.resolve(options.app)}\nBrowser ${version.product}, headless, throwaway profile\nKeeping screenshots and downloads in ${kept}`);
+
+  // Everything a page reports as wrong, and every address it asks for, is collected for the last check.
+  const problems = [], requests = [], dialogs = [];
+  async function openPage() {
+    const { targetId } = await send('Target.createTarget', { url: 'about:blank' }), { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
+    const page = (method, params) => send(method, params, sessionId);
+    listeners.add(message => {
+      if (message.sessionId !== sessionId) return;
+      const { method, params } = message;
+      if (method === 'Runtime.exceptionThrown') problems.push(`exception: ${params.exceptionDetails.exception?.description ?? params.exceptionDetails.text}`);
+      else if (method === 'Runtime.consoleAPICalled' && params.type === 'error') problems.push(`console.error: ${params.args.map(arg => arg.value ?? arg.description).join(' ')}`);
+      else if (method === 'Log.entryAdded' && params.entry.level === 'error') problems.push(`${params.entry.source}: ${params.entry.text} ${params.entry.url ?? ''}`);
+      else if (method === 'Network.requestWillBeSent') requests.push(params.request.url);
+      else if (method === 'Page.javascriptDialogOpening') { dialogs.push(`${params.type}: ${params.message}`); page('Page.handleJavaScriptDialog', { accept: true }).catch(() => {}); }
+    });
+    for (const domain of ['Page', 'Runtime', 'Network', 'Log', 'DOM']) await page(`${domain}.enable`);
+    const evaluate = async expression => {
+      const { result, exceptionDetails } = await page('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+      if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
+      return result.value;
+    };
+    // A page that is navigating cannot answer; that counts as "not yet".
+    const until = async (expression, what, timeout = 8000) => {
+      for (const start = Date.now(); ;) { const value = await evaluate(expression).catch(() => false); if (value) return value; if (Date.now() - start > timeout) throw new Error(`timed out waiting for ${what}`); await sleep(50); }
+    };
+    const goto = async url => { await page('Page.navigate', { url }); await until('document.readyState === "complete"', `${url} to load`); };
+    const reload = async () => { await evaluate('window.__before = true'); await page('Page.reload'); await until('!window.__before && document.readyState === "complete"', 'the page to reload'); };
+    // A real mouse click at the middle of the element, so the page sees a user gesture.
+    const click = async selector => {
+      const at = await evaluate(`(() => { const element = document.querySelector(${JSON.stringify(selector)}); if (!element) return null; element.scrollIntoView({ block: 'center', inline: 'center' }); const box = element.getBoundingClientRect(); return { x: box.left + box.width / 2, y: box.top + box.height / 2 }; })()`);
+      assert.ok(at, `nothing matches ${selector}`);
+      for (const type of ['mousePressed', 'mouseReleased']) await page('Input.dispatchMouseEvent', { type, x: at.x, y: at.y, button: 'left', clickCount: 1 });
+    };
+    const key = async (name, code, modifiers = 0) => { for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: name, code: name === ' ' ? 'Space' : name, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code, modifiers, ...(type === 'keyDown' && name === ' ' && { text: ' ' }) }); };
+    const choose = (id, value) => evaluate(`(() => { const select = document.getElementById(${JSON.stringify(id)}); select.value = ${JSON.stringify(value)}; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`);
+    const size = (width, height) => page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+    const shot = async (name, whole = false) => { await writeFile(path.join(kept, `${name}.png`), Buffer.from((await page('Page.captureScreenshot', { format: 'png', captureBeyondViewport: whole })).data, 'base64')); };
+    return { page, evaluate, until, goto, reload, click, key, choose, size, shot };
+  }
+  let downloads = 0;
+  // Runs `action` and returns the file the browser saved because of it.
+  async function download(action) {
+    const folder = path.join(kept, 'downloads', String(++downloads));
+    await mkdir(folder, { recursive: true });
+    await send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: folder, eventsEnabled: true });
+    const saved = new Promise((resolve, reject) => {
+      let filename = null;
+      const timer = setTimeout(() => { listeners.delete(listener); reject(new Error('no download arrived within 15 seconds')); }, 15000);
+      const listener = ({ method, params }) => {
+        if (method === 'Browser.downloadWillBegin') filename = params.suggestedFilename;
+        else if (method === 'Browser.downloadProgress' && params.state !== 'inProgress') { clearTimeout(timer); listeners.delete(listener); params.state === 'completed' ? resolve(path.join(folder, filename)) : reject(new Error(`the download was ${params.state}`)); }
+      };
+      listeners.add(listener);
+    });
+    await action();
+    return saved;
+  }
+
+  const studio = await openPage(), { evaluate, until, click, key, choose } = studio;
+  const text = id => evaluate(`document.getElementById(${JSON.stringify(id)}).textContent`);
+  // What the preview canvas shows: its size, how many pixels are drawn, the colours and a hash of every pixel.
+  const canvas = () => evaluate(`(() => { const c = document.getElementById('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, colors = new Set(); let drawn = 0, hash = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 3]) { drawn++; colors.add((d[i] << 16 | d[i + 1] << 8 | d[i + 2]).toString(16).padStart(6, '0')); } hash = (hash * 31 + d[i] + d[i + 1] * 3 + d[i + 2] * 7 + d[i + 3] * 11) >>> 0; } return { width: c.width, height: c.height, shown: c.style.width, drawn, hash, colors: [...colors] }; })()`);
+  const pressed = id => evaluate(`document.getElementById(${JSON.stringify(id)}).getAttribute('aria-pressed')`);
+  const ready = () => until(`document.querySelectorAll('#examples .example').length > 0 && document.getElementById('example-count').textContent !== '' && document.getElementById('source').value.length > 0 && document.getElementById('timeline').children.length > 0`, 'the studio to finish loading');
+  // Replaces the whole recipe the way typing does, then waits for the preview to follow (or for the error to show).
+  const type = async recipe => {
+    await evaluate(`(() => { const source = document.getElementById('source'); source.focus(); source.select(); })()`);
+    await studio.page('Input.insertText', { text: recipe });
+    await sleep(600);
+  };
+  const samples = await (async () => { await studio.size(1440, 900); await studio.goto(`${origin}/`); await ready(); return evaluate(`[...document.querySelectorAll('#examples .example')].map(button => ({ file: button.dataset.file, title: button.querySelector('strong').textContent }))`); })();
+
+  console.log('Samples and playback');
+  await check('the studio loads with its samples listed and counted, and the first one drawn', async () => {
+    assert.equal(await evaluate('document.title'), 'PixelForge · Sprite studio');
+    assert.ok(samples.length >= 7); assert.equal(await text('example-count'), String(samples.length).padStart(2, '0'));
+    assert.equal(await evaluate(`document.getElementById('error').hidden`), true); assert.ok((await canvas()).drawn > 0);
+    await studio.shot('wide'); return `${samples.length} samples`;
+  });
+  await check('the animation plays, pauses, and a frame can be picked from the timeline', async () => {
+    const before = await text('frame-counter');
+    await until(`document.getElementById('frame-counter').textContent !== ${JSON.stringify(before)}`, 'the frame counter to advance');
+    await click('#play'); assert.equal(await evaluate(`document.getElementById('play').getAttribute('aria-label')`), 'Play animation');
+    await click('#timeline .frame:nth-child(2)');
+    assert.match(await text('frame-counter'), /^02 \//); assert.equal(await evaluate(`document.querySelector('#timeline .frame:nth-child(2)').getAttribute('aria-pressed')`), 'true');
+    await click('#play'); assert.equal(await evaluate(`document.getElementById('play').getAttribute('aria-label')`), 'Pause animation');
+  });
+  for (const [index, sample] of samples.entries()) await check(`sample "${sample.title}" opens and renders`, async () => {
+    await click(`#examples .example:nth-child(${index + 1})`);
+    await until(`document.querySelector('#examples .example:nth-child(${index + 1})').classList.contains('active') && document.getElementById('source').value.includes(${JSON.stringify(`"name": "`)})`, 'the sample to load');
+    await sleep(150);
+    const [drawn, frames, hidden, status] = [(await canvas()).drawn, await evaluate(`document.getElementById('timeline').children.length`), await evaluate(`document.getElementById('error').hidden`), await text('compile-status')];
+    assert.ok(drawn > 0 && frames > 0 && hidden, `drawn ${drawn}, frames ${frames}, error hidden ${hidden}`);
+    await studio.shot(`sample-${sample.file.replace('/', '-')}`); return `${frames} frames, ${status.replace('● ', '')}`;
+  });
+
+  console.log('Preview controls');
+  const spirit = samples.findIndex(sample => sample.file === 'forest-spirit') + 1;
+  await click(`#examples .example:nth-child(${spirit})`); await until(`document.getElementById('project-name').textContent === 'Forest spirit'`, 'the forest spirit');
+  await click('#play'); await click('#timeline .frame:nth-child(1)');
+  const still = await canvas();
+  await check('zoom, grid, onion skin, review view and sheet view each change the preview and change it back', async () => {
+    await choose('zoom', '4'); assert.equal((await canvas()).shown, `${still.width * 4}px`); await choose('zoom', '12');
+    await click('#grid'); assert.deepEqual([await pressed('grid'), await evaluate(`document.getElementById('canvas-wrap').classList.contains('grid')`)], ['true', true]);
+    await click('#grid'); assert.equal(await pressed('grid'), 'false');
+    await click('#onion'); assert.equal(await pressed('onion'), 'true'); assert.notEqual((await canvas()).hash, still.hash, 'onion skin drew nothing extra');
+    await click('#onion'); assert.equal((await canvas()).hash, still.hash);
+    await choose('review-view', 'silhouette'); const silhouette = await canvas(); assert.notEqual(silhouette.hash, still.hash); assert.ok(silhouette.colors.length < still.colors.length);
+    await choose('review-view', 'color'); assert.equal((await canvas()).hash, still.hash);
+    await click('#sheet-view'); const sheet = await canvas(); assert.ok(sheet.width > still.width, 'the sheet is no wider than one frame'); assert.match(await text('artboard-caption'), /Export layout/);
+    await click('#animation-view'); assert.equal((await canvas()).hash, still.hash);
+  });
+  await check('the animation, speed and palette controls respond', async () => {
+    const [timing, others] = [await text('timing'), await evaluate(`[...document.getElementById('animation').options].map(option => option.value)`)];
+    await choose('animation', others.at(-1)); assert.notEqual(await text('timing'), timing); await choose('animation', others[0]);
+    assert.equal(await choose('speed', '2'), '2'); await click('#play');
+    const before = await text('frame-counter'); await until(`document.getElementById('frame-counter').textContent !== ${JSON.stringify(before)}`, 'playback at double speed'); await click('#play'); await choose('speed', '1');
+    await click('#palette .swatch'); assert.match(await text('color-info'), /#[0-9a-f]{6}/i);
+    return `${others.length} animations`;
+  });
+
+  console.log('Editing');
+  const original = await evaluate(`document.getElementById('source').value`), edited = original.replace('"#72b58d"', '"#ff00ff"');
+  await check('an edit to the recipe updates the preview', async () => {
+    assert.notEqual(edited, original);
+    await type(edited); await click('#timeline .frame:nth-child(1)');
+    assert.ok((await canvas()).colors.includes('ff00ff'), 'the new colour is not in the preview');
+    assert.ok(await evaluate(`[...document.querySelectorAll('#palette .swatch')].some(swatch => swatch.title.includes('#ff00ff'))`), 'the palette does not show the new colour');
+  });
+  await check('a broken recipe shows what is wrong, and the studio recovers when it is mended', async () => {
+    await type(edited.slice(0, -3));
+    assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [false, true]);
+    const message = await text('error'); assert.ok(message.length > 5); assert.match(await text('compile-status'), /Fix the recipe/);
+    await studio.shot('broken-recipe');
+    await type(edited);
+    assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [true, false]);
+    return message.slice(0, 60);
+  });
+
+  console.log('Files');
+  let savedRecipe;
+  await check('Save JSON puts the recipe on disk exactly as it is in the editor', async () => {
+    savedRecipe = await download(() => click('#save'));
+    assert.equal(path.basename(savedRecipe), 'forest-spirit.pixel.json'); assert.equal(await readFile(savedRecipe, 'utf8'), edited);
+    assert.equal(await text('toast'), 'Project JSON saved'); return path.basename(savedRecipe);
+  });
+  await check('Open project brings the saved recipe back', async () => {
+    await click('#new'); await until(`document.getElementById('project-name').textContent === 'New sprite'`, 'the blank canvas');
+    const { root: { nodeId } } = await studio.page('DOM.getDocument'), input = await studio.page('DOM.querySelector', { nodeId, selector: '#file' });
+    await studio.page('DOM.setFileInputFiles', { files: [savedRecipe], nodeId: input.nodeId });
+    await until(`document.getElementById('project-name').textContent === 'Forest spirit'`, 'the opened recipe');
+    assert.equal(await evaluate(`document.getElementById('source').value`), JSON.stringify(JSON.parse(edited), null, 2)); assert.match(await text('toast'), /^Opened /);
+  });
+  await check('Export assets downloads a ZIP whose preview.html shows every animation from disk', async () => {
+    const zip = await download(() => click('#export')), entries = readZip(await readFile(zip)), folder = path.join(kept, 'exported');
+    assert.equal(path.basename(zip), 'forest-spirit.zip');
+    for (const file of ['forest-spirit.png', 'forest-spirit.atlas.json', 'forest-spirit.pixel.json', 'forest-spirit.css', 'player.js', 'preview.html']) assert.ok(entries.has(file), `${file} is missing from the ZIP`);
+    for (const [file, entry] of entries) { await mkdir(path.dirname(path.join(folder, file)), { recursive: true }); await writeFile(path.join(folder, file), entry.read()); }
+    const preview = await openPage();
+    await preview.goto(pathToFileURL(path.join(folder, 'preview.html')).href);
+    const images = await preview.evaluate(`Promise.all([...document.images].map(image => image.decode().then(() => image.naturalWidth, () => 0)))`);
+    assert.ok(images.length > 0 && images.every(width => width > 0), `images that did not load: ${images}`);
+    assert.equal(images.length, [...entries.keys()].filter(file => file.startsWith('animations/')).length);
+    await preview.shot('exported-preview'); return `${entries.size} files, ${images.length} animations shown`;
+  });
+  await check('GIF downloads the current animation at the current zoom, and the browser decodes it', async () => {
+    await choose('zoom', '4');
+    const gif = await download(() => click('#gif')), bytes = await readFile(gif), expected = await evaluate(`document.getElementById('timeline').children.length`);
+    assert.match(path.basename(gif), /^forest-spirit-.+\.gif$/); assert.equal(bytes.toString('latin1', 0, 6), 'GIF89a');
+    const decoded = await evaluate(`(async () => { const decoder = new ImageDecoder({ data: Uint8Array.from(atob(${JSON.stringify(bytes.toString('base64'))}), c => c.charCodeAt(0)), type: 'image/gif' }); await decoder.tracks.ready; await decoder.completed; const { image } = await decoder.decode({ frameIndex: 0 }); return { frames: decoder.tracks.selectedTrack.frameCount, width: image.displayWidth }; })()`);
+    assert.deepEqual(decoded, { frames: expected, width: still.width * 4 }); await choose('zoom', '12');
+    return `${path.basename(gif)}, ${decoded.frames} frames, ${decoded.width} px wide`;
+  });
+
+  console.log('Draft recovery');
+  await check('an unsaved edit is offered back after the page is reloaded, restored on request, and gone once saved', async () => {
+    await type(edited.replace('"name": "forest-spirit"', '"name": "draft-walk"')); await sleep(300);
+    await studio.reload(); await ready();
+    assert.equal(await evaluate(`document.getElementById('draft').hidden`), false, 'no draft was offered after the reload'); assert.match(await text('draft-text'), /draft-walk\.json/);
+    await studio.shot('draft-offered');
+    await click('#draft-restore'); await until(`document.getElementById('project-name').textContent === 'Draft walk'`, 'the draft to be restored');
+    assert.equal(await evaluate(`document.getElementById('draft').hidden`), true);
+    await download(() => click('#save'));
+    await studio.reload(); await ready();
+    assert.deepEqual([await evaluate(`document.getElementById('draft').hidden`), await evaluate(`localStorage.length`)], [true, 0]);
+  });
+
+  console.log('Keyboard and window sizes');
+  await check('Tab reaches every main control, and the recipe editor does not trap the keyboard', async () => {
+    await evaluate(`document.activeElement.blur()`);
+    const reached = [];
+    for (let i = 0; i < 80; i++) {
+      await key('Tab', 9);
+      const focus = await evaluate(`(() => { const e = document.activeElement; return e === document.body ? '' : e.id || e.className.split(' ')[0]; })()`);
+      if (focus === 'source') break;
+      reached.push(focus);
+    }
+    const wanted = ['open', 'export', 'example', 'new', 'guide-toggle', 'animation-view', 'sheet-view', 'review-view', 'grid', 'onion', 'zoom', 'play', 'animation', 'gif', 'speed', 'frame', 'save'];
+    assert.deepEqual(wanted.filter(control => !reached.includes(control)), [], `reached: ${[...new Set(reached)].join(', ')}`);
+    assert.equal(await evaluate(`document.activeElement.id`), 'source', 'Tab never reached the recipe editor');
+    // Inside the editor Tab indents. Escape and then Tab moves on; Shift+Tab moves back.
+    const before = await evaluate(`document.getElementById('source').value`);
+    await key('Tab', 9); assert.deepEqual([await evaluate(`document.activeElement.id`), (await evaluate(`document.getElementById('source').value`)).length], ['source', before.length + 2]);
+    await key('Escape', 27); await key('Tab', 9);
+    assert.notEqual(await evaluate(`document.activeElement.id`), 'source', 'after Escape, Tab still stays in the editor');
+    const after = await evaluate(`document.activeElement.className`);
+    await key('Tab', 9, 8); assert.equal(await evaluate(`document.activeElement.id`), 'source'); await key('Tab', 9, 8);
+    assert.equal(await evaluate(`document.activeElement.id`), 'save', 'Shift+Tab did not leave the editor backwards');
+    await evaluate(`document.getElementById('grid').focus()`); await key(' ', 32); assert.equal(await pressed('grid'), 'true'); await key(' ', 32);
+    return `${new Set(reached).size} controls before the editor, then ${after}`;
+  });
+  for (const [name, width, height] of [['wide', 1440, 900], ['narrow', 390, 844]]) await check(`a ${name} window (${width} × ${height}) shows the controls without sideways scrolling`, async () => {
+    await studio.size(width, height); await studio.goto(`${origin}/`); await ready();
+    const layout = await evaluate(`(() => ({ overflow: document.documentElement.scrollWidth - innerWidth, hidden: ['open', 'export', 'artboard', 'play', 'gif', 'save', 'source'].filter(id => { const box = document.getElementById(id).getBoundingClientRect(); return box.width < 1 || box.height < 1 || box.left < -1 || box.right > innerWidth + 1; }), clipped: (() => { const board = document.getElementById('artboard'); board.scrollLeft = 0; board.scrollTop = 0; const sprite = document.getElementById('canvas').getBoundingClientRect(), frame = board.getBoundingClientRect(); return sprite.left < frame.left - 1 || sprite.top < frame.top - 1; })() }))()`);
+    assert.ok(layout.overflow <= 1, `the page is ${layout.overflow} px wider than the window`); assert.deepEqual(layout.hidden, []);
+    // A sprite larger than the artboard scrolls inside it, and its left and top edges must be reachable.
+    assert.equal(layout.clipped, false, 'part of the sprite cannot be scrolled into view');
+    await studio.shot(name, true);
+  });
+  await check('the scene study page draws its scene', async () => {
+    await studio.size(1440, 900); await studio.goto(`${origin}/scene.html`);
+    await until(`document.getElementById('name').textContent !== 'Loading scene'`, 'the scene to load');
+    const drawn = await evaluate(`(() => { const c = document.getElementById('scene'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; })()`);
+    assert.ok(drawn > 0); assert.equal(await text('error'), ''); await studio.shot('scene');
+    return await text('name');
+  });
+
+  console.log('Afterwards');
+  await check('no page reported an error, and no request left this computer', () => {
+    const foreign = requests.filter(url => !url.startsWith(`${origin}/`) && !/^(data|blob|about|file):/.test(url));
+    assert.deepEqual(problems, []); assert.deepEqual(foreign, []);
+    return `${requests.length} requests, all to ${origin} or local files`;
+  });
+  if (dialogs.length) note(`Confirmations the studio asked for and the walk accepted: ${[...new Set(dialogs)].join(' | ')}`);
+  const failed = results.filter(result => !result.ok);
+  console.log(`${results.length - failed.length} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map(result => result.name).join('; ')}` : ''}`);
+  exitCode = failed.length ? 1 : 0;
+} catch (error) { console.error(error.stack); }
+finally {
+  // Ask the browser to quit; then stop whatever still runs on this run's profile, which nothing else uses.
+  await closeBrowser?.().catch(() => {});
+  browser.kill(); server.closeAllConnections(); server.close();
+  await sleep(500);
+  if (process.platform === 'win32') spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:PF_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }'], { env: { ...process.env, PF_PROFILE: profile }, windowsHide: true });
+  else spawnSync('pkill', ['-f', profile]);
+  await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }).catch(() => {});
+}
+process.exit(exitCode);

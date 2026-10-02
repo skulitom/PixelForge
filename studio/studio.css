@@ -356,6 +356,9 @@ select{
   display:flex;
   align-items:center;
   justify-content:center;
+  /* "safe" keeps a sprite wider than the artboard scrollable to its left and top edges. */
+  align-items:safe center;
+  justify-content:safe center;
   overflow:auto;
   padding:36px
 }
@@ -830,9 +833,15 @@ dialog code{
   .examples{
     margin:0;
     display:flex;
-    gap:8px
+    gap:8px;
+    overflow-x:auto;
+    scrollbar-width:thin;
+    padding-bottom:4px
   }
   .example{
+    flex:0 0 auto;
+    width:auto;
+    max-width:150px;
     padding:5px;
     gap:5px;
     border-radius:6px

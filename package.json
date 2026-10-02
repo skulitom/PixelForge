@@ -1,6 +1,6 @@
 {
   "name": "pixelforge-agent",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Agent-first pixel art and animation toolkit with a CLI, MCP server and local studio. Deterministic JSON recipes to PNG, APNG and sprite atlases; zero dependencies.",
   "homepage": "https://github.com/skulitom/PixelForge#readme",
   "repository": { "type": "git", "url": "git+https://github.com/skulitom/PixelForge.git" },
@@ -28,6 +28,7 @@
     "mcp": "node bin/pixelforge.js mcp",
     "build:studio": "node scripts/build-studio.mjs",
     "check:studio": "node scripts/build-studio.mjs --check",
-    "verify:studio": "node scripts/verify-studio.mjs"
+    "verify:studio": "node scripts/verify-studio.mjs",
+    "qa:studio": "node scripts/qa-studio.mjs"
   }
 }

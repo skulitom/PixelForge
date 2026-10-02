@@ -138,9 +138,15 @@ function setMode(next) {
   render();
 }
 source.addEventListener('input', () => { dirty = true; valid = false; $('export').disabled = true; clearTimeout(compileTimer); compileTimer = setTimeout(compile, 350); clearTimeout(draftTimer); draftTimer = setTimeout(keepDraft, 400); });
+// Tab indents, as in any code editor, but must not trap the keyboard: Shift+Tab always moves back, and Escape lets
+// the next Tab move on.
+let leavingEditor = false;
 source.addEventListener('keydown', event => {
-  if (event.key === 'Tab') { event.preventDefault(); const start = source.selectionStart; source.setRangeText('  ', start, source.selectionEnd, 'end'); source.dispatchEvent(new Event('input')); }
+  if (event.key === 'Escape') { leavingEditor = true; return; }
+  if (event.key === 'Tab' && !event.shiftKey && !leavingEditor) { event.preventDefault(); const start = source.selectionStart; source.setRangeText('  ', start, source.selectionEnd, 'end'); source.dispatchEvent(new Event('input')); }
+  if (!['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) leavingEditor = false;
 });
+source.addEventListener('blur', () => { leavingEditor = false; });
 $('play').addEventListener('click', () => { if (!project) return; playing = !playing; if (playing) { if (elapsed >= project.animations[$('animation').value].duration) elapsed = 0; setMode('animation'); } playState(); });
 $('animation').addEventListener('change', animationChanged);
 $('zoom').addEventListener('change', () => { zoom = Number($('zoom').value); render(); });

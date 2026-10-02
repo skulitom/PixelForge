@@ -92,6 +92,18 @@ jobs:
       - name: Run the test suite on the bundled runtime (macOS and Linux)
         if: runner.os != 'Windows'
         run: '"$RUNNER_TEMP"/studio/*/runtime/node --test'
+      # A real browser walks the extracted build's studio: samples, editing, downloads, drafts, keyboard, window sizes.
+      - name: Walk the studio in the runner's browser (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $build = (Get-Item "$env:RUNNER_TEMP/studio/*").FullName
+          & "$build/runtime/node.exe" scripts/qa-studio.mjs --app "$build/app" --out "$env:RUNNER_TEMP/studio-qa"
+      # The ARM Linux runner may have no Chromium-based browser; the script then says so and exits with 3.
+      - name: Walk the studio in the runner's browser (macOS and Linux)
+        if: runner.os != 'Windows'
+        run: |
+          build=$(ls -d "$RUNNER_TEMP"/studio/*)
+          "$build/runtime/node" scripts/qa-studio.mjs --app "$build/app" --out "$RUNNER_TEMP/studio-qa" || { code=$?; if [ "$code" = 3 ] && [ "${{ matrix.target }}" = linux-arm64 ]; then echo "No browser on this runner; the studio walk did not run here."; else exit "$code"; fi; }
       # Every runner prints the hashes of all the archives, so builds made on different systems can be compared.
       - name: Build every target on this system
         shell: bash
