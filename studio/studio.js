@@ -215,6 +215,7 @@ async function boot() {
       button.append(thumbnail(imageCanvas(preview.frames[0].data, preview.width, preview.height), ''), label);
       button.addEventListener('click', () => loadExample(example)); $('examples').append(button);
     }
+    $('example-count').textContent = String($('examples').children.length).padStart(2, '0');
     offer = drafts.load();
     if (offer) {
       $('draft-text').textContent = `An unsaved draft of ${offer.name}, last edited ${new Date(offer.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}, is kept in this browser. Until you choose, new edits are not kept as a draft.`;

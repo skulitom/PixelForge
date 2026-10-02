@@ -218,3 +218,11 @@ test('studio serves only its assets and exports ZIP over same-origin requests', 
   const bad = await fetch(base + '/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(bad.status, 400); assert.match((await bad.json()).error, /version/);
 });
+test('every sample the studio lists is served, and the sidebar counts the list itself', async () => {
+  const script = await readFile(path.join(root, 'studio', 'studio.js'), 'utf8'), page = await readFile(path.join(root, 'studio', 'index.html'), 'utf8');
+  const samples = [...script.match(/const examples = \[.*\];/)[0].matchAll(/file: '([^']+)'/g)].map(match => match[1]);
+  assert.ok(samples.length >= 7);
+  for (const sample of samples) assert.ok(STUDIO_PATHS.includes(`/examples/${sample}.json`), sample);
+  // A number typed into the page went stale when samples were added, so the heading is filled in from the list.
+  assert.match(page, /<h2>Projects<\/h2><span id="example-count"><\/span>/); assert.match(script, /\$\('example-count'\)\.textContent = String\(\$\('examples'\)\.children\.length\)/);
+});
