@@ -109,11 +109,10 @@ try {
       assert.ok(at, `nothing matches ${selector}`);
       for (const type of ['mousePressed', 'mouseReleased']) await page('Input.dispatchMouseEvent', { type, x: at.x, y: at.y, button: 'left', clickCount: 1 });
     };
-    // On macOS a key pressed inside a text field acts through an editing command, which a synthetic event must name.
-    const editing = { Tab: 'insertTab', 'Shift+Tab': 'insertBacktab', Escape: 'cancelOperation' };
+    // Only the portable key code is sent. A native code means another key on macOS, and naming an editing command
+    // there (insertTab) makes the browser type a tab into a text field instead of moving focus.
     const key = async (name, code, modifiers = 0) => {
-      const command = process.platform === 'darwin' && editing[`${modifiers & 8 ? 'Shift+' : ''}${name}`];
-      for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: name, code: name === ' ' ? 'Space' : name, windowsVirtualKeyCode: code, modifiers, ...(type === 'keyDown' && name === ' ' && { text: ' ' }), ...(type === 'keyDown' && command && { commands: [command] }) });
+      for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: name, code: name === ' ' ? 'Space' : name, windowsVirtualKeyCode: code, modifiers, ...(type === 'keyDown' && name === ' ' && { text: ' ' }) });
     };
     const choose = (id, value) => evaluate(`(() => { const select = document.getElementById(${JSON.stringify(id)}); select.value = ${JSON.stringify(value)}; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`);
     const size = (width, height) => page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
