@@ -91,16 +91,27 @@ export async function packageFiles(base = root) {
   return found.sort();
 }
 // The commit a build is made from. A build is only named after a commit when every shipped file is tracked and
-// unmodified at it; otherwise the build is marked as a development build.
+// unmodified at it; otherwise the build is marked as a development build. A clean state also carries `read`, which
+// returns a shipped file's bytes from the commit itself: git calls a file unmodified when only its line endings
+// differ, so two working copies of one commit can hold different bytes.
 export async function sourceState(base = root) {
   const git = (...args) => execFileSync('git', ['-c', 'core.quotepath=off', ...args], { cwd: base, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 16 * 1024 * 1024 });
   const shipped = [...await packageFiles(base), ...await walk(base, PACKAGING)], inputs = [...shipped, 'scripts/build-studio.mjs'];
+  let state;
   try {
     const commit = git('rev-parse', 'HEAD').trim(), date = new Date(Number(git('log', '-1', '--format=%ct').trim()) * 1000);
     const tracked = new Set(git('ls-files', '-z', '--', ...inputs).split('\0'));
     const changed = git('status', '--porcelain', '-z', '--untracked-files=all', '--', ...inputs).split('\0').filter(Boolean).map(line => line.slice(3));
-    return { commit, date, dirty: [...new Set([...changed, ...inputs.filter(file => !tracked.has(file))])].sort() };
+    state = { commit, date, dirty: [...new Set([...changed, ...inputs.filter(file => !tracked.has(file))])].sort() };
   } catch { return { commit: null, date: new Date(Date.UTC(1980, 0, 1)), dirty: ['(not a git checkout)'] }; }
+  if (state.dirty.length) return state;
+  const output = execFileSync('git', ['cat-file', '--batch'], { cwd: base, input: shipped.map(file => `${state.commit}:${file}\n`).join(''), maxBuffer: 1024 * 1024 * 1024 }), blobs = new Map();
+  for (let at = 0, i = 0; i < shipped.length; i++) {
+    const end = output.indexOf(10, at), [, type, size] = output.toString('latin1', at, end).split(' ');
+    if (type !== 'blob') throw new Error(`${shipped[i]} is not a file in commit ${state.commit}`);
+    blobs.set(shipped[i], output.subarray(end + 1, end + 1 + Number(size))); at = end + 2 + Number(size);
+  }
+  return { ...state, read: file => blobs.get(file) };
 }
 
 async function nodeRuntime({ nodeZip, cache, log }) {
@@ -120,15 +131,15 @@ async function nodeRuntime({ nodeZip, cache, log }) {
   return { version: NODE.version, exe, license, origin: NODE.url, archiveSha256: NODE.sha256 };
 }
 // Lays out the build as a map of archive paths to bytes. `runtime` is { version, exe, license, origin } and
-// `source` is { commit, date, dirty }; tests pass stand-ins for both.
+// `source` is { commit, date, dirty, read? }; tests pass stand-ins for both. Without `read` the working copy is used.
 export async function assembleStudio({ runtime, source, base = root }) {
-  const { version } = JSON.parse(await readFile(path.join(base, 'package.json'), 'utf8')), release = Boolean(source.commit) && source.dirty.length === 0;
-  const name = `PixelForgeStudio-${version}${release ? '' : '-dev'}-win-x64`, files = new Map();
-  // Batch files need CRLF to parse reliably, and Notepad users expect it in the text files; the checkout may hold either.
+  const read = source.read ?? (file => readFile(path.join(base, file))), release = Boolean(source.commit) && source.dirty.length === 0;
+  const { version } = JSON.parse((await read('package.json')).toString()), name = `PixelForgeStudio-${version}${release ? '' : '-dev'}-win-x64`, files = new Map();
+  // Batch files need CRLF to parse reliably, and Notepad users expect it in the text files; the source holds LF.
   const crlf = bytes => Buffer.from(bytes.toString('utf8').replace(/\r?\n/g, '\r\n'));
-  for (const file of await packageFiles(base)) files.set(`app/${file}`, await readFile(path.join(base, file)));
+  for (const file of await packageFiles(base)) files.set(`app/${file}`, await read(file));
   for (const file of await walk(base, PACKAGING)) {
-    const bytes = await readFile(path.join(base, file));
+    const bytes = await read(file);
     files.set(file.slice(PACKAGING.length + 1), /\.(cmd|txt)$/.test(file) ? crlf(bytes) : bytes);
   }
   files.set('runtime/node.exe', runtime.exe); files.set('runtime/NODE-LICENSE.txt', runtime.license);

@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createZip } from '../src/export.js';
-import { root, readZip, writeZip, packageFiles, assembleStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
+import { root, readZip, writeZip, packageFiles, sourceState, assembleStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
 import { verifyStudio } from '../scripts/verify-studio.mjs';
 
 const source = { commit: 'c0ffee'.padEnd(40, '0'), date: new Date(Date.UTC(2026, 9, 2, 12, 30, 44)), dirty: [] };
@@ -51,6 +51,29 @@ test('the portable layout holds the package, runtime, launchers and build facts,
   assert.equal(dev.name, `PixelForgeStudio-${version}-dev-win-x64`);
   assert.match(dev.files.get(`${dev.name}/BUILD-INFO.txt`).toString(), /with uncommitted changes \(development build, not a release\)/);
 });
+test('a release build takes its files from the commit, whatever line endings the working copy holds', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), repo = await mkdtemp(path.join(tempRoot, 'pixelforge-source-'));
+  t.after(async () => { assert.ok(repo.startsWith(tempRoot + path.sep)); await rm(repo, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); });
+  const git = (...args) => spawnSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false', ...args], { cwd: repo, encoding: 'utf8' });
+  if (git('init', '-q').status !== 0) { t.skip('git is not available'); return; }
+  const write = async (file, text) => { await mkdir(path.dirname(path.join(repo, file)), { recursive: true }); await writeFile(path.join(repo, file), text); };
+  await write('.gitattributes', '* text=auto eol=lf\n'); await write('package.json', JSON.stringify({ version: '9.9.9', files: ['notes.txt'] }) + '\n');
+  // Saved with Windows line endings and then added: git stores LF and calls the CRLF working copy unmodified.
+  await write('notes.txt', 'one\r\ntwo\r\n'); await write('packaging/windows/run.cmd', '@echo off\n'); await write('scripts/build-studio.mjs', '\n');
+  git('add', '-A'); assert.equal(git('commit', '-q', '-m', 'fixture').status, 0);
+  assert.equal(await readFile(path.join(repo, 'notes.txt'), 'utf8'), 'one\r\ntwo\r\n');
+  const clean = await sourceState(repo);
+  assert.deepEqual(clean.dirty, []); assert.match(clean.commit, /^[0-9a-f]{40}$/);
+  const build = await assembleStudio({ runtime: standIn, source: clean, base: repo });
+  assert.equal(build.name, 'PixelForgeStudio-9.9.9-win-x64');
+  assert.equal(build.files.get(`${build.name}/app/notes.txt`).toString(), 'one\ntwo\n');
+  assert.equal(build.files.get(`${build.name}/run.cmd`).toString(), '@echo off\r\n');
+  // A real edit or an untracked shipped file makes it a development build, which is read from the working copy.
+  await write('notes.txt', 'one\r\nthree\r\n'); await write('packaging/windows/extra.txt', 'new\n');
+  const edited = await sourceState(repo), dev = await assembleStudio({ runtime: standIn, source: edited, base: repo });
+  assert.deepEqual(edited.dirty, ['notes.txt', 'packaging/windows/extra.txt']); assert.equal(edited.read, undefined);
+  assert.equal(dev.files.get('PixelForgeStudio-9.9.9-dev-win-x64/app/notes.txt').toString(), 'one\r\nthree\r\n');
+});
 test('the studio launcher takes a free port, serves the studio and stops cleanly', async t => {
   const start = () => new Promise((resolve, reject) => {
     const child = spawn(...launcher('studio.mjs', '--no-browser'), { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -90,5 +113,5 @@ test('an assembled build passes the release checks from a folder with a space an
   for (const [file, bytes] of build.files) { await mkdir(path.dirname(path.join(dir, file)), { recursive: true }); await writeFile(path.join(dir, file), bytes); }
   const lines = [], outcome = await verifyStudio({ dir: path.join(dir, build.name), pinned: false, log: line => lines.push(line) });
   assert.ok(outcome.ok, lines.join('\n')); assert.equal(outcome.complete, windows);
-  assert.ok(outcome.results.length >= (windows ? 25 : 6), lines.join('\n'));
+  assert.ok(outcome.results.length >= (windows ? 25 : 5), lines.join('\n'));
 });

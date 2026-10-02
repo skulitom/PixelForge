@@ -35,8 +35,9 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
   const note = text => { notes.push(text); log(`  note  ${text}`); };
   const windows = process.platform === 'win32' && process.arch === 'x64', systemRoot = process.env.SystemRoot ?? 'C:\\Windows', system = path.join(systemRoot, 'System32');
   const powershell = path.join(system, 'WindowsPowerShell', 'v1.0', 'powershell.exe'), comspec = path.join(system, 'cmd.exe');
-  // What a PC without developer tools offers: Windows' own folders on PATH and no Node or npm settings.
-  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(path|node_.*|npm_.*)$/i.test(key)));
+  // What a PC without developer tools offers: Windows' own folders on PATH and no Node or npm settings. PowerShell 7's
+  // module path goes too: Windows PowerShell started with it cannot load its own modules.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(path|psmodulepath|node_.*|npm_.*)$/i.test(key)));
   env.PATH = [system, systemRoot, path.join(system, 'Wbem'), path.dirname(powershell)].join(';');
   const ps = (script, extra = {}) => spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-Command', script], { env: { ...env, ...extra }, encoding: 'utf8', windowsHide: true, timeout: 120000 });
   let workspace = null;
