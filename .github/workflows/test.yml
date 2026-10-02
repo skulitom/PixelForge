@@ -48,6 +48,7 @@ jobs:
         include:
           - { os: windows-latest, target: win-x64 }
           - { os: ubuntu-latest, target: linux-x64 }
+          - { os: ubuntu-24.04-arm, target: linux-arm64 }
           - { os: macos-latest, target: darwin-arm64 }
           # The Intel build runs through Rosetta on the Apple silicon runner.
           - { os: macos-latest, target: darwin-x64 }
@@ -91,7 +92,7 @@ jobs:
       - name: Run the test suite on the bundled runtime (macOS and Linux)
         if: runner.os != 'Windows'
         run: '"$RUNNER_TEMP"/studio/*/runtime/node --test'
-      # Every runner prints the hashes of all four archives, so builds made on different systems can be compared.
+      # Every runner prints the hashes of all the archives, so builds made on different systems can be compared.
       - name: Build every target on this system
         shell: bash
         run: |

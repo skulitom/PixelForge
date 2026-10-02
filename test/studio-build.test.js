@@ -58,7 +58,7 @@ test('START HERE is one text with blocks for each system', () => {
 });
 test('the macOS and Linux builds hold shell launchers marked executable, their own START HERE and the right runtime', async () => {
   const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  for (const [target, system, launchers] of [['linux-x64', 'linux', []], ['darwin-arm64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']], ['darwin-x64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']]]) {
+  for (const [target, system, launchers] of [['linux-x64', 'linux', []], ['linux-arm64', 'linux', []],['darwin-arm64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']], ['darwin-x64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']]]) {
     const build = await assembleStudio({ runtime: standIn, source, target }), inside = file => build.files.get(`${build.name}/${file}`), names = [...build.files.keys()].map(name => name.slice(build.name.length + 1));
     assert.deepEqual([build.name, build.format, TARGETS[target].os], [`PixelForgeStudio-${version}-${target}`, 'tar.gz', system]);
     const scripts = ['pixelforge', 'pixelforge-studio', 'connect-your-agent', ...launchers];
@@ -78,7 +78,7 @@ test('the macOS and Linux builds hold shell launchers marked executable, their o
     assert.deepEqual([...packed.keys()], [...build.files.keys()]);
     assert.deepEqual([packed.get(`${build.name}/pixelforge`).mode, packed.get(`${build.name}/START HERE.txt`).mode], [0o755, 0o644]);
   }
-  assert.deepEqual([hostTarget('win32', 'x64'), hostTarget('linux', 'x64'), hostTarget('darwin', 'arm64'), hostTarget('darwin', 'x64'), hostTarget('freebsd', 'x64')], ['win-x64', 'linux-x64', 'darwin-arm64', 'darwin-x64', undefined]);
+  assert.deepEqual([hostTarget('win32', 'x64'), hostTarget('linux', 'x64'), hostTarget('linux', 'arm64'), hostTarget('darwin', 'arm64'), hostTarget('darwin', 'x64'), hostTarget('win32', 'arm64'), hostTarget('freebsd', 'x64')], ['win-x64', 'linux-x64', 'linux-arm64', 'darwin-arm64', 'darwin-x64', undefined, undefined]);
 });
 test('the build ships exactly the files npm pack ships', async t => {
   const packed = spawnSync('npm pack --dry-run --json', { cwd: root, shell: true, encoding: 'utf8' });

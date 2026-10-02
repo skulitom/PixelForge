@@ -1,7 +1,7 @@
 // Builds the portable PixelForge Studio: the files `npm pack` ships, the pinned official Node.js runtime for the
 // target system and the launcher scripts from packaging/, packed into one reproducible archive (a ZIP for Windows,
 // a .tar.gz that keeps execute permissions for macOS and Linux). Any host can build any target.
-//   node scripts/build-studio.mjs [--target win-x64|linux-x64|darwin-arm64|darwin-x64|all] [--out dist]
+//   node scripts/build-studio.mjs [--target win-x64|linux-x64|linux-arm64|darwin-arm64|darwin-x64|all] [--out dist]
 //                                 [--node-archive file] [--check] [--force] [--allow-dirty]
 // The default target is this machine's own. --check rebuilds and compares with the archive already in --out instead
 // of writing. --node-archive uses a runtime archive downloaded beforehand (one target only); it must still match
@@ -21,6 +21,7 @@ export const NODE_VERSION = '24.21.0';
 export const TARGETS = {
   'win-x64': { os: 'windows', format: 'zip', archive: `node-v${NODE_VERSION}-win-x64.zip`, sha256: '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541', binary: 'node.exe', binarySha256: 'ba4e6d110e8c1592a1ecd390f6b05f3da124b13871a5be62b341a07a853c6c32' },
   'linux-x64': { os: 'linux', format: 'tar.gz', archive: `node-v${NODE_VERSION}-linux-x64.tar.gz`, sha256: '6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff', binary: 'bin/node', binarySha256: '7fde7b8afa198da66257f42ee2001d874c7355631e6d1579a5fb5ef1f246df4c' },
+  'linux-arm64': { os: 'linux', format: 'tar.gz', archive: `node-v${NODE_VERSION}-linux-arm64.tar.gz`, sha256: '724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5', binary: 'bin/node', binarySha256: '0f8949d1028f6d61506b2d5bc57e7e6fe893d7b1997509b7847294fc9c616584' },
   'darwin-arm64': { os: 'macos', format: 'tar.gz', archive: `node-v${NODE_VERSION}-darwin-arm64.tar.gz`, sha256: 'bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057', binary: 'bin/node', binarySha256: 'e4b5a3af0e05c75de2eae013904145f40fe7fc2a6e6f17510128bf45cca4e79b' },
   'darwin-x64': { os: 'macos', format: 'tar.gz', archive: `node-v${NODE_VERSION}-darwin-x64.tar.gz`, sha256: '1462cb3b3046b815cf8ea436d3da450ec1a9f11dac7e5a46b0ada5305d7e8097', binary: 'bin/node', binarySha256: '7abcf39bd37ab251015337ff75304d7555f0d8e88c6e0fbf04bce8ce34636f49' }
 };
@@ -211,7 +212,7 @@ export async function assembleStudio({ runtime, source, target = 'win-x64', base
   const node = windows ? 'runtime/node.exe' : 'runtime/node';
   files.set(node, runtime.exe); modes.set(node, 0o755); files.set('runtime/NODE-LICENSE.txt', runtime.license);
   files.set('BUILD-INFO.txt', lines(Buffer.from([
-    `PixelForge Studio, portable build for ${{ 'win-x64': '64-bit Windows', 'linux-x64': '64-bit Linux (x64)', 'darwin-arm64': 'macOS on Apple silicon', 'darwin-x64': 'macOS on Intel' }[target]}`, '',
+    `PixelForge Studio, portable build for ${{ 'win-x64': '64-bit Windows', 'linux-x64': '64-bit Linux (x64)', 'linux-arm64': '64-bit Linux (ARM64)','darwin-arm64': 'macOS on Apple silicon', 'darwin-x64': 'macOS on Intel' }[target]}`, '',
     `PixelForge version: ${version}`,
     'Source: https://github.com/skulitom/PixelForge',
     `Source commit: ${source.commit ?? 'unknown'}${release ? '' : ' with uncommitted changes (development build, not a release)'}`,
