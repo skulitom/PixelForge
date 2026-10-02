@@ -17,9 +17,12 @@ together. To remove PixelForge Studio, stop it and delete the folder.
 Double-click "PixelForge Studio.cmd".
 
 A console window opens, prints the studio's address and opens it in your
-default browser. The address is normally http://127.0.0.1:4748/; if that port
+default browser. The address is normally http://127.0.0.1:4747/; if that port
 is busy, for example because a second copy is running, another one is used.
 The studio listens on this computer only. Close the console window to stop it.
+
+To open a recipe of your own, drag its .json file onto "PixelForge Studio.cmd".
+The studio starts with that recipe loaded.
 
 Windows may ask before it runs a file that came from the internet.
 "PixelForge Studio.cmd" is a short text script; you can read it in Notepad.
@@ -59,8 +62,9 @@ output\hero\preview.html to watch it play. gif saves one animation as a GIF
 you can post anywhere; --scale and --background change its size or blend it
 onto a colour.
 
-Existing files are never replaced unless you add --force. Run
-".\pixelforge help" for every command.
+To look at a recipe in the studio from here, run ".\pixelforge preview
+hero-v2.pixel.json --open". Existing files are never replaced unless you add
+--force. Run ".\pixelforge help" for every command.
 
 
 3. Connect your coding agent
@@ -70,8 +74,9 @@ Double-click "Connect your agent.cmd".
 
 It prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with
 this folder's paths already filled in. Copy the block for your agent into its
-settings. The helper only prints: it never changes a configuration file. If
-you move this folder, run it again.
+settings. For Claude Code and Codex it also prints one line you can run in
+Command Prompt or PowerShell instead. The helper itself only prints: it never
+changes a configuration file. If you move this folder, run it again.
 
 Then ask your agent to call pixel_help. What the agent renders is saved in the
 "output" folder here.

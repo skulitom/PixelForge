@@ -1,4 +1,6 @@
 import http from 'node:http';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { createBundle, createZip } from './export.js';
 import { renderProject, MAX_REQUEST_BYTES } from './core.js';
@@ -24,7 +26,22 @@ const routes = new Map([
 ]);
 // Every path the studio answers with GET, for checks that walk the whole allowlist.
 export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];
-export async function startStudio({ port = 4747, project, quiet = false } = {}) {
+export const STUDIO_PORT = 4747;
+// The program and arguments that hand an address to the system's default browser, without a shell to quote for.
+export function browserCommand(url, platform = process.platform, env = process.env) {
+  if (platform === 'win32') return [path.win32.join(env.SystemRoot ?? 'C:\\Windows', 'System32', 'rundll32.exe'), ['url.dll,FileProtocolHandler', url]];
+  return [platform === 'darwin' ? 'open' : 'xdg-open', [url]];
+}
+// Resolves to false when no opener could be started; the caller then asks the user to open the address.
+export function openBrowser(url) {
+  return new Promise(resolve => {
+    const [command, args] = browserCommand(url), child = spawn(command, args, { detached: true, stdio: 'ignore', windowsHide: true });
+    child.once('error', () => resolve(false)); child.once('spawn', () => { child.unref(); resolve(true); });
+  });
+}
+// `fallback` takes any free port when `port` is in use, so a second studio still starts. The studio's unsaved-draft
+// recovery lives in browser storage, which browsers keep per address: a draft is only found again on the same port.
+export async function startStudio({ port = STUDIO_PORT, fallback = false, project, quiet = false } = {}) {
   const scene = project?.format === 'pixelforge-scene';
   if (project) { if (scene) prepareScene(project); else renderProject(project); }
   const server = http.createServer(async (req, res) => {
@@ -55,7 +72,9 @@ export async function startStudio({ port = 4747, project, quiet = false } = {}) 
       reply(200, type, await readFile(new URL(file, import.meta.url)));
     } catch (error) { reply(400, 'application/json', JSON.stringify({ error: error.message })); }
   });
-  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
-  if (!quiet) console.log(`PixelForge studio: http://127.0.0.1:${server.address().port}\nPress Ctrl+C to stop.`);
+  const listen = number => new Promise((resolve, reject) => { server.once('error', reject); server.listen(number, '127.0.0.1', () => { server.off('error', reject); resolve(); }); });
+  await listen(port).catch(error => { if (!fallback || error.code !== 'EADDRINUSE') throw error; return listen(0); });
+  // One write, so anything reading the output sees the whole message at once.
+  if (!quiet) console.log(`PixelForge studio: http://127.0.0.1:${server.address().port}\n${port && server.address().port !== port ? `Port ${port} is in use, so this studio has another address. A draft kept at the usual address is not shown here.\n` : ''}Press Ctrl+C to stop.`);
   return server;
 }

@@ -15,7 +15,7 @@ import { NODE, readZip, sha256 } from './build-studio.mjs';
 const REQUIRED = ['START HERE.txt', 'PixelForge Studio.cmd', 'pixelforge.cmd', 'Connect your agent.cmd', 'first-edit.json', 'BUILD-INFO.txt', 'THIRD-PARTY-NOTICES.txt', 'runtime/node.exe', 'runtime/NODE-LICENSE.txt', 'launcher/studio.mjs', 'launcher/connect.mjs', 'app/package.json', 'app/LICENSE', 'app/bin/pixelforge.js'];
 const FORBIDDEN = ['demo', 'showcase', 'test', 'scripts', 'packaging', 'output', 'node_modules', '.git', '.github'];
 const COMMANDS = ['init', 'validate', 'inspect', 'patch', 'render', 'gif'];
-const USUAL_PORT = 4748;
+const USUAL_PORT = 4747;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function tree(base, relative = '') {
   const found = [];
@@ -108,15 +108,16 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
     };
     const settled = async () => { for (let i = 0; ; i++) { const left = running(); if (!left.length || i === 20) return left; await sleep(500); } };
     const launchers = [];
-    const launch = () => new Promise((resolve, reject) => {
-      const child = spawn(comspec, ['/d', '/s', '/c', `""${path.join(dir, 'PixelForge Studio.cmd')}" --no-browser"`], { cwd: os.tmpdir(), env, windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    // `dropped` is a file handed to the launcher the way Explorer hands over one dragged onto it.
+    const launch = dropped => new Promise((resolve, reject) => {
+      const child = spawn(comspec, ['/d', '/s', '/c', `""${path.join(dir, 'PixelForge Studio.cmd')}" --no-browser${dropped ? ` "${dropped}"` : ''}"`], { cwd: os.tmpdir(), env, windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
       let text = '';
       const timer = setTimeout(() => reject(new Error(`no address within 30 seconds; output so far:\n${text}`)), 30000);
       launchers.push(child);
       for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => {
         text += chunk;
-        const address = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(text);
-        if (address && /next time./.test(text)) { clearTimeout(timer); resolve({ child, url: address[0].slice(0, -1), port: Number(address[1]), text }); }
+        const address = /PixelForge studio: (http:\/\/127\.0\.0\.1:(\d+))/.exec(text);
+        if (address && /Press Ctrl\+C to stop\./.test(text)) { clearTimeout(timer); resolve({ child, url: address[1], port: Number(address[2]), text }); }
       });
       child.once('error', reject); child.once('exit', code => { clearTimeout(timer); reject(new Error(`the launcher exited with code ${code}:\n${text}`)); });
     });
@@ -147,6 +148,12 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
     await check('a second copy starts beside the first on another port and says why', async () => {
       second = await launch(); assert.notEqual(second.port, first.port); assert.match(second.text, new RegExp(`Port ${USUAL_PORT} is in use`));
       assert.equal(await status(first.url), 200); assert.equal(await status(second.url), 200); return second.url;
+    });
+    await check('a recipe dropped on the launcher opens in the studio', async () => {
+      const dropped = await launch(path.join(dir, 'app', 'examples', 'coin.json'));
+      assert.equal((await (await fetch(`${dropped.url}/project.json`)).json()).name, 'coin');
+      assert.equal(await (await fetch(`${first.url}/project.json`)).json(), null, 'a studio started without a file has no project');
+      return 'app\\examples\\coin.json';
     });
     await check('it listens on 127.0.0.1 only', () => {
       const listening = spawnSync(path.join(system, 'netstat.exe'), ['-ano', '-p', 'TCP'], { encoding: 'utf8', windowsHide: true }).stdout.split(/\r?\n/).map(line => line.trim().split(/\s+/)).filter(([, local, , state]) => state === 'LISTENING' && local.endsWith(`:${first.port}`));
@@ -236,7 +243,36 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
           : { command: JSON.parse(/^command = (.*)$/m.exec(client.text)[1]), args: JSON.parse(/^args = (.*)$/m.exec(client.text)[1]) };
         assert.deepEqual(parsed, settings.server, client.name);
         assert.ok(text.stdout.replace(/\r\n/g, '\n').includes(`${client.name} `) && text.stdout.replace(/\r\n/g, '\n').includes(client.text), `${client.name} is missing from the printed settings`);
+        if (client.command) assert.ok(text.stdout.includes(client.command), `${client.name}'s one-line command is missing from the printed settings`);
       }
+    });
+    // The one-line commands are run as printed, in each shell, against stand-ins for the two tools: a .cmd wrapper
+    // and the .ps1 wrapper npm installs. Each stand-in records the arguments it was given; nothing is configured.
+    await check('the one-line commands hand claude and codex the same server from Command Prompt and PowerShell', async () => {
+      const commands = Object.fromEntries(settings.clients.map(client => [client.id, client.command]));
+      assert.deepEqual([commands['claude-desktop'], commands.cursor], [null, null]);
+      if (/["%$`]/.test(dir)) { assert.deepEqual([commands['claude-code'], commands.codex], [null, null]); return 'none offered: the folder path has a character that shells treat specially'; }
+      const stand = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-shims-')), record = path.join(stand, 'record.cjs'), seen = path.join(stand, 'seen.json');
+      try {
+        await writeFile(record, 'require("node:fs").writeFileSync(process.env.PF_SEEN, JSON.stringify(process.argv.slice(2)));\n');
+        for (const tool of ['claude', 'codex']) {
+          await mkdir(path.join(stand, 'cmd'), { recursive: true }); await mkdir(path.join(stand, 'ps1'), { recursive: true });
+          await writeFile(path.join(stand, 'cmd', `${tool}.cmd`), '@echo off\r\n"%PF_NODE%" "%PF_RECORD%" %*\r\n');
+          await writeFile(path.join(stand, 'ps1', `${tool}.ps1`), '& $env:PF_NODE $env:PF_RECORD $args\r\n');
+        }
+        const shells = {
+          'Command Prompt': (line, shims) => spawnSync(comspec, ['/d', '/s', '/c', `"${line}"`], { cwd: os.tmpdir(), env: shims, encoding: 'utf8', windowsVerbatimArguments: true, windowsHide: true, timeout: 60000 }),
+          // Bypass applies to this one child process, so the stand-in .ps1 runs whatever the machine's policy is.
+          PowerShell: (line, shims) => spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(line, 'utf16le').toString('base64')], { cwd: os.tmpdir(), env: shims, encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        };
+        const target = [settings.server.command, ...settings.server.args], expected = { 'claude-code': ['mcp', 'add', '--scope', 'user', 'pixelforge', '--', ...target], codex: ['mcp', 'add', 'pixelforge', '--', ...target] };
+        for (const [shell, shim] of [['Command Prompt', 'cmd'], ['PowerShell', 'cmd'], ['PowerShell', 'ps1']]) for (const id of ['claude-code', 'codex']) {
+          await rm(seen, { force: true });
+          const run = shells[shell](commands[id], { ...env, PATH: `${path.join(stand, shim)};${env.PATH}`, PF_NODE: path.join(dir, 'runtime', 'node.exe'), PF_RECORD: record, PF_SEEN: seen });
+          assert.deepEqual(JSON.parse(await readFile(seen, 'utf8').catch(() => 'null')), expected[id], `${id} from ${shell} through a .${shim} wrapper: ${run.stderr || run.stdout}`);
+        }
+      } finally { await rm(stand, { recursive: true, force: true }); }
+      return 'cmd.exe and Windows PowerShell, .cmd and .ps1 wrappers';
     });
     await check('the MCP server initialises, lists eight tools and renders over stdio on the bundled runtime', async () => {
       const child = spawn(settings.server.command, settings.server.args, { cwd: os.tmpdir(), env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });

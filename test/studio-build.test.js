@@ -6,6 +6,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { createZip } from '../src/export.js';
+import { browserCommand, STUDIO_PORT } from '../src/server.js';
 import { root, readZip, writeZip, packageFiles, sourceState, assembleStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
 import { verifyStudio } from '../scripts/verify-studio.mjs';
 
@@ -75,26 +76,39 @@ test('a release build takes its files from the commit, whatever line endings the
   assert.deepEqual(edited.dirty, ['notes.txt', 'packaging/windows/extra.txt']); assert.equal(edited.read, undefined);
   assert.equal(dev.files.get('PixelForgeStudio-9.9.9-dev-win-x64/app/notes.txt').toString(), 'one\r\nthree\r\n');
 });
-test('the studio launcher keeps its usual port when it can, falls back when it cannot, and stops cleanly', async t => {
-  const start = () => new Promise((resolve, reject) => {
-    const child = spawn(...launcher('studio.mjs', '--no-browser'), { stdio: ['ignore', 'pipe', 'pipe'] });
+test('the launcher is preview with a browser: the usual port, a free one beside it, and a dropped recipe opens', async t => {
+  const start = (...dropped) => new Promise((resolve, reject) => {
+    const child = spawn(...launcher('studio.mjs', '--no-browser', ...dropped), { stdio: ['ignore', 'pipe', 'pipe'] });
     let text = '';
     t.after(() => child.kill());
-    child.stdout.on('data', chunk => { text += chunk; const address = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(text); if (address && /next time\./.test(text)) resolve({ child, url: address[0], port: Number(address[1]), text }); });
+    child.stdout.on('data', chunk => { text += chunk; const address = /PixelForge studio: (http:\/\/127\.0\.0\.1:(\d+))/.exec(text); if (address && /Press Ctrl\+C to stop\./.test(text)) resolve({ child, url: address[1], port: Number(address[2]), text }); });
     child.once('error', reject); child.once('exit', code => reject(new Error(`exited with ${code}: ${text}`)));
   });
   // Drafts are stored per address, so the same port every time is what lets a draft be found again.
-  const usualFree = await new Promise(resolve => { const probe = http.createServer(); probe.once('error', () => resolve(false)); probe.listen(4748, '127.0.0.1', () => probe.close(() => resolve(true))); });
-  const first = await start(), second = await start();
-  if (usualFree) { assert.equal(first.port, 4748); assert.doesNotMatch(first.text, /is in use/); }
-  assert.notEqual(second.port, 4748); assert.match(second.text, /Port 4748 is in use, so this copy has another address/);
+  const usualFree = await new Promise(resolve => { const probe = http.createServer(); probe.once('error', () => resolve(false)); probe.listen(STUDIO_PORT, '127.0.0.1', () => probe.close(() => resolve(true))); });
+  const first = await start(), second = await start(path.join(root, 'examples', 'coin.json'));
+  assert.match(first.text, /^PixelForge Studio \d+\.\d+\.\d+\r?\n\r?\nClose this window to stop it\./);
+  if (usualFree) { assert.equal(first.port, STUDIO_PORT); assert.doesNotMatch(first.text, /is in use/); }
+  assert.notEqual(second.port, STUDIO_PORT); assert.match(second.text, /Port 4747 is in use, so this studio has another address/);
   assert.notEqual(first.url, second.url);
   for (const { url } of [first, second]) assert.match(await (await fetch(url)).text(), /<title>PixelForge · Sprite studio<\/title>/);
+  // A file handed to the launcher, as Explorer does for one dragged onto it, is the studio's project.
+  assert.equal(await (await fetch(`${first.url}/project.json`)).json(), null);
+  assert.equal((await (await fetch(`${second.url}/project.json`)).json()).name, 'coin');
+  // A port named on the command line is used or refused, never swapped for another.
+  const busy = spawnSync(process.execPath, ['bin/pixelforge.js', 'preview', '--port', String(first.port)], { cwd: root, encoding: 'utf8' });
+  assert.equal(busy.status, 1); assert.match(JSON.parse(busy.stderr).error, /EADDRINUSE/);
   const exits = [first, second].map(({ child }) => new Promise(resolve => child.once('exit', resolve)));
   first.child.kill(); second.child.kill(); await Promise.all(exits);
   await assert.rejects(fetch(first.url));
-  const unknown = spawnSync(...launcher('studio.mjs', 'hero.pixel.json'), { encoding: 'utf8' });
-  assert.equal(unknown.status, 1); assert.match(unknown.stderr, /Unknown option: hero\.pixel\.json/);
+  const missing = spawnSync(...launcher('studio.mjs', '--no-browser', 'missing.pixel.json'), { encoding: 'utf8' });
+  assert.equal(missing.status, 1); assert.match(JSON.parse(missing.stderr).error, /ENOENT/);
+});
+test('the browser is opened by each system\'s own handler, with no shell to quote for', () => {
+  const url = 'http://127.0.0.1:4747/';
+  assert.deepEqual(browserCommand(url, 'win32', { SystemRoot: 'D:\\Windows' }), ['D:\\Windows\\System32\\rundll32.exe', ['url.dll,FileProtocolHandler', url]]);
+  assert.deepEqual(browserCommand(url, 'win32', {}), ['C:\\Windows\\System32\\rundll32.exe', ['url.dll,FileProtocolHandler', url]]);
+  assert.deepEqual([browserCommand(url, 'darwin', {}), browserCommand(url, 'linux', {})], [['open', [url]], ['xdg-open', [url]]]);
 });
 test('the connect helper prints the same server for four agents and changes nothing', () => {
   const json = spawnSync(...launcher('connect.mjs', '--json'), { encoding: 'utf8' }), text = spawnSync(...launcher('connect.mjs'), { encoding: 'utf8' });
@@ -108,6 +122,10 @@ test('the connect helper prints the same server for four agents and changes noth
     if (client.format === 'json') assert.deepEqual(JSON.parse(client.text), { mcpServers: { pixelforge: settings.server } });
     else assert.deepEqual([JSON.parse(/^command = (.*)$/m.exec(client.text)[1]), JSON.parse(/^args = (.*)$/m.exec(client.text)[1])], [settings.server.command, settings.server.args]);
   }
+  // The two agents with an "mcp add" command get one line; the separator is quoted so PowerShell cannot drop it.
+  const target = `pixelforge "--" "${settings.server.command}" "${settings.server.args[0]}" mcp --out "${settings.server.args[3]}"`;
+  assert.deepEqual(settings.clients.map(client => client.command), [`claude mcp add --scope user ${target}`, null, `codex mcp add ${target}`, null]);
+  for (const client of settings.clients) if (client.command) assert.ok(text.stdout.includes(`\n${client.command}\n`), client.name);
 });
 test('an assembled build passes the release checks from a folder with a space and an accent', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge studio é-'));

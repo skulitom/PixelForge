@@ -21,8 +21,9 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
   pixelforge overlay <recipe.json> --changes edits.json --out fixes.json [--selections regions.json]
   pixelforge import <image.png> --out recipe.json [--atlas atlas.json] [--name imported]
-  pixelforge preview [file.json] [--port 4747]
-                                           Studio for a recipe or scene; sources open as their compiled recipe
+  pixelforge preview [file.json] [--port N] [--open]
+                                           Studio for a recipe or scene; sources open as their compiled recipe.
+                                           Port 4747, or a free one when it is in use; --open starts your browser
   pixelforge mcp [--out directory] [--root directory]  Run the MCP server over stdio
   pixelforge schema                       Print the JSON Schema
 
@@ -44,7 +45,7 @@ No installation needed: node bin/pixelforge.js <command>
 function parseArgs(args) {
   const positional = [], options = {};
   for (let i = 0; i < args.length; i++) {
-    if (['--force', '--grid', '--native', '--diagnostics'].includes(args[i])) options[args[i].slice(2)] = true;
+    if (['--force', '--grid', '--native', '--diagnostics', '--open'].includes(args[i])) options[args[i].slice(2)] = true;
     else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root'].includes(args[i])) {
       const key = args[i].slice(2);
       if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`--${key} requires a value`);
@@ -104,7 +105,7 @@ try {
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], preview: ['port'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
+    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], preview: ['port', 'open'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -116,13 +117,15 @@ try {
     else if (command === 'mcp') {
       const { startMCP } = await import('../src/mcp.js'); await startMCP({ directory: options.out, ...(options.root !== undefined && { root: path.resolve(options.root) }) });
     } else if (command === 'preview') {
-      const { startStudio } = await import('../src/server.js');
-      const port = options.port === undefined ? 4747 : Number(options.port);
+      const { startStudio, openBrowser, STUDIO_PORT } = await import('../src/server.js');
+      const port = options.port === undefined ? STUDIO_PORT : Number(options.port);
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be an integer from 0 to 65535');
       let project = positional[0] ? (await readResolved(positional[0])).document : undefined;
       // Pose, autotile and effect sources open as the recipe they compile to.
       if (project && Object.hasOwn(COMPILERS, project.format ?? '')) project = COMPILERS[project.format](project).recipe;
-      await startStudio({ port, project });
+      // A port you name is used or refused; the usual one gives way to any free port when something else has it.
+      const server = await startStudio({ port, project, fallback: options.port === undefined });
+      if (options.open && !await openBrowser(`http://127.0.0.1:${server.address().port}/`)) console.log('No browser was opened. Copy the address above into your browser.');
     } else if (['compile', 'autotile', 'overlay', 'import'].includes(command)) {
       if (!options.out || !/\.json$/i.test(options.out)) throw new Error(`${command} requires --out <new.json>`);
       let value, metadata, input;
