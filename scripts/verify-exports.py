@@ -189,4 +189,49 @@ for name, expected in gifs.items():
         # Every pixel of a scaled block is the same colour: nothing was resampled.
         assert image.convert('RGBA').tobytes() == decoded.resize(image.size, Image.Resampling.NEAREST).tobytes(), (name, index)
 
-print(f'Independent decode passed: {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')
+# An image sequence for a video editor. Pillow reads every numbered PNG; each must be the pose that is active when
+# that video frame starts (worked out here with fractions, apart from PixelForge), enlarged by whole pixels at its
+# place, with the alpha left alone. If ffmpeg is installed, the command the sequence prints must then make a video
+# with the same frame count, rate and size, whose alpha is exact and whose colours are within 3 of 255.
+from fractions import Fraction
+import shutil
+with tempfile.TemporaryDirectory() as temporary:
+    out = Path(temporary) / 'sequence'
+    subprocess.check_output(['node', 'bin/pixelforge.js', 'sequence', 'examples/forest-spirit.json', '--fps', '29.97', '--size', '320x180',
+                             '--align', 'bottom-left', '--offset', '12,-6', '--loops', '2', '--out', str(out)], cwd=root)
+    info = json.loads((out / 'sequence.json').read_text(encoding='utf-8'))
+    assert (info['fps']['numerator'], info['fps']['denominator'], info['width'], info['height']) == (30000, 1001, 320, 180)
+    poses = [(name, atlas['frames'][name]['duration']) for name in atlas['animations']['idle']['frames']]
+    one_pass = sum(duration for _, duration in poses)
+    assert info['frames'] == -(-Fraction(2 * one_pass * 30000, 1000 * 1001) // 1), info['frames']
+    sheet_scale = atlas['meta']['scale'] if isinstance(atlas['meta'].get('scale'), int) else 1
+    for number in range(1, info['frames'] + 1):
+        moment = Fraction((number - 1) * 1001 * 1000, 30000) % one_pass
+        elapsed, active = 0, None
+        for name, duration in poses:
+            if elapsed <= moment < elapsed + duration:
+                active = name
+            elapsed += duration
+        pose = Image.open(folder / 'frames' / f'{active}.png').convert('RGBA')
+        native = pose.resize((pose.width // sheet_scale, pose.height // sheet_scale), Image.Resampling.NEAREST)
+        expected = Image.new('RGBA', (320, 180), (0, 0, 0, 0))
+        # 24 pixels fit 180 seven times: 168, placed 12 from the left and 6 above the bottom edge.
+        expected.paste(native.resize((168, 168), Image.Resampling.NEAREST), (12, 180 - 168 - 6))
+        actual = Image.open(out / (info['pattern'] % number))
+        assert actual.mode == 'RGBA' and actual.tobytes() == expected.tobytes(), (number, active)
+    video = 'not checked: ffmpeg is not installed'
+    if shutil.which('ffmpeg') and shutil.which('ffprobe'):
+        subprocess.run(info['commands']['prores4444'] + ' -loglevel error', cwd=out, shell=True, check=True)
+        stream = json.loads(subprocess.check_output(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-count_frames', '-show_entries',
+            'stream=codec_name,pix_fmt,width,height,r_frame_rate,nb_read_frames', '-of', 'json', str(out / (info['name'] + '.mov'))]))['streams'][0]
+        assert (stream['codec_name'], int(stream['nb_read_frames']), stream['width'], stream['height'], stream['r_frame_rate']) == ('prores', info['frames'], 320, 180, '30000/1001'), stream
+        assert stream['pix_fmt'].startswith('yuva'), stream['pix_fmt']
+        subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', str(out / (info['name'] + '.mov')), '-vf', 'scale=in_color_matrix=bt709:flags=neighbor', '-frames:v', '1', '-pix_fmt', 'rgba', str(out / 'back.png')], check=True)
+        first, back = Image.open(out / (info['pattern'] % 1)).convert('RGBA'), Image.open(out / 'back.png').convert('RGBA')
+        assert first.getchannel('A').tobytes() == back.getchannel('A').tobytes()
+        worst = max(abs(a - b) for original, decoded in zip(first.getdata(), back.getdata()) if original[3] for a, b in zip(original[:3], decoded[:3]))
+        assert worst <= 3, worst
+        video = f'ffmpeg made a {stream["pix_fmt"]} ProRes video of {stream["nb_read_frames"]} frames with exact alpha and colours within {worst} of 255'
+    sequence_frames = info['frames']
+
+print(f'Independent decode passed: a {sequence_frames}-frame image sequence at 29.97 with exact pixels and alpha ({video}), {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')

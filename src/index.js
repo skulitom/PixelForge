@@ -2,6 +2,7 @@ export { PixelError, MAX_REQUEST_BYTES, parseColor, renderProject, buildAtlas, s
 export { patchRecipe } from './patch.js';
 export { encodePNG, encodeAPNG } from './png.js';
 export { encodeGIF, animationGIF } from './gif.js';
+export { createSequence, createSceneSequence, planSequence, placeSprite, parseFrameRate, VIDEO_SIZES } from './sequence.js';
 export { createBundle, writeBundle, createZip, generateCSS, formatJSON } from './export.js';
 export { compilePoses, compileAutotile } from './authoring.js';
 export { compileEffects } from './fx.js';

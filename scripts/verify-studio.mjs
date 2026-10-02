@@ -285,6 +285,16 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       assert.match(await read('output/hero/preview.html'), /^<!doctype html>/);
       assert.equal((await readFile(path.join(dir, 'hero.gif'))).toString('latin1', 0, 6), 'GIF89a');
     });
+    await check('sequence writes numbered frames for a video editor, as START HERE describes', async () => {
+      assert.match(start.replace(/\r?\n/g, ' '), /"sequence hero-v2\.pixel\.json --fps 30 --size 1080p --out shots"/);
+      const run = shell(`${lines[0].split(' ')[0]} sequence hero-v2.pixel.json --fps 30 --size 1080p --out shots`); assert.equal(run.status, 0, run.stderr || run.stdout);
+      const report = JSON.parse(run.stdout), sidecar = JSON.parse(await read('shots/sequence.json'));
+      assert.deepEqual([report.ok, report.width, report.height, sidecar.frames, sidecar.fps.label], [true, 1920, 1080, report.frames, '30']);
+      const first = await readFile(path.join(dir, 'shots', sidecar.pattern.replace('%04d', '0001')));
+      assert.deepEqual([first.toString('latin1', 1, 4), first.readUInt32BE(16), first.readUInt32BE(20)], ['PNG', 1920, 1080]);
+      assert.ok((await read('shots/README.txt')).includes(sidecar.commands.prores4444));
+      return `${sidecar.frames} frames at 1920 × 1080`;
+    });
     await check('a second run refuses to replace an existing file', () => {
       const run = shell(lines[0]); assert.equal(run.status, 1); assert.equal(JSON.parse(run.stderr).ok, false);
     });

@@ -13,6 +13,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
 - `src/gif.js`: browser-compatible GIF89a export for sharing, used by the CLI, MCP and studio. Exact colours only: it never quantizes or dithers, and reports what GIF cannot keep (partial alpha, sub-10 ms timing) instead of hiding it.
+- `src/sequence.js`: numbered PNG frames for video editors, from recipes and scenes: exact frame-rate fractions, whole-number enlargement onto a video-sized canvas, a sidecar and the ffmpeg command for an alpha video. It encodes no video itself; keep it that way.
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer. `studio/draft.js` keeps one unsaved recipe in the browser's own storage; draft recovery must stay in the browser, never a server endpoint.
