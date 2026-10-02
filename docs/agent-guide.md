@@ -51,6 +51,7 @@ Coordinates are integers; origin is the top-left; positive y points down. x/y de
 | `replace` | from, to | Replace every exact RGBA match in the current buffer |
 | `grid` | x, y, rows, scale?, flipX?, flipY?, rotate?, remap? | Draw palette rows; dot and space skip |
 | `stamp` | x, y, symbol, scale?, flipX?, flipY?, rotate?, remap? | Place a named symbol |
+| `text` | x, y, text, color, align?, spacing?, lineHeight?, scale?, flipX?, flipY?, rotate? | Text in the built-in pixel font |
 | `copy` | x, y, symbol \| from, sx?, sy?, w?, h?, scale?, flipX?, flipY?, rotate?, remap? | Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA) |
 | `autotile` | x?, y?, symbol, mask, mode?, remap? | One autotile tile: the four quarters of a template symbol that a neighbour mask selects |
 | `outline` | color, diagonal?, position?, width?, directions? | Outline every visible pixel in this buffer: outside rings, inside edge rings or both, in chosen directions |
@@ -58,6 +59,8 @@ Coordinates are integers; origin is the top-left; positive y points down. x/y de
 | `rewrite` | x?, y?, w?, h?, rules, empty?, steps?, chance?, limit?, seed?, rotate?, mirror? | Markov-style rewrite rules: small match grids replaced wherever they occur, in a seeded order |
 
 Rectangle/ellipse/clear w/h are integers 1–512. Grid and symbol rows must be rectangular, at most 256×256 characters, and use defined palette keys. Grid/stamp/copy scale is 1–16. Flip X/Y before rotation; rotation is 0, 90, 180 or 270 degrees clockwise; then scale. x/y locates the transformed grid's upper-left corner. Geometry is never anti-aliased.
+
+`text` draws printable ASCII in the built-in font: capitals 7 pixels tall, lowercase 5, descenders 1 below the baseline, so a line is 8 rows and `y` is the top of the capitals. Glyphs are as wide as their ink (1 to 5 pixels), digits are always 5 so counters do not jitter, and a space is 3; with the default `spacing` of 1 a line of n characters is about 6n pixels wide, so 40 characters fit a 240-pixel canvas. `\n` starts a new line (default `lineHeight` 10). `align` says what `x` is: the `left` edge (default), the `center` or the `right` edge of the text, and lines align the same way. `scale`, flips and rotation work as for grids. A character outside ASCII is an error that names it; draw accents and symbols yourself with `grid`. Text that overhangs the canvas is clipped and reported like any other drawing. `measureText(text, { spacing, lineHeight })` from `src/font.js` returns the width and height before you draw. Use `outline` after it for a readable edge on busy backgrounds.
 
 `remap` recolors grid characters for one operation only, `{"1": "4", "2": "#ffffff"}`: one authored shape, several color variants. `copy` takes `sx, sy, w, h` from its source (defaults: the whole source) and draws it like a stamp; it is what lets one template symbol hold every autotile quarter. Frame copies keep exact RGBA and cannot remap. `outline` works on the buffer it is in: frame `ops` outline everything drawn so far (including an opaque background, which leaves nothing to outline), layer `ops` outline only that layer. The default is 4-connected; `diagonal: true` also fills corners. Stamp clusters in a layer and finish with `outline` to get one silhouette around their union.
 

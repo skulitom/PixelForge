@@ -6,6 +6,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 
 - `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
 - `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing and engine-independent trigonometry. Keep new randomness seeded and new maths polynomial so output stays identical across JavaScript engines.
+- `src/font.js`: browser-compatible built-in pixel font (printable ASCII) and text layout for the `text` drawing operation. Glyph changes change rendered pixels, so treat them as format changes: regenerate examples and review.
 - `src/fx.js`: browser-compatible `pixelforge-fx` compiler that bakes seeded particle emitters into ordinary recipes.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
 - `src/autotile.js`: browser-compatible blob/cardinal neighbour masks and template quarter layout, shared by scene tilemaps and the autotile compiler in `src/authoring.js`.

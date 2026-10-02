@@ -12,6 +12,7 @@ const routes = new Map([
   ['/studio.js', ['../studio/studio.js', 'text/javascript; charset=utf-8']],
   ['/core.js', ['./core.js', 'text/javascript; charset=utf-8']],
   ['/craft.js', ['./craft.js', 'text/javascript; charset=utf-8']],
+  ['/font.js', ['./font.js', 'text/javascript; charset=utf-8']],
   ['/gif.js', ['./gif.js', 'text/javascript; charset=utf-8']],
   ['/draft.js', ['../studio/draft.js', 'text/javascript; charset=utf-8']],
   ['/authoring.js', ['./authoring.js', 'text/javascript; charset=utf-8']],
@@ -22,7 +23,7 @@ const routes = new Map([
   ['/scene.html', ['../studio/scene.html', 'text/html; charset=utf-8']],
   ['/examples/quality/skink.json', ['../examples/quality/skink.json', 'application/json']],
   ['/schema.json', ['../schema.json', 'application/json']],
-  ...['forest-spirit', 'ember', 'coin', 'shrine', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
+  ...['forest-spirit', 'ember', 'coin', 'shrine', 'caption', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
 ]);
 // Every path the studio answers with GET, for checks that walk the whole allowlist.
 export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];

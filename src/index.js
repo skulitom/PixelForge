@@ -1,6 +1,7 @@
 export { PixelError, MAX_REQUEST_BYTES, parseColor, renderProject, buildAtlas, scalePixels, inspectProject, compareProjects, analyzeProject, reviewPixels, animationPosition, animationNeighbors, onionPixels, tileRepeat, tileReport } from './core.js';
 export { patchRecipe } from './patch.js';
 export { encodePNG, encodeAPNG } from './png.js';
+export { measureText, layoutText, FONT_CHARACTERS, FONT_HEIGHT, FONT_CAP_HEIGHT } from './font.js';
 export { encodeGIF, animationGIF } from './gif.js';
 export { createSequence, createSceneSequence, planSequence, placeSprite, parseFrameRate, VIDEO_SIZES } from './sequence.js';
 export { createBundle, writeBundle, createZip, generateCSS, formatJSON } from './export.js';

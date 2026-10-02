@@ -1006,6 +1006,80 @@
           "type": "object",
           "properties": {
             "op": {
+              "const": "text"
+            },
+            "x": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "y": {
+              "type": "integer",
+              "minimum": -4096,
+              "maximum": 4096
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "description": "Printable ASCII; \\n starts a new line (at most 64)."
+            },
+            "color": {
+              "type": "string",
+              "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+            },
+            "align": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ],
+              "description": "What x is: the left edge of the text (default), its centre or its right edge. Lines align the same way."
+            },
+            "spacing": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16,
+              "description": "Pixels between glyphs; default 1."
+            },
+            "lineHeight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64,
+              "description": "Pixels from the top of one line to the top of the next; default 10."
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "flipX": {
+              "type": "boolean"
+            },
+            "flipY": {
+              "type": "boolean"
+            },
+            "rotate": {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "text",
+            "color"
+          ],
+          "additionalProperties": false,
+          "description": "Draw text in the built-in pixel font. y is the top of the capitals; a line is 8 rows: capitals 7 tall, lowercase 5, descenders 1 below. Glyphs are 1 to 5 pixels wide, digits always 5, a space 3. One line of n average characters is about 6n pixels wide."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
               "const": "copy"
             },
             "x": {

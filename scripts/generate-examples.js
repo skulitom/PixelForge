@@ -103,9 +103,25 @@ const swing = { format: 'pixelforge-poses', version: 1, name: 'swing', width: 40
   ],
   animations: { swing: { frames: ['raise', 'swing-1', 'swing-2', 'strike', 'follow'], loop: false } } };
 
+// A lower third for video: 240 × 32 fills the width of a 1080p frame at scale 8. The panel opens, the title is typed
+// in, and the last pose holds. Every duration is a whole number of frames at 30 and at 60 frames per second.
+const panel = width => [{ op: 'rect', x: 0, y: 4, w: 3, h: 24, color: 'gold' }, ...(width ? [{ op: 'rect', x: 3, y: 4, w: width, h: 24, color: 'panel' }, { op: 'rect', x: 3, y: 27, w: width, h: 1, color: 'edge' }] : [])];
+const title = 'PIXELFORGE', line = 'text to pixels, frame by frame';
+const caption = { version: 1, name: 'caption', width: 240, height: 32, palette: { panel: '#141824e6', edge: '#0b0e16', gold: '#f2dc93', ink: '#f2f0e4', soft: '#9fb6c9' },
+  frames: [
+    { name: 'bar', duration: 100, ops: panel(0) },
+    { name: 'open-1', duration: 100, ops: panel(70) },
+    { name: 'open-2', duration: 100, ops: panel(150) },
+    { name: 'open-3', duration: 100, ops: panel(210) },
+    ...[3, 6, 10].map((letters, i) => ({ name: `type-${i + 1}`, duration: 100, ops: [...panel(210), { op: 'text', x: 11, y: 8, text: title.slice(0, letters), color: 'ink' }] })),
+    { name: 'shown', duration: 2000, ops: [...panel(210), { op: 'text', x: 11, y: 8, text: title, color: 'ink' }, { op: 'text', x: 11, y: 18, text: line, color: 'soft' }] }
+  ],
+  animations: { in: { frames: ['bar', 'open-1', 'open-2', 'open-3', 'type-1', 'type-2', 'type-3', 'shown'], loop: false }, hold: { frames: ['shown'] } },
+  sheet: { columns: 2, padding: 1 } };
+
 await mkdir(new URL('../examples/', import.meta.url), { recursive: true });
 // Authored sources are pretty-printed; compiled recipes use the CLI's compact formatting.
-const authored = { 'forest-spirit': forest, ember, coin, shrine, 'effects.fx': effects, 'swing.poses': swing };
+const authored = { 'forest-spirit': forest, ember, coin, shrine, caption, 'effects.fx': effects, 'swing.poses': swing };
 const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe };
 for (const [name, value] of Object.entries(authored)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
 for (const [name, value] of Object.entries(compiled)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), formatJSON(value));

@@ -85,7 +85,7 @@ Use PixelForge to create or revise pixel sprites, tiles, icons, effects and shor
 | [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
 | [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
 | [JSON Schema](schema.json) | Machine-readable recipe structure |
-| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a rotated sword swing and a particle effects source |
+| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing and a particle effects source |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
 Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
@@ -141,6 +141,16 @@ node bin/pixelforge.js gif hero.pixel.json --animation blink --scale 8 --backgro
 ```
 
 Colours are exact: nothing is quantized or dithered, and a frame that needs more than 256 colours is refused with an error instead of being approximated. GIF has no partial transparency, so pixels below 50% alpha become transparent and the rest opaque; `--background` (a palette name or opaque hex colour) blends every pixel onto one colour instead, which keeps soft shadows. Frame times are rounded to GIF's 10 ms steps with the remainder carried to the next frame, and raised to 20 ms where shorter. The JSON result's `notes` say which of these happened. The studio's **GIF** button downloads the current animation at the current zoom, and MCP `pixel_render` takes `"gif": {}`. The export bundle itself is unchanged.
+
+### Pixel text
+
+The `text` operation draws titles, captions, labels and counters in a built-in pixel font: printable ASCII, capitals 7 pixels tall, proportional letters and tabular digits.
+
+```json
+{ "op": "text", "x": 120, "y": 8, "text": "GAME OVER\nscore 12480", "color": "ink", "align": "center" }
+```
+
+`align` says whether `x` is the left edge, the centre or the right edge; `spacing`, `lineHeight`, `scale` and rotation adjust it, and `outline` after it gives a readable edge. Text that runs off the canvas is reported like any other clipped drawing, and a character the font lacks is an error that names it. [examples/caption.json](examples/caption.json) is a lower third that opens and types its title; `node bin/pixelforge.js sequence examples/caption.json --fps 30 --size 1080p --align bottom --offset 0,-64 --out shots/caption` turns it into 81 frames that sit across the bottom of a 1080p picture.
 
 ### Frames for a video editor
 
@@ -265,7 +275,7 @@ const { recipe: effects } = compileEffects(fxSource); // seeded particles baked 
 const gif = animationGIF(project, 'idle', { scale: 8 }); // { data, width, height, notes, ... }
 ```
 
-`src/core.js`, `src/craft.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+`src/core.js`, `src/craft.js`, `src/font.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
 
 ## Develop and verify
 
@@ -274,7 +284,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 
