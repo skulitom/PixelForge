@@ -12,7 +12,7 @@ Zero runtime dependencies. No build step, API key, image model, network service 
 
 ![PixelForge's local studio showing the forest spirit sprite, animation frames, editable JSON recipe and palette](docs/images/studio.png)
 
-[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable Windows build](#pixelforge-studio-a-portable-windows-build) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelforge-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
 
 ## Art quality workflow
 
@@ -260,19 +260,28 @@ Tests cover pixels, alpha blending, inheritance, transformations, flood fill, di
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 
-## PixelForge Studio: a portable Windows build
+## PixelForge Studio: portable builds
 
-`scripts/build-studio.mjs` packs the toolkit, the official Node.js 24 LTS runtime for 64-bit Windows and three small launcher scripts into one ZIP for people who have no Node.js, git or administrator rights. Unzipped, `PixelForge Studio.cmd` is `pixelforge preview --open`: it opens the studio in the default browser on loopback port 4747, or on any free port when that one is taken (the usual port is what lets the studio's draft recovery find its draft again), and a recipe dragged onto it opens in the studio. `pixelforge.cmd` is the command line, and `Connect your agent.cmd` prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with that folder's paths, plus a one-line `claude mcp add` and `codex mcp add` command that works in Command Prompt and PowerShell; the helper itself never edits a configuration file. Nothing is installed, and deleting the folder removes everything.
+`scripts/build-studio.mjs` packs the toolkit, the official Node.js 24 LTS runtime and a few small launcher scripts into one archive per system, for people who have no Node.js, git or administrator rights: a ZIP for 64-bit Windows, and a `.tar.gz` that keeps execute permissions for Linux (x64) and macOS (Apple silicon and Intel). Nothing is installed, and deleting the folder removes everything.
+
+| | Studio | Command line | Connect an agent |
+| --- | --- | --- | --- |
+| Windows | double-click `PixelForge Studio.cmd`, or drag a recipe onto it | `pixelforge.cmd` | `Connect your agent.cmd` |
+| macOS | double-click `PixelForge Studio.command`, or `./pixelforge-studio [recipe]` | `./pixelforge` | `Connect your agent.command` or `./connect-your-agent` |
+| Linux | `./pixelforge-studio [recipe]` | `./pixelforge` | `./connect-your-agent` |
+
+The studio launcher is `pixelforge preview --open`: it opens the default browser on loopback port 4747, or on any free port when that one is taken (the usual port is what lets the studio's draft recovery find its draft again). The connect helper prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with that folder's paths, plus a one-line `claude mcp add` and `codex mcp add` command written for that system's shells; the helper itself never edits a configuration file.
 
 ```sh
-node scripts/build-studio.mjs           # dist/PixelForgeStudio-<version>-win-x64.zip, its .sha256 and a per-file manifest
-node scripts/build-studio.mjs --check   # rebuild and compare with the ZIP in dist/
-node scripts/verify-studio.mjs dist/PixelForgeStudio-<version>-win-x64.zip
+node scripts/build-studio.mjs                       # this machine's own target, into dist/
+node scripts/build-studio.mjs --target all          # win-x64, linux-x64, darwin-arm64 and darwin-x64
+node scripts/build-studio.mjs --target all --check  # rebuild and compare with the archives in dist/
+node scripts/verify-studio.mjs dist/PixelForgeStudio-<version>-<target>.zip   # or .tar.gz
 ```
 
-The ZIP holds exactly the files `npm pack` ships (under `app/`), the runtime, and the contents of [packaging/windows](packaging/windows): no demos, tests or development scripts. The runtime is pinned in the build script by version and SHA-256, downloaded from nodejs.org on the first build (about 38 MB, cached in `dist/.cache`; `--node-zip <file>` uses a copy you already have) and included unmodified; a mismatch stops the build. `BUILD-INFO.txt` inside names the PixelForge version, the source commit and the runtime's hashes. A build refuses uncommitted changes to shipped files unless `--allow-dirty` marks it as a development build. One commit gives the same file list and per-file hashes anywhere; on 64-bit Windows the packing runs under the pinned runtime, so the ZIP itself is byte-identical.
+Any machine can build any target; each archive comes with its `.sha256` and a per-file manifest. An archive holds exactly the files `npm pack` ships (under `app/`), the runtime, and the files for its system from [packaging](packaging): no demos, tests or development scripts. The runtimes are pinned in the build script by version and SHA-256, downloaded from nodejs.org on the first build (36 to 58 MB each, cached in `dist/.cache`; `--node-archive <file>` uses a copy you already have) and included unmodified; a mismatch stops the build. `BUILD-INFO.txt` inside names the PixelForge version, the source commit, the target and the runtime's hashes. A build refuses uncommitted changes to shipped files unless `--allow-dirty` marks it as a development build, and a release build takes every shipped file from the commit itself rather than the working copy. One commit gives the same file list and per-file hashes anywhere; where a runtime is pinned for the building machine the packing runs under that runtime.
 
-`verify-studio.mjs` extracts the ZIP into a folder whose path has a space and a non-ASCII character and runs it with no Node.js or git on `PATH`: the launcher (two copies, loopback only, every studio route, foreign Host and Origin refused, export), a recipe dropped on the launcher, the commands exactly as `START HERE.txt` gives them from Command Prompt and PowerShell, the MCP server over stdio, the helper's output and its one-line commands in both shells, and that no process is left behind. The Tests workflow builds, rebuilds and verifies the ZIP on a fresh Windows runner, then runs the test suite on the bundled runtime. The portable build is Windows-only; on macOS and Linux use a checkout as described under [Start](#start).
+`verify-studio.mjs` extracts an archive with the system's own tool into a folder whose path has a space and a non-ASCII character, and runs it with no Node.js or git on `PATH`: the launcher (several copies, loopback only, every studio route, foreign Host and Origin refused, export, a recipe handed to it), the commands exactly as `START HERE.txt` gives them in two shells, the MCP server over stdio, the helper's output and its one-line commands, execute permissions and line endings, and that no process is left behind. It needs the system the archive is for; elsewhere it checks the contents only and says so. The Tests workflow builds, rebuilds and verifies each archive on a runner of its own system (the Intel Mac build through Rosetta on an Apple silicon runner), then runs the test suite on the bundled runtime. No runner has a person at the screen: the prompts Windows and macOS show for downloaded files, a double-click and a real browser are not exercised there.
 
 ## Contributing
 

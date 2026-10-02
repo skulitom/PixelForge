@@ -1,18 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { createZip } from '../src/export.js';
 import { browserCommand, STUDIO_PORT } from '../src/server.js';
-import { root, readZip, writeZip, packageFiles, sourceState, assembleStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
+import { root, TARGETS, hostTarget, readZip, writeZip, readTarGz, writeTarGz, forSystem, packageFiles, sourceState, assembleStudio, packStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
 import { verifyStudio } from '../scripts/verify-studio.mjs';
 
 const source = { commit: 'c0ffee'.padEnd(40, '0'), date: new Date(Date.UTC(2026, 9, 2, 12, 30, 44)), dirty: [] };
 const standIn = { version: process.versions.node, exe: Buffer.from('MZ stand-in for node.exe'), license: Buffer.from('Node.js license\n'), origin: 'a test stand-in' };
-const launcher = (script, ...args) => [process.execPath, [path.join(root, 'packaging', 'windows', 'launcher', script), ...args]];
+const launcher = (script, ...args) => [process.execPath, [path.join(root, 'packaging', 'common', 'launcher', script), ...args]];
 
 test('the build ZIP is deterministic, compressed where it helps and read back exactly', () => {
   const files = new Map([['top/text.txt', Buffer.from('pixel '.repeat(400))], ['top/noise.bin', Buffer.from(Array.from({ length: 64 }, (_, i) => i * 37 % 256))], ['top/empty', Buffer.alloc(0)]]);
@@ -30,6 +30,56 @@ test('the build ZIP is deterministic, compressed where it helps and read back ex
   // The studio's own store-mode exports read back through the same reader.
   assert.equal(readZip(createZip(new Map([['preview.html', Buffer.from('<!doctype html>')]]))).get('preview.html').read().toString(), '<!doctype html>');
 });
+test('the macOS and Linux archive keeps permissions, carries no host details and is read back exactly', async t => {
+  const long = `top/${'deep/'.repeat(22)}file.txt`, files = new Map([['top/run', Buffer.from('#!/bin/sh\necho hi\n')], ['top/text.txt', Buffer.from('pixel '.repeat(400))], [long, Buffer.from('far down')], ['top/empty', Buffer.alloc(0)]]);
+  const modes = new Map([['top/run', 0o755]]), archive = writeTarGz(files, { date: source.date, modes }), entries = readTarGz(archive);
+  assert.ok(archive.equals(writeTarGz(files, { date: source.date, modes })));
+  assert.deepEqual([...entries].map(([name, entry]) => [name, entry.mode, entry.read().toString()]), [...files].map(([name, data]) => [name, name === 'top/run' ? 0o755 : 0o644, data.toString()]));
+  // gzip header: deflate, no flags, no timestamp, and always "Unix", whatever system packed it.
+  assert.deepEqual([...archive.subarray(0, 10)], [0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 2, 3]);
+  assert.ok(long.length > 100 && archive.length < 600);
+  for (const name of ['/top/file', 'top\\file', 'tòp/file', `top/${'x'.repeat(120)}`]) assert.throws(() => writeTarGz(new Map([[name, Buffer.alloc(1)]])), /tar entry name/);
+  // The system's own tar reads it the same way: names, bytes, the time and, where there are any, permission bits.
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-tar-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  await writeFile(path.join(dir, 'archive.tar.gz'), archive);
+  const extracted = spawnSync('tar', ['-xzf', 'archive.tar.gz'], { cwd: dir, encoding: 'utf8' });
+  if (extracted.error) { t.diagnostic('no tar program on this machine'); return; }
+  assert.equal(extracted.status, 0, extracted.stderr);
+  for (const [name, data] of files) assert.ok(data.equals(await readFile(path.join(dir, name))), name);
+  const { mode, mtime } = await stat(path.join(dir, 'top', 'run'));
+  assert.equal(mtime.getTime(), source.date.getTime());
+  if (process.platform !== 'win32') assert.deepEqual([mode & 0o777, (await stat(path.join(dir, 'top', 'text.txt'))).mode & 0o777], [0o755, 0o644]);
+});
+test('START HERE is one text with blocks for each system', () => {
+  const text = 'all\n#if windows\nwin\n#endif\n#if macos linux\nunix\n#endif\n#if macos\nmac\n#endif\nend';
+  assert.deepEqual([forSystem(text, 'windows'), forSystem(text, 'macos'), forSystem(text, 'linux')], ['all\nwin\nend', 'all\nunix\nmac\nend', 'all\nunix\nend']);
+  for (const [broken, message] of [['#if windows\n#if linux\n#endif\n#endif', /nested/], ['#endif', /without #if/], ['#if windows', /without #endif/], ['#if solaris\n#endif', /Unreadable/], ['#ifdef x', /Unreadable/]]) assert.throws(() => forSystem(broken, 'linux'), message);
+});
+test('the macOS and Linux builds hold shell launchers marked executable, their own START HERE and the right runtime', async () => {
+  const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  for (const [target, system, launchers] of [['linux-x64', 'linux', []], ['darwin-arm64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']], ['darwin-x64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']]]) {
+    const build = await assembleStudio({ runtime: standIn, source, target }), inside = file => build.files.get(`${build.name}/${file}`), names = [...build.files.keys()].map(name => name.slice(build.name.length + 1));
+    assert.deepEqual([build.name, build.format, TARGETS[target].os], [`PixelForgeStudio-${version}-${target}`, 'tar.gz', system]);
+    const scripts = ['pixelforge', 'pixelforge-studio', 'connect-your-agent', ...launchers];
+    assert.deepEqual(names.filter(name => !name.includes('/')).sort(), ['BUILD-INFO.txt', 'START HERE.txt', 'THIRD-PARTY-NOTICES.txt', 'first-edit.json', ...scripts].sort());
+    assert.deepEqual(names.filter(name => name.startsWith('app/')).map(name => name.slice(4)), await packageFiles());
+    assert.ok(inside('runtime/node').equals(standIn.exe)); assert.equal(inside('runtime/node.exe'), undefined);
+    // Exactly the programs are executable; everything is LF, and the scripts start with a shell line.
+    assert.deepEqual([...build.modes].map(([name, mode]) => [name.slice(build.name.length + 1), mode]).sort(), ['app/bin/pixelforge.js', 'runtime/node', ...scripts].sort().map(name => [name, 0o755]));
+    for (const script of scripts) assert.match(inside(script).toString(), /^#!\/bin\/sh\n/, script);
+    for (const file of [...scripts, 'START HERE.txt', 'BUILD-INFO.txt', 'launcher/studio.mjs']) assert.ok(!inside(file).includes('\r'), `${file} must use LF`);
+    const start = inside('START HERE.txt').toString(), info = inside('BUILD-INFO.txt').toString();
+    assert.doesNotMatch(start, /^#|\.cmd|\\pixelforge/m); assert.match(start, /^ {4}\.\/pixelforge render hero-v2\.pixel\.json --out output\/hero$/m);
+    assert.equal(start.includes('PixelForge Studio.command'), system === 'macos');
+    for (const line of [`Target: ${target}`, `Node.js program SHA-256: ${sha256(standIn.exe)}`, `run: node scripts/build-studio.mjs --target ${target}`]) assert.ok(info.includes(`${line}\n`), line);
+    // Packed and read back, the archive carries the same files and the permission bits.
+    const packed = readTarGz(packStudio(build, source.date));
+    assert.deepEqual([...packed.keys()], [...build.files.keys()]);
+    assert.deepEqual([packed.get(`${build.name}/pixelforge`).mode, packed.get(`${build.name}/START HERE.txt`).mode], [0o755, 0o644]);
+  }
+  assert.deepEqual([hostTarget('win32', 'x64'), hostTarget('linux', 'x64'), hostTarget('darwin', 'arm64'), hostTarget('darwin', 'x64'), hostTarget('freebsd', 'x64')], ['win-x64', 'linux-x64', 'darwin-arm64', 'darwin-x64', undefined]);
+});
 test('the build ships exactly the files npm pack ships', async t => {
   const packed = spawnSync('npm pack --dry-run --json', { cwd: root, shell: true, encoding: 'utf8' });
   if (packed.status !== 0) { t.skip('npm is not available'); return; }
@@ -46,7 +96,7 @@ test('the portable layout holds the package, runtime, launchers and build facts,
   assert.ok(inside('runtime/node.exe').equals(standIn.exe)); assert.ok(inside('runtime/NODE-LICENSE.txt').equals(standIn.license));
   for (const file of ['PixelForge Studio.cmd', 'pixelforge.cmd', 'Connect your agent.cmd', 'START HERE.txt', 'BUILD-INFO.txt']) assert.ok(!/[^\r]\n/.test(inside(file).toString()), `${file} needs CRLF`);
   const info = inside('BUILD-INFO.txt').toString();
-  for (const line of [`PixelForge version: ${version}`, `Source commit: ${source.commit}`, 'Source commit date: 2026-10-02T12:30:44.000Z', `Node.js version: ${standIn.version}`, `node.exe SHA-256: ${sha256(standIn.exe)}`]) assert.ok(info.includes(`${line}\r\n`), line);
+  for (const line of [`PixelForge version: ${version}`, `Source commit: ${source.commit}`, 'Source commit date: 2026-10-02T12:30:44.000Z', 'Target: win-x64', `Node.js version: ${standIn.version}`, `Node.js program SHA-256: ${sha256(standIn.exe)}`]) assert.ok(info.includes(`${line}\r\n`), line);
   assert.equal(manifest((await assembleStudio({ runtime: standIn, source })).files), manifest(build.files));
   // Uncommitted changes never produce a build that carries a release name.
   const dev = await assembleStudio({ runtime: standIn, source: { ...source, dirty: ['src/core.js'] } });
@@ -87,7 +137,7 @@ test('the launcher is preview with a browser: the usual port, a free one beside 
   // Drafts are stored per address, so the same port every time is what lets a draft be found again.
   const usualFree = await new Promise(resolve => { const probe = http.createServer(); probe.once('error', () => resolve(false)); probe.listen(STUDIO_PORT, '127.0.0.1', () => probe.close(() => resolve(true))); });
   const first = await start(), second = await start(path.join(root, 'examples', 'coin.json'));
-  assert.match(first.text, /^PixelForge Studio \d+\.\d+\.\d+\r?\n\r?\nClose this window to stop it\./);
+  assert.match(first.text, /^PixelForge Studio \d+\.\d+\.\d+\r?\n\r?\nClose this window or press Ctrl\+C to stop it\./);
   if (usualFree) { assert.equal(first.port, STUDIO_PORT); assert.doesNotMatch(first.text, /is in use/); }
   assert.notEqual(second.port, STUDIO_PORT); assert.match(second.text, /Port 4747 is in use, so this studio has another address/);
   assert.notEqual(first.url, second.url);
@@ -122,19 +172,22 @@ test('the connect helper prints the same server for four agents and changes noth
     if (client.format === 'json') assert.deepEqual(JSON.parse(client.text), { mcpServers: { pixelforge: settings.server } });
     else assert.deepEqual([JSON.parse(/^command = (.*)$/m.exec(client.text)[1]), JSON.parse(/^args = (.*)$/m.exec(client.text)[1])], [settings.server.command, settings.server.args]);
   }
-  // The two agents with an "mcp add" command get one line; the separator is quoted so PowerShell cannot drop it.
-  const target = `pixelforge "--" "${settings.server.command}" "${settings.server.args[0]}" mcp --out "${settings.server.args[3]}"`;
+  // The two agents with an "mcp add" command get one line. On Windows the separator is quoted so PowerShell cannot
+  // drop it; elsewhere single quotes keep every character of a path literal.
+  const quoted = value => process.platform === 'win32' ? `"${value}"` : `'${value.replaceAll("'", "'\\''")}'`;
+  const target = `pixelforge ${process.platform === 'win32' ? '"--"' : '--'} ${quoted(settings.server.command)} ${quoted(settings.server.args[0])} mcp --out ${quoted(settings.server.args[3])}`;
   assert.deepEqual(settings.clients.map(client => client.command), [`claude mcp add --scope user ${target}`, null, `codex mcp add ${target}`, null]);
   for (const client of settings.clients) if (client.command) assert.ok(text.stdout.includes(`\n${client.command}\n`), client.name);
 });
 test('an assembled build passes the release checks from a folder with a space and an accent', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge studio é-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); });
-  // On 64-bit Windows the Node running the tests stands in for the pinned runtime, so the batch files really run.
-  const windows = process.platform === 'win32' && process.arch === 'x64', runtime = windows ? { ...standIn, exe: await readFile(process.execPath) } : standIn;
-  const build = await assembleStudio({ runtime, source });
-  for (const [file, bytes] of build.files) { await mkdir(path.dirname(path.join(dir, file)), { recursive: true }); await writeFile(path.join(dir, file), bytes); }
+  // Where a build is pinned for this machine, the Node running the tests stands in for the pinned runtime, so the
+  // launcher scripts really run. Elsewhere the Windows layout is checked for its contents only.
+  const target = hostTarget(), runtime = target ? { ...standIn, exe: await readFile(process.execPath) } : standIn;
+  const build = await assembleStudio({ runtime, source, target: target ?? 'win-x64' });
+  for (const [file, bytes] of build.files) { await mkdir(path.dirname(path.join(dir, file)), { recursive: true }); await writeFile(path.join(dir, file), bytes, { mode: build.modes.get(file) ?? 0o644 }); }
   const lines = [], outcome = await verifyStudio({ dir: path.join(dir, build.name), pinned: false, log: line => lines.push(line) });
-  assert.ok(outcome.ok, lines.join('\n')); assert.equal(outcome.complete, windows);
-  assert.ok(outcome.results.length >= (windows ? 25 : 5), lines.join('\n'));
+  assert.ok(outcome.ok, lines.join('\n')); assert.equal(outcome.complete, Boolean(target), lines.join('\n'));
+  assert.ok(outcome.results.length >= (target ? 25 : 5), lines.join('\n'));
 });

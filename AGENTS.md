@@ -16,7 +16,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer. `studio/draft.js` keeps one unsaved recipe in the browser's own storage; draft recovery must stay in the browser, never a server endpoint.
-- `packaging/windows/`: launcher scripts, START HERE and notices for the portable Windows build. `scripts/build-studio.mjs` packs them with the `npm pack` file list and the pinned official Node.js runtime into a reproducible ZIP under `dist/`; `scripts/verify-studio.mjs` tests a built ZIP. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
+- `packaging/`: launcher scripts, START HERE and notices for the portable builds: `common/` for every system (START HERE.txt is one text with `#if windows|macos|linux` blocks), `windows/` batch files, `unix/` shell scripts for macOS and Linux, `macos/` double-click `.command` files. `scripts/build-studio.mjs` packs them with the `npm pack` file list and the pinned official Node.js runtime into a reproducible archive per target under `dist/`; `scripts/verify-studio.mjs` tests a built archive on its own system. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
 - `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.
 

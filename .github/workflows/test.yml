@@ -35,11 +35,22 @@ jobs:
       - run: npm test
       - run: npm pack --dry-run
 
-  # Builds the portable Windows ZIP on a fresh runner and runs it the way a PC without developer tools would.
+
+  # Builds each portable archive on a fresh runner of its own system and runs it the way a computer without
+  # developer tools would.
   studio:
-    name: Portable Studio / windows-latest
-    runs-on: windows-latest
-    timeout-minutes: 15
+    name: Portable Studio / ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: win-x64 }
+          - { os: ubuntu-latest, target: linux-x64 }
+          - { os: macos-latest, target: darwin-arm64 }
+          # The Intel build runs through Rosetta on the Apple silicon runner.
+          - { os: macos-latest, target: darwin-x64 }
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -48,11 +59,12 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-      - name: Build the ZIP
-        run: node scripts/build-studio.mjs
+      - name: Build the archive
+        run: node scripts/build-studio.mjs --target ${{ matrix.target }}
       - name: Build it again and compare
-        run: node scripts/build-studio.mjs --check
-      - name: Verify the ZIP with Node.js and git off PATH
+        run: node scripts/build-studio.mjs --target ${{ matrix.target }} --check
+      - name: Verify the archive with Node.js and git off PATH (Windows)
+        if: runner.os == 'Windows'
         run: |
           $zip = (Get-Item dist/PixelForgeStudio-*-win-x64.zip).FullName
           Get-Content "$zip.sha256"
@@ -61,5 +73,27 @@ jobs:
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot;$env:SystemRoot\System32\WindowsPowerShell\v1.0"
           if (Get-Command node, git -ErrorAction SilentlyContinue) { throw 'Node.js or git is still on PATH' }
           & $node scripts/verify-studio.mjs $zip
-      - name: Run the test suite on the bundled runtime
+      - name: Make sure Rosetta is there for the Intel build
+        if: matrix.target == 'darwin-x64'
+        run: softwareupdate --install-rosetta --agree-to-license || true
+      # The script gives everything it starts a PATH with no Node.js, npm or git, wherever this system keeps them.
+      - name: Verify the archive on its own runtime (macOS and Linux)
+        if: runner.os != 'Windows'
+        run: |
+          archive=$(ls "$PWD"/dist/PixelForgeStudio-*-${{ matrix.target }}.tar.gz)
+          cat "$archive.sha256"
+          mkdir "$RUNNER_TEMP/studio"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/studio"
+          "$RUNNER_TEMP"/studio/*/runtime/node scripts/verify-studio.mjs "$archive"
+      - name: Run the test suite on the bundled runtime (Windows)
+        if: runner.os == 'Windows'
         run: '& (Get-Item "$env:RUNNER_TEMP/studio/*/runtime/node.exe").FullName --test'
+      - name: Run the test suite on the bundled runtime (macOS and Linux)
+        if: runner.os != 'Windows'
+        run: '"$RUNNER_TEMP"/studio/*/runtime/node --test'
+      # Every runner prints the hashes of all four archives, so builds made on different systems can be compared.
+      - name: Build every target on this system
+        shell: bash
+        run: |
+          node scripts/build-studio.mjs --target all --out dist-all
+          cat dist-all/*.sha256
