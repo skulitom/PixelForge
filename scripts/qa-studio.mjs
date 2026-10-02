@@ -283,9 +283,12 @@ try {
     assert.equal(await evaluate(`document.activeElement.id`), 'source', 'Tab never reached the recipe editor');
     // Inside the editor Tab indents. Escape and then Tab moves on; Shift+Tab moves back.
     const before = await evaluate(`document.getElementById('source').value`);
+    // Every key the page receives is written down with what handled it and where focus was, for the failure message.
+    await evaluate(`(() => { window.__keys = []; document.addEventListener('keydown', event => window.__keys.push(event.key + (event.defaultPrevented ? ' (taken by the editor)' : '') + ' at ' + (document.activeElement.id || document.activeElement.className))); })()`);
     await key('Tab', 9); assert.deepEqual([await evaluate(`document.activeElement.id`), (await evaluate(`document.getElementById('source').value`)).length], ['source', before.length + 2]);
     await key('Escape', 27); await key('Tab', 9);
-    assert.notEqual(await evaluate(`document.activeElement.id`), 'source', 'after Escape, Tab still stays in the editor');
+    const focus = await evaluate(`document.activeElement.id || document.activeElement.className`), seen = await evaluate(`window.__keys.join('; ')`), length = (await evaluate(`document.getElementById('source').value`)).length;
+    assert.notEqual(focus, 'source', `after Escape, Tab still stays in the editor. Keys the page saw: ${seen}. The recipe grew by ${length - before.length} characters.`);
     const after = await evaluate(`document.activeElement.className`);
     await key('Tab', 9, 8); assert.equal(await evaluate(`document.activeElement.id`), 'source'); await key('Tab', 9, 8);
     assert.equal(await evaluate(`document.activeElement.id`), 'save', 'Shift+Tab did not leave the editor backwards');
