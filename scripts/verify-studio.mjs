@@ -190,7 +190,9 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       if (host === 'macos') {
         const signed = spawnSync('codesign', ['--verify', '--strict', '--verbose=2', node], { encoding: 'utf8' }), details = spawnSync('codesign', ['-dvv', node], { encoding: 'utf8' }).stderr;
         note(`node code signature: ${signed.status === 0 ? 'valid' : `not valid (${signed.stderr.trim()})`}; ${(/^Authority=.*$/m.exec(details) ?? ['no signing authority read'])[0]}; ${(/^TeamIdentifier=.*$/m.exec(details) ?? [''])[0]}`);
-        if (process.arch !== info.Target.split('-')[1]) note(`This ${process.arch} machine ran the ${info.Target} build through translation (Rosetta), not on the processor it is built for.`);
+        // An Intel build on Apple silicon runs through Rosetta; the translated runtime reports that about itself.
+        const translated = spawnSync(node, ['-e', 'process.stdout.write(require("node:child_process").spawnSync("sysctl", ["-n", "sysctl.proc_translated"], { encoding: "utf8" }).stdout.trim())'], { encoding: 'utf8' }).stdout === '1';
+        note(`Processor: ${spawnSync('sysctl', ['-n', 'machdep.cpu.brand_string'], { encoding: 'utf8' }).stdout.trim() || os.cpus()[0]?.model}. ${translated ? `The ${info.Target} runtime ran through Rosetta translation, not on the processor it is built for.` : `The ${info.Target} runtime ran natively.`}`);
       }
     }
 
