@@ -88,6 +88,10 @@ try {
       else if (method === 'Page.javascriptDialogOpening') { dialogs.push(`${params.type}: ${params.message}`); page('Page.handleJavaScriptDialog', { accept: true }).catch(() => {}); }
     });
     for (const domain of ['Page', 'Runtime', 'Network', 'Log', 'DOM']) await page(`${domain}.enable`);
+    // Some systems (Windows Server, some macOS images) ask for reduced motion, and the studio then starts paused.
+    // The walk sets the preference itself so that it sees the same studio everywhere.
+    const motion = value => page('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value }] });
+    await motion('no-preference');
     const evaluate = async expression => {
       const { result, exceptionDetails } = await page('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
@@ -105,11 +109,16 @@ try {
       assert.ok(at, `nothing matches ${selector}`);
       for (const type of ['mousePressed', 'mouseReleased']) await page('Input.dispatchMouseEvent', { type, x: at.x, y: at.y, button: 'left', clickCount: 1 });
     };
-    const key = async (name, code, modifiers = 0) => { for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: name, code: name === ' ' ? 'Space' : name, windowsVirtualKeyCode: code, nativeVirtualKeyCode: code, modifiers, ...(type === 'keyDown' && name === ' ' && { text: ' ' }) }); };
+    // On macOS a key pressed inside a text field acts through an editing command, which a synthetic event must name.
+    const editing = { Tab: 'insertTab', 'Shift+Tab': 'insertBacktab', Escape: 'cancelOperation' };
+    const key = async (name, code, modifiers = 0) => {
+      const command = process.platform === 'darwin' && editing[`${modifiers & 8 ? 'Shift+' : ''}${name}`];
+      for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: name, code: name === ' ' ? 'Space' : name, windowsVirtualKeyCode: code, modifiers, ...(type === 'keyDown' && name === ' ' && { text: ' ' }), ...(type === 'keyDown' && command && { commands: [command] }) });
+    };
     const choose = (id, value) => evaluate(`(() => { const select = document.getElementById(${JSON.stringify(id)}); select.value = ${JSON.stringify(value)}; select.dispatchEvent(new Event('change', { bubbles: true })); return select.value; })()`);
     const size = (width, height) => page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
     const shot = async (name, whole = false) => { await writeFile(path.join(kept, `${name}.png`), Buffer.from((await page('Page.captureScreenshot', { format: 'png', captureBeyondViewport: whole })).data, 'base64')); };
-    return { page, evaluate, until, goto, reload, click, key, choose, size, shot };
+    return { page, evaluate, until, goto, reload, click, key, choose, size, shot, motion };
   }
   let downloads = 0;
   // Runs `action` and returns the file the browser saved because of it.
@@ -290,6 +299,14 @@ try {
     // A sprite larger than the artboard scrolls inside it, and its left and top edges must be reachable.
     assert.equal(layout.clipped, false, 'part of the sprite cannot be scrolled into view');
     await studio.shot(name, true);
+  });
+  await check('when the system asks for reduced motion, the studio starts paused and plays on request', async () => {
+    await studio.motion('reduce'); await studio.size(1440, 900); await studio.goto(`${origin}/`); await ready();
+    const [label, before] = [await evaluate(`document.getElementById('play').getAttribute('aria-label')`), await text('frame-counter')];
+    await sleep(1500);
+    assert.deepEqual([label, await text('frame-counter')], ['Play animation', before]);
+    await click('#play'); await until(`document.getElementById('frame-counter').textContent !== ${JSON.stringify(before)}`, 'playback after pressing play');
+    await studio.motion('no-preference');
   });
   await check('the scene study page draws its scene', async () => {
     await studio.size(1440, 900); await studio.goto(`${origin}/scene.html`);

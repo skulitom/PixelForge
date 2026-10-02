@@ -98,9 +98,11 @@ jobs:
         run: |
           $build = (Get-Item "$env:RUNNER_TEMP/studio/*").FullName
           & "$build/runtime/node.exe" scripts/qa-studio.mjs --app "$build/app" --out "$env:RUNNER_TEMP/studio-qa"
-      # The ARM Linux runner may have no Chromium-based browser; the script then says so and exits with 3.
+      # The ARM Linux runner may have no Chromium-based browser; the script then says so and exits with 3. The
+      # Intel Mac job is left out: its studio files are the same as the Apple silicon build's, and a browser started
+      # from the translated runtime is translated too and does not come up in time.
       - name: Walk the studio in the runner's browser (macOS and Linux)
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' && matrix.target != 'darwin-x64'
         run: |
           build=$(ls -d "$RUNNER_TEMP"/studio/*)
           "$build/runtime/node" scripts/qa-studio.mjs --app "$build/app" --out "$RUNNER_TEMP/studio-qa" || { code=$?; if [ "$code" = 3 ] && [ "${{ matrix.target }}" = linux-arm64 ]; then echo "No browser on this runner; the studio walk did not run here."; else exit "$code"; fi; }
