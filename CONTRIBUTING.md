@@ -28,6 +28,7 @@ External contributors should use a branch in their fork and submit a focused pul
 - When intentionally changing bundled examples, use `node scripts/generate-examples.js` and review the recipes and rendered artwork.
 - For changes to binary exports, also check with an independent decoder. The optional `scripts/verify-exports.py` check uses Python and Pillow after `npm run demo`. If `output/forest-spirit` already exists, preserve or move that output before running the demo again. `scripts/verify-trim.py` checks trimmed atlases the same way and needs no prior output.
 - For studio changes, check the preview at narrow and wide sizes, keyboard access, and animation playback. For artwork changes, inspect every frame, not just recipe validity.
+- For changes to `packaging/windows` or the portable build scripts, build and verify on 64-bit Windows: `node scripts/build-studio.mjs --allow-dirty --out <fresh folder>`, then `node scripts/verify-studio.mjs <the ZIP> --allow-dev`. On Windows, `npm test` runs the same checks against a stand-in runtime.
 
 Keep the core and runtime dependency-free. Use Node.js standard APIs for the CLI, file formats and local server. Preserve the text-first workflow, overwrite protection, loopback binding and explicit server asset allowlist.
 

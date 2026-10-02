@@ -1,6 +1,6 @@
 {
   "name": "pixelforge-agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-first pixel art and animation toolkit with a CLI, MCP server and local studio. Deterministic JSON recipes to PNG, APNG and sprite atlases; zero dependencies.",
   "homepage": "https://github.com/skulitom/PixelForge#readme",
   "repository": { "type": "git", "url": "git+https://github.com/skulitom/PixelForge.git" },
@@ -25,6 +25,9 @@
     "play:tidewatch": "node scripts/serve-tidewatch.mjs",
     "art:tidewatch": "node showcase/tidewatch/tools/build-assets.mjs",
     "check:tidewatch": "node showcase/tidewatch/tools/build-assets.mjs --check",
-    "mcp": "node bin/pixelforge.js mcp"
+    "mcp": "node bin/pixelforge.js mcp",
+    "build:studio": "node scripts/build-studio.mjs",
+    "check:studio": "node scripts/build-studio.mjs --check",
+    "verify:studio": "node scripts/verify-studio.mjs"
   }
 }

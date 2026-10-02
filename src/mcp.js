@@ -48,6 +48,7 @@ const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': com
 
 export async function startMCP({ directory = 'output', root = process.cwd(), input = process.stdin, output = process.stdout } = {}) {
   const schema = JSON.parse(await readFile(new URL('../schema.json', import.meta.url), 'utf8'));
+  const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
   const { $schema, $defs, ...projectSchema } = schema;
   const source = { project: projectSchema, revision: { type: 'string', pattern: '^[a-f0-9]{12}$', description: 'Revision id from an earlier PixelForge response. Send it instead of project to reuse that recipe, including after restarting with the same MCP --out directory.' } };
   const projectInput = { type: 'object', properties: source, additionalProperties: false, $defs };
@@ -119,7 +120,7 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
     if (method === 'initialize') {
       if (!params || typeof params.protocolVersion !== 'string') { error(-32602, 'protocolVersion is required'); return; }
       initialized = true;
-      result({ protocolVersion: versions.includes(params.protocolVersion) ? params.protocolVersion : versions[0], capabilities: { tools: {} }, serverInfo: { name: 'pixelforge', version: '0.1.0' }, instructions: 'Call pixel_help for the JSON format. Use small grids and reusable symbols. Send a full recipe once; every response returns a revision id to use instead of project afterwards. Call pixel_inspect to see every frame (grid: true reads exact pixels), pixel_patch to make targeted edits and check what changed, and pixel_render to export game-ready files. pixel_compile builds recipes from pose sources, autotile templates and particle effect sources; pixel_scene reviews assets together.' }); return;
+      result({ protocolVersion: versions.includes(params.protocolVersion) ? params.protocolVersion : versions[0], capabilities: { tools: {} }, serverInfo: { name: 'pixelforge', version }, instructions: 'Call pixel_help for the JSON format. Use small grids and reusable symbols. Send a full recipe once; every response returns a revision id to use instead of project afterwards. Call pixel_inspect to see every frame (grid: true reads exact pixels), pixel_patch to make targeted edits and check what changed, and pixel_render to export game-ready files. pixel_compile builds recipes from pose sources, autotile templates and particle effect sources; pixel_scene reviews assets together.' }); return;
     }
     if (method === 'ping') { result({}); return; }
     if (!initialized) { error(-32000, 'Initialize the server first'); return; }

@@ -15,6 +15,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer.
+- `packaging/windows/`: launcher scripts, START HERE and notices for the portable Windows build. `scripts/build-studio.mjs` packs them with the `npm pack` file list and the pinned official Node.js runtime into a reproducible ZIP under `dist/`; `scripts/verify-studio.mjs` tests a built ZIP. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
 - `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.
 

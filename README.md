@@ -12,7 +12,7 @@ Zero runtime dependencies. No build step, API key, image model, network service 
 
 ![PixelForge's local studio showing the forest spirit sprite, animation frames, editable JSON recipe and palette](docs/images/studio.png)
 
-[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable Windows build](#pixelforge-studio-a-portable-windows-build) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
 
 ## Art quality workflow
 
@@ -244,9 +244,23 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime and the local server. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
+
+## PixelForge Studio: a portable Windows build
+
+`scripts/build-studio.mjs` packs the toolkit, the official Node.js 24 LTS runtime for 64-bit Windows and three small launcher scripts into one ZIP for people who have no Node.js, git or administrator rights. Unzipped, `PixelForge Studio.cmd` opens the studio on a free loopback port in the default browser, `pixelforge.cmd` is the command line, and `Connect your agent.cmd` prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with that folder's paths; it never edits a configuration file. Nothing is installed, and deleting the folder removes everything.
+
+```sh
+node scripts/build-studio.mjs           # dist/PixelForgeStudio-<version>-win-x64.zip, its .sha256 and a per-file manifest
+node scripts/build-studio.mjs --check   # rebuild and compare with the ZIP in dist/
+node scripts/verify-studio.mjs dist/PixelForgeStudio-<version>-win-x64.zip
+```
+
+The ZIP holds exactly the files `npm pack` ships (under `app/`), the runtime, and the contents of [packaging/windows](packaging/windows): no demos, tests or development scripts. The runtime is pinned in the build script by version and SHA-256, downloaded from nodejs.org on the first build (about 38 MB, cached in `dist/.cache`; `--node-zip <file>` uses a copy you already have) and included unmodified; a mismatch stops the build. `BUILD-INFO.txt` inside names the PixelForge version, the source commit and the runtime's hashes. A build refuses uncommitted changes to shipped files unless `--allow-dirty` marks it as a development build. One commit gives the same file list and per-file hashes anywhere; on 64-bit Windows the packing runs under the pinned runtime, so the ZIP itself is byte-identical.
+
+`verify-studio.mjs` extracts the ZIP into a folder whose path has a space and a non-ASCII character and runs it with no Node.js or git on `PATH`: the launcher (two copies, loopback only, every studio route, foreign Host and Origin refused, export), the commands exactly as `START HERE.txt` gives them from Command Prompt and PowerShell, the MCP server over stdio, the helper's output, and that no process is left behind. The Tests workflow builds, rebuilds and verifies the ZIP on a fresh Windows runner, then runs the test suite on the bundled runtime. The portable build is Windows-only; on macOS and Linux use a checkout as described under [Start](#start).
 
 ## Contributing
 

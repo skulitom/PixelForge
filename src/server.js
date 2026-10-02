@@ -20,6 +20,8 @@ const routes = new Map([
   ['/schema.json', ['../schema.json', 'application/json']],
   ...['forest-spirit', 'ember', 'coin', 'shrine', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
 ]);
+// Every path the studio answers with GET, for checks that walk the whole allowlist.
+export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];
 export async function startStudio({ port = 4747, project, quiet = false } = {}) {
   const scene = project?.format === 'pixelforge-scene';
   if (project) { if (scene) prepareScene(project); else renderProject(project); }

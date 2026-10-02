@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startMCP } from '../src/mcp.js';
-import { startStudio } from '../src/server.js';
+import { startStudio, STUDIO_PATHS } from '../src/server.js';
 import { renderProject, inspectProject } from '../src/core.js';
 import { encodePNG } from '../src/png.js';
 
@@ -49,6 +49,7 @@ test('MCP handshake, discovery, help, errors and render work over stdio', async 
   input.end('not json\n'); await running;
   const results = text.trim().split('\n').map(line => JSON.parse(line));
   assert.equal(results.length, 8); assert.equal(results[0].result.protocolVersion, '2025-11-25');
+  assert.equal(results[0].result.serverInfo.version, JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).version);
   assert.equal(results[1].result.tools.length, 8); assert.equal(JSON.parse(results[2].result.content[0].text).ok, true);
   const render = results[3].result;
   assert.equal(render.content[1].mimeType, 'image/png');
@@ -204,6 +205,7 @@ test('studio serves only its assets and exports ZIP over same-origin requests', 
   t.after(() => { server.closeAllConnections(); server.close(); });
   const base = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(base)).status, 200);
+  for (const route of STUDIO_PATHS) assert.equal((await fetch(base + route)).status, 200, route);
   assert.equal((await fetch(base + '/package.json')).status, 404);
   const foreignHost = await new Promise((resolve, reject) => {
     const req = http.get(base, { headers: { Host: 'evil.example' } }, res => { res.resume(); resolve(res.statusCode); }); req.on('error', reject);
