@@ -3,7 +3,8 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { createBundle, createZip } from './export.js';
-import { renderProject, MAX_REQUEST_BYTES } from './core.js';
+import { renderProject, MAX_REQUEST_BYTES, PixelError } from './core.js';
+import { createSequence } from './sequence.js';
 import { prepareScene } from './scene.js';
 
 const routes = new Map([
@@ -28,6 +29,8 @@ const routes = new Map([
 // Every path the studio answers with GET, for checks that walk the whole allowlist.
 export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];
 export const STUDIO_PORT = 4747;
+// The most the studio sends back as one ZIP of frames; longer or larger clips belong on the command line.
+const SEQUENCE_ZIP_BYTES = 512 * 1048576;
 // The program and arguments that hand an address to the system's default browser, without a shell to quote for.
 export function browserCommand(url, platform = process.platform, env = process.env) {
   if (platform === 'win32') return [path.win32.join(env.SystemRoot ?? 'C:\\Windows', 'System32', 'rundll32.exe'), ['url.dll,FileProtocolHandler', url]];
@@ -51,7 +54,7 @@ export async function startStudio({ port = STUDIO_PORT, fallback = false, projec
     if (!hosts.includes(req.headers.host) || (req.headers.origin && !hosts.some(h => req.headers.origin === `http://${h}`))) { reply(403, 'text/plain', 'Only same-origin local requests are accepted.'); return; }
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
-      if (req.method === 'POST' && url.pathname === '/api/export') {
+      if (req.method === 'POST' && (url.pathname === '/api/export' || url.pathname === '/api/sequence')) {
         if (!req.headers['content-type']?.startsWith('application/json')) { reply(415, 'text/plain', 'Send application/json'); return; }
         let size = 0; const chunks = [];
         for await (const data of req) {
@@ -59,9 +62,19 @@ export async function startStudio({ port = STUDIO_PORT, fallback = false, projec
           if (size > MAX_REQUEST_BYTES) { reply(413, 'text/plain', `Project exceeds ${MAX_REQUEST_BYTES} bytes`); return; }
           chunks.push(data);
         }
-        const bundle = await createBundle(JSON.parse(Buffer.concat(chunks).toString('utf8')));
-        res.setHeader('Content-Disposition', `attachment; filename="${bundle.project.name}.zip"`);
-        reply(200, 'application/zip', createZip(bundle.files)); return;
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if (url.pathname === '/api/export') {
+          const bundle = await createBundle(body);
+          res.setHeader('Content-Disposition', `attachment; filename="${bundle.project.name}.zip"`);
+          reply(200, 'application/zip', createZip(bundle.files)); return;
+        }
+        // Frames for a video editor, built exactly as `pixelforge sequence` builds them, sent back as one ZIP.
+        if (body === null || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key => key !== 'project' && key !== 'sequence')) throw new PixelError('request', 'expected { "project": recipe, "sequence": options }');
+        const { info, files } = createSequence(renderProject(body.project), body.sequence ?? {}), total = [...files.values()].reduce((sum, bytes) => sum + bytes.length, 0);
+        if (total > SEQUENCE_ZIP_BYTES) { reply(413, 'application/json', JSON.stringify({ error: `These frames come to ${Math.ceil(total / 1048576)} MB, more than the studio sends at once (${SEQUENCE_ZIP_BYTES / 1048576} MB). Use pixelforge sequence, which writes them to a folder.` })); return; }
+        res.setHeader('Content-Disposition', `attachment; filename="${info.name}-frames.zip"`);
+        res.setHeader('X-PixelForge-Sequence', JSON.stringify({ frames: info.frames, width: info.width, height: info.height, fps: info.fps.label, notes: info.notes.length }));
+        reply(200, 'application/zip', createZip(new Map([...files].map(([name, bytes]) => [`${info.name}/${name}`, bytes])))); return;
       }
       if (req.method !== 'GET') { reply(405, 'text/plain', 'Method not allowed'); return; }
       if (scene && url.pathname === '/') { reply(200, 'text/html; charset=utf-8', await readFile(new URL('../studio/scene.html', import.meta.url))); return; }

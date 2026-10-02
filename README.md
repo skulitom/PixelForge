@@ -34,7 +34,7 @@ cd PixelForge
 node bin/pixelforge.js preview
 ```
 
-Open **http://127.0.0.1:4747**, or add `--open` to have your default browser opened for you. If that port is in use, a free one is taken and printed instead; `--port N` insists on one port and fails when it is busy. `preview hero.pixel.json` starts with your own recipe. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open, a GIF download of the current animation, recovery of unsaved edits and live error messages. All assets and fonts are local.
+Open **http://127.0.0.1:4747**, or add `--open` to have your default browser opened for you. If that port is in use, a free one is taken and printed instead; `--port N` insists on one port and fails when it is busy. `preview hero.pixel.json` starts with your own recipe. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open, a GIF download of the current animation, numbered frames for a video editor, recovery of unsaved edits and live error messages. All assets and fonts are local.
 
 Or generate an asset without opening a browser:
 
@@ -144,7 +144,7 @@ Colours are exact: nothing is quantized or dithered, and a frame that needs more
 
 ### Pixel text
 
-The `text` operation draws titles, captions, labels and counters in a built-in pixel font: printable ASCII, capitals 7 pixels tall, proportional letters and tabular digits.
+The `text` operation draws titles, captions, labels and counters in a built-in pixel font: printable ASCII, the accented letters of western European languages (À–ÿ, Œ œ Š š Ž ž Ÿ) and common symbols such as € £ © — … “ ” „ « », with capitals 7 pixels tall, proportional letters and tabular digits. The accent of a capital sits in the two rows above `y`.
 
 ```json
 { "op": "text", "x": 120, "y": 8, "text": "GAME OVER\nscore 12480", "color": "ink", "align": "center" }
@@ -154,21 +154,23 @@ The `text` operation draws titles, captions, labels and counters in a built-in p
 
 ### Frames for a video editor
 
-Video editors such as Premiere Pro, DaVinci Resolve and After Effects do not animate APNG, and GIF loses alpha and exact timing. `pixelforge sequence` writes what they do read: one numbered PNG per video frame, at a constant frame rate, on a canvas of the video's size, with the alpha kept.
+Video editors do not animate APNG, and GIF loses alpha and exact timing. `pixelforge sequence` writes what editors do read: one numbered PNG per video frame, at a constant frame rate, on a canvas of the video's size, with the alpha kept.
 
 ```sh
 node bin/pixelforge.js sequence hero.pixel.json --fps 30 --size 1080p --out shots/hero
 node bin/pixelforge.js sequence examples/effects.fx.json --animation sparks --fps 29.97 --size 4k --scale 16 --align bottom --offset 0,-200 --out shots/sparks
-node bin/pixelforge.js sequence room.scene.json --fps 24 --size 1080p --out shots/room
+node bin/pixelforge.js sequence room.scene.json --fps 24 --size 1080p --fit cover --out shots/room
 ```
 
 - **Timing.** Each video frame shows the pose that is active when the frame starts. `--fps` takes 24, 25, 30, 50, 60, the NTSC rates 23.976, 29.97 and 59.94 (kept exact as 24000/1001, 30000/1001 and 60000/1001, so long clips do not drift), or a fraction. `--loops n` or `--seconds s` sets the length; `--step 2` animates on twos. A looping animation keeps cycling; one that plays once holds its last pose.
-- **Size.** `--size` is `720p`, `1080p`, `1440p`, `4k`, `vertical` (1080×1920), `square` or `WIDTHxHEIGHT`. The sprite is enlarged by a whole number, never resampled: the largest that fits, or `--scale` up to 256. `--align` (`top-left` … `center` … `bottom-right`) and `--offset x,y` place it. Without `--size` the canvas is the sprite at `--scale`. `--background` blends onto an opaque colour instead of keeping alpha.
-- **Sources.** A recipe (`--animation` picks one), a pose, autotile or effects source, which is compiled on the way in, or a scene, which is rendered moment by moment as a shot; moments that look the same share one PNG. A scene of 192×108, 240×135 or 320×180 pixels fills 1080p exactly at scale 10, 8 or 6.
-- **What you get.** A new folder with `name_0001.png` onwards, `sequence.json` (frame rate as a fraction, frame count, size, placement, loop facts and the timing of every pose) and a `README.txt` with the import steps. The result's `notes` say what the frame grid did: which poses changed length, which are shorter than a video frame and never shown, and whether the clip ends exactly where the loop does, with the number of loops that would.
+- **Size.** `--size` is `720p`, `1080p`, `1440p`, `4k`, `vertical` (1080×1920), `square` or `WIDTHxHEIGHT`. The sprite is enlarged by a whole number, never resampled: the largest that fits, or `--scale` up to 256. `--align` (`top-left` … `center` … `bottom-right`) and `--offset x,y` place it. `--fit cover` takes the smallest whole number that covers the canvas instead and crops what hangs over; `--align` then chooses the part that stays, and the result's `placement.visible` says which columns and rows of the source that is. Without `--size` the canvas is the sprite at `--scale`. `--background` blends onto an opaque colour instead of keeping alpha.
+- **Sources.** A recipe (`--animation` picks one), a pose, autotile or effects source, which is compiled on the way in, or a scene, which is rendered moment by moment as a shot; moments that look the same share one PNG. A scene of 192×108, 240×135 or 320×180 pixels fills 1080p exactly at scale 10, 8 or 6. Any other scene is centred with margins in its own background colour, so the shot is still opaque from edge to edge, or fills the canvas with `--fit cover`.
+- **What you get.** A new folder with `name_0001.png` onwards, `sequence.json` (frame rate as a fraction, frame count, size, placement, loop facts and the timing of every pose) and a `README.txt` that says how to import them. The result's `notes` say what the frame grid did: which poses changed length, which are shorter than a video frame and never shown, and whether the clip ends exactly where the loop does, with the number of loops that would.
 - **One video file.** PixelForge does not encode video. The folder's README and the JSON result give the exact `ffmpeg` command for a ProRes 4444 `.mov` with alpha, and for an H.264 `.mp4` when there is a background. With ffmpeg 7 the ProRes command keeps the alpha exactly and the colours within 2 of 255; `scripts/verify-exports.py` repeats that check when ffmpeg is installed.
 
-In the editor, import the first file as an image sequence and set the clip's frame rate (the files carry none), then leave the clip at 100% scale: scaling there would blur the pixels. A sequence holds at most 18,000 frames and a canvas at most 4096 pixels on a side. MCP `pixel_render` and `pixel_scene` take `"sequence": { "fps": 30, "size": "1080p" }` with the same options.
+In the editor, import the files as an image sequence and set the clip's frame rate (the files carry none), then leave the clip at 100% scale: scaling there would blur the pixels. A sequence holds at most 18,000 frames and a canvas at most 4096 pixels on a side. MCP `pixel_render` and `pixel_scene` take `"sequence": { "fps": 30, "size": "1080p" }` with the same options.
+
+The studio's **Frames** button downloads the same files for the animation on screen as one ZIP. Its dialog also shows the `pixelforge sequence` command and the MCP `sequence` argument for the chosen frame rate and size, so an agent can repeat the export without the browser.
 
 ## Connect an agent through MCP
 

@@ -1,6 +1,6 @@
 {
   "name": "pixelforge-agent",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Agent-first pixel art and animation toolkit with a CLI, MCP server and local studio. Deterministic JSON recipes to PNG, APNG and sprite atlases; zero dependencies.",
   "homepage": "https://github.com/skulitom/PixelForge#readme",
   "repository": { "type": "git", "url": "git+https://github.com/skulitom/PixelForge.git" },

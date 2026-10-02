@@ -180,6 +180,28 @@ $('gif').addEventListener('click', () => {
     toast(`GIF saved: ${gif.width} × ${gif.height} px.${gif.partialAlpha ? ` ${gif.partialAlpha} partly transparent pixels became fully transparent or opaque; the gif command can blend them onto a background.` : ''}`);
   } catch (error) { toast(error.message); }
 });
+// Frames for a video editor: the server builds them exactly as `pixelforge sequence` does. The dialog also shows that
+// call, and the MCP one, because agents are who usually make these.
+const framesSettings = () => ({ fps: $('frames-fps').value, animation: $('animation').value, ...($('frames-size').value ? { size: $('frames-size').value } : { scale: zoom }) });
+function showFramesCall() {
+  const settings = framesSettings(), sizing = settings.size ? `--size ${settings.size}` : `--scale ${settings.scale}`;
+  $('frames-call').textContent = `pixelforge sequence ${project.name}.pixel.json --fps ${settings.fps} ${sizing} --animation ${settings.animation} --out frames\n\npixel_render { "revision": "…", "sequence": ${JSON.stringify(settings)} }`;
+}
+$('frames').addEventListener('click', () => { compile(); if (!valid) { toast('Fix the recipe to export frames.'); return; } showFramesCall(); $('frames-dialog').showModal(); });
+for (const id of ['frames-fps', 'frames-size']) $(id).addEventListener('change', showFramesCall);
+$('frames-close').addEventListener('click', () => $('frames-dialog').close());
+$('frames-export').addEventListener('click', async () => {
+  const button = $('frames-export'); button.disabled = true; button.textContent = 'Making frames…';
+  try {
+    const response = await fetch('/api/sequence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project: spec, sequence: framesSettings() }) });
+    if (!response.ok) { const body = await response.text(); try { throw new Error(JSON.parse(body).error); } catch (error) { if (error instanceof SyntaxError) throw new Error(body); throw error; } }
+    const summary = JSON.parse(response.headers.get('X-PixelForge-Sequence') ?? '{}');
+    download(await response.blob(), `${project.name}-${$('animation').value}-frames.zip`);
+    $('frames-dialog').close();
+    toast(`Frames saved: ${summary.frames} PNGs, ${summary.width} × ${summary.height}, ${summary.fps} fps.${summary.notes ? ' The README in the ZIP explains how the timing was fitted.' : ''}`);
+  } catch (error) { toast(error.message); }
+  finally { button.disabled = false; button.textContent = 'Export frames'; }
+});
 $('draft-restore').addEventListener('click', () => {
   if (dirty && !confirm('Replace your edited recipe with the draft? Save JSON first if you want to keep it.')) return;
   loadVersion++; source.value = offer.text; offer = null; $('draft').hidden = true; dirty = true;

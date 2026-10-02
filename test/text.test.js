@@ -15,12 +15,14 @@ const draw = (w, h, ops, extra = {}) => {
   return { project, rows: Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => data[(y * w + x) * 4 + 3] ? '#' : '.').join('')) };
 };
 
-test('the built-in font covers printable ASCII with tabular digits', () => {
-  assert.equal(FONT_CHARACTERS, Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join(''));
+test('the built-in font covers printable ASCII, western European letters and common symbols, with tabular digits', () => {
+  const ascii = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join(''), more = '¡¢£¥©«®°±·»¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸŽž–—‘’‚“”„•…‹›€';
+  assert.equal(FONT_CHARACTERS, ascii + more);
   assert.deepEqual([FONT_HEIGHT, FONT_CAP_HEIGHT], [8, 7]);
   for (const character of FONT_CHARACTERS) {
-    const { width, height, rows } = layoutText(character);
-    assert.ok(height === 8 && rows.length === 8 && width >= 1 && width <= 5 && rows.every(row => row.length === width), JSON.stringify(character));
+    const { width, height, top, rows } = layoutText(character);
+    // A line is 8 rows; a capital with an accent starts 2 rows higher. Nothing is wider than 7 pixels.
+    assert.ok(height === 8 - top && (top === 0 || top === -2) && rows.length === height && width >= 1 && width <= 7 && rows.every(row => row.length === width), JSON.stringify(character));
     // Every glyph but the space has ink, and is trimmed to it on both sides.
     if (character === ' ') { assert.equal(width, 3); continue; }
     assert.ok(rows.some(row => row.includes('#')), `${character} is blank`);
@@ -29,18 +31,28 @@ test('the built-in font covers printable ASCII with tabular digits', () => {
   assert.deepEqual([...'0123456789'].map(digit => measureText(digit).width), Array(10).fill(5));
   // Capitals stand on the baseline (row 6); only descenders and the underscore use the row below it.
   for (const character of 'ABCXYZ0189') assert.equal(layoutText(character).rows[7].includes('#'), false, character);
-  assert.deepEqual([...FONT_CHARACTERS].filter(character => layoutText(character).rows[7].includes('#')).join(''), ',;_gjpqy');
+  assert.deepEqual([...FONT_CHARACTERS].filter(character => layoutText(character).rows.at(-1).includes('#')).join(''), ',;_gjpqyÇçýþÿ‚„');
+  // Accented capitals are the only glyphs that reach above the capitals; five glyphs are wider than a letter.
+  assert.deepEqual([[...FONT_CHARACTERS].filter(character => layoutText(character).top === -2).join(''), [...FONT_CHARACTERS].filter(character => layoutText(character).width > 5).join('')], ['ÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝŠŸŽ', '©®Œœ—']);
+  // An accented letter is its base letter with a mark: below the mark, é is e and É is E.
+  assert.deepEqual([layoutText('é').rows.slice(2), layoutText('É').rows.slice(2), layoutText('é').rows.slice(0, 2), layoutText('É').rows.slice(0, 2)], [layoutText('e').rows.slice(2), layoutText('E').rows, ['..#..', '.#...'], ['..#..', '.#...']]);
 });
 test('text is laid out with glyph spacing, line height and alignment', () => {
   assert.deepEqual(layoutText('i.').rows, ['.#...', '.....', '##...', '.#...', '.#...', '.#...', '###.#', '.....']);
-  assert.deepEqual(measureText('Hi'), { width: 9, height: 8, lines: [{ text: 'Hi', width: 9 }] });
-  assert.deepEqual(measureText('A\nBB'), { width: 11, height: 18, lines: [{ text: 'A', width: 5 }, { text: 'BB', width: 11 }] });
+  assert.deepEqual(measureText('Hi'), { width: 9, height: 8, top: 0, lines: [{ text: 'Hi', width: 9 }] });
+  assert.deepEqual(measureText('A\nBB'), { width: 11, height: 18, top: 0, lines: [{ text: 'A', width: 5 }, { text: 'BB', width: 11 }] });
+  // An accented capital on the first line makes the block start two rows above that line's capitals. On a later
+  // line the accent sits in the gap between lines, unless the lines are closer than two rows.
+  assert.deepEqual([measureText('École'), measureText('a\nÉ'), measureText('é').top, measureText('a\nÉ', { lineHeight: 1 }).top], [{ width: 27, height: 10, top: -2, lines: [{ text: 'École', width: 27 }] }, { width: 5, height: 18, top: 0, lines: [{ text: 'a', width: 5 }, { text: 'É', width: 5 }] }, 0, -1]);
+  assert.deepEqual(layoutText('a\nÉ').rows.slice(8, 11), ['..#..', '.#...', '#####']);
+  // A letter followed by a combining accent is the same as the composed letter.
+  assert.deepEqual(layoutText('cafe\u0301').rows, layoutText('café').rows);
   assert.deepEqual([measureText('AB', { spacing: 0 }).width, measureText('AB', { spacing: 4 }).width, measureText('A\nB', { lineHeight: 20 }).height, measureText('a b').width], [10, 14, 28, 15]);
   // A shorter line sits left, in the middle or right of the block.
   const first = align => layoutText('.\nAAA', { align }).rows[6];
   assert.deepEqual([first('left'), first('center'), first('right')], ['#................', '........#........', '................#']);
-  assert.deepEqual(measureText('\n'), { width: 1, height: 18, lines: [{ text: '', width: 0 }, { text: '', width: 0 }] });
-  assert.throws(() => layoutText('né'), /no glyph for "é"/);
+  assert.deepEqual(measureText('\n'), { width: 1, height: 18, top: 0, lines: [{ text: '', width: 0 }, { text: '', width: 0 }] });
+  assert.throws(() => layoutText('日本'), /no glyph for "日"/);
 });
 test('the text operation draws exact glyph pixels, placed by align and changed by the usual transforms', () => {
   // "i." at 1,1: a three-wide i, one pixel of spacing, and a full stop on the baseline.
@@ -55,12 +67,17 @@ test('the text operation draws exact glyph pixels, placed by align and changed b
   // Colours come from the palette or a hex value; layers and several lines work like any other drawing.
   const { project, rows } = draw(11, 18, [], { frames: [{ name: 'a', layers: [{ name: 'label', ops: [{ op: 'text', x: 0, y: 0, text: 'A\nBB', color: '#ff000080' }] }] }] });
   assert.deepEqual([rows[0], rows[10], [...project.frames[0].data.subarray(4, 8)]], ['.###.......', '####..####.', [255, 0, 0, 128]]);
+  // y is the top of the capitals: the accent of a capital is drawn in the two rows above it, and is clipped and
+  // reported like any other overhang when y leaves it no room.
+  assert.deepEqual(draw(5, 10, [{ op: 'text', x: 0, y: 2, text: 'É', color: 'w' }]).rows.slice(0, 4), ['..#..', '.#...', '#####', '#....']);
+  assert.deepEqual([draw(5, 8, [{ op: 'text', x: 0, y: 0, text: 'É', color: 'w' }]).project.clipping, draw(5, 8, [{ op: 'text', x: 0, y: 0, text: 'é', color: 'w' }]).project.clipping], [[{ path: 'project.frames[0].ops[0]', pixels: 2 }], undefined]);
+  assert.deepEqual(draw(10, 20, [{ op: 'text', x: 0, y: 4, text: 'É', color: 'w', scale: 2 }]).rows.slice(0, 5).map(row => row.slice(0, 10)), ['....##....', '....##....', '..##......', '..##......', '##########']);
   // Text that runs off the canvas is clipped and reported at its operation, like every other overhang.
   assert.deepEqual(draw(6, 8, [{ op: 'text', x: 0, y: 0, text: 'WW', color: 'w' }]).project.clipping.map(entry => entry.path), ['project.frames[0].ops[0]']);
 });
 test('text errors name the field and the character', () => {
   for (const [op, where, message] of [
-    [{ text: 'café', color: 'w' }, 'text', /no glyph for "é"; the built-in font draws printable ASCII/], [{ text: '', color: 'w' }, 'text', /1–512 characters/], [{ text: 'x'.repeat(513), color: 'w' }, 'text', /1–512 characters/],
+    [{ text: 'tofu 豆腐', color: 'w' }, 'text', /no glyph for "豆"; the built-in font draws printable ASCII, western European accented letters/], [{ text: '', color: 'w' }, 'text', /1–512 characters/], [{ text: 'x'.repeat(513), color: 'w' }, 'text', /1–512 characters/],
     [{ text: 7, color: 'w' }, 'text', /1–512 characters/], [{ text: 'a\n'.repeat(64), color: 'w' }, 'text', /at most 64 lines/], [{ text: 'a', color: 'w', align: 'middle' }, 'align', /left, center or right/],
     [{ text: 'a', color: 'w', spacing: 17 }, 'spacing', /0 to 16/], [{ text: 'a', color: 'w', lineHeight: 0 }, 'lineHeight', /1 to 64/], [{ text: 'a', color: 'nope' }, 'color', /unknown color/],
     [{ text: 'a' }, 'color', /palette name or hex/], [{ text: 'a', color: 'w', font: 'tiny' }, 'font', /unknown field/], [{ text: 'a', color: 'w', scale: 17 }, 'scale', /1 to 16/]

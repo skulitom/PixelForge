@@ -6,7 +6,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 
 - `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
 - `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing and engine-independent trigonometry. Keep new randomness seeded and new maths polynomial so output stays identical across JavaScript engines.
-- `src/font.js`: browser-compatible built-in pixel font (printable ASCII) and text layout for the `text` drawing operation. Glyph changes change rendered pixels, so treat them as format changes: regenerate examples and review.
+- `src/font.js`: browser-compatible built-in pixel font (printable ASCII, western European accented letters, common symbols) and text layout for the `text` drawing operation. Glyph changes change rendered pixels, so treat them as format changes: regenerate examples and review.
 - `src/fx.js`: browser-compatible `pixelforge-fx` compiler that bakes seeded particle emitters into ordinary recipes.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
 - `src/autotile.js`: browser-compatible blob/cardinal neighbour masks and template quarter layout, shared by scene tilemaps and the autotile compiler in `src/authoring.js`.
@@ -14,7 +14,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
 - `src/gif.js`: browser-compatible GIF89a export for sharing, used by the CLI, MCP and studio. Exact colours only: it never quantizes or dithers, and reports what GIF cannot keep (partial alpha, sub-10 ms timing) instead of hiding it.
-- `src/sequence.js`: numbered PNG frames for video editors, from recipes and scenes: exact frame-rate fractions, whole-number enlargement onto a video-sized canvas, a sidecar and the ffmpeg command for an alpha video. It encodes no video itself; keep it that way.
+- `src/sequence.js`: numbered PNG frames for video editors, from recipes and scenes: exact frame-rate fractions, whole-number enlargement onto a video-sized canvas (contained, or covering it and cropped), a sidecar and the ffmpeg command for an alpha video. It encodes no video itself; keep it that way.
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer. `studio/draft.js` keeps one unsaved recipe in the browser's own storage; draft recovery must stay in the browser, never a server endpoint.

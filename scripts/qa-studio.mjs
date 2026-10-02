@@ -253,6 +253,25 @@ try {
     assert.deepEqual(decoded, { frames: expected, width: still.width * 4 }); await choose('zoom', '12');
     return `${path.basename(gif)}, ${decoded.frames} frames, ${decoded.width} px wide`;
   });
+  await check('Frames exports numbered PNG frames for a video editor, and shows the same call for the command line and MCP', async () => {
+    const open = `document.getElementById('frames-dialog').open`, animation = await evaluate(`document.getElementById('animation').value`), base = `forest-spirit-${animation}`;
+    await click('#frames'); await until(open, 'the frames dialog');
+    await choose('frames-fps', '24'); await choose('frames-size', '720p'); await studio.shot('frames-dialog');
+    const call = await text('frames-call');
+    assert.ok(call.startsWith(`pixelforge sequence forest-spirit.pixel.json --fps 24 --size 720p --animation ${animation} --out frames\n`), call);
+    assert.ok(call.includes(`pixel_render { "revision": "…", "sequence": {"fps":"24","animation":"${animation}","size":"720p"} }`), call);
+    const zip = await download(() => click('#frames-export')), entries = readZip(await readFile(zip)), info = JSON.parse(entries.get(`${base}/sequence.json`).read().toString());
+    const pictures = [...entries.keys()].filter(name => name.endsWith('.png')), first = entries.get(`${base}/${base}_0001.png`).read();
+    assert.equal(path.basename(zip), `${base}-frames.zip`);
+    assert.deepEqual([info.frames, info.width, info.height, info.fps.label, info.animation], [pictures.length, 1280, 720, '24', animation]);
+    assert.deepEqual([first.toString('latin1', 1, 4), first.readUInt32BE(16), first.readUInt32BE(20), entries.has(`${base}/README.txt`)], ['PNG', 1280, 720, true]);
+    await until(`!${open}`, 'the dialog to close'); assert.match(await text('toast'), /^Frames saved: \d+ PNGs, 1280 × 720, 24 fps\./);
+    // Without a canvas the sprite is exported at the current zoom; Escape closes the dialog without exporting.
+    await click('#frames'); await until(open, 'the frames dialog'); await choose('frames-size', '');
+    assert.ok((await text('frames-call')).includes('--scale 12 '), await text('frames-call'));
+    await key('Escape', 27); await until(`!${open}`, 'Escape to close the dialog');
+    return `${pictures.length} frames in ${path.basename(zip)}`;
+  });
 
   console.log('Draft recovery');
   await check('an unsaved edit is offered back after the page is reloaded, restored on request, and gone once saved', async () => {
@@ -277,7 +296,7 @@ try {
       if (focus === 'source') break;
       reached.push(focus);
     }
-    const wanted = ['open', 'export', 'example', 'new', 'guide-toggle', 'animation-view', 'sheet-view', 'review-view', 'grid', 'onion', 'zoom', 'play', 'animation', 'gif', 'speed', 'frame', 'save'];
+    const wanted = ['open', 'export', 'example', 'new', 'guide-toggle', 'animation-view', 'sheet-view', 'review-view', 'grid', 'onion', 'zoom', 'play', 'animation', 'gif', 'frames', 'speed', 'frame', 'save'];
     assert.deepEqual(wanted.filter(control => !reached.includes(control)), [], `reached: ${[...new Set(reached)].join(', ')}`);
     assert.equal(await evaluate(`document.activeElement.id`), 'source', 'Tab never reached the recipe editor');
     // Inside the editor Tab indents. Escape and then Tab moves on; Shift+Tab moves back.

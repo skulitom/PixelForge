@@ -15,7 +15,7 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge gif <file.json|-> --out anim.gif [--animation name] [--scale 1-16] [--background color]
                                            Share one animation as a GIF; writes only --out
   pixelforge sequence <recipe|source|scene.json> --out folder --fps 30 [--size 1080p|WxH] [--scale n]
-                    [--align center] [--offset x,y] [--background color] [--animation name]
+                    [--fit contain|cover] [--align center] [--offset x,y] [--background color] [--animation name]
                     [--loops n | --seconds s] [--step n]
                                            Numbered PNG frames for a video editor, at a constant frame rate
   pixelforge compile <source.json> --out recipe.json [--metadata meta.json]
@@ -44,7 +44,8 @@ GIF keeps exact colours (at most 256 per frame, never quantized), 1-bit transpar
 onto a colour, and 10 ms timing steps; the result's notes list what changed. Default scale: up to 256 pixels.
 Sequence writes one PNG per video frame with alpha, plus sequence.json and a README with the ffmpeg command for a
 .mov. --size is 720p, 1080p, 1440p, 4k, vertical, square or WIDTHxHEIGHT; the sprite is enlarged by a whole number
-(the largest that fits, or --scale) and placed by --align (top-left ... bottom-right) and --offset. --step 2
+(the largest that fits, or --scale; --fit cover takes the smallest that covers the canvas and crops the rest) and
+placed by --align (top-left ... bottom-right) and --offset. A scene's margins take its background colour. --step 2
 animates on twos. Rates such as 23.976 and 29.97 are exact (24000/1001, 30000/1001).
 All command results except the preview server are JSON. Errors exit with code 1.
 No installation needed: node bin/pixelforge.js <command>
@@ -54,7 +55,7 @@ function parseArgs(args) {
   const positional = [], options = {};
   for (let i = 0; i < args.length; i++) {
     if (['--force', '--grid', '--native', '--diagnostics', '--open'].includes(args[i])) options[args[i].slice(2)] = true;
-    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root', '--fps', '--size', '--align', '--offset', '--loops', '--seconds', '--step'].includes(args[i])) {
+    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root', '--fps', '--size', '--align', '--offset', '--loops', '--seconds', '--step', '--fit'].includes(args[i])) {
       const key = args[i].slice(2);
       if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`--${key} requires a value`);
       options[key] = args[++i];
@@ -113,7 +114,7 @@ try {
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], sequence: ['out', 'fps', 'animation', 'size', 'scale', 'align', 'offset', 'background', 'loops', 'seconds', 'step', 'force'], preview: ['port', 'open'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
+    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], sequence: ['out', 'fps', 'animation', 'size', 'scale', 'fit', 'align', 'offset', 'background', 'loops', 'seconds', 'step', 'force'], preview: ['port', 'open'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -195,7 +196,7 @@ try {
       // Pose, autotile and effect sources become the recipe they compile to; a scene is rendered moment by moment.
       const document = Object.hasOwn(COMPILERS, input.document?.format ?? '') ? COMPILERS[input.document.format](input.document).recipe : input.document;
       const numeric = key => options[key] === undefined ? {} : { [key]: Number(options[key]) }, text = key => options[key] === undefined ? {} : { [key]: options[key] };
-      const settings = { ...text('fps'), ...text('animation'), ...text('size'), ...numeric('scale'), ...text('align'), ...(options.offset !== undefined && { offset: options.offset.split(',').map(Number) }), ...text('background'), ...numeric('loops'), ...numeric('seconds'), ...numeric('step') };
+      const settings = { ...text('fps'), ...text('animation'), ...text('size'), ...numeric('scale'), ...text('fit'), ...text('align'), ...(options.offset !== undefined && { offset: options.offset.split(',').map(Number) }), ...text('background'), ...numeric('loops'), ...numeric('seconds'), ...numeric('step') };
       const sequence = document?.format === 'pixelforge-scene' ? createSceneSequence(prepareScene(document), document.name, settings) : createSequence(renderProject(document), settings);
       const files = await writeBundle(sequence, options.out, options), { timing, ...info } = sequence.info;
       console.log(JSON.stringify({ ok: true, ...info, directory: path.resolve(options.out), files: files.length, ...referenced(input) }, null, 2));

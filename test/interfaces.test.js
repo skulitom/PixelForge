@@ -11,6 +11,8 @@ import { startMCP } from '../src/mcp.js';
 import { startStudio, STUDIO_PATHS } from '../src/server.js';
 import { renderProject, inspectProject } from '../src/core.js';
 import { encodePNG } from '../src/png.js';
+import { createSequence } from '../src/sequence.js';
+import { readZip } from '../scripts/build-studio.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const tiny = { version: 1, name: 'dot', width: 1, height: 1, frames: [{ name: 'idle', ops: [{ op: 'pixel', color: '#fff' }] }] };
@@ -217,6 +219,26 @@ test('studio serves only its assets and exports ZIP over same-origin requests', 
   assert.equal(Buffer.from(await res.arrayBuffer()).readUInt32LE(0), 0x04034b50);
   const bad = await fetch(base + '/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(bad.status, 400); assert.match((await bad.json()).error, /version/);
+});
+test('studio returns frames for a video editor as one ZIP, built as the sequence command builds them', async t => {
+  const server = await startStudio({ port: 0, quiet: true });
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const post = (body, headers = {}) => fetch(base + '/api/sequence', { method: 'POST', headers: { Origin: base, 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
+  const response = await post({ project: strip, sequence: { fps: 10, scale: 2 } });
+  assert.deepEqual([response.status, response.headers.get('content-type'), response.headers.get('content-disposition')], [200, 'application/zip', 'attachment; filename="strip-default-frames.zip"']);
+  assert.deepEqual(JSON.parse(response.headers.get('x-pixelforge-sequence')), { frames: 2, width: 24, height: 4, fps: '10', notes: 0 });
+  // The ZIP holds one folder with exactly the files the command would write.
+  const entries = readZip(Buffer.from(await response.arrayBuffer())), expected = createSequence(renderProject(strip), { fps: 10, scale: 2 });
+  assert.deepEqual([...entries.keys()], [...expected.files.keys()].map(name => `strip-default/${name}`));
+  for (const [name, bytes] of expected.files) assert.ok(entries.get(`strip-default/${name}`).read().equals(bytes), name);
+  // Refusals are JSON with the path of what was wrong, and nothing is ever written by the server.
+  for (const [body, message] of [[{ project: strip }, /sequence\.fps/], [{ project: strip, sequence: { fps: 30, size: '8k' } }, /sequence\.size/], [{ project: {}, sequence: { fps: 30 } }, /project/], [{ project: strip, sequence: { fps: 30 }, out: 'C:/x' }, /request/], [[strip], /request/]]) {
+    const refused = await post(body); assert.equal(refused.status, 400); assert.match((await refused.json()).error, message);
+  }
+  assert.equal((await post({ project: strip, sequence: { fps: 10 } }, { Origin: 'https://evil.example' })).status, 403);
+  // The address only answers a POST: reading it finds nothing, and other methods are refused.
+  assert.deepEqual([(await fetch(base + '/api/sequence')).status, (await fetch(base + '/api/sequence', { method: 'PUT', headers: { Origin: base } })).status], [404, 405]);
 });
 test('every sample the studio lists is served, and the sidebar counts the list itself', async () => {
   const script = await readFile(path.join(root, 'studio', 'studio.js'), 'utf8'), page = await readFile(path.join(root, 'studio', 'index.html'), 'utf8');

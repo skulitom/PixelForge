@@ -113,7 +113,8 @@ a colour.
 
 For a video editor, the same command with "sequence hero-v2.pixel.json --fps 30
 --size 1080p --out shots" writes numbered PNG frames with alpha, and a README
-with the import steps. With "preview hero-v2.pixel.json --open" it shows a
+that says how to import them; the studio's Frames button saves the same
+files as one ZIP. With "preview hero-v2.pixel.json --open" it shows a
 recipe in the studio, and with "help" it lists every command. Existing files
 are never replaced unless you add --force.
 

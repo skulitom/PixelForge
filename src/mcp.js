@@ -59,6 +59,7 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
     ...(animated && { animation: { type: 'string', description: 'Default: the previewed animation, or the first.' }, step: { type: 'integer', minimum: 1, maximum: 60, description: 'Hold each sampled frame for this many video frames; 2 animates on twos.' } }),
     size: { type: 'string', description: 'Canvas: 720p, 1080p, 1440p, 4k, vertical, square or WIDTHxHEIGHT. Default: the sprite at scale.' },
     scale: { type: 'integer', minimum: 1, maximum: 256, description: 'Whole-number enlargement. Default: the largest that fits the canvas, or 1 without a size.' },
+    fit: { enum: ['contain', 'cover'], description: 'contain (default): the whole sprite fits the canvas. cover: the smallest scale that covers the canvas; the overhang is cropped.' },
     align: { enum: ['top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right'] },
     offset: { type: 'array', items: { type: 'integer' }, minItems: 2, maxItems: 2, description: '[x, y] canvas pixels added to the aligned position.' },
     background: { type: 'string', description: 'Palette name or opaque hex colour. Default: transparent.' },

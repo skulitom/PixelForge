@@ -233,5 +233,17 @@ with tempfile.TemporaryDirectory() as temporary:
         assert worst <= 3, worst
         video = f'ffmpeg made a {stream["pix_fmt"]} ProRes video of {stream["nb_read_frames"]} frames with exact alpha and colours within {worst} of 255'
     sequence_frames = info['frames']
+    # Cover: 24 pixels cover 100 × 60 five times (120 × 120); from the top-right corner, 20 pixels are cut on the left
+    # and 60 at the bottom. Pillow crops the same enlarged pose itself.
+    cover = Path(temporary) / 'cover'
+    subprocess.check_output(['node', 'bin/pixelforge.js', 'sequence', 'examples/forest-spirit.json', '--fps', '10', '--size', '100x60',
+                             '--fit', 'cover', '--align', 'top-right', '--out', str(cover)], cwd=root)
+    covered = json.loads((cover / 'sequence.json').read_text(encoding='utf-8'))
+    assert (covered['placement']['scale'], covered['placement']['x'], covered['placement']['visible']) == (5, -20, [4, 0, 20, 12]), covered['placement']
+    pose = Image.open(folder / 'frames' / f'{poses[0][0]}.png').convert('RGBA')
+    native = pose.resize((pose.width // sheet_scale, pose.height // sheet_scale), Image.Resampling.NEAREST)
+    expected = native.resize((120, 120), Image.Resampling.NEAREST).crop((20, 0, 120, 60))
+    actual = Image.open(cover / (covered['pattern'] % 1))
+    assert actual.mode == 'RGBA' and actual.size == (100, 60) and actual.tobytes() == expected.tobytes()
 
-print(f'Independent decode passed: a {sequence_frames}-frame image sequence at 29.97 with exact pixels and alpha ({video}), {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')
+print(f'Independent decode passed: a {sequence_frames}-frame image sequence at 29.97 with exact pixels and alpha ({video}), a cover-cropped frame, {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')

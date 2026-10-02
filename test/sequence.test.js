@@ -57,6 +57,13 @@ test('a sprite is enlarged by a whole number and placed on a video-sized canvas'
   assert.deepEqual(placeSprite(48, 16, { size: 'vertical', scale: 10, align: 'bottom-left', offset: [40, -60] }), { width: 1080, height: 1920, scale: 10, x: 40, y: 1700, spriteWidth: 480, spriteHeight: 160 });
   // 8 × 8 fits a 100 × 60 canvas seven times: 56 pixels, so 44 from the left when right-aligned and 2 from the top when centred.
   assert.deepEqual([placeSprite(8, 8, { size: '100x60', align: 'top-right' }).x, placeSprite(8, 8, { size: [100, 60], align: 'right' }).y, VIDEO_SIZES['4k']], [44, 2, [3840, 2160]]);
+  // Cover takes the smallest whole scale that covers the canvas; what hangs over is cropped, and the result says so.
+  assert.deepEqual(placeSprite(192, 72, { size: '1080p', fit: 'cover' }), { width: 1920, height: 1080, scale: 15, x: -480, y: 0, spriteWidth: 2880, spriteHeight: 1080, fit: 'cover', cropped: true, covers: true });
+  assert.deepEqual(placeSprite(240, 135, { size: '1080p', fit: 'cover' }), { width: 1920, height: 1080, scale: 8, x: 0, y: 0, spriteWidth: 1920, spriteHeight: 1080, fit: 'cover', cropped: false, covers: true });
+  // With cover a sprite may be larger than the canvas, a chosen scale may overhang, and align picks the part that stays.
+  assert.deepEqual([placeSprite(24, 24, { size: '16x16', fit: 'cover' }).x, placeSprite(24, 24, { size: '1080p', fit: 'cover', scale: 46, align: 'top' }).y, placeSprite(24, 24, { size: '1080p', fit: 'cover', scale: 10 }).covers], [-4, 0, false]);
+  for (const [options, where] of [[{ fit: 'cover' }, 'sequence.fit'], [{ size: '1080p', fit: 'stretch' }, 'sequence.fit'], [{ size: '1080p', fit: 'cover', offset: [4000, 0] }, 'sequence.offset']]) assert.throws(() => placeSprite(24, 24, options), error => error.path === where, JSON.stringify(options));
+  assert.throws(() => placeSprite(8, 8, { size: '4k', fit: 'cover' }), error => error.path === 'sequence.fit' && /scale of 480/.test(error.message));
   for (const [options, where] of [[{ size: '8k' }, 'sequence.size'], [{ size: '5000x10' }, 'sequence.size'], [{ size: '16x16' }, 'sequence.size'], [{ size: '1080p', scale: 46 }, 'sequence.scale'], [{ scale: 300 }, 'sequence.scale'], [{ size: '1080p', align: 'middle' }, 'sequence.align'], [{ size: '1080p', offset: [900, 0] }, 'sequence.offset'], [{ offset: [1] }, 'sequence.offset']]) assert.throws(() => placeSprite(24, 24, options), error => error.path === where, JSON.stringify(options));
 });
 test('a recipe becomes numbered PNG frames with exact pixels, straight alpha, a sidecar and working instructions', () => {
@@ -79,7 +86,22 @@ test('a recipe becomes numbered PNG frames with exact pixels, straight alpha, a 
   assert.equal(info.commands.prores4444, 'ffmpeg -framerate 20 -start_number 1 -i "probe-cycle_%04d.png" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vf "scale=out_color_matrix=bt709:flags=neighbor" -colorspace bt709 -color_primaries bt709 -color_trc bt709 "probe-cycle.mov"');
   assert.equal(info.commands.h264, undefined);
   const readme = files.get('README.txt').toString();
-  for (const expected of ['4 PNG files, probe-cycle_####.png, numbered from 0001.', '8 x 4 pixels, 20 frames per second, 0.2 seconds.', 'tick "Image Sequence"', info.commands.prores4444]) assert.ok(readme.includes(expected), expected);
+  for (const expected of ['4 PNG files, probe-cycle_####.png, numbered from 0001.', '8 x 4 pixels, 20 frames per second, 0.2 seconds.', 'import these files as an image sequence', "set the clip's frame rate to 20 where", info.commands.prores4444]) assert.ok(readme.includes(expected), expected);
+});
+test('cover fills the canvas with the sprite and crops what hangs over', () => {
+  // 2 × 1 covers 3 × 3 at scale 3: 6 × 3, centred, so one and a half canvas pixels hang over on each side.
+  const { info, files } = createSequence(renderProject(recipe), { fps: 20, size: '3x3', fit: 'cover' });
+  assert.deepEqual(info.placement, { scale: 3, x: -2, y: 0, width: 6, height: 3, source: [2, 1], fit: 'cover', cropped: true, visible: [0, 0, 2, 1] });
+  assert.deepEqual(info.notes, ['The sprite is enlarged 3 times to 6×3 and cropped to the 3×3 canvas: columns 0 to 1 and rows 0 to 0 of the sprite stay in view.']);
+  // The blue pose is transparent on the left and blue on the right: one canvas column of the left pixel is left.
+  const blue = decodePNG(files.get('probe-cycle_0004.png'));
+  assert.deepEqual([[blue.width, blue.height], pixel(blue, 0, 0), pixel(blue, 1, 0), pixel(blue, 2, 2)], [[3, 3], [0, 0, 0, 0], [0, 0, 255, 255], [0, 0, 255, 255]]);
+  // Align chooses what stays: from the left edge, only the sprite's left pixel is on the canvas.
+  const left = createSequence(renderProject(recipe), { fps: 20, size: '3x3', fit: 'cover', align: 'left', background: 'k' });
+  assert.deepEqual([left.info.placement.visible, pixel(decodePNG(left.files.get('probe-cycle_0004.png')), 2, 1), pixel(decodePNG(left.files.get('probe-cycle_0001.png')), 2, 1)], [[0, 0, 1, 1], [16, 32, 48, 255], [255, 0, 0, 255]]);
+  // A sprite that covers the canvas exactly is not cropped, and nothing is noted.
+  const exact = createSequence(renderProject(recipe), { fps: 20, size: '8x4', fit: 'cover' });
+  assert.deepEqual([exact.info.placement, exact.info.notes], [{ scale: 4, x: 0, y: 0, width: 8, height: 4, source: [2, 1], fit: 'cover', cropped: false, visible: [0, 0, 2, 1] }, []]);
 });
 test('a background blends the alpha away, and the notes say what the frame grid changed', () => {
   const project = renderProject(recipe), matte = createSequence(project, { fps: '29.97', background: 'k', scale: 2 });
@@ -109,10 +131,23 @@ test('a scene becomes a shot: each frame is the scene at that moment, and still 
     for (const [x, y] of [[0, 0], [20, 30], [60, 40], [100, 50], [191, 71]]) assert.deepEqual(pixel(png, x * 4 + 3, y * 4 + 1), [...expected.data.subarray((y * 192 + x) * 4, (y * 192 + x) * 4 + 4)], `frame ${number} at ${x},${y}`);
   }
   assert.ok(info.differentFrames > 1 && info.differentFrames <= 36);
-  // On a canvas it does not fill, the note says which scene size would.
+  // On a canvas it does not fill, the margins take the scene's own background colour, so the shot is opaque edge to
+  // edge, and the note says how to fill the canvas.
   const letterboxed = createSceneSequence(scene, source.name, { fps: 6, size: '1080p', seconds: 1 });
-  assert.deepEqual([letterboxed.info.frames, letterboxed.info.placement.scale, letterboxed.info.loop.seamless], [6, 10, false]);
-  assert.ok(letterboxed.info.notes.includes('The scene covers 1920×720 of the 1920×1080 canvas. A 192×108 scene fills it exactly at this scale.'));
+  assert.deepEqual([letterboxed.info.frames, letterboxed.info.placement.scale, letterboxed.info.loop.seamless, letterboxed.info.alpha, Object.keys(letterboxed.info.commands)], [6, 10, false, 'none: opaque background', ['prores4444', 'h264']]);
+  assert.deepEqual(scene.background, [24, 34, 57, 255]);
+  const margin = decodePNG(letterboxed.files.get('skink-stride-study_0001.png'));
+  assert.deepEqual([pixel(margin, 0, 0), pixel(margin, 1919, 1079)], [[24, 34, 57, 255], [24, 34, 57, 255]]);
+  assert.deepEqual(letterboxed.info.notes, ["The scene covers 1920×720 of the 1920×1080 canvas; the margins take the scene's background colour. Use fit cover to fill the canvas and crop the overhang, or author the scene at 192×108 to fill it exactly at this scale."]);
+  // A named background replaces that colour, and "transparent" keeps the margins clear.
+  const clear = createSceneSequence(scene, source.name, { fps: 6, size: '1080p', seconds: 1, background: 'transparent' });
+  assert.deepEqual([pixel(decodePNG(clear.files.get('skink-stride-study_0001.png')), 0, 0), clear.info.alpha, clear.info.notes[0].startsWith('The scene covers 1920×720 of the 1920×1080 canvas. Use fit cover')], [[0, 0, 0, 0], 'straight (unpremultiplied)', true]);
+  assert.deepEqual(pixel(decodePNG(createSceneSequence(scene, source.name, { fps: 6, size: '1080p', seconds: 1, background: '#ff0000' }).files.get('skink-stride-study_0001.png')), 0, 0), [255, 0, 0, 255]);
+  // Cover fills 1080p with the 192 × 72 scene at scale 15 and keeps its middle 128 columns.
+  const filled = createSceneSequence(scene, source.name, { fps: 6, size: '1080p', seconds: 1, fit: 'cover' });
+  assert.deepEqual([filled.info.placement, filled.info.notes], [{ scale: 15, x: -480, y: 0, width: 2880, height: 1080, source: [192, 72], fit: 'cover', cropped: true, visible: [32, 0, 128, 72] }, ['The scene is enlarged 15 times to 2880×1080 and cropped to the 1920×1080 canvas: columns 32 to 159 and rows 0 to 71 of the scene stay in view.']]);
+  const shot = decodePNG(filled.files.get('skink-stride-study_0001.png')), whole = renderScene(scene, { time: 0 });
+  for (const [x, y] of [[32, 0], [60, 40], [100, 50], [159, 71]]) assert.deepEqual(pixel(shot, (x - 32) * 15 + 7, y * 15 + 7), [...whole.data.subarray((y * 192 + x) * 4, (y * 192 + x) * 4 + 4)], `cover at ${x},${y}`);
   // A still scene is one picture however many frames it lasts.
   const still = prepareScene({ format: 'pixelforge-scene', version: 1, name: 'still', width: 4, height: 4, duration: 1000, assets: { dot: { version: 1, name: 'dot', width: 1, height: 1, frames: [{ name: 'a', ops: [{ op: 'pixel', color: '#fff' }] }] } }, instances: [{ asset: 'dot', at: [1, 1] }] });
   assert.deepEqual([createSceneSequence(still, 'still', { fps: 30 }).info.frames, createSceneSequence(still, 'still', { fps: 30 }).info.differentFrames], [30, 1]);
@@ -136,9 +171,11 @@ test('CLI sequence writes a new folder for a recipe, an effects source and a sce
   assert.deepEqual([sparks.name, sparks.loop.plays, sparks.width, sparks.height], ['effects-sparks', 'once', 192, 160]);
   const shot = JSON.parse(run('examples/quality/stride.scene.json', '--fps', '10', '--seconds', '1', '--out', path.join(dir, 'shot')).stdout);
   assert.deepEqual([shot.source, shot.frames, shot.width, shot.height], ['scene', 10, 192, 72]);
+  const filled = JSON.parse(run('examples/quality/stride.scene.json', '--fps', '5', '--seconds', '1', '--size', '720p', '--fit', 'cover', '--out', path.join(dir, 'filled')).stdout);
+  assert.deepEqual([filled.width, filled.height, filled.placement.scale, filled.placement.visible], [1280, 720, 10, [32, 0, 128, 72]]);
   // Refused requests write nothing.
-  for (const [args, message] of [[['--out', path.join(dir, 'a')], /requires --fps/], [['--fps', '30'], /requires --out/], [['--fps', '30', '--size', '8k', '--out', path.join(dir, 'b')], /sequence\.size/], [['--fps', '30', '--grid', '--out', path.join(dir, 'c')], /--grid is not supported by sequence/]]) assert.match(JSON.parse(run('examples/coin.json', ...args).stderr).error, message);
-  assert.deepEqual((await readdir(dir)).sort(), ['coin', 'shot', 'sparks']);
+  for (const [args, message] of [[['--out', path.join(dir, 'a')], /requires --fps/], [['--fps', '30'], /requires --out/], [['--fps', '30', '--size', '8k', '--out', path.join(dir, 'b')], /sequence\.size/], [['--fps', '30', '--fit', 'cover', '--out', path.join(dir, 'd')], /sequence\.fit: cover needs a size to cover/], [['--fps', '30', '--grid', '--out', path.join(dir, 'c')], /--grid is not supported by sequence/]]) assert.match(JSON.parse(run('examples/coin.json', ...args).stderr).error, message);
+  assert.deepEqual((await readdir(dir)).sort(), ['coin', 'filled', 'shot', 'sparks']);
 });
 test('MCP render and scene tools write a sequence on request, beside what they already write', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-sequence-mcp-'));
@@ -159,7 +196,9 @@ test('MCP render and scene tools write a sequence on request, beside what they a
   const scene = JSON.parse(await readFile(path.join(root, 'examples', 'quality', 'stride.scene.json'), 'utf8'));
   const shot = JSON.parse(call(path.join(dir, 'scene'), 'pixel_scene', { scene, sequence: { fps: 4, seconds: 1 } }).content[0].text);
   assert.deepEqual([shot.sequence.frames, shot.sequence.width, (await readdir(path.join(shot.directory, 'sequence'))).length], [4, 192, 6]);
-  for (const [tool, args] of [['pixel_render', { project: recipe, sequence: { fps: 0 } }], ['pixel_render', { project: recipe, sequence: true }], ['pixel_scene', { scene, sequence: { fps: 30, step: 2 } }]]) {
+  const cover = JSON.parse(call(path.join(dir, 'cover'), 'pixel_scene', { scene, sequence: { fps: 4, seconds: 0.5, size: '720p', fit: 'cover' } }).content[0].text);
+  assert.deepEqual([cover.sequence.frames, cover.sequence.width, cover.sequence.height, cover.sequence.placement.fit], [2, 1280, 720, 'cover']);
+  for (const [tool, args] of [['pixel_render', { project: recipe, sequence: { fps: 0 } }], ['pixel_render', { project: recipe, sequence: { fps: 30, fit: 'cover' } }], ['pixel_render', { project: recipe, sequence: true }], ['pixel_scene', { scene, sequence: { fps: 30, step: 2 } }]]) {
     const refused = call(path.join(dir, 'refused'), tool, args);
     assert.equal(refused.isError, true, JSON.stringify(refused)); assert.match(JSON.parse(refused.content[0].text).path, /^sequence/);
   }

@@ -167,14 +167,14 @@ export function renderProject(spec, options = {}) {
         };
       };
       // Draws a w x h source through flip, rotation and integer scale; flips happen before rotation. `shift` moves
-      // the drawing sideways by a function of its drawn width (text alignment).
-      const drawCells = (w, h, sample, shift = () => 0) => {
+      // the drawing by [dx, dy], given its drawn width and scale (text alignment, and accents above the first line).
+      const drawCells = (w, h, sample, shift = () => [0, 0]) => {
         const scale = integer(op.scale ?? 1, `${p}.scale`, 1, 16);
         const flipX = boolean(op.flipX ?? false, `${p}.flipX`), flipY = boolean(op.flipY ?? false, `${p}.flipY`);
         const rotate = integer(op.rotate ?? 0, `${p}.rotate`, 0, 270);
         if (rotate % 90) fail(`${p}.rotate`, 'expected 0, 90, 180 or 270 degrees clockwise');
         spend(w * h * scale * scale);
-        const left = x + shift((rotate % 180 ? h : w) * scale);
+        const [dx, dy] = shift((rotate % 180 ? h : w) * scale, scale), left = x + dx, top = y + dy;
         for (let gy = 0; gy < h; gy++) for (let gx = 0; gx < w; gx++) {
           const c = sample(gx, gy);
           if (!c) continue;
@@ -182,7 +182,7 @@ export function renderProject(spec, options = {}) {
           if (rotate === 90) [px, py] = [h - 1 - py, px];
           else if (rotate === 180) [px, py] = [w - 1 - px, h - 1 - py];
           else if (rotate === 270) [px, py] = [py, w - 1 - px];
-          for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) put(left + px * scale + sx, y + py * scale + sy, c);
+          for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) put(left + px * scale + sx, top + py * scale + sy, c);
         }
       };
       if (op.op === 'pixel') { spend(1); put(x, y, color(op.color, `${p}.color`)); }
@@ -209,7 +209,8 @@ export function renderProject(spec, options = {}) {
         const sample = paletteSampler();
         drawCells(grid.width, grid.height, (gx, gy) => sample(grid.rows[gy][gx]));
       } else if (op.op === 'text') {
-        // Text in the built-in font. x is the block's left edge, its centre or its right edge, by `align`.
+        // Text in the built-in font. x is the block's left edge, its centre or its right edge, by `align`; y is the
+        // top of the first line's capitals, and the accents of capitals in that line reach two rows above it.
         if (typeof op.text !== 'string' || !op.text.length || op.text.length > 512) fail(`${p}.text`, 'expected 1–512 characters');
         if (op.text.split('\n').length > 64) fail(`${p}.text`, 'at most 64 lines');
         const align = op.align ?? 'left';
@@ -217,7 +218,7 @@ export function renderProject(spec, options = {}) {
         const spacing = integer(op.spacing ?? 1, `${p}.spacing`, 0, 16), lineHeight = integer(op.lineHeight ?? 10, `${p}.lineHeight`, 1, 64);
         const block = layoutText(op.text, { spacing, lineHeight, align }, message => fail(`${p}.text`, message)), c = color(op.color, `${p}.color`);
         if (block.width > 4096) fail(`${p}.text`, `a line is ${block.width} pixels wide; break it into lines`);
-        drawCells(block.width, block.height, (gx, gy) => block.rows[gy][gx] === '#' ? c : null, drawn => align === 'center' ? -Math.floor(drawn / 2) : align === 'right' ? -drawn : 0);
+        drawCells(block.width, block.height, (gx, gy) => block.rows[gy][gx] === '#' ? c : null, (drawn, scale) => [align === 'center' ? -Math.floor(drawn / 2) : align === 'right' ? -drawn : 0, block.top * scale]);
       } else if (op.op === 'copy') {
         // Copies a rectangle of a symbol (palette characters) or of an earlier frame (exact RGBA).
         if ((op.from === undefined) === (op.symbol === undefined)) fail(p, 'copy needs exactly one of from (an earlier frame) or symbol');
