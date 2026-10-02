@@ -12,9 +12,10 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/resolve.js`: Node-side resolution of shared palette files and scene asset references; the renderer itself never reads files.
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
+- `src/gif.js`: browser-compatible GIF89a export for sharing, used by the CLI, MCP and studio. Exact colours only: it never quantizes or dithers, and reports what GIF cannot keep (partial alpha, sub-10 ms timing) instead of hiding it.
 - `src/mcp.js`, `src/server.js`: agent and studio interfaces.
 - `src/runtime.js`: exported Canvas animation player.
-- `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer.
+- `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer. `studio/draft.js` keeps one unsaved recipe in the browser's own storage; draft recovery must stay in the browser, never a server endpoint.
 - `packaging/windows/`: launcher scripts, START HERE and notices for the portable Windows build. `scripts/build-studio.mjs` packs them with the `npm pack` file list and the pinned official Node.js runtime into a reproducible ZIP under `dist/`; `scripts/verify-studio.mjs` tests a built ZIP. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
 - `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.

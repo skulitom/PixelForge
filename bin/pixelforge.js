@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, animationGIF, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -12,6 +12,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge patch <file.json|-> --changes <changes.json|-> [--out new.json] [--image diff.png]
                                            Preview edits; writes only --out and --image
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
+  pixelforge gif <file.json|-> --out anim.gif [--animation name] [--scale 1-16] [--background color]
+                                           Share one animation as a GIF; writes only --out
   pixelforge compile <source.json> --out recipe.json [--metadata meta.json]
                                            Build a recipe from authored poses, an autotile template or particle effects
   pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
@@ -33,6 +35,8 @@ Inspect: --frames a,b or --animation name picks cells; --region x,y,w,h crops;
 Patch accepts correction overlays as --changes; a changed base fails with a fingerprint conflict.
 A cleanup change ({"cleanup": "frames[run-2]", "value": {"corners": true, "strays": true}}) previews
 proposed fixes for doubled corners and stray pixels; --diagnostics counts both per frame.
+GIF keeps exact colours (at most 256 per frame, never quantized), 1-bit transparency unless --background blends
+onto a colour, and 10 ms timing steps; the result's notes list what changed. Default scale: up to 256 pixels.
 All command results except the preview server are JSON. Errors exit with code 1.
 No installation needed: node bin/pixelforge.js <command>
 `;
@@ -100,7 +104,7 @@ try {
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], preview: ['port'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
+    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], preview: ['port'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -173,6 +177,12 @@ try {
       }, options.force);
       const { sheet, ...drawn } = image ?? {};
       console.log(JSON.stringify({ ok: true, name: after.name, edits, ...(applied.rebased && { rebased: true }), ...report, ...(written.image && { image: { ...drawn, scale: sheet.scale, file: written.image } }), ...(written.recipe && { recipe: written.recipe }), warnings: after.warnings, ...(after.clipping && { clipping: after.clipping }) }, null, 2));
+    } else if (command === 'gif') {
+      if (!options.out || !/\.gif$/i.test(options.out)) throw new Error('gif requires --out <new.gif>');
+      const input = await readResolved(positional[0]), project = renderProject(input.document);
+      const { data, ...gif } = animationGIF(project, options.animation, { ...(options.scale !== undefined && { scale: Number(options.scale) }), ...(options.background !== undefined && { background: options.background }) });
+      const written = await writeOutputs({ file: [options.out, data] }, options.force);
+      console.log(JSON.stringify({ ok: true, name: project.name, ...gif, ...written, warnings: project.warnings, ...referenced(input) }, null, 2));
     } else {
       const input = await readResolved(positional[0]);
       if (command === 'validate') console.log(JSON.stringify({ ok: true, ...summary(renderProject(input.document)), ...referenced(input) }));

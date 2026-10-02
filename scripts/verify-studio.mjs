@@ -14,7 +14,8 @@ import { NODE, readZip, sha256 } from './build-studio.mjs';
 
 const REQUIRED = ['START HERE.txt', 'PixelForge Studio.cmd', 'pixelforge.cmd', 'Connect your agent.cmd', 'first-edit.json', 'BUILD-INFO.txt', 'THIRD-PARTY-NOTICES.txt', 'runtime/node.exe', 'runtime/NODE-LICENSE.txt', 'launcher/studio.mjs', 'launcher/connect.mjs', 'app/package.json', 'app/LICENSE', 'app/bin/pixelforge.js'];
 const FORBIDDEN = ['demo', 'showcase', 'test', 'scripts', 'packaging', 'output', 'node_modules', '.git', '.github'];
-const COMMANDS = ['init', 'validate', 'inspect', 'patch', 'render'];
+const COMMANDS = ['init', 'validate', 'inspect', 'patch', 'render', 'gif'];
+const USUAL_PORT = 4748;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function tree(base, relative = '') {
   const found = [];
@@ -115,7 +116,7 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
       for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => {
         text += chunk;
         const address = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(text);
-        if (address && /Stop:/.test(text)) { clearTimeout(timer); resolve({ child, url: address[0].slice(0, -1), port: Number(address[1]), text }); }
+        if (address && /next time./.test(text)) { clearTimeout(timer); resolve({ child, url: address[0].slice(0, -1), port: Number(address[1]), text }); }
       });
       child.once('error', reject); child.once('exit', code => { clearTimeout(timer); reject(new Error(`the launcher exited with code ${code}:\n${text}`)); });
     });
@@ -135,9 +136,16 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
 
     log('Studio');
     let first, second, paths = [];
-    await check('the launcher in no-browser mode prints a loopback address and how to stop', async () => { first = await launch(); assert.match(first.text, /close this window/i); return first.url; });
-    await check('a second copy starts beside the first on another port', async () => {
-      second = await launch(); assert.notEqual(second.port, first.port);
+    // Drafts live in browser storage, which is per address, so the launcher takes its usual port whenever it is free.
+    const usualFree = await new Promise(resolve => { const probe = http.createServer(); probe.once('error', () => resolve(false)); probe.listen(USUAL_PORT, '127.0.0.1', () => probe.close(() => resolve(true))); });
+    await check('the launcher in no-browser mode prints a loopback address and how to stop', async () => {
+      first = await launch(); assert.match(first.text, /close this window/i);
+      if (usualFree) assert.equal(first.port, USUAL_PORT, 'the usual port was free but the launcher took another');
+      else assert.match(first.text, new RegExp(`Port ${USUAL_PORT} is in use`));
+      return `${first.url}${usualFree ? ', its usual port' : `; port ${USUAL_PORT} was busy, so it fell back`}`;
+    });
+    await check('a second copy starts beside the first on another port and says why', async () => {
+      second = await launch(); assert.notEqual(second.port, first.port); assert.match(second.text, new RegExp(`Port ${USUAL_PORT} is in use`));
       assert.equal(await status(first.url), 200); assert.equal(await status(second.url), 200); return second.url;
     });
     await check('it listens on 127.0.0.1 only', () => {
@@ -187,7 +195,7 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
 
     log('Command line');
     const lines = start.split(/\r?\n/).map(line => /^ {4}(\.\\pixelforge .+)$/.exec(line)?.[1]).filter(Boolean);
-    await check('START HERE gives init, validate, inspect, patch and render', () => assert.deepEqual(lines.map(line => line.split(' ')[1]), COMMANDS));
+    await check('START HERE gives init, validate, inspect, patch, render and gif', () => assert.deepEqual(lines.map(line => line.split(' ')[1]), COMMANDS));
     for (const line of lines) await check(line, () => {
       const run = cmd(line); assert.equal(run.status, 0, run.stderr || run.stdout); assert.equal(JSON.parse(run.stdout).ok, true);
     });
@@ -195,6 +203,7 @@ export async function verifyStudio({ zip, dir, pinned = true, allowDev = false, 
       assert.equal((await readFile(path.join(dir, 'hero-frames.png'))).toString('latin1', 1, 4), 'PNG');
       assert.equal(JSON.parse(await read('hero-v2.pixel.json')).palette.L, JSON.parse(await read('first-edit.json'))[0].value);
       assert.match(await read('output/hero/preview.html'), /^<!doctype html>/);
+      assert.equal((await readFile(path.join(dir, 'hero.gif'))).toString('latin1', 0, 6), 'GIF89a');
     });
     await check('a second run refuses to replace an existing file', () => {
       const run = cmd(lines[0]); assert.equal(run.status, 1); assert.equal(JSON.parse(run.stderr).ok, false);

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { createZip } from '../src/export.js';
@@ -74,15 +75,19 @@ test('a release build takes its files from the commit, whatever line endings the
   assert.deepEqual(edited.dirty, ['notes.txt', 'packaging/windows/extra.txt']); assert.equal(edited.read, undefined);
   assert.equal(dev.files.get('PixelForgeStudio-9.9.9-dev-win-x64/app/notes.txt').toString(), 'one\r\nthree\r\n');
 });
-test('the studio launcher takes a free port, serves the studio and stops cleanly', async t => {
+test('the studio launcher keeps its usual port when it can, falls back when it cannot, and stops cleanly', async t => {
   const start = () => new Promise((resolve, reject) => {
     const child = spawn(...launcher('studio.mjs', '--no-browser'), { stdio: ['ignore', 'pipe', 'pipe'] });
     let text = '';
     t.after(() => child.kill());
-    child.stdout.on('data', chunk => { text += chunk; const address = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(text); if (address) resolve({ child, url: address[0], text }); });
+    child.stdout.on('data', chunk => { text += chunk; const address = /http:\/\/127\.0\.0\.1:(\d+)\//.exec(text); if (address && /next time\./.test(text)) resolve({ child, url: address[0], port: Number(address[1]), text }); });
     child.once('error', reject); child.once('exit', code => reject(new Error(`exited with ${code}: ${text}`)));
   });
+  // Drafts are stored per address, so the same port every time is what lets a draft be found again.
+  const usualFree = await new Promise(resolve => { const probe = http.createServer(); probe.once('error', () => resolve(false)); probe.listen(4748, '127.0.0.1', () => probe.close(() => resolve(true))); });
   const first = await start(), second = await start();
+  if (usualFree) { assert.equal(first.port, 4748); assert.doesNotMatch(first.text, /is in use/); }
+  assert.notEqual(second.port, 4748); assert.match(second.text, /Port 4748 is in use, so this copy has another address/);
   assert.notEqual(first.url, second.url);
   for (const { url } of [first, second]) assert.match(await (await fetch(url)).text(), /<title>PixelForge · Sprite studio<\/title>/);
   const exits = [first, second].map(({ child }) => new Promise(resolve => child.once('exit', resolve)));

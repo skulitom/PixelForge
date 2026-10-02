@@ -152,4 +152,41 @@ with tempfile.TemporaryDirectory(prefix='pixelforge-decode-') as temporary:
             assert animated.convert('RGBA').getpixel((1, 1)) == (0, 0, 0, 0)
             assert animated.convert('RGBA').getpixel((2, 0)) == (0, 255, 0, 128)
 
-print(f'Independent decode passed: sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')
+# Decode GIFs with Pillow and compare every pixel, delay and loop flag with the rendered frames: once with
+# 1-bit transparency (alpha below 128 is clear) and once blended onto a background and scaled.
+program = """
+import { readFile } from 'node:fs/promises';
+import { renderProject } from './src/core.js';
+import { animationGIF } from './src/gif.js';
+const project = renderProject(JSON.parse(await readFile('examples/forest-spirit.json', 'utf8'))), out = {};
+for (const [name, options] of [['idle', { scale: 1 }], ['blink', { scale: 3, background: '#17191d' }]]) {
+  const gif = animationGIF(project, name, options);
+  out[name] = { data: Buffer.from(gif.data).toString('base64'), loop: gif.loop, scale: gif.scale, width: project.width, height: project.height,
+    frames: project.animations[name].frames.map(i => ({ rgba: Buffer.from(project.frames[i].data).toString('base64'), duration: project.frames[i].duration })) };
+}
+process.stdout.write(JSON.stringify(out));
+"""
+gifs = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', program], cwd=root))
+matte = (0x17, 0x19, 0x1d)
+for name, expected in gifs.items():
+    image = Image.open(io.BytesIO(base64.b64decode(expected['data'])))
+    scale, width, height = expected['scale'], expected['width'], expected['height']
+    assert image.format == 'GIF' and image.size == (width * scale, height * scale), name
+    assert image.n_frames == len(expected['frames']), name
+    assert image.info.get('loop') == (0 if expected['loop'] else None), (name, image.info.get('loop'))
+    for index, frame in enumerate(expected['frames']):
+        image.seek(index)
+        assert image.info['duration'] == frame['duration'], (name, index)
+        source = base64.b64decode(frame['rgba'])
+        decoded = image.convert('RGBA').resize((width, height), Image.Resampling.NEAREST)
+        for position, actual in enumerate(decoded.getdata()):
+            r, g, b, a = source[position * 4:position * 4 + 4]
+            if name == 'blink':
+                wanted = tuple((channel * a + back * (255 - a) + 127) // 255 for channel, back in zip((r, g, b), matte)) + (255,)
+            else:
+                wanted = (r, g, b, 255) if a >= 128 else (0, 0, 0, 0)
+            assert actual == wanted, (name, index, position, actual, wanted)
+        # Every pixel of a scaled block is the same colour: nothing was resampled.
+        assert image.convert('RGBA').tobytes() == decoded.resize(image.size, Image.Resampling.NEAREST).tobytes(), (name, index)
+
+print(f'Independent decode passed: {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')

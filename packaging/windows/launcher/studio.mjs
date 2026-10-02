@@ -1,4 +1,6 @@
-// Double-click launcher: starts the studio on a free loopback port and opens it in the default browser.
+// Double-click launcher: starts the studio on a loopback port and opens it in the default browser. It asks for the
+// same port every time, because the studio's unsaved-draft recovery lives in browser storage and browsers keep
+// storage per address. If that port is taken (a second copy, another program) it takes any free one instead.
 //   --no-browser   print the address without opening a browser (used by automated checks)
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -10,22 +12,26 @@ if (unknown.length) {
   console.error(`Unknown option: ${unknown[0]}\nUsage: "PixelForge Studio.cmd" [--no-browser]\nTo open a recipe from the command line: pixelforge preview <file.json>`);
   process.exit(1);
 }
+const USUAL_PORT = 4748;
 let server;
 try {
   const { startStudio } = await import(pathToFileURL(path.join(app, 'src', 'server.js')));
-  // Port 0 asks the system for a free port, so a second copy or another program on 4747 never blocks the start.
-  server = await startStudio({ port: 0, quiet: true });
+  // 4747 stays free for `pixelforge preview`. Port 0 asks the system for any free port.
+  server = await startStudio({ port: USUAL_PORT, quiet: true }).catch(error => { if (error.code !== 'EADDRINUSE') throw error; return startStudio({ port: 0, quiet: true }); });
 } catch (error) {
   console.error(`PixelForge Studio could not start: ${error.message}`);
   process.exit(1);
 }
-const url = `http://127.0.0.1:${server.address().port}/`;
+const url = `http://127.0.0.1:${server.address().port}/`, moved = server.address().port === USUAL_PORT ? '' : `
+Port ${USUAL_PORT} is in use, so this copy has another address. A draft kept at the usual address is not shown here.`;
+// One write, so anything reading the output sees the whole message at once.
 console.log(`PixelForge Studio ${version}
 
   Open:  ${url}
   Stop:  close this window, or press Ctrl+C.
-
-The studio runs on this computer only. There is no autosave: use "Save JSON" in the studio to keep a recipe.
+${moved}
+The studio runs on this computer only. Use "Save JSON" in the studio to keep a recipe; unsaved edits are kept
+as a draft in your browser and offered back next time.
 `);
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { server.closeAllConnections(); server.close(); console.log('PixelForge Studio stopped.'); process.exit(0); });
 

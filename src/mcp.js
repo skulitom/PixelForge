@@ -1,10 +1,11 @@
-import { readFile, mkdir, mkdtemp } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import { PixelError, MAX_REQUEST_BYTES, renderProject, inspectProject, compareProjects, scalePixels, reviewPixels } from './core.js';
 import { patchRecipe } from './patch.js';
 import { createRevisionStore } from './revisions.js';
 import { encodePNG } from './png.js';
 import { createBundle, writeBundle } from './export.js';
+import { animationGIF } from './gif.js';
 import { compilePoses, compileAutotile } from './authoring.js';
 import { compileEffects } from './fx.js';
 import { prepareScene, renderScene } from './scene.js';
@@ -52,7 +53,7 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
   const { $schema, $defs, ...projectSchema } = schema;
   const source = { project: projectSchema, revision: { type: 'string', pattern: '^[a-f0-9]{12}$', description: 'Revision id from an earlier PixelForge response. Send it instead of project to reuse that recipe, including after restarting with the same MCP --out directory.' } };
   const projectInput = { type: 'object', properties: source, additionalProperties: false, $defs };
-  const renderInput = { ...projectInput, properties: { ...source, animation: { type: 'string', description: 'Preview this animation in playback order. Default: preview every frame in project order. All animations are always exported.' }, listFiles: { type: 'boolean', description: 'List every exported file. Default: key files plus frame/animation counts.' } } };
+  const renderInput = { ...projectInput, properties: { ...source, animation: { type: 'string', description: 'Preview this animation in playback order. Default: preview every frame in project order. All animations are always exported.' }, listFiles: { type: 'boolean', description: 'List every exported file. Default: key files plus frame/animation counts.' }, gif: { type: 'object', properties: { scale: { type: 'integer', minimum: 1, maximum: 16, description: 'Default: the largest that keeps the longer side within 256 pixels.' }, background: { type: 'string', description: 'Palette name or opaque hex colour to blend onto. Default: 1-bit transparency.' } }, additionalProperties: false, description: 'Also write every animation as a GIF in gifs/ for sharing ({} for defaults). Exact colours, at most 256 per frame, never quantized; notes report alpha and timing changes.' } } };
   const coordinate = (minimum, maximum) => ({ type: 'integer', minimum, maximum });
   const inspectInput = { ...projectInput, properties: {
     ...source,
@@ -163,11 +164,17 @@ export async function startMCP({ directory = 'output', root = process.cwd(), inp
         const summary = { ok: true, revision: await remember(recipe), base: baseId, edits, ...(applied.rebased && { rebased: true }), ...report, ...(image && { image: { region: image.region, frames: image.frames, ...(image.omitted && { omitted: image.omitted }), scale: image.sheet.scale } }), warnings: after.warnings };
         result({ content: [textContent(withResolved(summary, resolved)), ...(image ? [imageContent(image.sheet)] : [])] });
       } else if (params.name === 'pixel_render') {
-        const { animation, listFiles } = options;
+        const { animation, listFiles, gif } = options;
         const { recipe, resolved } = await recipeFrom(spec, revision), bundle = await createBundle(recipe), view = inspectProject(bundle.project, { ...(animation !== undefined && { animation }), maxCells: 256 });
+        // GIFs are encoded before anything is written, so a refused GIF leaves no folder behind.
+        if (gif !== undefined && (gif === null || typeof gif !== 'object' || Array.isArray(gif))) throw new PixelError('gif', 'expected an object such as {} or { "scale": 8 }');
+        const gifs = gif === undefined ? [] : Object.keys(bundle.project.animations).map(name => animationGIF(bundle.project, name, gif));
+        if (gifs.reduce((sum, item) => sum + item.frames * item.width * item.height, 0) > 67108864) throw new PixelError('gif', 'all animations at this scale exceed 67,108,864 pixels; lower gif.scale');
         const savedRevision = await remember(recipe), out = await newFolder(bundle.project.name);
         const files = await writeBundle(bundle, out);
-        result({ content: [textContent(withResolved({ ok: true, revision: savedRevision, directory: out, ...outputSummary(out, files, listFiles === true), playback: path.join(out, 'preview.html'), preview: viewSummary(view), warnings: bundle.project.warnings }, resolved)), imageContent(view.sheet)] });
+        if (gifs.length) await mkdir(path.join(out, 'gifs'));
+        for (const item of gifs) await writeFile(path.join(out, 'gifs', `${item.animation}.gif`), item.data, { flag: 'wx' });
+        result({ content: [textContent(withResolved({ ok: true, revision: savedRevision, directory: out, ...outputSummary(out, files, listFiles === true), playback: path.join(out, 'preview.html'), ...(gifs.length && { gifs: { directory: 'gifs', count: gifs.length, scale: gifs[0].scale, width: gifs[0].width, height: gifs[0].height, ...(gifs.length <= 16 && { files: gifs.map(item => `gifs/${item.animation}.gif`) }), notes: gifs.flatMap(item => item.notes.map(text => `${item.animation}: ${text}`)).slice(0, 16) } }), preview: viewSummary(view), warnings: bundle.project.warnings }, resolved)), imageContent(view.sheet)] });
       } else if (params.name === 'pixel_compile') {
         const { document } = await resolveReferences(args.source, { baseDir: root, root });
         const format = document?.format;

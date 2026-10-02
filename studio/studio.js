@@ -1,4 +1,6 @@
 import { renderProject, buildAtlas, parseColor, reviewPixels, onionPixels, animationPosition, animationNeighbors } from '/core.js';
+import { animationGIF } from '/gif.js';
+import { createDraftStore } from '/draft.js';
 
 const $ = id => document.getElementById(id);
 const source = $('source'), canvas = $('canvas'), context = canvas.getContext('2d');
@@ -6,6 +8,10 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let project, spec, atlas, frameImages = [], selected = 0, playing = !reducedMotion, mode = 'animation';
 let position = 0;
 let elapsed = 0, lastTime = 0, zoom = 12, dirty = false, valid = false, compileTimer, toastTimer, loadVersion = 0;
+// An unsaved recipe is kept as a draft in this browser. `offer` is a draft found at start-up that the user has not
+// yet restored or discarded; until then new edits do not replace it.
+const drafts = createDraftStore((() => { try { return localStorage; } catch { return null; } })());
+let offer = null, draftTimer, draftWarned = false;
 const examples = [{ file: 'quality/skink', title: 'Lantern skink', type: 'Authored poses · 12 frames' }, { file: 'forest-spirit', title: 'Forest spirit', type: 'Character · 6 frames' }, { file: 'ember', title: 'Campfire', type: 'Effect · 4 frames' }, { file: 'coin', title: 'Golden coin', type: 'Collectible · 6 frames' }, { file: 'shrine', title: 'Moonlit shrine', type: 'Dither, rewrite, rim light · 2 frames' }, { file: 'swing', title: 'Sword swing', type: 'Rotated, tweened poses · 5 frames' }, { file: 'effects', title: 'Particle effects', type: 'Compiled fx · 57 frames' }];
 const title = name => name.replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
 function imageCanvas(data, width, height) {
@@ -102,9 +108,16 @@ function compile() {
     $('compile-status').textContent = 'Fix the recipe to update the preview'; $('export').disabled = true;
   }
 }
+function keepDraft() {
+  clearTimeout(draftTimer);
+  if (!dirty || offer) return;
+  if (!drafts.save(source.value, $('source-filename').textContent) && !draftWarned) { draftWarned = true; toast('This browser is not keeping drafts (storage is off or full). Use Save JSON.'); }
+}
+// The recipe on screen is saved or was replaced on purpose, so its draft is no longer needed.
+function settle() { dirty = false; clearTimeout(draftTimer); if (!offer) drafts.clear(); }
 function setSource(value, exampleFile) {
   loadVersion++;
-  source.value = JSON.stringify(value, null, 2); dirty = false;
+  source.value = JSON.stringify(value, null, 2); settle();
   document.querySelectorAll('.example').forEach(button => button.classList.toggle('active', button.dataset.file === exampleFile));
   compile(); playState();
 }
@@ -124,7 +137,7 @@ function setMode(next) {
   $('artboard-caption').textContent = mode === 'sheet' ? 'Export layout · transparent padding' : 'Transparent background';
   render();
 }
-source.addEventListener('input', () => { dirty = true; valid = false; $('export').disabled = true; clearTimeout(compileTimer); compileTimer = setTimeout(compile, 350); });
+source.addEventListener('input', () => { dirty = true; valid = false; $('export').disabled = true; clearTimeout(compileTimer); compileTimer = setTimeout(compile, 350); clearTimeout(draftTimer); draftTimer = setTimeout(keepDraft, 400); });
 source.addEventListener('keydown', event => {
   if (event.key === 'Tab') { event.preventDefault(); const start = source.selectionStart; source.setRangeText('  ', start, source.selectionEnd, 'end'); source.dispatchEvent(new Event('input')); }
 });
@@ -152,7 +165,22 @@ $('new').addEventListener('click', () => {
   setSource({ version: 1, name: 'new-sprite', width: 16, height: 16, palette: { g: '#72b58d' }, frames: [{ name: 'idle', duration: 150, ops: [] }] });
   source.focus();
 });
-$('save').addEventListener('click', () => { download(source.value, `${project?.name ?? 'sprite'}.pixel.json`, 'application/json'); dirty = false; toast('Project JSON saved'); });
+$('save').addEventListener('click', () => { download(source.value, `${project?.name ?? 'sprite'}.pixel.json`, 'application/json'); settle(); toast('Project JSON saved'); });
+$('gif').addEventListener('click', () => {
+  compile(); if (!valid) { toast('Fix the recipe to export a GIF.'); return; }
+  try {
+    const gif = animationGIF(project, $('animation').value, { scale: zoom });
+    download(gif.data, `${project.name}-${gif.animation}.gif`, 'image/gif');
+    toast(`GIF saved: ${gif.width} × ${gif.height} px.${gif.partialAlpha ? ` ${gif.partialAlpha} partly transparent pixels became fully transparent or opaque; the gif command can blend them onto a background.` : ''}`);
+  } catch (error) { toast(error.message); }
+});
+$('draft-restore').addEventListener('click', () => {
+  if (dirty && !confirm('Replace your edited recipe with the draft? Save JSON first if you want to keep it.')) return;
+  loadVersion++; source.value = offer.text; offer = null; $('draft').hidden = true; dirty = true;
+  document.querySelectorAll('.example').forEach(button => button.classList.remove('active'));
+  compile(); playState(); toast('Draft restored. Save JSON to keep it.');
+});
+$('draft-discard').addEventListener('click', () => { offer = null; $('draft').hidden = true; drafts.clear(); keepDraft(); });
 $('export').addEventListener('click', async () => {
   compile(); if (!valid) return;
   const button = $('export'), original = button.textContent; button.disabled = true; button.textContent = 'Packing assets…';
@@ -165,7 +193,8 @@ $('export').addEventListener('click', async () => {
 });
 addEventListener('resize', render);
 addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
-document.addEventListener('visibilitychange', () => { lastTime = 0; });
+addEventListener('pagehide', keepDraft);
+document.addEventListener('visibilitychange', () => { lastTime = 0; if (document.hidden) keepDraft(); });
 function tick(time) {
   const delta = lastTime ? time - lastTime : 0; lastTime = time;
   if (project && playing && mode === 'animation' && !document.hidden) {
@@ -185,6 +214,11 @@ async function boot() {
       strong.textContent = example.title; small.textContent = example.type; label.append(strong, small);
       button.append(thumbnail(imageCanvas(preview.frames[0].data, preview.width, preview.height), ''), label);
       button.addEventListener('click', () => loadExample(example)); $('examples').append(button);
+    }
+    offer = drafts.load();
+    if (offer) {
+      $('draft-text').textContent = `An unsaved draft of ${offer.name}, last edited ${new Date(offer.savedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}, is kept in this browser. Until you choose, new edits are not kept as a draft.`;
+      $('draft').hidden = false;
     }
     const initial = await (await fetch('/project.json')).json();
     if (initial) setSource(initial); else await loadExample(examples[0]);

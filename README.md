@@ -6,7 +6,7 @@
 
 **Text to pixels. A zero-dependency pixel art and sprite animation toolkit for AI agents and game developers.**
 
-Write a JSON recipe with palettes, text grids, reusable symbols and drawing operations. Get transparent PNGs, sprite sheets, animated PNGs, and the metadata and player needed to use them. Inspect and edit the recipe in a local browser studio.
+Write a JSON recipe with palettes, text grids, reusable symbols and drawing operations. Get transparent PNGs, sprite sheets, animated PNGs, GIFs for sharing, and the metadata and player needed to use them. Inspect and edit the recipe in a local browser studio.
 
 Zero runtime dependencies. No build step, API key, image model, network service or native graphics library. Requires **Node.js 20 or newer**. Works from a checkout on Windows, macOS and Linux.
 
@@ -34,7 +34,7 @@ cd PixelForge
 node bin/pixelforge.js preview
 ```
 
-Open **http://127.0.0.1:4747**. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open and live error messages. All assets and fonts are local.
+Open **http://127.0.0.1:4747**. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open, a GIF download of the current animation, recovery of unsaved edits and live error messages. All assets and fonts are local.
 
 Or generate an asset without opening a browser:
 
@@ -45,7 +45,7 @@ node bin/pixelforge.js inspect hero.pixel.json --out hero-frames.png
 node bin/pixelforge.js render hero.pixel.json --out output/hero
 ```
 
-`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
+`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. `gif hero.pixel.json --out hero.gif` saves one animation as a GIF for sharing. Commands return JSON; errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
 
 ## Play the local Emberfall demo
 
@@ -129,7 +129,18 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 
 APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer or custom patterns, and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
 
-Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`. See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`. See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+
+### GIF for sharing
+
+APNG keeps full alpha and exact timing, but many chat, forum and store pages only animate GIFs and cannot scale pixels crisply. `pixelforge gif` writes one animation as a GIF, enlarged by a whole number (by default the largest that keeps the longer side within 256 pixels):
+
+```sh
+node bin/pixelforge.js gif hero.pixel.json --out hero.gif
+node bin/pixelforge.js gif hero.pixel.json --animation blink --scale 8 --background "#17191d" --out hero-blink.gif
+```
+
+Colours are exact: nothing is quantized or dithered, and a frame that needs more than 256 colours is refused with an error instead of being approximated. GIF has no partial transparency, so pixels below 50% alpha become transparent and the rest opaque; `--background` (a palette name or opaque hex colour) blends every pixel onto one colour instead, which keeps soft shadows. Frame times are rounded to GIF's 10 ms steps with the remainder carried to the next frame, and raised to 20 ms where shorter. The JSON result's `notes` say which of these happened. The studio's **GIF** button downloads the current animation at the current zoom, and MCP `pixel_render` takes `"gif": {}`. The export bundle itself is unchanged.
 
 ## Connect an agent through MCP
 
@@ -165,7 +176,7 @@ The eight tools are:
 - **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location.
 - **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
-- **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Every call writes a fresh folder inside the configured output directory.
+- **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Add `"gif": {}` (or `{ "scale": 8, "background": "#17191d" }`) to also write every animation as a GIF in `gifs/`, with notes on any alpha or timing change. Every call writes a fresh folder inside the configured output directory.
 - **`pixel_compile`**: compile a `pixelforge-poses` source (including rotated parts and tweened in-betweens), a `pixelforge-autotile` template or a `pixelforge-fx` particle source into a recipe revision, with a contact sheet and optional metadata.
 - **`pixel_scene`**: render a `pixelforge-scene` manifest (tilemaps with autotile legends, sequences, trajectories, lighting) at any time, or export it; assets may be revisions.
 - **`pixel_import`**: import a native-resolution PNG, given as base64 or a file inside the server root, as a lossless recipe revision.
@@ -224,7 +235,7 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
@@ -233,9 +244,10 @@ const report = compareProjects(project, renderProject(next)); // changed pixels,
 const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
 const { recipe: effects } = compileEffects(fxSource); // seeded particles baked into an ordinary recipe
+const gif = animationGIF(project, 'idle', { scale: 8 }); // { data, width, height, notes, ... }
 ```
 
-`src/core.js`, `src/craft.js`, `src/patch.js` and `src/fx.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+`src/core.js`, `src/craft.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
 
 ## Develop and verify
 
@@ -244,13 +256,13 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and compares every pixel, delay and loop flag.
 
-The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
+The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 
 ## PixelForge Studio: a portable Windows build
 
-`scripts/build-studio.mjs` packs the toolkit, the official Node.js 24 LTS runtime for 64-bit Windows and three small launcher scripts into one ZIP for people who have no Node.js, git or administrator rights. Unzipped, `PixelForge Studio.cmd` opens the studio on a free loopback port in the default browser, `pixelforge.cmd` is the command line, and `Connect your agent.cmd` prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with that folder's paths; it never edits a configuration file. Nothing is installed, and deleting the folder removes everything.
+`scripts/build-studio.mjs` packs the toolkit, the official Node.js 24 LTS runtime for 64-bit Windows and three small launcher scripts into one ZIP for people who have no Node.js, git or administrator rights. Unzipped, `PixelForge Studio.cmd` opens the studio in the default browser on loopback port 4748, or on any free port when that one is taken (the usual port is what lets the studio's draft recovery find its draft again), `pixelforge.cmd` is the command line, and `Connect your agent.cmd` prints MCP settings for Claude Code, Claude Desktop, Codex and Cursor with that folder's paths; it never edits a configuration file. Nothing is installed, and deleting the folder removes everything.
 
 ```sh
 node scripts/build-studio.mjs           # dist/PixelForgeStudio-<version>-win-x64.zip, its .sha256 and a per-file manifest

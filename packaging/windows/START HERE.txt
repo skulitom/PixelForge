@@ -17,18 +17,23 @@ together. To remove PixelForge Studio, stop it and delete the folder.
 Double-click "PixelForge Studio.cmd".
 
 A console window opens, prints the studio's address and opens it in your
-default browser. The address looks like http://127.0.0.1:50123/ and the number
-changes on each start. The studio listens on this computer only. Close the
-console window to stop it.
+default browser. The address is normally http://127.0.0.1:4748/; if that port
+is busy, for example because a second copy is running, another one is used.
+The studio listens on this computer only. Close the console window to stop it.
 
 Windows may ask before it runs a file that came from the internet.
 "PixelForge Studio.cmd" is a short text script; you can read it in Notepad.
 
 In the studio, pick a sample on the left and edit its JSON on the right. The
 preview updates as you type. "Save JSON" downloads your recipe and "Open
-project" loads it again. There is no autosave, so save before you close the
-tab. "Export assets" downloads a ZIP with the sprite sheet, every frame, the
-animations and a preview.html that plays from disk.
+project" loads it again. "Export assets" downloads a ZIP with the sprite
+sheet, every frame, the animations and a preview.html that plays from disk.
+"GIF" downloads the current animation at the current zoom, for sharing.
+
+Unsaved edits are kept as a draft in your browser and offered back the next
+time the studio opens at the same address. The draft is a safety net, not a
+file: it is gone if you clear the browser's site data, and it is not shown
+when the studio had to use another port. Use "Save JSON" to keep your work.
 
 The studio inspects and edits recipes. It is not a paint program.
 
@@ -44,12 +49,15 @@ cmd and press Enter. The commands below work in Command Prompt and PowerShell.
     .\pixelforge inspect hero.pixel.json --out hero-frames.png
     .\pixelforge patch hero.pixel.json --changes first-edit.json --out hero-v2.pixel.json
     .\pixelforge render hero-v2.pixel.json --out output\hero
+    .\pixelforge gif hero-v2.pixel.json --out hero.gif
 
 init writes an editable copy of the forest spirit sample. validate checks it.
 inspect saves a contact sheet of every frame. patch applies the two small
 changes in first-edit.json, lists every pixel they alter and saves the result
 as a new recipe. render exports the complete asset bundle; open
-output\hero\preview.html to watch it play.
+output\hero\preview.html to watch it play. gif saves one animation as a GIF
+you can post anywhere; --scale and --background change its size or blend it
+onto a colour.
 
 Existing files are never replaced unless you add --force. Run
 ".\pixelforge help" for every command.
