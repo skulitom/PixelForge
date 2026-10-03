@@ -7,6 +7,8 @@ description: Create and revise deterministic pixel art and animations with Pixel
 
 Use this when creating pixel sprites, tiles, icons, effects or short sprite animations. PixelForge lives at the project root two directories above this skill's directory. Run its CLI with Node.js, or use its MCP tools if configured.
 
+In the portable PixelForge Studio build, run `.\pixelforge` on Windows or `./pixelforge` elsewhere from the build folder instead of `node bin/pixelforge.js`.
+
 Read `docs/agent-guide.md` before creating the first recipe. Use `schema.json` for exact field names. Begin with one of the files in `examples/` if helpful.
 
 For finished artwork, also read `docs/art-workflow.md` and the worked before/after study in `docs/art-quality-lab.md`. Establish a small art brief outside the recipe: native/display size, three silhouette landmarks, palette roles, light direction, material rules, outline treatment, action intent, contact/origin and scene role. Record the actual strengths and failures of each review. A rendered file, frame count or passing test is not evidence of artistic quality. These checkpoints do not require user permission.

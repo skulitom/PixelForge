@@ -85,6 +85,21 @@ test('the build ships exactly the files npm pack ships', async t => {
   if (packed.status !== 0) { t.skip('npm is not available'); return; }
   assert.deepEqual(await packageFiles(), JSON.parse(packed.stdout)[0].files.map(file => file.path).sort());
 });
+
+test('every relative README link and image is shipped in the portable package', async () => {
+  const readme = await readFile(path.join(root, 'README.md'), 'utf8'), shipped = await packageFiles();
+  // Inline links/images and reference definitions; a directory is shipped when it contains a packaged file.
+  const targets = [...readme.matchAll(/!?\[[^\]\n]*\]\(<?([^\s)>]+)>?(?:\s+"[^"]*")?\)/g), ...readme.matchAll(/^ {0,3}\[[^\]\n]+\]:\s*<?([^\s>]+)>?/gm)].map(match => match[1]);
+  assert.ok(targets.length > 0);
+  const missing = [];
+  for (const target of targets) {
+    if (/^(?:#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) continue;
+    const relative = path.posix.normalize(decodeURIComponent(target.split(/[?#]/)[0])).replace(/\/$/, '');
+    if (!shipped.some(file => file === relative || file.startsWith(`${relative}/`))) missing.push(target);
+  }
+  assert.deepEqual(missing, [], 'README links must resolve inside the shipped package or use an absolute URL');
+});
+
 test('the portable layout holds the package, runtime, launchers and build facts, and nothing from development', async () => {
   const build = await assembleStudio({ runtime: standIn, source }), { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   assert.equal(build.name, `PixelForgeStudio-${version}-win-x64`);
@@ -178,6 +193,27 @@ test('the connect helper prints the same server for four agents and changes noth
   const target = `pixelforge ${process.platform === 'win32' ? '"--"' : '--'} ${quoted(settings.server.command)} ${quoted(settings.server.args[0])} mcp --out ${quoted(settings.server.args[3])}`;
   assert.deepEqual(settings.clients.map(client => client.command), [`claude mcp add --scope user ${target}`, null, `codex mcp add ${target}`, null]);
   for (const client of settings.clients) if (client.command) assert.ok(text.stdout.includes(`\n${client.command}\n`), client.name);
+});
+test('the Windows connect helper pauses after failure only when started without arguments', async t => {
+  const script = await readFile(path.join(root, 'packaging', 'windows', 'Connect your agent.cmd'));
+  assert.ok(script.every(byte => byte < 128), 'the batch file must be plain ASCII');
+  assert.doesNotMatch(script.toString(), /(?<!\r)\n|\r(?!\n)/, 'the batch file must use CRLF');
+  assert.match(script.toString(), /if errorlevel 1 \(\r\n  if "%~1"=="" pause\r\n  exit \/b 1\r\n\)/);
+  if (process.platform !== 'win32') return;
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-connect-failed-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  await mkdir(path.join(dir, 'runtime'));
+  await writeFile(path.join(dir, 'runtime', 'node.exe'), standIn.exe);
+  await writeFile(path.join(dir, 'Connect your agent.cmd'), script);
+  const child = spawn('cmd.exe', ['/d', '/c', '"Connect your agent.cmd" --json'], { cwd: dir, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+  t.after(() => { child.stdin.destroy(); child.kill(); });
+  // Leave stdin open: an accidental pause cannot be satisfied by EOF.
+  const result = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { child.kill(); reject(new Error('the helper did not exit without waiting for input')); }, 5000);
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('exit', code => { clearTimeout(timer); resolve(code); });
+  });
+  assert.equal(result, 1);
 });
 test('an assembled build passes the release checks from a folder with a space and an accent', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge studio é-'));

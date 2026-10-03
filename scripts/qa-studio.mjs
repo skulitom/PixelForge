@@ -43,6 +43,7 @@ const check = async (name, run) => {
 const note = text => { notes.push(text); console.log(`  note  ${text}`); };
 
 const { startStudio } = await import(pathToFileURL(path.join(path.resolve(options.app), 'src', 'server.js')));
+const { renderProject, MAX_REQUEST_BYTES } = await import(pathToFileURL(path.join(path.resolve(options.app), 'src', 'core.js')));
 const server = await startStudio({ port: 0, quiet: true }), origin = `http://127.0.0.1:${server.address().port}`;
 const browser = spawn(program, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--disable-component-update', '--disable-sync', '--mute-audio', '--window-size=1440,900', ...options['browser-arg'], 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 let exitCode = 1, closeBrowser = null;
@@ -232,6 +233,28 @@ try {
     await studio.page('DOM.setFileInputFiles', { files: [savedRecipe], nodeId: input.nodeId });
     await until(`document.getElementById('project-name').textContent === 'Forest spirit'`, 'the opened recipe');
     assert.equal(await evaluate(`document.getElementById('source').value`), JSON.stringify(JSON.parse(edited), null, 2)); assert.match(await text('toast'), /^Opened /);
+  });
+  await check('Open project accepts a valid saved recipe larger than 2 MiB', async () => {
+    const recipe = { version: 1, name: 'large-project', width: 128, height: 128, palette: { x: '#72b58d' }, frames: Array.from({ length: 128 }, (_, i) => ({ name: `frame-${i}`, ops: [{ op: 'grid', rows: Array(128).fill('x'.repeat(128)) }] })) };
+    const rendered = renderProject(recipe), json = JSON.stringify(recipe, null, 2), bytes = Buffer.byteLength(json), file = path.join(kept, 'large-project.pixel.json');
+    assert.ok(bytes > 2 * 1024 * 1024 && bytes < MAX_REQUEST_BYTES, `fixture size: ${bytes} bytes`);
+    assert.equal(rendered.frames.length, 128);
+    await writeFile(file, json);
+    const { root: { nodeId } } = await studio.page('DOM.getDocument'), input = await studio.page('DOM.querySelector', { nodeId, selector: '#file' });
+    try {
+      await studio.page('DOM.setFileInputFiles', { files: [file], nodeId: input.nodeId });
+      await until(`document.getElementById('file').value === ''`, 'the large file to finish opening');
+      assert.equal(await text('toast'), 'Opened large-project.pixel.json', 'opening a valid large recipe must not show an error toast');
+      assert.equal(await text('project-name'), 'Large project');
+      assert.equal(await evaluate(`document.getElementById('error').hidden`), true);
+      assert.equal(await evaluate(`document.getElementById('timeline').children.length`), 128);
+      assert.deepEqual(JSON.parse(await evaluate(`document.getElementById('source').value`)), recipe);
+    } finally {
+      // Leave the saved forest spirit in place for the existing export checks.
+      await studio.page('DOM.setFileInputFiles', { files: [savedRecipe], nodeId: input.nodeId });
+      await until(`document.getElementById('project-name').textContent === 'Forest spirit'`, 'the saved recipe to be restored');
+    }
+    return `${bytes} bytes, 128 frames`;
   });
   await check('Export assets downloads a ZIP whose preview.html shows every animation from disk', async () => {
     const zip = await download(() => click('#export')), entries = readZip(await readFile(zip)), folder = path.join(kept, 'exported');

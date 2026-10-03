@@ -1,4 +1,4 @@
-import { renderProject, buildAtlas, parseColor, reviewPixels, onionPixels, animationPosition, animationNeighbors } from '/core.js';
+import { renderProject, buildAtlas, parseColor, reviewPixels, onionPixels, animationPosition, animationNeighbors, MAX_REQUEST_BYTES } from '/core.js';
 import { animationGIF } from '/gif.js';
 import { createDraftStore } from '/draft.js';
 
@@ -160,7 +160,7 @@ $('open').addEventListener('click', () => $('file').click());
 $('file').addEventListener('change', async () => {
   const file = $('file').files[0]; if (!file) return;
   try {
-    if (file.size > 2097152) throw new Error('Choose a project smaller than 2 MiB.');
+    if (file.size > MAX_REQUEST_BYTES) throw new Error(`Choose a project no larger than ${MAX_REQUEST_BYTES / (1024 * 1024)} MiB.`);
     const value = JSON.parse((await file.text()).replace(/^\uFEFF/, '')); renderProject(value);
     if (dirty && !confirm('Replace your edited recipe? Save JSON first if you want to keep it.')) return;
     setSource(value); toast(`Opened ${file.name}`);

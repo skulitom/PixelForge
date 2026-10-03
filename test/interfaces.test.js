@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import http from 'node:http';
-import { readFile, writeFile, readdir, mkdtemp, rm, access } from 'node:fs/promises';
+import { readFile, writeFile, readdir, mkdtemp, rm, access, realpath } from 'node:fs/promises';
 import { PassThrough } from 'node:stream';
 import os from 'node:os';
 import path from 'node:path';
@@ -23,6 +23,15 @@ function runMCP(directory, calls) {
   assert.equal(result.status, 0, result.stderr);
   return result.stdout.trim().split('\n').slice(1).map(line => JSON.parse(line).result);
 }
+test('CLI help describes its text output and commands for checkout and portable builds', () => {
+  const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'help'], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.ok(result.stdout.includes('Command results except help and the preview server are JSON. Errors exit with code 1.\n'));
+  assert.ok(result.stdout.includes('Checkout: node bin/pixelforge.js <command>. Portable build folder: .\\pixelforge (Windows) or ./pixelforge (macOS/Linux).\n'));
+  assert.doesNotMatch(result.stdout, /All command results except the preview server are JSON|No installation needed:/);
+});
+
 test('CLI consumes stdin, emits machine-readable diagnostics and handles unknown flags', () => {
   const result = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-'], { cwd: root, input: JSON.stringify(tiny), encoding: 'utf8' });
   assert.equal(result.status, 0); assert.equal(JSON.parse(result.stdout).frames, 1);
@@ -31,6 +40,28 @@ test('CLI consumes stdin, emits machine-readable diagnostics and handles unknown
   const flags = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-','--typo'], { cwd: root, encoding: 'utf8' });
   assert.equal(flags.status, 1); assert.match(JSON.parse(flags.stderr).error, /Unknown option/);
 });
+
+test('CLI init protects an existing recipe with an actionable JSON error and honours --force', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-init-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const file = path.join(dir, 'hero.json');
+  const run = (...args) => spawnSync(process.execPath, [path.join(root, 'bin', 'pixelforge.js'), 'init', 'hero.json', ...args], { cwd: dir, encoding: 'utf8' });
+  const first = run();
+  assert.equal(first.status, 0, first.stderr);
+  const original = await readFile(file), edited = Buffer.from(JSON.stringify({ ...JSON.parse(original), name: 'my-hero' }) + '\n');
+  await writeFile(file, edited);
+  const again = run();
+  assert.equal(again.status, 1);
+  const refused = JSON.parse(again.stderr), shown = /^Output already exists: (.+)\. Choose a new file or pass --force\.$/.exec(refused.error);
+  // The CLI names the file from its working folder, which macOS reports through /private/var, not /var.
+  assert.equal(refused.ok, false); assert.ok(shown, refused.error); assert.equal(await realpath(shown[1]), await realpath(file));
+  assert.deepEqual(await readFile(file), edited);
+  const forced = run('--force');
+  assert.equal(forced.status, 0, forced.stderr);
+  assert.deepEqual(JSON.parse(forced.stdout), { ok: true, file: 'hero.json' });
+  assert.deepEqual(await readFile(file), original);
+});
+
 test('MCP handshake, discovery, help, errors and render work over stdio', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-mcp-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });

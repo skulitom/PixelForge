@@ -22,6 +22,8 @@ Required: `version: 1`, `name`, `width`, `height`, `frames`.
 
 Use `node bin/pixelforge.js schema` for the complete JSON Schema. Unknown fields are errors so misspelled instructions do not disappear silently. Omit optional fields to use defaults; null is not accepted.
 
+In the portable PixelForge Studio build, run `.\pixelforge` on Windows or `./pixelforge` elsewhere from the build folder instead of `node bin/pixelforge.js`.
+
 ## Frames and layers
 
 A frame is `{name, duration?, from?, translate?, wrap?, flipX?, flipY?, palette?, anchor?, points?, ops?, layers?, pixels?}`.
