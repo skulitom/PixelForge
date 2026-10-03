@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import http from 'node:http';
-import { readFile, writeFile, readdir, mkdtemp, rm, access } from 'node:fs/promises';
+import { readFile, writeFile, readdir, mkdtemp, rm, access, realpath } from 'node:fs/promises';
 import { PassThrough } from 'node:stream';
 import os from 'node:os';
 import path from 'node:path';
@@ -52,7 +52,9 @@ test('CLI init protects an existing recipe with an actionable JSON error and hon
   await writeFile(file, edited);
   const again = run();
   assert.equal(again.status, 1);
-  assert.deepEqual(JSON.parse(again.stderr), { ok: false, error: `Output already exists: ${file}. Choose a new file or pass --force.` });
+  const refused = JSON.parse(again.stderr), shown = /^Output already exists: (.+)\. Choose a new file or pass --force\.$/.exec(refused.error);
+  // The CLI names the file from its working folder, which macOS reports through /private/var, not /var.
+  assert.equal(refused.ok, false); assert.ok(shown, refused.error); assert.equal(await realpath(shown[1]), await realpath(file));
   assert.deepEqual(await readFile(file), edited);
   const forced = run('--force');
   assert.equal(forced.status, 0, forced.stderr);
