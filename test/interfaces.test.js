@@ -31,6 +31,26 @@ test('CLI consumes stdin, emits machine-readable diagnostics and handles unknown
   const flags = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-','--typo'], { cwd: root, encoding: 'utf8' });
   assert.equal(flags.status, 1); assert.match(JSON.parse(flags.stderr).error, /Unknown option/);
 });
+
+test('CLI init protects an existing recipe with an actionable JSON error and honours --force', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-init-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const file = path.join(dir, 'hero.json');
+  const run = (...args) => spawnSync(process.execPath, [path.join(root, 'bin', 'pixelforge.js'), 'init', 'hero.json', ...args], { cwd: dir, encoding: 'utf8' });
+  const first = run();
+  assert.equal(first.status, 0, first.stderr);
+  const original = await readFile(file), edited = Buffer.from(JSON.stringify({ ...JSON.parse(original), name: 'my-hero' }) + '\n');
+  await writeFile(file, edited);
+  const again = run();
+  assert.equal(again.status, 1);
+  assert.deepEqual(JSON.parse(again.stderr), { ok: false, error: `Output already exists: ${file}. Choose a new file or pass --force.` });
+  assert.deepEqual(await readFile(file), edited);
+  const forced = run('--force');
+  assert.equal(forced.status, 0, forced.stderr);
+  assert.deepEqual(JSON.parse(forced.stdout), { ok: true, file: 'hero.json' });
+  assert.deepEqual(await readFile(file), original);
+});
+
 test('MCP handshake, discovery, help, errors and render work over stdio', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-mcp-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
