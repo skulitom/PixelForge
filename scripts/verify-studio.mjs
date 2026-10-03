@@ -1,8 +1,9 @@
 // Tests a built portable Studio the way a stranger's computer would run it: extracted with the system's own tool
 // into a folder whose path has a space and a non-ASCII character, with no Node.js on PATH. It checks the layout and
 // BUILD-INFO, the launcher, every studio route, the command line exactly as START HERE gives it, the MCP server
-// over stdio, the connect helper and its one-line commands, and that nothing is left running afterwards. The
-// runtime checks need the system the archive was built for; elsewhere only the contents are checked.
+// over stdio, the connect helper and its one-line commands, that nothing is written to the user's profile or temp
+// folders, and that nothing is left running afterwards. The runtime checks need the system the archive was built
+// for; elsewhere only the contents are checked.
 //   node scripts/verify-studio.mjs <PixelForgeStudio-...zip|.tar.gz> [--allow-dev] [--keep]
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
@@ -136,16 +137,25 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     for (const other of Object.values(SYSTEMS).flatMap(system => [system.studio, system.helper, ...system.scripts]).filter(name => !names.named.includes(name))) assert.ok(!start.includes(`"${other}"`), `START HERE mentions ${other}, which is not in this build`);
   });
 
+  // Everything the build itself runs gets per-user and temp folders inside an empty trap, which must stay empty: the
+  // build writes nowhere outside its own folder. PowerShell runs and this script's own helpers keep `env`, because
+  // Windows PowerShell caches module data in the profile by itself.
+  const profile = kind === host ? await mkdtemp(path.join(os.tmpdir(), 'pixelforge-profile-trap-')) : null, runEnv = { ...env };
+  if (profile) for (const key of windows ? ['USERPROFILE', 'HOME', 'APPDATA', 'LOCALAPPDATA', 'TEMP', 'TMP'] : ['HOME', 'TMPDIR', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME']) {
+    // Windows reads environment names in any case, so no second spelling may keep pointing at the real folder.
+    for (const name of Object.keys(runEnv)) if (name.toUpperCase() === key) delete runEnv[name];
+    runEnv[key] = path.join(profile, key.toLowerCase()); await mkdir(runEnv[key]);
+  }
   // The runtime checks need the system the build is for, and a machine that can run its node program.
-  const version = kind === host ? spawnSync(node, ['--version'], { env, encoding: 'utf8', windowsHide: true }) : null, runnable = version?.status === 0;
+  const version = kind === host ? spawnSync(node, ['--version'], { env: runEnv, encoding: 'utf8', windowsHide: true }) : null, runnable = version?.status === 0;
   if (kind !== host) note(`Runtime checks skipped: this is a ${info.Target} build and this machine runs ${host}.`);
   else if (!runnable) note(`Runtime checks skipped: this machine cannot run the ${info.Target} runtime (${version.error?.message ?? (version.stderr.trim() || `exit ${version.status}`)}).`);
   else {
     const shell = (line, options = {}) => windows
-      ? spawnSync(comspec, ['/d', '/s', '/c', `"${line}"`], { cwd: dir, env, encoding: 'utf8', windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options })
-      : spawnSync('/bin/sh', ['-c', line], { cwd: dir, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options });
+      ? spawnSync(comspec, ['/d', '/s', '/c', `"${line}"`], { cwd: dir, env: runEnv, encoding: 'utf8', windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options })
+      : spawnSync('/bin/sh', ['-c', line], { cwd: dir, env: runEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options });
     // Runs one of the build's own scripts with arguments, the way a terminal or a double-click starts it.
-    const script = (file, args = [], options = {}) => windows ? shell(`"${path.join(dir, file)}"${args.map(value => ` ${value}`).join('')}`, options) : spawnSync(path.join(dir, file), args, { cwd: dir, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options });
+    const script = (file, args = [], options = {}) => windows ? shell(`"${path.join(dir, file)}"${args.map(value => ` ${value}`).join('')}`, options) : spawnSync(path.join(dir, file), args, { cwd: dir, env: runEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, ...options });
     const running = () => {
       const run = windows
         ? ps('Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($env:PF_DIR, [StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { "$($_.ProcessId) $($_.Name)" }', { PF_DIR: dir + path.sep })
@@ -159,8 +169,8 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     // `dropped` is a file handed to the launcher, as Explorer does for one dragged onto it; `file` picks the script.
     const launch = (dropped, file = names.studio) => new Promise((resolve, reject) => {
       const child = windows
-        ? spawn(comspec, ['/d', '/s', '/c', `""${path.join(dir, file)}" --no-browser${dropped ? ` "${dropped}"` : ''}"`], { cwd: os.tmpdir(), env, windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
-        : spawn(path.join(dir, file), ['--no-browser', ...(dropped ? [dropped] : [])], { cwd: os.tmpdir(), env, stdio: ['ignore', 'pipe', 'pipe'] });
+        ? spawn(comspec, ['/d', '/s', '/c', `""${path.join(dir, file)}" --no-browser${dropped ? ` "${dropped}"` : ''}"`], { cwd: os.tmpdir(), env: runEnv, windowsVerbatimArguments: true, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
+        : spawn(path.join(dir, file), ['--no-browser', ...(dropped ? [dropped] : [])], { cwd: os.tmpdir(), env: runEnv, stdio: ['ignore', 'pipe', 'pipe'] });
       let text = '';
       const timer = setTimeout(() => reject(new Error(`no address within 30 seconds; output so far:\n${text}`)), 30000);
       launchers.push(child);
@@ -307,7 +317,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     });
     // The other shell people are likely to be in: PowerShell on Windows, zsh on macOS, bash on Linux.
     const other = windows ? ['PowerShell', line => spawnSync(powershell, ['-NoProfile', '-NonInteractive', '-Command', `${line}; exit $LASTEXITCODE`], { cwd: dir, env, encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })]
-      : [host === 'macos' ? 'zsh' : 'bash', line => spawnSync(host === 'macos' ? '/bin/zsh' : '/bin/bash', ['-c', line], { cwd: dir, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })];
+      : [host === 'macos' ? 'zsh' : 'bash', line => spawnSync(host === 'macos' ? '/bin/zsh' : '/bin/bash', ['-c', line], { cwd: dir, env: runEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })];
     await check(`the same commands work from ${other[0]}`, () => {
       const run = other[1](lines[1]);
       assert.equal(run.status, 0, run.stderr || String(run.error)); assert.equal(JSON.parse(run.stdout).ok, true);
@@ -317,7 +327,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       const bin = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-link-'));
       try {
         await symlink(path.join(dir, names.cli), path.join(bin, 'pixelforge'));
-        const run = spawnSync(path.join(bin, 'pixelforge'), ['validate', path.join(dir, 'hero.pixel.json')], { cwd: bin, env, encoding: 'utf8' });
+        const run = spawnSync(path.join(bin, 'pixelforge'), ['validate', path.join(dir, 'hero.pixel.json')], { cwd: bin, env: runEnv, encoding: 'utf8' });
         assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(run.stdout).ok, true);
       } finally { await rm(bin, { recursive: true, force: true }); }
     });
@@ -367,14 +377,14 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
         const to = [settings.server.command, ...settings.server.args], expected = { 'claude-code': ['mcp', 'add', '--scope', 'user', 'pixelforge', '--', ...to], codex: ['mcp', 'add', 'pixelforge', '--', ...to] };
         for (const [name, shim] of windows ? [['Command Prompt', 'cmd'], ['PowerShell', 'cmd'], ['PowerShell', 'ps1']] : [['sh', 'sh'], [other[0], 'sh']]) for (const id of ['claude-code', 'codex']) {
           await rm(seen, { force: true });
-          const run = shells[name](commands[id], { ...env, PATH: `${path.join(stand, shim)}${path.delimiter}${env.PATH}`, PF_NODE: node, PF_RECORD: record, PF_SEEN: seen });
+          const run = shells[name](commands[id], { ...(name === 'PowerShell' ? env : runEnv), PATH: `${path.join(stand, shim)}${path.delimiter}${env.PATH}`, PF_NODE: node, PF_RECORD: record, PF_SEEN: seen });
           assert.deepEqual(JSON.parse(await readFile(seen, 'utf8').catch(() => 'null')), expected[id], `${id} from ${name} through a ${shim} wrapper: ${run.stderr || run.stdout}`);
         }
       } finally { await rm(stand, { recursive: true, force: true }); }
       return windows ? 'cmd.exe and Windows PowerShell, .cmd and .ps1 wrappers' : undefined;
     });
     await check('the MCP server initialises, lists eight tools and renders over stdio on the bundled runtime', async () => {
-      const child = spawn(settings.server.command, settings.server.args, { cwd: os.tmpdir(), env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+      const child = spawn(settings.server.command, settings.server.args, { cwd: os.tmpdir(), env: runEnv, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
       let output = '', errors = '';
       child.stdout.on('data', chunk => { output += chunk; }); child.stderr.on('data', chunk => { errors += chunk; });
       const messages = [{ id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'verify-studio', version: '1' } } }, { method: 'notifications/initialized' }, { id: 2, method: 'tools/list' }, { id: 3, method: 'tools/call', params: { name: 'pixel_render', arguments: { project: JSON.parse(await read('app/examples/coin.json')) } } }];
@@ -397,13 +407,18 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       const copy = path.join(workspace, 'quarantined');
       await cp(dir, copy, { recursive: true });
       const marked = spawnSync('xattr', ['-r', '-w', 'com.apple.quarantine', `0083;${Math.floor(Date.now() / 1000).toString(16)};Safari;`, copy], { encoding: 'utf8' });
-      const run = spawnSync(path.join(copy, names.cli), ['validate', path.join(copy, 'app', 'examples', 'coin.json')], { cwd: copy, env, encoding: 'utf8', timeout: 60000 });
+      const run = spawnSync(path.join(copy, names.cli), ['validate', path.join(copy, 'app', 'examples', 'coin.json')], { cwd: copy, env: runEnv, encoding: 'utf8', timeout: 60000 });
       note(`With the download quarantine mark set (${marked.status === 0 ? 'xattr ok' : `xattr failed: ${marked.stderr.trim()}`}; Gatekeeper ${spawnSync('spctl', ['--status'], { encoding: 'utf8' }).stdout.trim() || 'status unknown'}), the command line ${run.status === 0 ? 'ran normally' : `did not run: ${run.error?.message ?? run.signal ?? (run.stderr.trim().split('\n').pop() || `exit ${run.status}`)}`}. This runner has no screen, so it shows nothing about the prompts a person would see.`);
       await rm(copy, { recursive: true, force: true });
     }
+    await check('nothing was written to the profile or temp folders every program was given', async () => {
+      const written = await tree(profile);
+      assert.equal(written.length, 0, `files written outside the folder (${written.length}):\n${written.slice(0, 20).join('\n')}`);
+    });
     if (workspace && !keep) await check('deleting the folder removes everything', async () => { await rm(workspace, { recursive: true }); await assert.rejects(access(workspace)); workspace = null; });
   }
   if (toolbox) await rm(toolbox, { recursive: true, force: true }).catch(() => {});
+  if (profile) await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }).catch(() => {});
   if (workspace && !keep) await rm(workspace, { recursive: true, force: true }).catch(() => {});
   if (workspace && keep) note(`Kept ${workspace}`);
   const failed = results.filter(result => !result.ok), complete = kind === host && runnable;
