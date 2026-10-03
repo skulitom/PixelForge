@@ -47,8 +47,8 @@ Sequence writes one PNG per video frame with alpha, plus sequence.json and a REA
 (the largest that fits, or --scale; --fit cover takes the smallest that covers the canvas and crops the rest) and
 placed by --align (top-left ... bottom-right) and --offset. A scene's margins take its background colour. --step 2
 animates on twos. Rates such as 23.976 and 29.97 are exact (24000/1001, 30000/1001).
-All command results except the preview server are JSON. Errors exit with code 1.
-No installation needed: node bin/pixelforge.js <command>
+Command results except help and the preview server are JSON. Errors exit with code 1.
+Checkout: node bin/pixelforge.js <command>. Portable build folder: .\\pixelforge (Windows) or ./pixelforge (macOS/Linux).
 `;
 
 function parseArgs(args) {

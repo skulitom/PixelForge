@@ -23,6 +23,15 @@ function runMCP(directory, calls) {
   assert.equal(result.status, 0, result.stderr);
   return result.stdout.trim().split('\n').slice(1).map(line => JSON.parse(line).result);
 }
+test('CLI help describes its text output and commands for checkout and portable builds', () => {
+  const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'help'], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.ok(result.stdout.includes('Command results except help and the preview server are JSON. Errors exit with code 1.\n'));
+  assert.ok(result.stdout.includes('Checkout: node bin/pixelforge.js <command>. Portable build folder: .\\pixelforge (Windows) or ./pixelforge (macOS/Linux).\n'));
+  assert.doesNotMatch(result.stdout, /All command results except the preview server are JSON|No installation needed:/);
+});
+
 test('CLI consumes stdin, emits machine-readable diagnostics and handles unknown flags', () => {
   const result = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-'], { cwd: root, input: JSON.stringify(tiny), encoding: 'utf8' });
   assert.equal(result.status, 0); assert.equal(JSON.parse(result.stdout).frames, 1);
