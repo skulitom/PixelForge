@@ -194,6 +194,27 @@ test('the connect helper prints the same server for four agents and changes noth
   assert.deepEqual(settings.clients.map(client => client.command), [`claude mcp add --scope user ${target}`, null, `codex mcp add ${target}`, null]);
   for (const client of settings.clients) if (client.command) assert.ok(text.stdout.includes(`\n${client.command}\n`), client.name);
 });
+test('the Windows connect helper pauses after failure only when started without arguments', async t => {
+  const script = await readFile(path.join(root, 'packaging', 'windows', 'Connect your agent.cmd'));
+  assert.ok(script.every(byte => byte < 128), 'the batch file must be plain ASCII');
+  assert.doesNotMatch(script.toString(), /(?<!\r)\n|\r(?!\n)/, 'the batch file must use CRLF');
+  assert.match(script.toString(), /if errorlevel 1 \(\r\n  if "%~1"=="" pause\r\n  exit \/b 1\r\n\)/);
+  if (process.platform !== 'win32') return;
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-connect-failed-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  await mkdir(path.join(dir, 'runtime'));
+  await writeFile(path.join(dir, 'runtime', 'node.exe'), standIn.exe);
+  await writeFile(path.join(dir, 'Connect your agent.cmd'), script);
+  const child = spawn('cmd.exe', ['/d', '/c', '"Connect your agent.cmd" --json'], { cwd: dir, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+  t.after(() => { child.stdin.destroy(); child.kill(); });
+  // Leave stdin open: an accidental pause cannot be satisfied by EOF.
+  const result = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { child.kill(); reject(new Error('the helper did not exit without waiting for input')); }, 5000);
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('exit', code => { clearTimeout(timer); resolve(code); });
+  });
+  assert.equal(result, 1);
+});
 test('an assembled build passes the release checks from a folder with a space and an accent', async t => {
   const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge studio é-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); });
