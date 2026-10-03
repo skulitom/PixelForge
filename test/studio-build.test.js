@@ -85,6 +85,21 @@ test('the build ships exactly the files npm pack ships', async t => {
   if (packed.status !== 0) { t.skip('npm is not available'); return; }
   assert.deepEqual(await packageFiles(), JSON.parse(packed.stdout)[0].files.map(file => file.path).sort());
 });
+
+test('every relative README link and image is shipped in the portable package', async () => {
+  const readme = await readFile(path.join(root, 'README.md'), 'utf8'), shipped = await packageFiles();
+  // Inline links/images and reference definitions; a directory is shipped when it contains a packaged file.
+  const targets = [...readme.matchAll(/!?\[[^\]\n]*\]\(<?([^\s)>]+)>?(?:\s+"[^"]*")?\)/g), ...readme.matchAll(/^ {0,3}\[[^\]\n]+\]:\s*<?([^\s>]+)>?/gm)].map(match => match[1]);
+  assert.ok(targets.length > 0);
+  const missing = [];
+  for (const target of targets) {
+    if (/^(?:#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(target)) continue;
+    const relative = path.posix.normalize(decodeURIComponent(target.split(/[?#]/)[0])).replace(/\/$/, '');
+    if (!shipped.some(file => file === relative || file.startsWith(`${relative}/`))) missing.push(target);
+  }
+  assert.deepEqual(missing, [], 'README links must resolve inside the shipped package or use an absolute URL');
+});
+
 test('the portable layout holds the package, runtime, launchers and build facts, and nothing from development', async () => {
   const build = await assembleStudio({ runtime: standIn, source }), { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   assert.equal(build.name, `PixelForgeStudio-${version}-win-x64`);

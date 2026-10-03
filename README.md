@@ -57,9 +57,9 @@ npm run play
 
 Open **http://127.0.0.1:4173** and choose **Begin adventure** or **Watch it play**. The game runs entirely in the browser with no runtime dependencies. It is currently a local preview; hosting is intentionally deferred.
 
-![Emberfall's moonlit forest and spell effects](demo/preview.png)
+![Emberfall's moonlit forest and spell effects](https://raw.githubusercontent.com/skulitom/PixelForge/main/demo/preview.png)
 
-[Demo details and controls](demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md) · [PixelForge art-quality roadmap](docs/reports/pixelforge-art-quality-roadmap.md)
+[Demo details and controls](https://github.com/skulitom/PixelForge/blob/main/demo/README.md) · [Stress-test findings and bug reports](docs/bugreports/emberfall-stress-test.md) · [PixelForge art-quality roadmap](docs/reports/pixelforge-art-quality-roadmap.md)
 
 ## Tidewatch: a top-down showcase
 
@@ -71,9 +71,9 @@ npm run play:tidewatch
 
 Open **http://127.0.0.1:4180**.
 
-![Tidewatch at night: the relit lighthouse sweeps its beam over the sea](showcase/tidewatch/screens/night.png)
+![Tidewatch at night: the relit lighthouse sweeps its beam over the sea](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/tidewatch/screens/night.png)
 
-[Showcase details](showcase/tidewatch/README.md) · [Findings report: bugs and missing features](docs/reports/tidewatch-showcase-report.md)
+[Showcase details](https://github.com/skulitom/PixelForge/blob/main/showcase/tidewatch/README.md) · [Findings report: bugs and missing features](docs/reports/tidewatch-showcase-report.md)
 
 ## For agents
 
@@ -309,7 +309,7 @@ node scripts/build-studio.mjs --target all --check  # rebuild and compare with t
 node scripts/verify-studio.mjs dist/PixelForgeStudio-<version>-<target>.zip   # or .tar.gz
 ```
 
-Any machine can build any target; each archive comes with its `.sha256` and a per-file manifest. An archive holds exactly the files `npm pack` ships (under `app/`), the runtime, and the files for its system from [packaging](packaging): no demos, tests or development scripts. The runtimes are pinned in the build script by version and SHA-256, downloaded from nodejs.org on the first build (36 to 58 MB each, cached in `dist/.cache`; `--node-archive <file>` uses a copy you already have) and included unmodified; a mismatch stops the build. `BUILD-INFO.txt` inside names the PixelForge version, the source commit, the target and the runtime's hashes. A build refuses uncommitted changes to shipped files unless `--allow-dirty` marks it as a development build, and a release build takes every shipped file from the commit itself rather than the working copy. One commit gives the same file list and per-file hashes anywhere. Where a runtime is pinned for the building machine the packing runs under that runtime, and the archives then come out byte-identical whichever system builds them: every CI runner (Windows, Linux on x64 and ARM64, and macOS) builds all five and prints their hashes.
+Any machine can build any target; each archive comes with its `.sha256` and a per-file manifest. An archive holds exactly the files `npm pack` ships (under `app/`), the runtime, and the files for its system from [packaging](https://github.com/skulitom/PixelForge/blob/main/packaging): no demos, tests or development scripts. The runtimes are pinned in the build script by version and SHA-256, downloaded from nodejs.org on the first build (36 to 58 MB each, cached in `dist/.cache`; `--node-archive <file>` uses a copy you already have) and included unmodified; a mismatch stops the build. `BUILD-INFO.txt` inside names the PixelForge version, the source commit, the target and the runtime's hashes. A build refuses uncommitted changes to shipped files unless `--allow-dirty` marks it as a development build, and a release build takes every shipped file from the commit itself rather than the working copy. One commit gives the same file list and per-file hashes anywhere. Where a runtime is pinned for the building machine the packing runs under that runtime, and the archives then come out byte-identical whichever system builds them: every CI runner (Windows, Linux on x64 and ARM64, and macOS) builds all five and prints their hashes.
 
 `verify-studio.mjs` extracts an archive with the system's own tool into a folder whose path has a space and a non-ASCII character, and runs it with no Node.js or git on `PATH`: the launcher (several copies, loopback only, every studio route, foreign Host and Origin refused, export, a recipe handed to it), the commands exactly as `START HERE.txt` gives them in two shells, the MCP server over stdio, the helper's output and its one-line commands, execute permissions and line endings, and that no process is left behind. It needs the system the archive is for; elsewhere it checks the contents only and says so. The Tests workflow builds, rebuilds and verifies each archive on a runner of its own system (the Intel Mac build through Rosetta on an Apple silicon runner), then runs the test suite on the bundled runtime and walks the extracted build's studio in the runner's browser. On the macOS runner the command line also runs with the download quarantine mark set. No runner has a person at the screen: the prompts Windows and macOS show for downloaded files, a double-click and a real browser are not exercised there.
 
