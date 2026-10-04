@@ -120,7 +120,8 @@ const vector = (minimum, maximum, description) => ({ ...pairOf(num(minimum, maxi
 const emitter = object({
   name: id, at: vector(-4096, 4096, 'Spawn centre [x, y] in canvas pixels.'), area: { ...pairOf(int(1, 256)), description: 'Spawn box [w, h] centred on at; default [1, 1].' },
   burst: int(1, 1024, 'Particles spawned at start (each cycle when looping).'), rate: num(0.001, 64, 'Particles per frame from start until end.'),
-  start: int(0, 255, 'Frame of the burst or first spawn; default 0.'), end: int(1, 256, 'Frame where a rate emitter stops; default the last.'),
+  start: { oneOf: [int(0, 255), id], description: 'Frame of the burst or first spawn, or the name of a timeline cue (the frame it starts); default 0.' },
+  end: { oneOf: [int(1, 256), id], description: 'Frame where a rate emitter stops, or a timeline cue; default after the last frame.' },
   life: { oneOf: [int(1, 256), pairOf(int(1, 256))], description: 'Frames a particle lives; [min, max] picks per particle. Required to loop or dissolve; otherwise particles live to the end.' },
   angle: range(-3600, 3600, 'Launch direction in degrees, clockwise: 0 right, 90 down, 270 up. Default [0, 360].'), speed: range(0, 64, 'Launch speed in pixels per frame; default 0.'),
   gravity: vector(-8, 8, 'Acceleration [x, y] added each frame.'), drag: num(0, 1, 'Share of velocity lost each frame.'),
@@ -134,13 +135,26 @@ const emitter = object({
   dissolve: num(0, 1, 'Share of the life, at its end, during which the particle thins out through an ordered-dither pattern.'),
   pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dissolve pattern, as for the dither operation: bayer2, bayer4 (default), bayer8 or a matrix of ranks, e.g. [[0, 1, 2], [1, 2, 0], [2, 0, 1]] for diagonal stripes.' }
 }, ['at', 'shapes']);
+const timeline = {
+  ...object({
+    length: int(1, 60000, 'Milliseconds; the frames end exactly here.'),
+    rate: num(1, 120, 'Frames per second. Each span between cues gets a whole number of near-equal frames, so every cue starts a frame.'),
+    times: { ...array(int(0, 59999), 256), minItems: 1, description: 'Instead of a rate: the start of every frame in milliseconds, from 0, increasing, including every cue time.' },
+    cues: { type: 'object', maxProperties: 64, propertyNames: id, additionalProperties: { oneOf: [int(0, 59999), object({ time: int(0, 59999), at: { ...point, description: 'Optional [x, y]: the frame the cue starts gets a point of this name, exported to the atlas.' } }, ['time'])] },
+      description: 'Named moments in milliseconds, such as { "impact": 500 }; each starts a frame. Emitters can start or end at a cue by name; the compile metadata lists each cue\'s time and frame.' }
+  }, ['length']),
+  oneOf: [{ required: ['rate'] }, { required: ['times'] }],
+  description: 'Frames from a game\'s own timing instead of frames and duration. Emitter values stay per frame (speed in pixels per frame, life in frames), so a different rate changes particle motion in time; the length and cue times do not change.'
+};
 const fx = {
   $schema: schema.$schema, title: 'PixelForge particle effects',
   description: 'Seeded particle emitters compiled into an ordinary recipe: one frame sequence and animation per effect (frames <effect>-0, <effect>-1…), drawn with stamp, grid and line operations on these symbols. Deterministic for a given seed.',
   ...object({ format: { const: 'pixelforge-fx' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), palette: schema.properties.palette,
     symbols: { type: 'object', minProperties: 1, propertyNames: id, additionalProperties: ref('rows') }, anchor: schema.properties.anchor,
-    effects: { type: 'object', minProperties: 1, maxProperties: 64, propertyNames: id, additionalProperties: object({ frames: int(1, 256), duration: { oneOf: [int(1, 60000), array(int(1, 60000), 256)], description: 'Milliseconds per frame, or one per frame; default 100.' },
-      loop: { type: 'boolean', description: 'Seamless loop: the simulation warms up so particles in flight at frame 0 are those alive at the end. Needs a finite life.' }, seed: int(0, 2147483647, 'Default 1.'), emitters: { ...array(emitter, 16), minItems: 1 } }, ['frames', 'emitters']) },
+    effects: { type: 'object', minProperties: 1, maxProperties: 64, propertyNames: id, additionalProperties: {
+      ...object({ frames: int(1, 256), duration: { oneOf: [int(1, 60000), array(int(1, 60000), 256)], description: 'Milliseconds per frame, or one per frame; default 100.' }, timeline,
+        loop: { type: 'boolean', description: 'Seamless loop: the simulation warms up so particles in flight at frame 0 are those alive at the end. Needs a finite life.' }, seed: int(0, 2147483647, 'Default 1.'), emitters: { ...array(emitter, 16), minItems: 1 } }, ['emitters']),
+      oneOf: [{ required: ['frames'], not: { required: ['timeline'] } }, { required: ['timeline'], not: { anyOf: [{ required: ['frames'] }, { required: ['duration'] }] } }] } },
     sheet: schema.properties.sheet
   }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: schema.$defs
 };

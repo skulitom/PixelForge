@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderProject } from '../src/core.js';
+import { renderProject, buildAtlas } from '../src/core.js';
 import { compilePoses } from '../src/authoring.js';
 import { compileEffects } from '../src/fx.js';
 import { prepareScene, renderScene } from '../src/scene.js';
@@ -83,6 +83,47 @@ test('effect sources fail early with paths an agent can act on', () => {
   assert.throws(() => compileEffects({ ...effects(one), effects: { spark: one, Spark: one } }), error => error.path === 'fx.effects.Spark' && /ignoring case/.test(error.message));
   assert.throws(() => compileEffects(effects({ frames: 4, duration: [1, 2], emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] })), /one duration or 4/);
   assert.throws(() => compileEffects({ ...effects({ frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }), effects: { a: { frames: 200, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] }, b: { frames: 100, emitters: [{ at: [1, 1], burst: 1, shapes: ['dot'] }] } } }), /at most 256/);
+});
+
+test('timelines put frames on a game\'s milliseconds, start emitters at cues and carry cue points to the atlas', () => {
+  const { recipe, metadata } = compileEffects(effects({ timeline: { length: 1300, rate: 12, cues: { impact: { time: 500, at: [12, 20] }, settle: 900 } }, seed: 2, emitters: [
+    { name: 'hit', at: [12, 20], burst: 3, start: 'impact', speed: 1, life: 3, shapes: ['dot'] },
+    { name: 'smoke', at: [12, 20], rate: 1, start: 'impact', end: 'settle', life: 2, shapes: ['warm'] }] }));
+  const durations = recipe.frames.map(frame => frame.duration);
+  assert.deepEqual(durations, [83, 84, 83, 83, 84, 83, ...Array(10).fill(80)]);
+  assert.equal(durations.reduce((a, b) => a + b), 1300);
+  assert.deepEqual(metadata.effects.burst.timeline, { length: 1300, cues: { impact: { time: 500, frame: 'burst-6', at: [12, 20] }, settle: { time: 900, frame: 'burst-11' } } });
+  // Nothing spawns before the impact frame; the rate emitter runs from impact up to, not including, settle.
+  assert.ok(opsOf(recipe).slice(0, 6).every(ops => !ops.length));
+  assert.equal(opsOf(recipe)[6].length, 4);
+  assert.deepEqual(metadata.effects.burst.emitters, [{ name: 'hit', spawned: 3, maxAlive: 3 }, { name: 'smoke', spawned: 5, maxAlive: 2 }]);
+  assert.deepEqual(recipe.frames[6].points, { impact: [12, 20] });
+  assert.deepEqual(buildAtlas(renderProject(recipe)).metadata.frames['burst-6'].points, { impact: { x: 12, y: 20 } });
+  // Explicit start times work too; a cue must be one of them.
+  const timed = compileEffects(effects({ timeline: { length: 300, times: [0, 50, 100, 200], cues: { hit: 100 } }, emitters: [{ at: [4, 4], burst: 1, start: 'hit', shapes: ['dot'] }] }));
+  assert.deepEqual(timed.recipe.frames.map(frame => frame.duration), [50, 50, 100, 100]);
+  assert.deepEqual(opsOf(timed.recipe).map(ops => ops.length), [0, 0, 1, 1]);
+  // A timeline loops like any other effect.
+  const looped = compileEffects(effects({ timeline: { length: 800, rate: 10 }, loop: true, emitters: [{ at: [12, 20], rate: 1, angle: 270, speed: 1, life: 4, shapes: ['dot'] }] }));
+  assert.deepEqual(opsOf(looped.recipe).map(ops => ops.length), Array(8).fill(4));
+});
+
+test('timeline mistakes fail with paths an agent can act on', () => {
+  const bad = (effect, path, pattern) => assert.throws(() => compileEffects(effects(effect)), error => error.path === path && pattern.test(error.message));
+  const emitters = [{ at: [1, 1], burst: 1, shapes: ['dot'] }];
+  bad({ frames: 4, timeline: { length: 100, rate: 10 }, emitters }, 'fx.effects.burst.timeline', /not both/);
+  bad({ emitters }, 'fx.effects.burst', /frames .*or a timeline/);
+  bad({ timeline: { length: 100, rate: 10, times: [0] }, emitters }, 'fx.effects.burst.timeline', /exactly one of rate/);
+  bad({ timeline: { length: 300, times: [0, 100, 200], cues: { hit: 150 } }, emitters }, 'fx.effects.burst.timeline.cues.hit', /150 ms does not start a frame.*100 and 200/);
+  bad({ timeline: { length: 300, times: [10, 100] }, emitters }, 'fx.effects.burst.timeline.times[0]', /starts at 0/);
+  bad({ timeline: { length: 300, times: [0, 100, 100] }, emitters }, 'fx.effects.burst.timeline.times[2]', /increase/);
+  bad({ timeline: { length: 300, rate: 10, cues: { hit: 300 } }, emitters }, 'fx.effects.burst.timeline.cues.hit', /0 to 299/);
+  bad({ timeline: { length: 300, rate: 10, cues: { hit: { time: 100, at: [1.5, 0] } } }, emitters }, 'fx.effects.burst.timeline.cues.hit.at', /integer/);
+  bad({ timeline: { length: 60000, rate: 120 }, emitters }, 'fx.effects.burst.timeline', /at most 256/);
+  bad({ timeline: { length: 300, rate: 10, cues: { Aux: 100 } }, emitters }, 'fx.effects.burst.timeline.cues.Aux', /reserved/);
+  bad({ timeline: { length: 300, rate: 10, cues: { hit: 100 } }, emitters: [{ ...emitters[0], start: 'boom' }] }, 'fx.effects.burst.emitters[0].start', /unknown cue "boom".*hit/);
+  bad({ frames: 4, emitters: [{ ...emitters[0], start: 'hit' }] }, 'fx.effects.burst.emitters[0].start', /no timeline cues/);
+  bad({ timeline: { length: 300, rate: 10, cues: { early: 100, late: 200 } }, emitters: [{ at: [1, 1], rate: 1, start: 'late', end: 'early', shapes: ['dot'] }] }, 'fx.effects.burst.emitters[0].end', /cue early starts frame 1, which is not after/);
 });
 
 const armSource = poses => ({ format: 'pixelforge-poses', version: 1, name: 'arm', width: 16, height: 16, palette: { a: '#f00', b: '#00f', c: '#0f0' },

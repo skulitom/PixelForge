@@ -3,14 +3,15 @@
 // A meteor strike written the way a game's draw loop states it (seconds, floating-point positions, radii and heat),
 // rendered twice from that one description: a smooth Canvas-style reference with additive glow and alpha, and a pixel
 // version whose "glow adapter" maps heat onto an authored palette ramp in seeded clusters and writes an ordinary
-// version-1 recipe. The recipe validates, inspects, patches and exports with the existing CLI.
+// version-1 recipe through rampRows from src/craft.js. The recipe validates, inspects, patches and exports with the
+// existing CLI.
 //
 //   node scripts/prototype-code-first-fx.mjs --out output/code-first-fx [--radius 40] [--force]
 //
 // Writes meteor.recipe.json, compare.apng (smooth left, pixel right, 30 fps) and compare.png (five key moments).
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { random, sinDeg, cosDeg } from '../src/craft.js';
+import { random, sinDeg, cosDeg, rampRows, frameStarts } from '../src/craft.js';
 import { renderProject, scalePixels } from '../src/core.js';
 import { encodePNG, encodeAPNG } from '../src/png.js';
 import { formatJSON } from '../src/export.js';
@@ -47,7 +48,7 @@ function scene(t) {
     const u = t / FALL, [hx, hy] = fallAt(u), [px, py] = fallAt(Math.max(0, u - 0.18));
     const dx = hx - px, dy = hy - py, len = length(dx, dy) || 1, tail = 9 + 26 * u;
     shapes.push({ kind: 'marker', x: IMPACT[0], y: IMPACT[1], rx: R, ry: R * SQUASH, heat: 0.3 + 0.2 * u });
-    shapes.push({ kind: 'streak', x1: hx, y1: hy, x2: hx - dx / len * tail, y2: hy - dy / len * tail, w1: 2.2, w2: 0.5, h1: 0.92, h2: 0.3, flicker: true });
+    shapes.push({ kind: 'streak', x1: hx, y1: hy, x2: hx - dx / len * tail, y2: hy - dy / len * tail, w1: 2.2, w2: 0.5, h1: 0.92, h2: 0.3 });
     shapes.push({ kind: 'glow', x: hx, y: hy, r: 2.2, heat: 1.1 });
     shapes.push({ kind: 'glow', x: hx, y: hy, r: 6.5, heat: 0.42, halo: true });
     for (const e of EMBERS) {
@@ -60,8 +61,8 @@ function scene(t) {
     const a = t - FALL, [cx, cy] = IMPACT, ring = R * (0.25 + 0.75 * easeOut(clamp01(a / 0.32)));
     // A flash and a molten pool at contact, then a ring that thins and cools as it spreads, leaving a scorch mark.
     if (a < 0.2) shapes.push({ kind: 'glow', x: cx, y: cy - 1, r: 3 + 5 * easeOut(a / 0.2), squash: 0.6, heat: 1.15 * (1 - a / 0.2) });
-    if (a < 0.16) shapes.push({ kind: 'disc', x: cx, y: cy, rx: ring, ry: ring * SQUASH, heat: 0.72 * (1 - a / 0.16), flicker: true });
-    shapes.push({ kind: 'ring', x: cx, y: cy, rx: ring, ry: ring * SQUASH, thick: lerp(3.2, 1.1, clamp01(a / 0.45)), heat: 0.86 * (1 - smooth(clamp01((a - 0.05) / 0.6))), flicker: true });
+    if (a < 0.16) shapes.push({ kind: 'disc', x: cx, y: cy, rx: ring, ry: ring * SQUASH, heat: 0.72 * (1 - a / 0.16) });
+    shapes.push({ kind: 'ring', x: cx, y: cy, rx: ring, ry: ring * SQUASH, thick: lerp(3.2, 1.1, clamp01(a / 0.45)), heat: 0.86 * (1 - smooth(clamp01((a - 0.05) / 0.6))) });
     shapes.push({ kind: 'scorch', x: cx, y: cy, rx: R, ry: R * SQUASH, thick: 1.6, amount: clamp01((a - 0.16) / 0.12) * (1 - smooth(clamp01((a - 0.4) / 0.4))) });
     for (const s of SPARKS) {
       if (a > s.life) continue;
@@ -97,15 +98,14 @@ function sample(s, x, y) {
   return 0;
 }
 function field(shapes, x, y) {
-  let heat = 0, scorch = 0, marker = 0, flicker = false;
+  let heat = 0, scorch = 0, marker = 0;
   for (const s of shapes) {
     const v = sample(s, x, y);
-    if (!v) continue;
     if (s.kind === 'scorch') scorch = Math.max(scorch, v);
     else if (s.kind === 'marker') marker = Math.max(marker, v);
-    else if (v > heat) { heat = v; flicker = !!s.flicker; }
+    else heat = Math.max(heat, v);
   }
-  return { heat, scorch, marker, flicker };
+  return { heat, scorch, marker };
 }
 
 // ---- Renderer 1: the smooth draw loop (anti-aliased colour, additive bloom, alpha) --------------------------------
@@ -139,31 +139,19 @@ function smoothFrame(t, S) {
 }
 
 // ---- Renderer 2: the pixel adapter -------------------------------------------------------------------------------------
-// Heat becomes palette steps rather than alpha: a glow ends in hard bands, a fade cools down the ramp, and seeded
-// two-pixel clusters break up the too-regular geometry. No ordered dither: on fire it reads as a screen pattern.
-const RAMP = ['d', 'r', 'o', 'y', 'w'], FLOOR = 0.2, BREAKUP = 0.55, CLUSTER = 2;
+// rampRows turns heat into palette steps rather than alpha: a glow ends in hard bands, a fade cools down the ramp, and
+// seeded two-pixel clusters break up the too-regular geometry. Fire reseeds every pose, so it flickers; the scorch keeps
+// one seed, so as it fades the same clumps go first instead of thinning to a checkerboard. No ordered dither: on fire
+// it reads as a screen pattern.
 const PALETTE = { d: '#7a1a2c', r: '#d23a3c', o: '#f46a40', y: '#f8b468', w: '#fff0cc', s: '#462630', S: '#5e2632', m: '#6a2434' };
+const FIRE = { ramp: ['d', 'r', 'o', 'y', 'w'], floor: 0.2, breakup: 0.55, cluster: 2 };
+const SCORCH = { ramp: ['s', 's', 'S'], floor: 0.4, breakup: 1, cluster: 2, seed: 1 };
 function pixelLayers(t, frame) {
-  const shapes = scene(t), fire = [], scorch = [];
-  for (let y = 0; y < H; y++) {
-    let row = '', mark = '';
-    for (let x = 0; x < W; x++) {
-      const f = field(shapes, x + 0.5, y + 0.5), cx = Math.floor(x / CLUSTER), cy = Math.floor(y / CLUSTER);
-      let heat = f.heat;
-      if (heat > 0) {
-        // Flickering fire reshuffles its clusters every frame; everything else keeps one stable breakup.
-        const seed = f.flicker ? frame : 0, n = 0.65 * random(31, seed, cx, cy) + 0.35 * random(32, seed, x, y);
-        heat *= 1 + (n - 0.5) * 2 * BREAKUP;
-      }
-      const step = heat <= 0 ? -1 : Math.min(RAMP.length - 1, Math.floor((heat - FLOOR) / (1 - FLOOR) * RAMP.length));
-      row += step >= 0 ? RAMP[step] : '.';
-      // A fading mark loses whole clusters, the same ones first, instead of thinning to a checkerboard.
-      const keep = f.scorch > 0.12 && 0.75 * random(41, cx, cy) + 0.25 * random(42, x, y) < f.scorch;
-      mark += keep ? (f.scorch > 0.6 && random(43, cx, y) < 0.45 ? 'S' : 's') : '.';
-    }
-    fire.push(row); scorch.push(mark);
-  }
-  return { fire, scorch };
+  const shapes = scene(t), at = Array.from({ length: W * H }, (_, i) => field(shapes, i % W + 0.5, Math.floor(i / W) + 0.5));
+  return {
+    fire: rampRows(W, H, (x, y) => at[y * W + x].heat, { ...FIRE, seed: frame }),
+    scorch: rampRows(W, H, (x, y) => at[y * W + x].scorch, SCORCH)
+  };
 }
 function crop(rows) {
   let x0 = W, y0 = H, x1 = -1, y1 = -1;
@@ -172,9 +160,10 @@ function crop(rows) {
 }
 
 // Pixel timing: about 12 poses a second instead of the draw loop's 60, with boundaries on the game's own times, so the
-// contact frame starts at exactly FALL and the last pose ends at FALL + AFTERMATH. Contact gets two quick 50 ms poses.
+// contact frame starts at exactly FALL and the last pose ends at FALL + AFTERMATH. The fall uses frameStarts; contact
+// gets two quick 50 ms poses chosen by hand.
 const fallMs = FALL * 1000, endMs = (FALL + AFTERMATH) * 1000;
-const MS = [...Array.from({ length: 6 }, (_, k) => Math.round(k * fallMs / 6)), ...[0, 50, 100, 167, 250, 333, 417, 500, 583, 667, 750].map(ms => fallMs + ms), endMs];
+const MS = [...frameStarts(fallMs, 12), ...[0, 50, 100, 167, 250, 333, 417, 500, 583, 667, 750].map(ms => fallMs + ms), endMs];
 // Thin strokes are not sampled from the field (they break into dashes); they use the renderer's own ellipse.
 const marker = { op: 'ellipse', x: IMPACT[0] - Math.round(R), y: IMPACT[1] - Math.round(R * SQUASH), w: 2 * Math.round(R) + 1, h: 2 * Math.round(R * SQUASH) + 1, color: 'm', filled: false };
 const frames = MS.slice(0, -1).map((ms, i) => {

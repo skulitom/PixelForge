@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderProject, analyzeProject } from '../src/core.js';
 import { patchRecipe } from '../src/patch.js';
 import { createOverlay, applyOverlay } from '../src/overlays.js';
-import { cleanupIds, rotateRows, ease, EASINGS, sinDeg, cosDeg, ditherThreshold } from '../src/craft.js';
+import { cleanupIds, rotateRows, ease, EASINGS, sinDeg, cosDeg, ditherThreshold, rampRows, rampProblem, frameStarts } from '../src/craft.js';
 
 const palette = { r: '#f00', b: '#00f', g: '#0f0', k: '#000', s: '#888', m: '#0a0' };
 const names = new Map(Object.entries(palette).map(([key, hex]) => [renderProject({ version: 1, name: 'p', width: 1, height: 1, palette, frames: [{ name: 'a', ops: [{ op: 'pixel', color: hex }] }] }).frames[0].data.join(), key]));
@@ -144,4 +144,67 @@ test('easing presets start at 0, end at 1 and keep their character', () => {
   assert.ok(ease('in', 0.5) < 0.5 && ease('out', 0.5) > 0.5 && ease('inOut', 0.5) === 0.5);
   assert.ok(Math.max(...Array.from({ length: 99 }, (_, i) => ease('overshoot', (i + 1) / 100))) > 1);
   assert.ok(Math.abs(ease('bounce', 1 / 2.75) - 1) < 1e-12);
+});
+
+test('heat ramps band a field onto palette keys and leave the floor and empty space transparent', () => {
+  const gradient = x => x / 9;
+  // Equal bands above the floor, open below and closed above; heat at 1 or more is the hottest key.
+  assert.deepEqual(rampRows(10, 1, gradient, { ramp: ['a', 'b', 'c'] }), ['.aaabbbccc']);
+  assert.deepEqual(rampRows(10, 1, gradient, { ramp: ['a', 'b', 'c'], floor: 0.4 }), ['....aabbcc']);
+  // A repeated key widens its band; anything that is not a positive number is transparent.
+  assert.deepEqual(rampRows(4, 1, x => [0.5, 2, NaN, -1][x], { ramp: ['a', 'a', 'b'] }), ['ab..']);
+  // sample receives canvas pixels, shifted by origin.
+  const seen = [];
+  rampRows(2, 2, (x, y) => { seen.push([x, y]); return 1; }, { ramp: ['a'], origin: [5, -3] });
+  assert.deepEqual(seen, [[5, -3], [6, -3], [5, -2], [6, -2]]);
+  // Dither mixes neighbouring bands through the canvas-anchored pattern.
+  assert.deepEqual(rampRows(4, 2, () => 0.5, { ramp: ['a', 'b'], dither: 1, pattern: [[0, 1], [1, 0]] }), ['abab', 'baba']);
+});
+
+test('heat ramp breakup is seeded, clustered, anchored to the canvas and erodes the same clumps first', () => {
+  const disc = (x, y) => Math.max(0, 1 - ((x - 15.5) * (x - 15.5) + (y - 15.5) * (y - 15.5)) / 200);
+  const options = { ramp: ['a', 'b', 'c', 'd'], floor: 0.1, breakup: 0.6, cluster: 2, seed: 4 };
+  const whole = rampRows(32, 32, disc, options);
+  assert.deepEqual(rampRows(32, 32, disc, { ...options }), whole);
+  assert.notDeepEqual(rampRows(32, 32, disc, { ...options, seed: 5 }), whole);
+  assert.notDeepEqual(rampRows(32, 32, disc, { ...options, breakup: 0 }), whole);
+  // Breakup never paints where the field is empty.
+  whole.forEach((row, y) => [...row].forEach((key, x) => { if (disc(x, y) <= 0) assert.equal(key, '.'); }));
+  // Areas sampled separately line up with one large sample.
+  assert.deepEqual(rampRows(10, 6, disc, { ...options, origin: [12, 20] }), whole.slice(20, 26).map(row => row.slice(12, 22)));
+  // A fainter field only removes pixels, and keeps the clumps whose noise was highest.
+  const strong = rampRows(32, 32, disc, { ...options, ramp: ['a'] }), faint = rampRows(32, 32, (x, y) => disc(x, y) * 0.4, { ...options, ramp: ['a'] });
+  const count = rows => rows.join('').split('a').length - 1;
+  assert.ok(count(faint) < count(strong));
+  faint.forEach((row, y) => [...row].forEach((key, x) => { if (key === 'a') assert.equal(strong[y][x], 'a'); }));
+  // Clusters make horizontal neighbours agree more often than per-pixel noise does.
+  const flat = cluster => rampRows(64, 64, () => 0.5, { ramp: ['a', 'b', 'c', 'd'], breakup: 1, cluster, seed: 9 });
+  const agree = rows => rows.reduce((sum, row) => sum + [...row].slice(1).filter((key, i) => key === row[i]).length, 0);
+  assert.ok(agree(flat(2)) > agree(flat(1)) * 1.3);
+});
+
+test('heat ramp options are checked with paths an agent can act on', () => {
+  assert.equal(rampProblem({ ramp: ['a'], floor: 0.2, breakup: 1, cluster: 3, seed: 7, dither: 0.5, pattern: 'bayer8', origin: [-4, 9] }), null);
+  assert.deepEqual(rampProblem({ ramp: [] }), ['.ramp', 'expected 1–64 palette keys, coolest first']);
+  assert.equal(rampProblem({ ramp: ['a', 'bb'] })[0], '.ramp[1]');
+  assert.equal(rampProblem({ ramp: ['a'], clusters: 2 })[0], '.clusters');
+  assert.equal(rampProblem({ ramp: ['a'], pattern: [[0, 5]] })[0], '.pattern[0][1]');
+  for (const [key, value] of [['floor', 1], ['breakup', 1.5], ['cluster', 0], ['seed', -1], ['dither', 2], ['origin', [0.5, 0]]]) assert.equal(rampProblem({ ramp: ['a'], [key]: value })[0], `.${key}`);
+  assert.throws(() => rampRows(4, 4, () => 1, { ramp: ['.'] }), /rampRows: options\.ramp\[0\]: expected one grid character/);
+  assert.throws(() => rampRows(0, 4, () => 1, { ramp: ['a'] }), /width and height/);
+  assert.throws(() => rampRows(4, 4, 'hot', { ramp: ['a'] }), /sample must be a function/);
+});
+
+test('frame starts put every cue on a frame boundary and end exactly at the length', () => {
+  assert.deepEqual(frameStarts(1300, 12, [500]), [0, 83, 167, 250, 333, 417, 500, 580, 660, 740, 820, 900, 980, 1060, 1140, 1220]);
+  // An off-grid cue reshapes the spans around it; order and repeats of cues do not matter.
+  assert.deepEqual(frameStarts(1300, 12, [450]).slice(3, 8), [270, 360, 450, 535, 620]);
+  assert.deepEqual(frameStarts(1000, 10, [500, 200, 500]), frameStarts(1000, 10, [200, 500]));
+  assert.ok(frameStarts(1000, 10, [200, 500]).includes(200));
+  // Every span gets at least one frame, and frames never shrink below a millisecond.
+  assert.deepEqual(frameStarts(100, 1, [40]), [0, 40]);
+  assert.deepEqual(frameStarts(5, 1000), [0, 1, 2, 3, 4]);
+  assert.throws(() => frameStarts(0, 12), /length/);
+  assert.throws(() => frameStarts(100, 0), /rate/);
+  assert.throws(() => frameStarts(100, 12, [100]), /cues/);
 });

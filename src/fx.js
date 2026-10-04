@@ -1,11 +1,12 @@
 // Particle effects compiled to ordinary, editable recipes, after Pixel Composer's particle system. A pixelforge-fx
 // source names effects; each simulates seeded emitters frame by frame and bakes every frame into stamp, grid and
 // line operations on the source's own symbols. The result inspects, patches and exports like any other version-1
-// recipe, and editing a symbol in it updates every particle drawn with it. Browser-compatible and deterministic:
-// seeded hashing and polynomial trigonometry, no Math.random.
+// recipe, and editing a symbol in it updates every particle drawn with it. An effect's frames come from a count and
+// durations, or from a millisecond timeline whose named cues (a game's impact at 500 ms) each start a frame.
+// Browser-compatible and deterministic: seeded hashing and polynomial trigonometry, no Math.random.
 import { PixelError, parseColor, renderProject } from './core.js';
 import { fields, point } from './authoring.js';
-import { patternProblem, ditherThreshold, traceLine, random, sinDeg, cosDeg } from './craft.js';
+import { patternProblem, ditherThreshold, traceLine, random, sinDeg, cosDeg, frameStarts } from './craft.js';
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -45,12 +46,21 @@ const LIMITS = { effects: 64, emitters: 16, spawned: 4096, alive: 1024, operatio
 
 function readEmitter(emitter, path, context) {
   fields(emitter, ['name', 'at', 'area', 'burst', 'rate', 'start', 'end', 'life', 'angle', 'speed', 'gravity', 'drag', 'attract', 'sway', 'floor', 'bounce', 'shapes', 'play', 'remaps', 'trail', 'dissolve', 'pattern'], path);
-  const { frames, symbols, palette, loop } = context;
+  const { frames, symbols, palette, loop, cues } = context;
   if (emitter.name !== undefined) identifier(emitter.name, `${path}.name`);
   if ((emitter.burst === undefined) === (emitter.rate === undefined)) fail(path, 'use exactly one of burst (particles at start) or rate (particles per frame)');
-  const start = integer(emitter.start ?? 0, `${path}.start`, 0, frames - 1);
+  // start and end take a frame number or the name of a timeline cue, which stands for the frame the cue starts.
+  const frameOf = (value, p) => {
+    if (typeof value !== 'string') return value;
+    const names = Object.keys(cues);
+    if (!Object.hasOwn(cues, value)) fail(p, names.length ? `unknown cue ${JSON.stringify(value)}; expected a frame number or one of ${names.join(', ')}` : 'names a cue, but this effect has no timeline cues; use a frame number');
+    return cues[value].index;
+  };
+  const start = integer(frameOf(emitter.start ?? 0, `${path}.start`), `${path}.start`, 0, frames - 1);
   if (emitter.end !== undefined && emitter.rate === undefined) fail(`${path}.end`, 'end applies to rate emitters');
-  const end = integer(emitter.end ?? frames, `${path}.end`, start + 1, frames);
+  const end = frameOf(emitter.end ?? frames, `${path}.end`);
+  if (typeof emitter.end === 'string' && end <= start) fail(`${path}.end`, `cue ${emitter.end} starts frame ${end}, which is not after the emitter's start (frame ${start})`);
+  integer(end, `${path}.end`, start + 1, frames);
   if (!Array.isArray(emitter.shapes) || !emitter.shapes.length || emitter.shapes.length > 64) fail(`${path}.shapes`, 'expected 1–64 symbol names (one sequence) or lists of them (variants picked per particle)');
   const nested = Array.isArray(emitter.shapes[0]);
   const variants = (nested ? emitter.shapes : [emitter.shapes]).map((sequence, v) => {
@@ -111,6 +121,44 @@ function readEmitter(emitter, path, context) {
     dissolve: emitter.dissolve === undefined ? 0 : number(emitter.dissolve, `${path}.dissolve`, 0, 1),
     threshold: ditherThreshold(pattern)
   };
+}
+
+// A timeline gives an effect's length in milliseconds and its frames as a rate (frames per second, spread so that every
+// cue starts a frame) or as explicit start times, which must include every cue. Returns the frame starts and, per cue,
+// its time, the frame it starts and an optional point that the compiled frame carries into the atlas.
+function readTimeline(timeline, path) {
+  if (!isObject(timeline)) fail(path, 'expected { length, rate or times, cues }');
+  fields(timeline, ['length', 'rate', 'times', 'cues'], path);
+  const length = integer(timeline.length, `${path}.length`, 1, 60000);
+  if ((timeline.rate === undefined) === (timeline.times === undefined)) fail(path, 'use exactly one of rate (frames per second) or times (the start of every frame in milliseconds)');
+  const cues = {};
+  if (timeline.cues !== undefined) {
+    if (!isObject(timeline.cues) || Object.keys(timeline.cues).length > 64) fail(`${path}.cues`, 'expected at most 64 named cues');
+    for (const [name, cue] of Object.entries(timeline.cues)) {
+      const cp = `${path}.cues.${name}`;
+      identifier(name, cp);
+      if (/^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name)) fail(cp, 'reserved filename; a cue can name an atlas point, so choose a portable name');
+      if (isObject(cue)) {
+        fields(cue, ['time', 'at'], cp);
+        cues[name] = { time: integer(cue.time, `${cp}.time`, 0, length - 1), ...(cue.at !== undefined && { at: point(cue.at, `${cp}.at`) }) };
+      } else cues[name] = { time: integer(cue, cp, 0, length - 1) };
+    }
+  }
+  let starts;
+  if (timeline.rate !== undefined) starts = frameStarts(length, number(timeline.rate, `${path}.rate`, 1, 120), Object.values(cues).map(cue => cue.time));
+  else {
+    if (!Array.isArray(timeline.times) || !timeline.times.length || timeline.times.length > 256) fail(`${path}.times`, 'expected 1–256 frame start times in milliseconds');
+    starts = timeline.times.map((time, i) => integer(time, `${path}.times[${i}]`, 0, length - 1));
+    if (starts[0] !== 0) fail(`${path}.times[0]`, 'the first frame starts at 0');
+    starts.forEach((time, i) => { if (i && time <= starts[i - 1]) fail(`${path}.times[${i}]`, 'start times must increase'); });
+    for (const [name, cue] of Object.entries(cues)) if (!starts.includes(cue.time)) {
+      const before = starts.filter(time => time < cue.time).at(-1), after = starts.find(time => time > cue.time);
+      fail(`${path}.cues.${name}`, `${cue.time} ms does not start a frame; add it to times (the nearest frames start at ${before}${after === undefined ? '' : ` and ${after}`} ms)`);
+    }
+  }
+  if (starts.length > 256) fail(path, `the timeline makes ${starts.length} frames; an effect holds at most 256, so lower the rate`);
+  for (const cue of Object.values(cues)) cue.index = starts.indexOf(cue.time);
+  return { length, starts, cues };
 }
 
 // Simulates one effect and returns its frames' operations plus counts for the metadata.
@@ -213,24 +261,40 @@ export function compileEffects(source) {
     // Effect names become animation and frame names, which must be unique ignoring case for portable bundles.
     if (seen.has(name.toLowerCase())) fail(path, 'effect names must be unique ignoring case; they name animations and frames');
     seen.add(name.toLowerCase());
-    fields(effect, ['frames', 'duration', 'loop', 'seed', 'emitters'], path);
-    const count = integer(effect.frames, `${path}.frames`, 1, 256), loop = effect.loop ?? false;
+    fields(effect, ['frames', 'duration', 'timeline', 'loop', 'seed', 'emitters'], path);
+    const loop = effect.loop ?? false;
     if (typeof loop !== 'boolean') fail(`${path}.loop`, 'expected a boolean');
-    const durations = Array.isArray(effect.duration)
-      ? (effect.duration.length === count ? effect.duration.map((d, i) => integer(d, `${path}.duration[${i}]`, 1, 60000)) : fail(`${path}.duration`, `expected one duration or ${count}`))
-      : Array(count).fill(integer(effect.duration ?? 100, `${path}.duration`, 1, 60000));
+    let count, durations, timeline = null;
+    if (effect.timeline !== undefined) {
+      if (effect.frames !== undefined || effect.duration !== undefined) fail(`${path}.timeline`, 'use frames and duration, or a timeline, not both');
+      timeline = readTimeline(effect.timeline, `${path}.timeline`);
+      count = timeline.starts.length;
+      durations = timeline.starts.map((time, i) => (timeline.starts[i + 1] ?? timeline.length) - time);
+    } else {
+      if (effect.frames === undefined) fail(path, 'expected frames (with an optional duration) or a timeline');
+      count = integer(effect.frames, `${path}.frames`, 1, 256);
+      durations = Array.isArray(effect.duration)
+        ? (effect.duration.length === count ? effect.duration.map((d, i) => integer(d, `${path}.duration[${i}]`, 1, 60000)) : fail(`${path}.duration`, `expected one duration or ${count}`))
+        : Array(count).fill(integer(effect.duration ?? 100, `${path}.duration`, 1, 60000));
+    }
     if (!Array.isArray(effect.emitters) || !effect.emitters.length || effect.emitters.length > LIMITS.emitters) fail(`${path}.emitters`, `expected 1–${LIMITS.emitters} emitters`);
-    const context = { frames: count, loop, symbols: source.symbols, palette, width, height, path };
+    const cues = timeline?.cues ?? {};
+    const context = { frames: count, loop, cues, symbols: source.symbols, palette, width, height, path };
     const emitters = effect.emitters.map((emitter, i) => readEmitter(emitter, `${path}.emitters[${i}]`, context));
     const run = simulate({ frames: count, loop, seed: integer(effect.seed ?? 1, `${path}.seed`, 0, 2147483647), emitters }, context);
     const spawned = run.stats.reduce((sum, s) => sum + s.spawned, 0);
     if (spawned > LIMITS.spawned) fail(`${path}.emitters`, `more than ${LIMITS.spawned} particles; lower burst, rate or frames`);
+    // A cue with a position becomes a named point on the frame it starts, so the atlas carries it to the game.
+    const points = Array.from({ length: count }, () => ({}));
+    for (const [cue, { index, at }] of Object.entries(cues)) if (at) points[index][cue] = at;
     const names = run.output.map((ops, i) => {
-      frames.push({ name: `${name}-${i}`, duration: durations[i], ...(ops.length && { ops }) });
+      frames.push({ name: `${name}-${i}`, duration: durations[i], ...(Object.keys(points[i]).length && { points: points[i] }), ...(ops.length && { ops }) });
       return `${name}-${i}`;
     });
     animations[name] = { frames: names, ...(!loop && { loop: false }) };
-    metadata.effects[name] = { frames: count, loop, seed: effect.seed ?? 1, operations: run.operations, culled: run.culled, emitters: run.stats };
+    metadata.effects[name] = { frames: count, loop, seed: effect.seed ?? 1,
+      ...(timeline && { timeline: { length: timeline.length, cues: Object.fromEntries(Object.entries(cues).map(([cue, { time, index, at }]) => [cue, { time, frame: names[index], ...(at && { at }) }])) } }),
+      operations: run.operations, culled: run.culled, emitters: run.stats };
   }
   if (frames.length > 256) fail('fx.effects', `the effects make ${frames.length} frames; a recipe holds at most 256`);
   const recipe = { version: 1, name: source.name, width, height, palette, symbols: source.symbols, ...(source.anchor !== undefined && { anchor: source.anchor }), frames, animations, ...(source.sheet !== undefined && { sheet: source.sheet }) };

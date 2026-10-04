@@ -176,6 +176,38 @@ Randomness is a seeded hash keyed by effect seed, emitter, spawn frame and parti
 
 The compiler makes behaviour cheap to try; it does not supply it. Give each material its own motion and shapes (fire rises and fades, stone chips arc and settle, leaves flutter), keep particle counts low enough to read at native size, and review playback. [examples/effects.fx.json](../examples/effects.fx.json) holds sparks, looping embers, landing dust, falling leaves and stone shards. Tidewatch's [effects source](../showcase/tidewatch/art/effects/fx.fx.json) shows a production set: sampled bursts for leaves and shards, a placed cluster (one emitter per puff) with a custom dissolve pattern for smoke, and hand-drawn frame sequences played by single particles.
 
+### Game timing: timelines and cues
+
+When an effect has to match the game (the hit lands at 300 ms, the whole thing lasts 900), give it a `timeline` in milliseconds instead of `frames` and `duration`:
+
+```json
+"strike": { "timeline": { "length": 900, "rate": 15, "cues": { "impact": { "time": 300, "at": [24, 36] }, "cool": 600 } }, "emitters": [
+  { "name": "sparks", "at": [24, 34], "burst": 10, "start": "impact", "angle": [200, 340], "speed": [1.6, 3], "life": [5, 8], "shapes": ["hot", "warm", "cool", "ash"] },
+  { "name": "smoulder", "at": [24, 35], "rate": 0.6, "start": "impact", "end": "cool", "life": [6, 9], "shapes": ["ember", "ember-dim", "ember-end"] } ] }
+```
+
+With `rate` (frames per second), each span between cues gets a whole number of near-equal frames, so every cue starts a frame and the frames end exactly at `length`. Use `times` instead to list the start of every frame yourself, for example two quick 50 ms frames at contact; each cue must then be one of them. An emitter's `start` and `end` take a cue's name as well as a frame number. A cue written as `{ "time": 300, "at": [24, 36] }` also puts a point of that name on the frame it starts, so the atlas carries the moment and its position to game code; the compile metadata lists every cue's time and frame. Emitter values stay per frame (speed in pixels per frame, life in frames), so a different `rate` changes how fast particles move in time while the length and cue times stay put. Retune motion after changing the rate. `strike` in [the example](../examples/effects.fx.json) lands an ember on its `impact` cue.
+
+### Effects written as code
+
+A glow, shock ring or trail that already exists as code (a function of time, as a game's draw loop states it) can become pixel art without redrawing it, as long as each smooth feature gets a pixel translation. `rampRows(width, height, sample, options)` from `src/craft.js` is that translation for heat. It calls `sample(x, y)` for every canvas pixel and returns rows for a `grid` operation or a symbol:
+
+```js
+import { rampRows, frameStarts } from './src/craft.js';
+const starts = frameStarts(1300, 12, [500]);             // the impact at 500 ms starts a frame
+const frames = starts.map((ms, i) => ({ name: `strike-${i}`, duration: (starts[i + 1] ?? 1300) - ms, ops: [{ op: 'grid', x: 0, y: 0,
+  rows: rampRows(112, 72, (x, y) => heatAt(x + 0.5, y + 0.5, ms / 1000), { ramp: ['d', 'r', 'o', 'y', 'w'], floor: 0.2, breakup: 0.55, cluster: 2, seed: i }) }] }));
+```
+
+- **Glow becomes bands.** Heat above `floor` splits into equal bands along `ramp` (palette keys, coolest first; repeat a key to widen its band). Keep white for the hottest pixels only.
+- **Fades cool.** Lower the heat and the pixels step down the ramp, then vanish, instead of turning translucent.
+- **Geometry breaks into clumps.** `breakup` scales heat by seeded noise in `cluster`-pixel cells and never paints where the field is empty. Change `seed` every frame for flicker; keep it for a mark that should lose the same pieces first as it fades.
+- **Thin lines stay primitives.** Sampled from a field, a one-pixel ring breaks into dashes; draw it with `ellipse` or `line`.
+- **Dither sparingly.** `dither` mixes neighbouring bands through an ordered `pattern`; on fire it reads as a screen pattern.
+- **Fewer frames, same moments.** Sample at about 12 frames a second rather than the draw loop's 60, on `frameStarts` boundaries or hand-picked times.
+
+Code suits energy and timing: falloff, expansion, cooling, the moment of impact. It does not design forms; keep characters and props authored. [scripts/prototype-code-first-fx.mjs](../scripts/prototype-code-first-fx.mjs) converts a meteor strike this way and [the investigation](reports/code-first-effects.md) records why each rule is there. Inspect the result and keep hand corrections as overlays: they reapply when the code is rebuilt and refuse to apply when it changed the frames they touch.
+
 ## Lossless raster return path
 
 ```sh

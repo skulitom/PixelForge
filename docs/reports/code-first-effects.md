@@ -1,6 +1,16 @@
 # Code-first effects: what a converted draw loop teaches PixelForge
 
-4 October 2026 · Baseline `d1dcb2a` (0.7.0) · Investigation and prototype only; no toolkit behaviour changed.
+4 October 2026 · Baseline `d1dcb2a` (0.7.0) · Investigation and prototype; recommendations 1 and 3 implemented in 0.8.0.
+
+## Update: heat ramps and timelines are in the toolkit
+
+Recommendations 1 and 3 below are implemented in 0.8.0:
+
+- **`rampRows` and `rampProblem` in `src/craft.js`** turn a heat field into rows of palette keys, and are exported from `src/index.js`. Heat above a floor splits into equal bands along a ramp, seeded clustered breakup never paints empty space, optional ordered dither mixes bands, and noise follows canvas coordinates. The prototype now uses it instead of its own adapter, with one seed per pose for the fire and a fixed seed for the scorch. The scorch erodes by the same rule as everything else; that needed a higher floor (0.4) to break into dashes as the inline version did.
+- **`timeline` on `pixelforge-fx` effects** replaces `frames` and `duration` with `length`, a `rate` or explicit `times`, and named `cues` in milliseconds. With a rate, every cue starts a frame and the frames end exactly at the length; explicit times must include every cue. Emitters `start` and `end` at a cue by name. A cue with `at` becomes a named frame point, which the atlas exports, and the compile metadata lists each cue's time and frame. `frameStarts` in `craft.js` computes the same frame times for generator scripts. [examples/effects.fx.json](../../examples/effects.fx.json) gains a `strike` effect: an ember lands on its `impact` cue, which starts the flash and sparks.
+
+Emitter values stay per frame, so changing a timeline's rate changes particle motion in time; converting particle physics to time units would change the format's meaning and was left out. Recommendations 2 (shape elements in `pixelforge-fx`) and 4 (a worked meteor example) remain open; [the art workflow](../art-workflow.md#effects-written-as-code) now carries the conversion rules. Numbers below are from the updated prototype.
+
 
 ## The prompt
 
@@ -36,7 +46,7 @@ PixelForge is well placed to do this better than an offline Canvas render, becau
 [`scripts/prototype-code-first-fx.mjs`](../../scripts/prototype-code-first-fx.mjs) recreates the post’s experiment inside PixelForge. A meteor strike is written as a game would write it: a function of time in seconds that returns float primitives (a glow, a tapered streak, a disc, a ring, a scorch mark, seeded embers and sparks) using the post’s numbers: 0.5 s fall, radius 40 game pixels, 0.8 s aftermath. Two renderers read that one function:
 
 1. A smooth reference: anti-aliased colour gradient, additive bloom and alpha fades, standing in for the Canvas draw loop.
-2. A pixel adapter that samples heat at native resolution (112×72), maps it onto an authored palette ramp, and writes a version-1 recipe.
+2. A pixel adapter that samples heat at native resolution (112×72), maps it onto an authored palette ramp with `rampRows`, and writes a version-1 recipe.
 
 ```sh
 node scripts/prototype-code-first-fx.mjs --out output/code-first-fx [--radius 40]
@@ -53,7 +63,7 @@ It writes `meteor.recipe.json`, `compare.apng` (smooth left, pixel right, 30 fps
 
 - **17 poses instead of 78 draw-loop frames** (1.3 s at 60 Hz). Durations are 83–84 ms (about 12 poses a second), with two 50 ms poses at contact for punch. Pose boundaries sit on the game’s own times, so the contact pose starts at exactly 500 ms and the last ends at 1300 ms. The contact pose carries an `impact` point, and every pose anchors on the impact centre.
 - **8 palette keys**: a five-step fire ramp, two scorch tones and a marker colour. Each frame has named `marker`, `scorch` and `fire` layers.
-- **An ordinary recipe of 22.8 KB** (formatted). It validates without warnings and inspects, patches, renders and exports with the existing CLI.
+- **An ordinary recipe of 22.4 KB** (formatted). It validates without warnings and inspects, patches, renders and exports with the existing CLI.
 
 ### Conversion rules the prototype established
 
@@ -63,7 +73,7 @@ The first pass looked wrong in specific ways; each fix became a rule. These are 
 | --- | --- | --- |
 | Glow and bloom (alpha falloff) | Heat mapped onto a short palette ramp, transparent below a floor (0.2 of full heat). White only at the very hottest. | Too much heat in the top band: the contact pool rendered as a white blob. |
 | Alpha fade | Cool down the ramp (white → orange → red → deep red), then erode whole clusters. | Not attempted; this is how the post’s aftermath reads too. |
-| Perfect geometry | Seeded breakup in 2-pixel clusters, multiplying heat by 0.45–1.55. Fire reshuffles its clusters every pose; ground marks keep one seed so the same pieces vanish first. | Rings and discs looked machine-perfect. |
+| Perfect geometry | Seeded breakup in 2-pixel clusters, multiplying the fire’s heat by 0.45–1.55. Fire reshuffles its clusters every pose; ground marks keep one seed so the same pieces vanish first. | Rings and discs looked machine-perfect. |
 | Thin anti-aliased strokes | The renderer’s own pixel-perfect `ellipse` (or `line`) operation, not a sampled field. | The field-sampled aiming ellipse broke into dashes with doubled corners. |
 | Ordered dither | Off for fire and for fading marks. | A scorch thinned by a Bayer threshold became an evenly spaced dot grid. Bayer 4 at the flame’s band edges added scattered single pixels without smoothing the ramp. That difference is small on enlarged sheets. |
 | 60 Hz draw loop | About 12 poses a second, with boundaries on the game’s cue times. | The post keeps the source’s update rate; fewer, held poses are the usual pixel-art choice, and recipe durations let the total stay exact. |
@@ -75,7 +85,7 @@ Three tuning passes were needed, judged by eye on contact sheets at native and e
 `inspect --diagnostics` on the generated recipe reported:
 
 - **A duplicate.** Poses 0 and 1 are identical because the game’s ease-in keeps the meteor off-canvas for the first 167 ms. That is a real authoring question the smooth version hides (do those poses earn their time?).
-- **Isolated pixels** on poses 9–15. These are the sparks, and they are intended.
+- **Isolated pixels** on poses 9–12, 14 and 15: sparks and the last scorch fragments, both intended.
 - **An empty final pose.** The effect’s lifetime ends with nothing visible.
 
 A hand correction made with `pixelforge overlay` (four painted pixels brightening the contact pose) was then reapplied to regenerated recipes:
@@ -102,9 +112,9 @@ PixelForge already has seeded hashing and polynomial trigonometry (`craft.js`), 
 
 In order. Effort is relative: small is a focused addition, medium spans compiler, schema, docs and tests.
 
-1. **A heat-ramp rasterizer in `craft.js`** (small). Something like `rampRows(width, height, sample, { ramp, floor, breakup, cluster, seed })` returning palette rows. It would be deterministic, browser-compatible, and use only the author’s palette keys. It is the reusable core of the adapter. Exporting it serves agents writing their own generator scripts, the code-first path the competitive review already prefers to an expression language.
+1. **A heat-ramp rasterizer in `craft.js`** (small; done in 0.8.0 as `rampRows`). Something like `rampRows(width, height, sample, { ramp, floor, breakup, cluster, seed })` returning palette rows. It would be deterministic, browser-compatible, and use only the author’s palette keys. It is the reusable core of the adapter. Exporting it serves agents writing their own generator scripts, the code-first path the competitive review already prefers to an expression language.
 2. **Shapes in `pixelforge-fx`** (medium). `glow`, `ring`, `streak` and `disc` elements beside emitters, with values keyed over time and eased (radius, thickness, heat), rendered through a `ramp`. Also emitters that follow a `path` or another element, and a clustered `dissolve` mode. The output stays an ordinary recipe, as now.
-3. **Millisecond timelines with cues** (small to medium). An effect would declare its length, a pose rate or explicit boundaries, and `cues` such as `{ "impact": 500 }` that are guaranteed to start a pose and are exported as points or metadata. This is the “same timing as the game” contract.
+3. **Millisecond timelines with cues** (small to medium; done in 0.8.0 as `timeline`). An effect would declare its length, a pose rate or explicit boundaries, and `cues` such as `{ "impact": 500 }` that are guaranteed to start a pose and are exported as points or metadata. This is the “same timing as the game” contract.
 4. **A worked example and guidance** (small). Add the meteor to `examples/` once 1–3 exist, and a section in [the art workflow](../art-workflow.md) with the conversion table above and the boundary: code for energy and timing, authored symbols and poses for form, then inspect and correct with overlays.
 
 Not recommended:
@@ -115,4 +125,4 @@ Not recommended:
 
 ## Limits
 
-One effect, tuned and reviewed by the same agent that built it, with no independent art review. The post’s code is unavailable, so its adapter is inferred from a compressed screen recording, and the smooth reference here is an approximation of a Canvas draw loop rather than that game’s code. The prototype uses floating-point square roots for its own fields; a toolkit version must keep `craft.js`’s determinism rules and add tests. Nothing here shows that code-first effects look better than hand-animated ones; it shows that a code-defined effect can become an editable, correctly timed PixelForge recipe, and which translation rules mattered.
+One effect, tuned and reviewed by the same agent that built it, with no independent art review. The post’s code is unavailable, so its adapter is inferred from a compressed screen recording, and the smooth reference here is an approximation of a Canvas draw loop rather than that game’s code. `rampRows` uses only integer hashing and arithmetic and is covered by tests; the prototype's own fields use `Math.sqrt`, which is correctly rounded everywhere, and `craft.js`'s polynomial trigonometry. Nothing here shows that code-first effects look better than hand-animated ones; it shows that a code-defined effect can become an editable, correctly timed PixelForge recipe, and which translation rules mattered.

@@ -402,6 +402,135 @@
           ]
         }
       ]
+    },
+    "strike": {
+      "timeline": {
+        "length": 900,
+        "rate": 15,
+        "cues": {
+          "impact": {
+            "time": 300,
+            "at": [
+              24,
+              36
+            ]
+          },
+          "cool": 600
+        }
+      },
+      "seed": 5,
+      "emitters": [
+        {
+          "at": [
+            24,
+            4
+          ],
+          "name": "fall",
+          "burst": 1,
+          "gravity": [
+            0,
+            2.13
+          ],
+          "life": 6,
+          "floor": 36,
+          "shapes": [
+            "ember-big"
+          ],
+          "trail": {
+            "color": "o",
+            "length": 2
+          }
+        },
+        {
+          "at": [
+            24,
+            34
+          ],
+          "name": "flash",
+          "burst": 1,
+          "start": "impact",
+          "life": 2,
+          "shapes": [
+            "flash-0",
+            "flash-1"
+          ],
+          "play": "once"
+        },
+        {
+          "at": [
+            24,
+            34
+          ],
+          "name": "sparks",
+          "area": [
+            3,
+            1
+          ],
+          "burst": 10,
+          "start": "impact",
+          "angle": [
+            200,
+            340
+          ],
+          "speed": [
+            1.6,
+            3
+          ],
+          "gravity": [
+            0,
+            0.3
+          ],
+          "drag": 0.04,
+          "life": [
+            5,
+            8
+          ],
+          "floor": 36,
+          "bounce": 0.3,
+          "shapes": [
+            "hot",
+            "warm",
+            "cool",
+            "ash"
+          ],
+          "trail": {
+            "color": "r",
+            "length": 1
+          }
+        },
+        {
+          "at": [
+            24,
+            35
+          ],
+          "name": "smoulder",
+          "area": [
+            8,
+            1
+          ],
+          "rate": 0.6,
+          "start": "impact",
+          "end": "cool",
+          "angle": [
+            255,
+            285
+          ],
+          "speed": [
+            0.4,
+            0.8
+          ],
+          "life": [
+            6,
+            9
+          ],
+          "shapes": [
+            "ember",
+            "ember-dim",
+            "ember-end"
+          ],
+          "dissolve": 0.3
+        }
+      ]
     }
   }
 }

@@ -85,7 +85,7 @@ Use PixelForge to create or revise pixel sprites, tiles, icons, effects and shor
 | [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
 | [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
 | [JSON Schema](schema.json) | Machine-readable recipe structure |
-| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing and a particle effects source |
+| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing and a particle effects source with a cue-timed strike |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
 Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
@@ -129,7 +129,7 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 
 APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer or custom patterns, and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
 
-Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`. See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`; an effect can run on a game's millisecond timeline, where each named cue (an impact at 300 ms) starts a frame and can travel to the atlas as a point. For effects written as code, `rampRows` maps a heat field onto a palette ramp in seeded clumps, so glows become bands and fades cool instead of turning translucent ([investigation](docs/reports/code-first-effects.md)). See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
 ### GIF for sharing
 
@@ -265,7 +265,7 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF, rampRows, frameStarts } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
@@ -275,6 +275,8 @@ const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
 const { recipe: effects } = compileEffects(fxSource); // seeded particles baked into an ordinary recipe
 const gif = animationGIF(project, 'idle', { scale: 8 }); // { data, width, height, notes, ... }
+const starts = frameStarts(1300, 12, [500]); // frame times in ms; the 500 ms cue starts a frame
+const rows = rampRows(32, 32, (x, y) => heatAt(x + 0.5, y + 0.5), { ramp: ['d', 'r', 'o', 'y'], floor: 0.2, breakup: 0.5, cluster: 2 }); // grid rows
 ```
 
 `src/core.js`, `src/craft.js`, `src/font.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
@@ -286,7 +288,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects and timelines, heat ramps, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 

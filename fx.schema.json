@@ -98,6 +98,95 @@
             ],
             "description": "Milliseconds per frame, or one per frame; default 100."
           },
+          "timeline": {
+            "type": "object",
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 60000,
+                "description": "Milliseconds; the frames end exactly here."
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 120,
+                "description": "Frames per second. Each span between cues gets a whole number of near-equal frames, so every cue starts a frame."
+              },
+              "times": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 59999
+                },
+                "maxItems": 256,
+                "minItems": 1,
+                "description": "Instead of a rate: the start of every frame in milliseconds, from 0, increasing, including every cue time."
+              },
+              "cues": {
+                "type": "object",
+                "maxProperties": 64,
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+                  "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+                },
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 59999
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "time": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 59999
+                        },
+                        "at": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": -4096,
+                            "maximum": 4096
+                          },
+                          "maxItems": 2,
+                          "minItems": 2,
+                          "description": "Optional [x, y]: the frame the cue starts gets a point of this name, exported to the atlas."
+                        }
+                      },
+                      "required": [
+                        "time"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "description": "Named moments in milliseconds, such as { \"impact\": 500 }; each starts a frame. Emitters can start or end at a cue by name; the compile metadata lists each cue's time and frame."
+              }
+            },
+            "required": [
+              "length"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "rate"
+                ]
+              },
+              {
+                "required": [
+                  "times"
+                ]
+              }
+            ],
+            "description": "Frames from a game's own timing instead of frames and duration. Emitter values stay per frame (speed in pixels per frame, life in frames), so a different rate changes particle motion in time; the length and cue times do not change."
+          },
           "loop": {
             "type": "boolean",
             "description": "Seamless loop: the simulation warms up so particles in flight at frame 0 are those alive at the end. Needs a finite life."
@@ -153,16 +242,34 @@
                   "description": "Particles per frame from start until end."
                 },
                 "start": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 255,
-                  "description": "Frame of the burst or first spawn; default 0."
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+                      "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+                    }
+                  ],
+                  "description": "Frame of the burst or first spawn, or the name of a timeline cue (the frame it starts); default 0."
                 },
                 "end": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 256,
-                  "description": "Frame where a rate emitter stops; default the last."
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+                      "description": "Portable name: do not use Windows device names (CON, PRN, AUX, NUL, COM1–9, LPT1–9). Frame/animation names must be unique ignoring case."
+                    }
+                  ],
+                  "description": "Frame where a rate emitter stops, or a timeline cue; default after the last frame."
                 },
                 "life": {
                   "oneOf": [
@@ -426,10 +533,40 @@
           }
         },
         "required": [
-          "frames",
           "emitters"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "frames"
+            ],
+            "not": {
+              "required": [
+                "timeline"
+              ]
+            }
+          },
+          {
+            "required": [
+              "timeline"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "frames"
+                  ]
+                },
+                {
+                  "required": [
+                    "duration"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     "sheet": {

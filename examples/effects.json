@@ -1207,7 +1207,232 @@
         { "op": "stamp", "symbol": "chip-a", "x": 41, "y": 28 },
         { "op": "stamp", "symbol": "chip-d", "x": 6, "y": 35 }
       ]
-    }
+    },
+    { "name": "strike-0", "duration": 60, "ops": [{ "op": "stamp", "symbol": "ember-big", "x": 23, "y": 3 }] },
+    {
+      "name": "strike-1",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 4, "x2": 24, "y2": 6, "color": "o" },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 5 }
+      ]
+    },
+    {
+      "name": "strike-2",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 4, "x2": 24, "y2": 10, "color": "o" },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 9 }
+      ]
+    },
+    {
+      "name": "strike-3",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 6, "x2": 24, "y2": 17, "color": "o" },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 16 }
+      ]
+    },
+    {
+      "name": "strike-4",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 10, "x2": 24, "y2": 25, "color": "o" },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 24 }
+      ]
+    },
+    {
+      "name": "strike-5",
+      "duration": 60,
+      "points": { "impact": [24, 36] },
+      "ops": [
+        { "op": "line", "x": 24, "y": 17, "x2": 24, "y2": 36, "color": "o" },
+        { "op": "stamp", "symbol": "ember-big", "x": 23, "y": 35 },
+        { "op": "stamp", "symbol": "flash-0", "x": 22, "y": 32 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 34 },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 34 }
+      ]
+    },
+    {
+      "name": "strike-6",
+      "duration": 60,
+      "ops": [
+        { "op": "stamp", "symbol": "flash-1", "x": 22, "y": 32 },
+        { "op": "line", "x": 24, "y": 34, "x2": 24, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 32 },
+        { "op": "line", "x": 23, "y": 34, "x2": 23, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 32 },
+        { "op": "line", "x": 25, "y": 34, "x2": 25, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 33 },
+        { "op": "line", "x": 24, "y": 34, "x2": 22, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 22, "y": 33 },
+        { "op": "line", "x": 24, "y": 34, "x2": 25, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 25, "y": 32 },
+        { "op": "line", "x": 24, "y": 34, "x2": 23, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 32 },
+        { "op": "line", "x": 24, "y": 34, "x2": 24, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 24, "y": 32 },
+        { "op": "line", "x": 25, "y": 34, "x2": 23, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 33 },
+        { "op": "line", "x": 23, "y": 34, "x2": 22, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 22, "y": 33 },
+        { "op": "line", "x": 24, "y": 34, "x2": 23, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "hot", "x": 23, "y": 33 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 35 }
+      ]
+    },
+    {
+      "name": "strike-7",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 32, "x2": 24, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 24, "y": 30 },
+        { "op": "line", "x": 23, "y": 32, "x2": 23, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 23, "y": 31 },
+        { "op": "line", "x": 25, "y": 33, "x2": 26, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 26, "y": 32 },
+        { "op": "line", "x": 22, "y": 33, "x2": 20, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 20, "y": 31 },
+        { "op": "line", "x": 25, "y": 32, "x2": 26, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 26, "y": 31 },
+        { "op": "line", "x": 23, "y": 32, "x2": 22, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 22, "y": 30 },
+        { "op": "line", "x": 24, "y": 32, "x2": 24, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 24, "y": 31 },
+        { "op": "line", "x": 23, "y": 33, "x2": 22, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 22, "y": 33 },
+        { "op": "line", "x": 22, "y": 33, "x2": 21, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 21, "y": 31 },
+        { "op": "line", "x": 23, "y": 33, "x2": 21, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 21, "y": 32 },
+        { "op": "stamp", "symbol": "ember", "x": 28, "y": 35 }
+      ]
+    },
+    {
+      "name": "strike-8",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 30, "x2": 24, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 24, "y": 29 },
+        { "op": "line", "x": 23, "y": 31, "x2": 23, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 23, "y": 30 },
+        { "op": "line", "x": 26, "y": 32, "x2": 26, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 26, "y": 31 },
+        { "op": "line", "x": 20, "y": 31, "x2": 18, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 18, "y": 31 },
+        { "op": "line", "x": 26, "y": 31, "x2": 27, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 27, "y": 30 },
+        { "op": "line", "x": 22, "y": 30, "x2": 22, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 22, "y": 29 },
+        { "op": "line", "x": 24, "y": 31, "x2": 24, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 24, "y": 30 },
+        { "op": "line", "x": 22, "y": 33, "x2": 20, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 20, "y": 33 },
+        { "op": "line", "x": 21, "y": 31, "x2": 20, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 20, "y": 31 },
+        { "op": "line", "x": 21, "y": 32, "x2": 20, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "warm", "x": 20, "y": 32 },
+        { "op": "stamp", "symbol": "ember", "x": 28, "y": 34 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 35 }
+      ]
+    },
+    {
+      "name": "strike-9",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 29, "x2": 24, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 24, "y": 28 },
+        { "op": "line", "x": 23, "y": 30, "x2": 22, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 22, "y": 29 },
+        { "op": "stamp", "symbol": "cool", "x": 26, "y": 31 },
+        { "op": "line", "x": 18, "y": 31, "x2": 16, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 16, "y": 30 },
+        { "op": "line", "x": 27, "y": 30, "x2": 27, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 27, "y": 29 },
+        { "op": "line", "x": 22, "y": 29, "x2": 21, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 21, "y": 28 },
+        { "op": "line", "x": 24, "y": 30, "x2": 24, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 24, "y": 29 },
+        { "op": "line", "x": 20, "y": 33, "x2": 19, "y2": 34, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 19, "y": 34 },
+        { "op": "line", "x": 20, "y": 31, "x2": 19, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 19, "y": 30 },
+        { "op": "line", "x": 20, "y": 32, "x2": 19, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 19, "y": 32 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 28, "y": 34 },
+        { "op": "stamp", "symbol": "ember", "x": 27, "y": 34 },
+        { "op": "stamp", "symbol": "ember", "x": 24, "y": 35 }
+      ]
+    },
+    {
+      "name": "strike-10",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 28, "x2": 24, "y2": 27, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 24, "y": 27 },
+        { "op": "line", "x": 22, "y": 29, "x2": 22, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 22, "y": 28 },
+        { "op": "line", "x": 26, "y": 31, "x2": 27, "y2": 31, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 27, "y": 31 },
+        { "op": "line", "x": 27, "y": 29, "x2": 28, "y2": 29, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 28, "y": 29 },
+        { "op": "stamp", "symbol": "cool", "x": 24, "y": 29 },
+        { "op": "line", "x": 19, "y": 34, "x2": 18, "y2": 34, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 18, "y": 34 },
+        { "op": "line", "x": 19, "y": 30, "x2": 18, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 18, "y": 30 },
+        { "op": "line", "x": 19, "y": 32, "x2": 18, "y2": 32, "color": "r" },
+        { "op": "stamp", "symbol": "cool", "x": 18, "y": 32 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 28, "y": 33 },
+        { "op": "stamp", "symbol": "ember-dim", "x": 27, "y": 34 },
+        { "op": "stamp", "symbol": "ember", "x": 24, "y": 34 }
+      ]
+    },
+    {
+      "name": "strike-11",
+      "duration": 60,
+      "ops": [
+        { "op": "line", "x": 24, "y": 27, "x2": 24, "y2": 26, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 24, "y": 26 },
+        { "op": "stamp", "symbol": "ash", "x": 22, "y": 28 },
+        { "op": "line", "x": 28, "y": 29, "x2": 29, "y2": 28, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 29, "y": 28 },
+        { "op": "stamp", "symbol": "ash", "x": 24, "y": 29 },
+        { "op": "line", "x": 18, "y": 34, "x2": 17, "y2": 35, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 17, "y": 35 },
+        { "op": "line", "x": 18, "y": 30, "x2": 17, "y2": 30, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 17, "y": 30 },
+        { "op": "line", "x": 18, "y": 32, "x2": 17, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 17, "y": 33 },
+        { "op": "grid", "x": 28, "y": 33, "rows": ["o"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 27, "y": 33 },
+        { "op": "stamp", "symbol": "ember", "x": 24, "y": 34 }
+      ]
+    },
+    {
+      "name": "strike-12",
+      "duration": 60,
+      "ops": [
+        { "op": "stamp", "symbol": "ash", "x": 24, "y": 26 },
+        { "op": "stamp", "symbol": "ash", "x": 22, "y": 28 },
+        { "op": "line", "x": 17, "y": 35, "x2": 16, "y2": 36, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 16, "y": 36 },
+        { "op": "line", "x": 17, "y": 33, "x2": 16, "y2": 33, "color": "r" },
+        { "op": "stamp", "symbol": "ash", "x": 16, "y": 33 },
+        { "op": "grid", "x": 28, "y": 33, "rows": ["r"] },
+        { "op": "stamp", "symbol": "ember-dim", "x": 25, "y": 33 }
+      ]
+    },
+    { "name": "strike-13", "duration": 60, "ops": [{ "op": "grid", "x": 25, "y": 33, "rows": ["o"] }] },
+    { "name": "strike-14", "duration": 60, "ops": [{ "op": "grid", "x": 25, "y": 32, "rows": ["r"] }] }
   ],
   "animations": {
     "sparks": {
@@ -1279,6 +1504,26 @@
         "shatter-9",
         "shatter-10",
         "shatter-11"
+      ],
+      "loop": false
+    },
+    "strike": {
+      "frames": [
+        "strike-0",
+        "strike-1",
+        "strike-2",
+        "strike-3",
+        "strike-4",
+        "strike-5",
+        "strike-6",
+        "strike-7",
+        "strike-8",
+        "strike-9",
+        "strike-10",
+        "strike-11",
+        "strike-12",
+        "strike-13",
+        "strike-14"
       ],
       "loop": false
     }

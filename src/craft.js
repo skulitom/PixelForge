@@ -1,8 +1,9 @@
 // Browser-compatible pixel-art helpers shared by the renderer, patches and authoring compilers: ordered dither,
-// cleanup of doubled corners and stray pixels, pixel-art rotation of palette grids, rewrite rules, easing and seeded
-// hashing. Several follow node designs from Pixel Composer (MIT). Everything is deterministic: integer hashing
-// instead of Math.random, and polynomial trigonometry instead of Math.sin, whose last bit may differ between engines.
-// Inputs are validated by the callers, which own the error paths. No I/O and no imports.
+// cleanup of doubled corners and stray pixels, pixel-art rotation of palette grids, rewrite rules, easing, seeded
+// hashing, heat ramps and cue-aligned frame timing. Several follow node designs from Pixel Composer (MIT). Everything
+// is deterministic: integer hashing instead of Math.random, and polynomial trigonometry instead of Math.sin, whose last
+// bit may differ between engines. Inputs are validated by the callers, which own the error paths; rampRows and
+// frameStarts, which generator scripts call directly, also check their own. No I/O and no imports.
 
 // ---- Ordered dither ----------------------------------------------------------------------------------------------
 export const DITHER_PATTERNS = ['bayer2', 'bayer4', 'bayer8'];
@@ -281,4 +282,78 @@ export function rewriteIds(ids, width, height, rules, { x = 0, y = 0, w = width,
     if (!effective) break;
   }
   return changed;
+}
+
+// ---- Heat ramps --------------------------------------------------------------------------------------------------
+// How smooth effect code becomes pixel art: a scalar field (heat, light, density) turns into rows of palette keys.
+// The range above `floor` splits into equal bands, one per `ramp` key from coolest to hottest (repeat a key to widen
+// its band); heat at 1 or more is the hottest key, and anything at or below the floor stays transparent. So a glow
+// ends in hard bands instead of alpha, and a fade cools down the ramp instead of turning translucent.
+// `breakup` scales heat by seeded noise, mostly per `cluster`-pixel cell with a little per-pixel variation so cell
+// edges stay ragged: geometric shapes break into clumps, and as heat falls the same clumps go first. It never paints
+// where the field is empty. `dither` (0–1, off by default) mixes neighbouring bands through an ordered `pattern`.
+// Noise and pattern follow canvas coordinates: `sample(x, y)` receives the canvas pixel, `origin` is the canvas
+// position of the first row's first pixel, so separately sampled areas line up. Change `seed` per frame for flicker.
+const RAMP_OPTIONS = ['ramp', 'floor', 'breakup', 'cluster', 'seed', 'dither', 'pattern', 'origin'];
+export function rampProblem(options) {
+  if (options === null || typeof options !== 'object' || Array.isArray(options)) return ['', 'expected options with a ramp of palette keys'];
+  const unknown = Object.keys(options).find(key => !RAMP_OPTIONS.includes(key));
+  if (unknown !== undefined) return [`.${unknown}`, `unknown option; expected ${RAMP_OPTIONS.join(', ')}`];
+  const { ramp, floor = 0, breakup = 0, cluster = 1, seed = 0, dither = 0, pattern = 'bayer4', origin = [0, 0] } = options;
+  const within = (value, min, max) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+  if (!Array.isArray(ramp) || !ramp.length || ramp.length > 64) return ['.ramp', 'expected 1–64 palette keys, coolest first'];
+  for (const [i, key] of ramp.entries()) if (typeof key !== 'string' || key.length !== 1 || key === '.' || key === ' ') return [`.ramp[${i}]`, 'expected one grid character other than dot or space'];
+  if (!within(floor, 0, 1) || floor === 1) return ['.floor', 'expected a number from 0 up to, but not including, 1'];
+  if (!within(breakup, 0, 1)) return ['.breakup', 'expected a number from 0 to 1'];
+  if (!Number.isInteger(cluster) || cluster < 1 || cluster > 64) return ['.cluster', 'expected a whole number of pixels from 1 to 64'];
+  if (!Number.isInteger(seed) || seed < 0 || seed > 2147483647) return ['.seed', 'expected an integer from 0 to 2147483647'];
+  if (!within(dither, 0, 1)) return ['.dither', 'expected a number from 0 to 1'];
+  const problem = patternProblem(pattern);
+  if (problem) return [`.pattern${problem[0]}`, problem[1]];
+  if (!Array.isArray(origin) || origin.length !== 2 || !origin.every(Number.isInteger)) return ['.origin', 'expected [x, y] in whole canvas pixels'];
+  return null;
+}
+export function rampRows(width, height, sample, options) {
+  if (![width, height].every(n => Number.isInteger(n) && n >= 1 && n <= 4096)) throw new RangeError('rampRows: width and height must be whole numbers from 1 to 4096');
+  if (typeof sample !== 'function') throw new TypeError('rampRows: sample must be a function (x, y) => heat');
+  const problem = rampProblem(options);
+  if (problem) throw new RangeError(`rampRows: options${problem[0]}: ${problem[1]}`);
+  const { ramp, floor = 0, breakup = 0, cluster = 1, seed = 0, dither = 0, pattern = 'bayer4', origin = [0, 0] } = options;
+  const threshold = dither ? ditherThreshold(pattern) : null, hottest = ramp.length - 1, rows = [];
+  for (let j = 0; j < height; j++) {
+    let row = '';
+    for (let i = 0; i < width; i++) {
+      const x = origin[0] + i, y = origin[1] + j;
+      let heat = sample(x, y);
+      if (!(heat > 0)) { row += '.'; continue; }
+      if (breakup) {
+        const n = cluster > 1 ? 0.65 * random(seed, 1, Math.floor(x / cluster), Math.floor(y / cluster)) + 0.35 * random(seed, 2, x, y) : random(seed, 2, x, y);
+        heat *= 1 + (n - 0.5) * 2 * breakup;
+      }
+      // Bands are open below and closed above: heat just over the floor is the coolest key.
+      let level = (heat - floor) / (1 - floor) * ramp.length;
+      if (threshold) level += (threshold(x, y) - 0.5) * dither;
+      const step = Math.min(hottest, Math.ceil(level) - 1);
+      row += step < 0 ? '.' : ramp[step];
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ---- Cue-aligned frame timing ------------------------------------------------------------------------------------
+// Start times in whole milliseconds for `length` ms of animation at about `rate` frames a second, with every cue time
+// starting a frame: each span between consecutive cues gets a whole number of near-equal frames (at least one), so a
+// game's moments (an impact at 500 ms) land on frame boundaries and the frames still end exactly at `length`.
+export function frameStarts(length, rate, cues = []) {
+  if (!Number.isInteger(length) || length < 1 || length > 3600000) throw new RangeError('frameStarts: length must be whole milliseconds from 1 to 3600000');
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0 || rate > 1000) throw new RangeError('frameStarts: rate must be above 0 and at most 1000 frames per second');
+  if (!Array.isArray(cues) || cues.some(t => !Number.isInteger(t) || t < 0 || t >= length)) throw new RangeError('frameStarts: cues must be whole milliseconds from 0 to length − 1');
+  const marks = [...new Set([0, ...cues, length])].sort((a, b) => a - b), starts = [];
+  for (let i = 0; i + 1 < marks.length; i++) {
+    // At most one frame per millisecond, so rounded starts never collide.
+    const from = marks[i], span = marks[i + 1] - from, count = Math.max(1, Math.round(span * rate / 1000));
+    for (let k = 0; k < count; k++) starts.push(from + Math.round(k * span / count));
+  }
+  return starts;
 }
