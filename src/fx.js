@@ -126,7 +126,7 @@ function readEmitter(emitter, path, context) {
 // A timeline gives an effect's length in milliseconds and its frames as a rate (frames per second, spread so that every
 // cue starts a frame) or as explicit start times, which must include every cue. Returns the frame starts and, per cue,
 // its time, the frame it starts and an optional point that the compiled frame carries into the atlas.
-function readTimeline(timeline, path) {
+export function readTimeline(timeline, path) {
   if (!isObject(timeline)) fail(path, 'expected { length, rate or times, cues }');
   fields(timeline, ['length', 'rate', 'times', 'cues'], path);
   const length = integer(timeline.length, `${path}.length`, 1, 60000);

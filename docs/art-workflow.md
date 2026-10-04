@@ -181,32 +181,56 @@ The compiler makes behaviour cheap to try; it does not supply it. Give each mate
 When an effect has to match the game (the hit lands at 300 ms, the whole thing lasts 900), give it a `timeline` in milliseconds instead of `frames` and `duration`:
 
 ```json
-"strike": { "timeline": { "length": 900, "rate": 15, "cues": { "impact": { "time": 300, "at": [24, 36] }, "cool": 600 } }, "emitters": [
+"hit": { "timeline": { "length": 900, "rate": 15, "cues": { "impact": { "time": 300, "at": [24, 36] }, "cool": 600 } }, "emitters": [
   { "name": "sparks", "at": [24, 34], "burst": 10, "start": "impact", "angle": [200, 340], "speed": [1.6, 3], "life": [5, 8], "shapes": ["hot", "warm", "cool", "ash"] },
   { "name": "smoulder", "at": [24, 35], "rate": 0.6, "start": "impact", "end": "cool", "life": [6, 9], "shapes": ["ember", "ember-dim", "ember-end"] } ] }
 ```
 
-With `rate` (frames per second), each span between cues gets a whole number of near-equal frames, so every cue starts a frame and the frames end exactly at `length`. Use `times` instead to list the start of every frame yourself, for example two quick 50 ms frames at contact; each cue must then be one of them. An emitter's `start` and `end` take a cue's name as well as a frame number. A cue written as `{ "time": 300, "at": [24, 36] }` also puts a point of that name on the frame it starts, so the atlas carries the moment and its position to game code; the compile metadata lists every cue's time and frame. Emitter values stay per frame (speed in pixels per frame, life in frames), so a different `rate` changes how fast particles move in time while the length and cue times stay put. Retune motion after changing the rate. `strike` in [the example](../examples/effects.fx.json) lands an ember on its `impact` cue.
+With `rate` (frames per second), each span between cues gets a whole number of near-equal frames, so every cue starts a frame and the frames end exactly at `length`. Use `times` instead to list the start of every frame yourself, for example two quick 50 ms frames at contact; each cue must then be one of them. An emitter's `start` and `end` take a cue's name as well as a frame number. A cue written as `{ "time": 300, "at": [24, 36] }` also puts a point of that name on the frame it starts, so the atlas carries the moment and its position to game code; the compile metadata lists every cue's time and frame. Emitter values stay per frame (speed in pixels per frame, life in frames), so a different `rate` changes how fast particles move in time while the length and cue times stay put. Retune motion after changing the rate. For timing written as code, draw loops (below) take the same `timeline`.
 
-### Effects written as code
+## Animations written as code
 
-A glow, shock ring or trail that already exists as code (a function of time, as a game's draw loop states it) can become pixel art without redrawing it, as long as each smooth feature gets a pixel translation. `rampRows(width, height, sample, options)` from `src/craft.js` is that translation for heat. It calls `sample(x, y)` for every canvas pixel and returns rows for a `grid` operation or a symbol:
+Motion is often easiest to state as code: an arc that eases, a swing that decays, squash on landing, light that flickers, a ring that spreads and cools. A game usually already has that code as a draw loop. PixelForge runs such a loop through a pixel-art Canvas 2D context and samples it on a timeline, so the same function that paints a smooth browser canvas compiles into an ordinary recipe. Nothing in the method is specific to one kind of effect.
 
 ```js
-import { rampRows, frameStarts } from './src/craft.js';
-const starts = frameStarts(1300, 12, [500]);             // the impact at 500 ms starts a frame
-const frames = starts.map((ms, i) => ({ name: `strike-${i}`, duration: (starts[i + 1] ?? 1300) - ms, ops: [{ op: 'grid', x: 0, y: 0,
-  rows: rampRows(112, 72, (x, y) => heatAt(x + 0.5, y + 0.5, ms / 1000), { ramp: ['d', 'r', 'o', 'y', 'w'], floor: 0.2, breakup: 0.55, cluster: 2, seed: i }) }] }));
+// slime.loop.mjs: ordinary canvas code plus a few fields that say how to make pixels of it.
+export default {
+  name: 'slime', width: 48, height: 48,
+  palette: { s: '#22202e', G: '#2f6b4a', g: '#4fb06a', l: '#b7f0a1', k: '#14131c' },
+  timeline: { length: 900, rate: 12, cues: { land: { time: 600, at: [24, 40] } } },
+  draw(ctx, t) {                                   // t in seconds
+    ctx.save(); ctx.translate(24.5, 40 - lift(t)); ctx.scale(squashX(t), squashY(t));
+    ctx.fillStyle = '#4fb06a'; /* path… */ ctx.fill();
+    ctx.restore();
+    ctx.point('feet', 24.5, 40 - lift(t));         // a named point on this frame, exported to the atlas
+  }
+};
 ```
 
-- **Glow becomes bands.** Heat above `floor` splits into equal bands along `ramp` (palette keys, coolest first; repeat a key to widen its band). Keep white for the hottest pixels only.
-- **Fades cool.** Lower the heat and the pixels step down the ramp, then vanish, instead of turning translucent.
-- **Geometry breaks into clumps.** `breakup` scales heat by seeded noise in `cluster`-pixel cells and never paints where the field is empty. Change `seed` every frame for flicker; keep it for a mark that should lose the same pieces first as it fades.
-- **Thin lines stay primitives.** Sampled from a field, a one-pixel ring breaks into dashes; draw it with `ellipse` or `line`.
-- **Dither sparingly.** `dither` mixes neighbouring bands through an ordered `pattern`; on fire it reads as a screen pattern.
-- **Fewer frames, same moments.** Sample at about 12 frames a second rather than the draw loop's 60, on `frameStarts` boundaries or hand-picked times.
+```sh
+node bin/pixelforge.js compile examples/slime.loop.mjs --out slime.json --metadata slime.meta.json
+node bin/pixelforge.js preview examples/lantern.loop.mjs     # every command that reads a recipe also reads a loop
+```
 
-Code suits energy and timing: falloff, expansion, cooling, the moment of impact. It does not design forms; keep characters and props authored. [scripts/prototype-code-first-fx.mjs](../scripts/prototype-code-first-fx.mjs) converts a meteor strike this way and [the investigation](reports/code-first-effects.md) records why each rule is there. Inspect the result and keep hand corrections as overlays: they reapply when the code is rebuilt and refuse to apply when it changed the frames they touch.
+![Two draw loops, each drawn twice from the same module: smooth in a browser canvas above, pixel art through PixelForge below. A lantern swings with a banded glow; a slime crouches, jumps and lands.](images/draw-loops.png)
+
+*[examples/lantern.loop.mjs](../examples/lantern.loop.mjs) and [examples/slime.loop.mjs](../examples/slime.loop.mjs): the browser's Canvas 2D above, PixelForge below, at the same moments.*
+
+The context keeps the drawing calls (paths, arcs, ellipses, curves, rectangles, transforms, save and restore, clip, gradients, shadows, `globalAlpha`, `lighter` and `destination-out`, `fillText`, `drawImage`) and translates what pixel art cannot use:
+
+- **No anti-aliasing.** Fills take the pixels whose centres are inside. Strokes under 1.5 pixels are one pixel wide: a pixel is lit when the path crosses the diamond inscribed in it, and pixels that only fill the inside of an L are dropped, independently of drawing direction, so mirrored paths give mirrored pixels. Wider strokes take the pixels within half the width (round joins). Like crisp canvas code, put one-pixel lines and symmetric shapes on pixel centres (`x + 0.5`).
+- **Palette keys, never quantization.** A CSS colour (`#hex`, `rgb()`, `hsl()`) that equals an opaque palette colour uses that key; `colors` maps any other colour text to a key (`{ "orange": "o" }`). Unmapped colours fail the compile together, with how often each was drawn. Palette keys can be used directly as styles too.
+- **Soft values become pixel decisions.** Alpha, gradient stops and shadow blur give each pixel a coverage. A solid key dithers by coverage through `pattern` (`soft: "threshold"` draws at half coverage and above instead). A gradient between two solid keys hands over through the same pattern.
+- **Light on ramps.** Keys listed in `ramps` (coolest first) behave as light: coverage scales a key's level, `lighter` adds levels up, and the result bands along the ramp above its `floor` (0.1 by default). A radial glow ends in hard rings, a fading key cools down the ramp instead of turning translucent, and a shadow in a ramp colour is a banded glow. `breakup` and `cluster` break the bands into seeded clumps; `flicker: true` reseeds them every frame. A solid key drawn on top covers the light.
+- **Sprites stay authored.** `drawImage` takes a symbol name or `{ rows }` of palette keys. It resizes by nearest neighbour, mirrors exactly, turns quarter turns exactly and other angles by RotSprite to the nearest degree, and places on whole pixels. Draw forms as sprites and give code the motion: the lantern's body is a symbol; the swing, rope and light are code.
+- **Time is sampled, not streamed.** `timeline` takes `length`, `rate` or `times`, and `cues`, exactly as for particle effects: about 12 frames a second instead of the loop's 60, with every cue starting a frame and the frames ending at `length`. `draw(ctx, t, { ms, frame, duration })` gets the moment in seconds.
+- **Game handoff.** `ctx.point(name, x, y)` puts a named point on the frame; a cue with `at` does the same for its frame. Both reach the atlas. `ctx.layer(name)` sends what follows to a named recipe layer for inspection with `--layers`.
+
+`units` maps drawing units to pixels, so code written for a larger game canvas can be compiled at native size (`units: 0.5` halves every coordinate, radius and blur), and `snap: true` rounds translations to whole pixels so a shape moved with `translate` keeps identical pixels. Calls a browser canvas has but the pixel context does not (`getImageData`, patterns, filters, dashes, conic gradients, `arcTo`, `Path2D`) are errors naming the call, never silent no-ops; `lineCap`, `lineJoin`, image smoothing and similar settings are accepted and ignored.
+
+Draw loops are code, so they run on your machine through the CLI or `compileLoop` from `src/drawloop.js`; the MCP server does not execute them. Pass the compiled recipe to MCP tools. For deterministic output across JavaScript engines, use `sinDeg`, `cosDeg`, `ease` and `random` from `src/craft.js` instead of `Math.sin` and `Math.random` in the loop. `rampRows` and `frameStarts` from the same file are the ramp and timing steps on their own, for generator scripts that build recipes directly.
+
+Code suits motion, timing and energy. It does not design forms: a silhouette drawn with `ellipse` calls will look assembled. Keep characters and props authored as symbols or poses, inspect the compiled frames, and keep hand corrections as overlays: they reapply when the loop is rebuilt and refuse to apply when it changed the frames they touch. [The investigation](reports/code-first-animation.md) records where the method came from and what was tested.
 
 ## Lossless raster return path
 

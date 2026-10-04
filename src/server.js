@@ -24,7 +24,7 @@ const routes = new Map([
   ['/scene.html', ['../studio/scene.html', 'text/html; charset=utf-8']],
   ['/examples/quality/skink.json', ['../examples/quality/skink.json', 'application/json']],
   ['/schema.json', ['../schema.json', 'application/json']],
-  ...['forest-spirit', 'ember', 'coin', 'shrine', 'caption', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
+  ...['forest-spirit', 'ember', 'coin', 'shrine', 'caption', 'swing', 'effects', 'lantern', 'slime'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
 ]);
 // Every path the studio answers with GET, for checks that walk the whole allowlist.
 export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];

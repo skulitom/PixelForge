@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, animationGIF, createSequence, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { pathToFileURL } from 'node:url';
+import { renderProject, animationGIF, createSequence, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, compileLoop, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -18,8 +19,9 @@ const HELP = `PixelForge — text to pixels, without dependencies
                     [--fit contain|cover] [--align center] [--offset x,y] [--background color] [--animation name]
                     [--loops n | --seconds s] [--step n]
                                            Numbered PNG frames for a video editor, at a constant frame rate
-  pixelforge compile <source.json> --out recipe.json [--metadata meta.json]
-                                           Build a recipe from authored poses, an autotile template or particle effects
+  pixelforge compile <source.json|loop.mjs> --out recipe.json [--metadata meta.json]
+                                           Build a recipe from authored poses, an autotile template, particle effects
+                                           or a draw loop (Canvas-style code sampled on a timeline)
   pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
                                            Build a 47-tile blob or 16-tile cardinal set
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
@@ -47,6 +49,8 @@ Sequence writes one PNG per video frame with alpha, plus sequence.json and a REA
 (the largest that fits, or --scale; --fit cover takes the smallest that covers the canvas and crops the rest) and
 placed by --align (top-left ... bottom-right) and --offset. A scene's margins take its background colour. --step 2
 animates on twos. Rates such as 23.976 and 29.97 are exact (24000/1001, 30000/1001).
+A draw loop is a .mjs module exporting { name, width, height, palette, timeline, draw(ctx, t) }; every command that
+reads a recipe also accepts one and compiles it first. It runs as code on your machine, like node itself would.
 All command results except the preview server are JSON. Errors exit with code 1.
 No installation needed: node bin/pixelforge.js <command>
 `;
@@ -71,8 +75,15 @@ async function readProject(file) {
   else source = await readFile(file, 'utf8');
   return JSON.parse(source.replace(/^﻿/, ''));
 }
-// Reads a document and inlines its references relative to its own folder (stdin: the working directory).
+// Reads a document and inlines its references relative to its own folder (stdin: the working directory). A draw loop
+// (.mjs or .js) is code: it is imported and compiled, so every command that reads a recipe also reads a loop.
 async function readResolved(file) {
+  if (file && /\.m?js$/i.test(file)) {
+    const module = await import(pathToFileURL(path.resolve(file)).href), spec = module.default;
+    if (!spec || typeof spec !== 'object') throw new Error(`${file} must export default { name, width, height, palette, timeline, draw }`);
+    const compiled = compileLoop(spec);
+    return { original: compiled.recipe, document: compiled.recipe, compiled, resolution: { files: [], palettes: [] }, baseDir: path.dirname(path.resolve(file)) };
+  }
   const original = await readProject(file), baseDir = file === '-' ? process.cwd() : path.dirname(path.resolve(file));
   const resolution = await resolveReferences(original, { baseDir });
   return { original, document: resolution.document, resolution, baseDir };
@@ -140,7 +151,8 @@ try {
       let value, metadata, input;
       if (command === 'compile' || command === 'autotile') {
         input = await readResolved(positional[0]);
-        const compile = command === 'autotile' ? compileAutotile : COMPILERS[input.document?.format] ?? compilePoses;
+        if (input.compiled && command === 'autotile') throw new Error('autotile takes a template; compile draw loops with compile');
+        const compile = input.compiled ? () => input.compiled : command === 'autotile' ? compileAutotile : COMPILERS[input.document?.format] ?? compilePoses;
         const compiled = compile(input.document);
         value = linkPalette(compiled.recipe, input, options.out); metadata = compiled.metadata;
       } else if (command === 'overlay') {

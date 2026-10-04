@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "name": "slime",
+  "width": 48,
+  "height": 48,
+  "palette": { "s": "#22202e", "G": "#2f6b4a", "g": "#4fb06a", "l": "#b7f0a1", "k": "#14131c" },
+  "frames": [
+    {
+      "name": "slime-0",
+      "duration": 86,
+      "points": { "feet": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 15,
+          "y": 29,
+          "rows": [
+            "........GGG........",
+            ".....GGGgggGGG.....",
+            "....GlllggggggG....",
+            "...GllllgggggggG...",
+            "..GglllgggggggggG..",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            "GggggkkgggggkkggggG",
+            "GgggggggggggggggggG",
+            "GgggggggggggggggggG",
+            "GgggggggggggggggggG",
+            "sGGGGGGGGGGGGGGGGG.",
+            ".ss.sss.sss.sss.ss.",
+            "....sssssssssss...."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-1",
+      "duration": 85,
+      "points": { "feet": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 13,
+          "y": 32,
+          "rows": [
+            "......GGGGGGGGGGG......",
+            "....GGlllggggggggGG....",
+            "...GgllllggggggggggG...",
+            "..GgggkkgggggggkkgggG..",
+            ".GggggkkgggggggkkggggG.",
+            "GgggggkkgggggggkkgggggG",
+            "GgggggggggggggggggggggG",
+            "GgggggggggggggggggggggG",
+            "sGGGGGGGGGGGGGGGGGGGGGs",
+            "..sss.sss.sss.sss.sss..",
+            ".....sssssssssssss....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-2",
+      "duration": 86,
+      "points": { "feet": [24, 36] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 15,
+          "y": 26,
+          "rows": [
+            ".......GGGGG.......",
+            ".....GGgggggGG.....",
+            "....GlllggggggG....",
+            "...GlllggggggggG...",
+            "..GgglggggggggggG..",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            "GggggkkgggggkkggggG",
+            "GgggggggggggggggggG",
+            "GgggggggggggggggggG",
+            ".GGGGGGGGGGGGGGGGG.",
+            "...................",
+            ".....sssssssss.....",
+            "..s.s.s.s.s.s.s.s..",
+            ".sssssssssssssssss.",
+            "..s.sss.sss.sss.s..",
+            ".....sssssssss....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-3",
+      "duration": 86,
+      "points": { "feet": [24, 26] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 16,
+          "y": 15,
+          "rows": [
+            ".......GGG.......",
+            ".....GGgggGG.....",
+            "...GGlggggggGG...",
+            "..GglllgggggggG..",
+            "..GgllggggggggG..",
+            ".GggkkgggggkkggG.",
+            "GgggkkgggggkkgggG",
+            "GgggkkgggggkkgggG",
+            "GgggkkgggggkkgggG",
+            "GgggggggggggggggG",
+            "GgggggggggggggggG",
+            "gGGGGGGGGGGGGGGGg",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            "......s.s.s......",
+            "...s.s.s.s.s.s...",
+            "..s.sss.sss.sss..",
+            "...s.s.s.s.s.s...",
+            "......s.s.s......"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-4",
+      "duration": 86,
+      "points": { "feet": [24, 22] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 16,
+          "y": 10,
+          "rows": [
+            "......GGGGG......",
+            "....GGgggggGG....",
+            "...GgllggggggG...",
+            "..GglllgggggggG..",
+            "..GgllggggggggG..",
+            ".GggkkgggggkkggG.",
+            ".GggkkgggggkkggG.",
+            ".GggkkgggggkkggG.",
+            "GgggkkgggggkkgggG",
+            "GgggggggggggggggG",
+            "GgggggggggggggggG",
+            "GgggggggggggggggG",
+            ".GGGGGGGGGGGGGGG.",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            "......s.s.s......",
+            ".......s...s.....",
+            "....s.s.s.s.s....",
+            ".....s.s.s.s.....",
+            "......s.s.s......"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-5",
+      "duration": 85,
+      "points": { "feet": [24, 23] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 16,
+          "y": 11,
+          "rows": [
+            "......GGGGG......",
+            "....GGgggggGG....",
+            "...GlllggggggG...",
+            "..GglllgggggggG..",
+            "..GgllggggggggG..",
+            ".GggkkgggggkkggG.",
+            ".GggkkgggggkkggG.",
+            "GgggkkgggggkkgggG",
+            "GgggkkgggggkkgggG",
+            "GgggggggggggggggG",
+            "GgggggggggggggggG",
+            "GgggggggggggggggG",
+            ".GGGGGGGGGGGGGGG.",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            ".................",
+            "......s.s.s......",
+            "...s...s...s.....",
+            "....s.s.s.s.s....",
+            "...s.s.s.s.s.....",
+            "......s.s.s......"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-6",
+      "duration": 86,
+      "points": { "feet": [24, 28] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 15,
+          "y": 17,
+          "rows": [
+            ".........G.........",
+            "......GGGgGGG......",
+            "....GGlggggggGG....",
+            "...GglllgggggggG...",
+            "..GglllgggggggggG..",
+            "..GggkkgggggkkggG..",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            ".GgggggggggggggggG.",
+            "GgggggggggggggggggG",
+            ".GGGGGGGGGGGGGGGGG.",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            "...................",
+            ".......s.s.s.......",
+            "....s.s.s.s.s.s....",
+            "...s.sss.sss.sss...",
+            "....s.s.s.s.s.s....",
+            ".......s.s.s......."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-7",
+      "duration": 75,
+      "points": { "feet": [24, 40], "land": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 12,
+          "y": 33,
+          "rows": [
+            ".......GGGGGGGGGGG.......",
+            "....GGGlllggggggggGGG....",
+            "...GgllllggggggggggggG...",
+            "..GgggkkkgggggggkkkgggG..",
+            ".GggggkkkgggggggkkkggggG.",
+            "GgggggggggggggggggggggggG",
+            "GgggggggggggggggggggggggG",
+            "sGGGGGGGGGGGGGGGGGGGGGGGs",
+            ".s.sss.sss.sss.sss.sss.s.",
+            ".....sssssssssssssss....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-8",
+      "duration": 75,
+      "points": { "feet": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 13,
+          "y": 32,
+          "rows": [
+            "......GGGGGGGGGGG......",
+            "....GGlllggggggggGG....",
+            "...GgllllggggggggggG...",
+            "..GgggkkgggggggkkgggG..",
+            ".GggggkkgggggggkkggggG.",
+            "GgggggkkgggggggkkgggggG",
+            "GgggggggggggggggggggggG",
+            "GgggggggggggggggggggggG",
+            "sGGGGGGGGGGGGGGGGGGGGGs",
+            "..sss.sss.sss.sss.sss..",
+            ".....sssssssssssss....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-9",
+      "duration": 75,
+      "points": { "feet": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 13,
+          "y": 32,
+          "rows": [
+            "......GGGGGGGGGGG......",
+            "....GGlllggggggggGG....",
+            "...GgllllggggggggggG...",
+            "..GgggkkgggggggkkgggG..",
+            ".GggggkkgggggggkkggggG.",
+            ".GggggkkgggggggkkggggG.",
+            "GgggggggggggggggggggggG",
+            "GgggggggggggggggggggggG",
+            ".GGGGGGGGGGGGGGGGGGGGG.",
+            "..sss.sss.sss.sss.sss..",
+            ".....sssssssssssss....."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slime-10",
+      "duration": 75,
+      "points": { "feet": [24, 40] },
+      "ops": [
+        {
+          "op": "grid",
+          "x": 15,
+          "y": 29,
+          "rows": [
+            ".......GGGGG.......",
+            ".....GGgggggGG.....",
+            "....GlllggggggG....",
+            "...GllllgggggggG...",
+            "..GgglggggggggggG..",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            ".GgggkkgggggkkgggG.",
+            "GgggggggggggggggggG",
+            "GgggggggggggggggggG",
+            "GgggggggggggggggggG",
+            ".GGGGGGGGGGGGGGGGG.",
+            ".ss.sss.sss.sss.ss.",
+            "....sssssssssss...."
+          ]
+        }
+      ]
+    }
+  ],
+  "animations": {
+    "slime": {
+      "frames": [
+        "slime-0",
+        "slime-1",
+        "slime-2",
+        "slime-3",
+        "slime-4",
+        "slime-5",
+        "slime-6",
+        "slime-7",
+        "slime-8",
+        "slime-9",
+        "slime-10"
+      ]
+    }
+  }
+}

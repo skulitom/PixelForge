@@ -7,6 +7,7 @@ export { createSequence, createSceneSequence, planSequence, placeSprite, parseFr
 export { createBundle, writeBundle, createZip, generateCSS, formatJSON } from './export.js';
 export { compilePoses, compileAutotile } from './authoring.js';
 export { compileEffects } from './fx.js';
+export { compileLoop, createPixelContext } from './drawloop.js';
 export { DITHER_PATTERNS, EASINGS, ease, ditherThreshold, cleanupIds, rotateRows, ruleVariants, rewriteIds, rampRows, rampProblem, frameStarts } from './craft.js';
 export { BLOB_MASKS, CARDINAL_MASKS, neighbourMask, quadrantPieces, templatePiece } from './autotile.js';
 export { prepareScene, renderScene, inspectTile } from './scene.js';

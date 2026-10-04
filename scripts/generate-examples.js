@@ -1,5 +1,5 @@
 import { writeFile, mkdir } from 'node:fs/promises';
-import { compileEffects, compilePoses, formatJSON } from '../src/index.js';
+import { compileEffects, compilePoses, compileLoop, formatJSON } from '../src/index.js';
 const rows = source => source.map(row => row.padEnd(16, '.'));
 const spirit = rows([
   '........dd',
@@ -60,14 +60,7 @@ const effects = { format: 'pixelforge-fx', version: 1, name: 'effects', width: 4
       emit([24, 18], { area: [10, 4], burst: 8, angle: [200, 340], speed: [1, 2.2], gravity: [0, 0.18], drag: 0.14, life: [10, 12], sway: { amplitude: [1.4, 0], period: 6 },
         shapes: [['leaf-a', 'leaf-b'], ['leaf-b', 'leaf-c'], ['leaf-c', 'leaf-a']], play: 'loop', remaps: [{}, { g: 'l' }, { G: 'g', g: 'l' }], dissolve: 0.25 })] },
     shatter: { frames: 12, duration: 60, seed: 3, emitters: [
-      emit([24, 26], { area: [6, 4], burst: 9, angle: [205, 335], speed: [2, 3.5], gravity: [0, 0.45], drag: 0.02, life: 12, floor: 35, bounce: 0.3, shapes: [['chip-a'], ['chip-b'], ['chip-c'], ['chip-d']] })] },
-    // Game timing: the ember lands at the impact cue (300 ms, a frame boundary at any rate), which also starts the
-    // flash and sparks and carries its position into the atlas; the smoulder runs from impact until the cool cue.
-    strike: { timeline: { length: 900, rate: 15, cues: { impact: { time: 300, at: [24, 36] }, cool: 600 } }, seed: 5, emitters: [
-      emit([24, 4], { name: 'fall', burst: 1, gravity: [0, 2.13], life: 6, floor: 36, shapes: ['ember-big'], trail: { color: 'o', length: 2 } }),
-      emit([24, 34], { name: 'flash', burst: 1, start: 'impact', life: 2, shapes: ['flash-0', 'flash-1'], play: 'once' }),
-      emit([24, 34], { name: 'sparks', area: [3, 1], burst: 10, start: 'impact', angle: [200, 340], speed: [1.6, 3], gravity: [0, 0.3], drag: 0.04, life: [5, 8], floor: 36, bounce: 0.3, shapes: ['hot', 'warm', 'cool', 'ash'], trail: { color: 'r', length: 1 } }),
-      emit([24, 35], { name: 'smoulder', area: [8, 1], rate: 0.6, start: 'impact', end: 'cool', angle: [255, 285], speed: [0.4, 0.8], life: [6, 9], shapes: ['ember', 'ember-dim', 'ember-end'], dissolve: 0.3 })] }
+      emit([24, 26], { area: [6, 4], burst: 9, angle: [205, 335], speed: [2, 3.5], gravity: [0, 0.45], drag: 0.02, life: 12, floor: 35, bounce: 0.3, shapes: [['chip-a'], ['chip-b'], ['chip-c'], ['chip-d']] })] }
   } };
 
 // Dithered sky bands, a shading band limited to one colour, an inside rim light, grown cracks and moss, a drop line.
@@ -129,6 +122,8 @@ const caption = { version: 1, name: 'caption', width: 240, height: 32, palette: 
 await mkdir(new URL('../examples/', import.meta.url), { recursive: true });
 // Authored sources are pretty-printed; compiled recipes use the CLI's compact formatting.
 const authored = { 'forest-spirit': forest, ember, coin, shrine, caption, 'effects.fx': effects, 'swing.poses': swing };
-const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe };
+// Draw loops are code (examples/*.loop.mjs); their compiled recipes sit beside them.
+const loops = Object.fromEntries(await Promise.all(['lantern', 'slime'].map(async name => [name, compileLoop((await import(`../examples/${name}.loop.mjs`)).default).recipe])));
+const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe, ...loops };
 for (const [name, value] of Object.entries(authored)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
 for (const [name, value] of Object.entries(compiled)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), formatJSON(value));
