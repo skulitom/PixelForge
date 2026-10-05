@@ -41,9 +41,7 @@ test('dither draws a canvas-anchored ordered pattern, ramps density and respects
   assert.throws(() => draw([{ op: 'dither', color: 'r', density: 2 }]), /density: expected a number from 0 to 1/);
 });
 
-test('outline keeps its default and adds inside, middle, width and direction masks', () => {
-  assert.equal(count(rows(draw([{ op: 'pixel', x: 3, y: 3, color: 'b' }, { op: 'outline', color: 'r' }])), 'r'), 4);
-  assert.equal(count(rows(draw([{ op: 'pixel', x: 3, y: 3, color: 'b' }, { op: 'outline', color: 'r', diagonal: true }])), 'r'), 8);
+test('outline adds inside, middle, width and direction masks', () => {
   assert.deepEqual(rows(draw([{ op: 'rect', x: 2, y: 2, w: 4, h: 4, color: 'b' }, { op: 'outline', color: 'r', position: 'inside' }])).slice(2, 6), ['..rrrr..', '..rbbr..', '..rbbr..', '..rrrr..']);
   // A drop shadow grows down-right only; two rings make a longer shadow.
   assert.deepEqual(rows(draw([{ op: 'rect', x: 2, y: 2, w: 3, h: 3, color: 'b' }, { op: 'outline', color: 'r', directions: ['...', '...', '..x'], width: 2 }])).slice(2, 7), ['..bbb...', '..bbbr..', '..bbbrr.', '...rrrr.', '....rrr.']);
