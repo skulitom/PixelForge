@@ -34,10 +34,39 @@ Code suits motion, timing and light. It does not design forms: PixelForge’s ow
 
 *[examples/lantern.loop.mjs](../../examples/lantern.loop.mjs) and [examples/slime.loop.mjs](../../examples/slime.loop.mjs), unchanged, drawn by headless Chromium’s Canvas 2D (above) and by PixelForge (below) at the same moments. The browser harness drew `drawImage` palette rows and ignored `ctx.point`, which a browser context lacks; it is not part of the toolkit.*
 
-- **Different kinds of motion through one context.** The lantern combines an authored sprite turned by RotSprite, a one-pixel rope, an additive radial glow on a light ramp and a floor pool made elliptical by `scale()`. The slime combines squash and stretch through `scale()`, an eased jump, a one-pixel outline, a translucent shadow that dithers, a landing cue and a `feet` point per frame.
+- **Different kinds of motion through one context.** The lantern combines authored sprites that trail the swing by whole pixels, a one-pixel rope, and additive light that raises a wall and a floor along their own colours (see [the lantern study](#the-lantern-study)). The slime combines squash and stretch through `scale()`, an eased jump, a one-pixel outline, a translucent shadow that dithers, a landing cue and a `feet` point per frame.
 - **The original case needs nothing special.** The post’s meteor, rewritten as plain canvas code (an `ellipse` target, a gradient streak, `shadowBlur`, an additive flash and spreading ring, a translucent scorch ring), compiled through the same context with `units: 0.5` for its game-sized coordinates. That check stayed in a scratch folder; no meteor ships.
 - **Tests.** `test/drawloop.test.js` covers pixel-centre fills, mirror-symmetric one-pixel circles without doubled corners, wide strokes, transforms, colour mapping and the report of unmapped colours, dithered and thresholded coverage, ramp banding, cooling and additive light, banded shadow glows, clip and layers, text, sprites through scaling, mirroring and turning, errors for unsupported calls, timeline sampling with cues and points, the examples, and the CLI.
 - **Corrections survive rebuilds.** A two-pixel overlay on the slime’s landing frame, applied through the CLI directly to the `.mjs` loop: reapplied after an unchanged rebuild; applied and reported `rebased: true` after a deeper crouch changed only earlier frames; refused with a fingerprint conflict naming `slime-7` after moving the ground by one pixel.
+
+## The lantern study
+
+5 October 2026. The first lantern did not look right, and tuning did not fix it. Zoomed in, its glow was a flat, opaque brown disc behind the sprite; the iron frame was almost the colour of the background, so the lantern read as a yellow square; turning a 7×9 sprite to 24° mangled it; the floor “light” was a brown puddle; and breakup noise left ragged notches.
+
+**What made it difficult.** I had adjusted one control, how far the light reaches, while the problems were structural. Light is defined by what it lands on: a browser’s `lighter` brightens the background slightly, but a transparent sprite has no background, so faint light could only become opaque pixels of some dark colour, which read as an object. The colours were picked by eye, not from the light. And a dozen-pixel sprite cannot survive arbitrary rotation.
+
+**Method.** Each hypothesis was one change from the shipped lantern, built by a scratch lab script and rendered over the same backdrop, four frames per variant, judged at 5–8× zoom. Where something could be counted, it was: distinct sprite shapes across the 16 frames (how much the sprite boils), isolated pixels, and pixels changed between consecutive frames. Visual verdicts are mine.
+
+| Hypothesis | Tested | Result | Verdict |
+| --- | --- | --- | --- |
+| H1. Light needs a surface | Wall and floor drawn, light painted over them | Still a brown disc, now on a wall | Not alone |
+| | Wall and floor as **surface ramps**: light raises them along their own colours (new `surface: true`) | Reads as light on a wall, with a lit floor patch. A control swapping the halo radius (12 and 18) showed the surface model, not the radius, made the difference | **Confirmed** |
+| H2. Translucent faint light | Faint steps as translucent palette colours | Disc takes the background’s colour, but stays a flat disc with a hard edge; GIF drops partial alpha | Partial, not adopted |
+| H3. A readable subject | Lighter iron only | Frame slightly visible | Small gain |
+| | 9×13 sprite, iron lighter than the wall, frame edges lit by the flame | Lantern reads when it hangs straight; swung frames smeared | **Confirmed**, exposed H4 |
+| H4. Do not rotate small sprites | Free turn / 12° steps / per-row shear / upright / body trailing by whole pixels | 9 / 5 / 9 / 1 / 3 distinct sprite shapes. Turning and steps smeared the glass; per-row shear broke the cap and a post at 8×; upright and whole-part trailing stayed clean | **Confirmed**: move rigid parts by whole pixels |
+| H5. Dither the falloff | `dither` 0.8 on the old disc; 0.6 and 1 with surfaces | On the disc: softer edge, 16 isolated pixels, still a disc. With surfaces, 0.6 reads as falloff and changes no more pixels per frame (280 either way); 1 is checkerboard noise | Adopted at 0.6 with surfaces |
+| H6. Flicker by size, not noise | Breakup 0, radius pulse kept | Ragged notches gone, no loss | **Confirmed** |
+| H7. Surface steps from the light | Steps computed as base plus what `lighter` adds at each step’s level, 5 and 8 steps | The hand-picked step for 45% light was `#43302f`; the browser shows about `rgb(128, 86, 64)`. Derived steps matched the smooth brightness; with 5 steps the first band read as a disc, 8 smaller steps fixed it | **Confirmed** |
+| H8. Shape the falloff in code | Linear versus eased, roughly (1 − r)², gradient stops | Linear spread faint light over a wide ring with a hard first step; eased kept the light near the lantern | **Confirmed** |
+
+![The lantern before and after the study, four frames each over the same backdrop: above, a small turning sprite inside a flat brown disc; below, a larger upright lantern lighting a wall and floor with banded, dithered light.](../images/lantern-study.png)
+
+*Before (above) and after (below), frames 0, 2, 4 and 6.*
+
+The shipped lantern now draws its wall and floor, lights them through surface ramps with eight derived steps, eases its falloff, keeps its sprites upright with the body trailing the swing, and flickers by size. The `surface` ramp flag is the only adapter change the study needed; everything else is how the draw code is written, and the [art workflow](../art-workflow.md#animations-written-as-code) now says so.
+
+**What remains.** Beside the smooth version, the light still has a visible outer edge. The first lit step is a whole step (+42 in red) above the wall, while a browser fades to nothing; dither softens the transition but does not remove it. Smaller steps near darkness would need unevenly spaced bands, which the ramp model does not have.
 
 ## Conversion rules
 
@@ -62,5 +91,5 @@ The first response reproduced the post’s effect rather than its method: a mete
 - **A subset of Canvas 2D.** Patterns, filters, dashed lines, conic gradients, `arcTo`, `Path2D`, `strokeText` and pixel reads are errors naming the call; line caps and joins are approximated as round. Draw code that uses them needs rewriting first.
 - **Code runs locally.** Draw loops execute through the CLI or `compileLoop`; the MCP server does not run code.
 - **Determinism depends on the loop.** The context is deterministic; draw code that uses `Math.sin` or `Math.random` may differ in its last bits between engines. `drawImage` rotation rounds to whole degrees.
-- **Art quality is self-reviewed.** Both examples were tuned by eye in a few passes (the lantern’s floor took three tries) and have had no independent review. Nothing here shows code-first animation looking better than hand animation; it shows that code-defined motion becomes an editable, correctly timed recipe, and which translations matter.
+- **Art quality is self-reviewed.** The lantern study measured what it could (sprite shapes, stray pixels, frame-to-frame change), but every “reads as light” verdict is my judgment; neither example has had an independent review. Nothing here shows code-first animation looking better than hand animation; it shows that code-defined motion becomes an editable, correctly timed recipe, and which translations matter.
 - **The post’s code is unavailable,** so its adapter is inferred from a compressed screen recording.

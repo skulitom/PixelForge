@@ -121,6 +121,24 @@ test('ramp keys behave as light: gradients band, fades cool and lighter adds up'
   assert.deepEqual(rows(covered), ['kw']);
 });
 
+test('light added onto a surface ramp raises the surface along its own colours', () => {
+  const wall = { ...palette, a: '#101018', b: '#302830', c: '#604838' };
+  const light = (surface, composite = 'lighter', alpha = 0.6) => {
+    const ctx = createPixelContext({ width: 3, height: 1, palette: wall, ramps: [...ramp, { keys: ['a', 'b', 'c'], surface }] });
+    ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, 3, 1);
+    ctx.globalCompositeOperation = composite; ctx.globalAlpha = alpha; ctx.fillStyle = 'o'; ctx.fillRect(0, 0, 2, 1);
+    ctx.globalAlpha = 1; ctx.fillRect(0, 0, 1, 1);
+    return rows(ctx)[0];
+  };
+  // On a surface, light steps the wall up its own ramp: more light, a higher step; unlit wall stays as it was.
+  assert.equal(light(true), 'cba');
+  // Without the flag the light paints its own colours over the wall, as before; two lights add up to white.
+  assert.equal(light(false), 'wra');
+  // source-over still paints over a surface.
+  assert.equal(light(true, 'source-over', 1)[0], 'o');
+  assert.throws(() => createPixelContext({ width: 1, height: 1, palette, ramps: [{ keys: ['d'], surface: 'yes' }] }), /surface: expected a boolean/);
+});
+
 test('shadow blur draws a glow under the shape, banded when its colour is on a ramp', () => {
   const ctx = context(21, 21, { ramps: ramp });
   ctx.shadowColor = '#ffd080'; ctx.shadowBlur = 6; ctx.fillStyle = 'w'; ctx.fillRect(7, 7, 7, 7);

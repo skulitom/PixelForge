@@ -57,7 +57,7 @@ function cssColor(value) {
 const hexOf = ([r, g, b]) => `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
 
 // ---- Options shared by every frame --------------------------------------------------------------------------------
-const RAMP_FIELDS = ['keys', 'floor', 'breakup', 'cluster', 'seed', 'flicker', 'dither', 'pattern'];
+const RAMP_FIELDS = ['keys', 'floor', 'breakup', 'cluster', 'seed', 'flicker', 'dither', 'pattern', 'surface'];
 const CONTEXT_FIELDS = ['width', 'height', 'palette', 'colors', 'ramps', 'soft', 'pattern', 'units', 'snap', 'symbols'];
 const PARSED = Symbol('parsed options');
 function readOptions(options, path) {
@@ -78,12 +78,12 @@ function readOptions(options, path) {
     if (!Array.isArray(ramp.keys) || !ramp.keys.length || ramp.keys.length > 64) fail(`${rp}.keys`, 'expected 1–64 palette keys, coolest first');
     ramp.keys.forEach((key, i) => keyOf(key, `${rp}.keys[${i}]`));
     if (new Set(ramp.keys).size !== ramp.keys.length) fail(`${rp}.keys`, 'each key appears once; a key is one step of the ramp');
-    if (ramp.flicker !== undefined && typeof ramp.flicker !== 'boolean') fail(`${rp}.flicker`, 'expected a boolean');
-    const { keys, flicker = false, ...rest } = ramp, problem = rampProblem({ ramp: keys, ...rest });
+    for (const flag of ['flicker', 'surface']) if (ramp[flag] !== undefined && typeof ramp[flag] !== 'boolean') fail(`${rp}.${flag}`, 'expected a boolean');
+    const { keys, flicker = false, surface = false, ...rest } = ramp, problem = rampProblem({ ramp: keys, ...rest });
     if (problem) fail(`${rp}${problem[0] === '.ramp' ? '.keys' : problem[0]}`, problem[1]);
     // Light under a tenth of full is invisible by default, so a blur's faint tail does not flood the canvas.
     const floor = rest.floor ?? 0.1, levels = new Map(keys.map((key, i) => [key, floor + (1 - floor) * (i + 0.5) / keys.length]));
-    return { keys, flicker, seed: rest.seed ?? 0, options: { floor, breakup: rest.breakup ?? 0, cluster: rest.cluster ?? 1, dither: rest.dither ?? 0, pattern: rest.pattern ?? 'bayer4' }, levels };
+    return { keys, flicker, surface, seed: rest.seed ?? 0, options: { floor, breakup: rest.breakup ?? 0, cluster: rest.cluster ?? 1, dither: rest.dither ?? 0, pattern: rest.pattern ?? 'bayer4' }, levels };
   });
   const rampOf = new Map();
   ramps.forEach((ramp, r) => ramp.keys.forEach(key => {
@@ -311,13 +311,18 @@ export function createPixelContext(options, { frame = 0, unmapped = new Map() } 
     if (state.clip && !state.clip[i]) return;
     const l = target(), x = i % width, y = (i - x) / width;
     if (state.composite === 'destination-out') { if (passes(c, x, y)) { l.base[i] = 0; l.ramp[i] = -1; l.heat[i] = 0; } return; }
-    const r = rampOf.get(key);
+    let r = rampOf.get(key);
     if (r === undefined) {
       if (!passes(c, x, y)) return;
       l.base[i] = code.get(key); l.ramp[i] = -1; l.heat[i] = 0;
       return;
     }
     const lit = level ?? ramps[r].levels.get(key);
+    // Light added onto a surface ramp raises that surface along its own colours instead of painting the light's.
+    if (state.composite === 'lighter') {
+      const under = l.ramp[i] >= 0 ? l.ramp[i] : rampOf.get(keys[l.base[i]]);
+      if (under !== undefined && under !== r && ramps[under].surface) r = under;
+    }
     if (l.ramp[i] !== r) {
       if (l.ramp[i] >= 0) bake(l, i, x, y);
       const below = keys[l.base[i]];
