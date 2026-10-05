@@ -2,7 +2,7 @@
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { compilePoses, renderProject, inspectProject, createOverlay, applyOverlay, prepareScene, renderScene, encodePNG, scalePixels, createBundle, createSceneBundle } from '../src/index.js';
+import { compilePoses, renderProject, inspectProject, createOverlay, applyOverlay, prepareScene, renderScene, encodePNG, scalePixels } from '../src/index.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url)), files = new Map();
 const palette = { k:'#0b1020', v:'#182239', b:'#26354c', s:'#3d5364', t:'#477975', g:'#72967d', h:'#afc4a0', y:'#e7ce89', w:'#f7edc4', a:'#cc8762', r:'#8d5260', p:'#573b57', c:'#75bfbc', d:'#3a8eaa' };

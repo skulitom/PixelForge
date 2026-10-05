@@ -1,4 +1,4 @@
-import {World,WIDTH,HEIGHT,WORLD,FLOOR,GAPS,PLATFORMS,SPELLS} from './world.js';
+import {World,WIDTH,HEIGHT,FLOOR,GAPS,PLATFORMS,SPELLS} from './world.js';
 const $=id=>document.getElementById(id), canvas=$('game'), ctx=canvas.getContext('2d',{alpha:false});
 ctx.imageSmoothingEnabled=false;
 const world=new World(), assets={}, reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;

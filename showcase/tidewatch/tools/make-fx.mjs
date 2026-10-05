@@ -5,7 +5,6 @@ const force = { force: process.argv.includes('--force') };
 const canvas = (w, h) => Array.from({ length: h }, () => Array(w).fill('.'));
 const rows = g => g.map(r => r.join(''));
 const put = (g, x, y, c) => { x = Math.round(x); y = Math.round(y); if (y >= 0 && y < g.length && x >= 0 && x < g[0].length) g[y][x] = c; };
-const stamp = (g, x, y, shape) => shape.forEach((row, dy) => [...row].forEach((c, dx) => { if (c !== '.') put(g, x + dx, y + dy, c); }));
 // ---------------- sword slash arcs (48x48, centred on the keeper's body) ----------------
 const SWEEPS = { d: [-20, 200], u: [160, 380], r: [-110, 110], l: [70, 290] };
 function slash(dir, frame) {
