@@ -298,7 +298,10 @@ try {
 
   console.log('Draft recovery');
   await check('an unsaved edit is offered back after the page is reloaded, restored on request, and gone once saved', async () => {
-    await type(edited.replace('"name": "forest-spirit"', '"name": "draft-walk"')); await sleep(300);
+    await type(edited.replace('"name": "forest-spirit"', '"name": "draft-walk"'));
+    // The draft keeps the file name the editor shows, which changes only when the studio recompiles (350 ms after the
+    // last keystroke, later on a busy machine). Reloading before that would keep the draft under the old name.
+    await until(`document.getElementById('source-filename').textContent === 'draft-walk.json'`, 'the editor to show draft-walk.json before the reload');
     await studio.reload(); await ready();
     assert.equal(await evaluate(`document.getElementById('draft').hidden`), false, 'no draft was offered after the reload'); assert.match(await text('draft-text'), /draft-walk\.json/);
     await studio.shot('draft-offered');
