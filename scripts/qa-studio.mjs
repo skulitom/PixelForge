@@ -145,7 +145,7 @@ try {
   const canvas = () => evaluate(`(() => { const c = document.getElementById('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, colors = new Set(); let drawn = 0, hash = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 3]) { drawn++; colors.add((d[i] << 16 | d[i + 1] << 8 | d[i + 2]).toString(16).padStart(6, '0')); } hash = (hash * 31 + d[i] + d[i + 1] * 3 + d[i + 2] * 7 + d[i + 3] * 11) >>> 0; } return { width: c.width, height: c.height, shown: c.style.width, drawn, hash, colors: [...colors] }; })()`);
   const pressed = id => evaluate(`document.getElementById(${JSON.stringify(id)}).getAttribute('aria-pressed')`);
   const ready = () => until(`document.querySelectorAll('#examples .example').length > 0 && document.getElementById('example-count').textContent !== '' && document.getElementById('source').value.length > 0 && document.getElementById('timeline').children.length > 0`, 'the studio to finish loading');
-  // Replaces the whole recipe the way typing does, then waits for the preview to follow (or for the error to show).
+  // Replaces the whole recipe the way typing does, then pauses; each caller waits for what the recompile shows.
   const type = async recipe => {
     await evaluate(`(() => { const source = document.getElementById('source'); source.focus(); source.select(); })()`);
     await studio.page('Input.insertText', { text: recipe });
@@ -213,7 +213,7 @@ try {
     assert.ok((await canvas()).colors.includes('ff00ff'), 'the new colour is not in the preview');
   });
   await check('a broken recipe shows what is wrong, and the studio recovers when it is mended', async () => {
-    await type(edited.slice(0, -3)); await until(`!document.getElementById('error').hidden`, 'the broken recipe\'s error');
+    await type(edited.slice(0, -3)); await until(`!document.getElementById('error').hidden`, 'the error for the broken recipe');
     assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [false, true]);
     const message = await text('error'); assert.ok(message.length > 5); assert.match(await text('compile-status'), /Fix the recipe/);
     await studio.shot('broken-recipe');
