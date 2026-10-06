@@ -34,71 +34,88 @@ function compress(indices, minimum, slots, state) {
   return bytes.subarray(0, length);
 }
 
-// `frames` are { data: RGBA bytes, duration: ms } at width × height. Pixels below 50% alpha become transparent and
-// the rest opaque; pass `background` ([r, g, b]) to blend every pixel over one colour instead. Returns the file with
-// the delays actually written (ms) and how many partly transparent pixels lost their alpha.
-export function encodeGIF(frames, width, height, { loop = true, scale = 1, background = null } = {}) {
-  if (!Array.isArray(frames) || !frames.length) throw new PixelError('gif', 'at least one frame is required');
-  if (!Number.isInteger(scale) || scale < 1 || scale > 16) throw new PixelError('gif.scale', 'expected a whole number from 1 to 16');
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * scale > 65535 || height * scale > 65535) throw new PixelError('gif', 'invalid dimensions');
-  if (frames.length * width * height * scale * scale > MAX_PIXELS) throw new PixelError('gif', `${frames.length} frames at ${width * scale}×${height * scale} exceed 67,108,864 pixels; lower the scale or shorten the animation`);
-  const area = width * height, all = new Map(), indexed = [];
-  let partialAlpha = 0, transparency = false;
-  for (const [position, frame] of frames.entries()) {
-    if (frame.data.length !== area * 4) throw new PixelError('gif', 'RGBA buffer does not match the dimensions');
-    if (!Number.isInteger(frame.duration) || frame.duration < 1 || frame.duration > 60000) throw new PixelError('gif', 'frame durations must be 1–60000ms');
-    const colors = new Map(), pixels = new Int32Array(area), { data } = frame;
-    let transparent = false;
-    for (let i = 0; i < area; i++) {
-      const alpha = data[i * 4 + 3];
-      let r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
-      if (background) {
-        // Integer source-over onto an opaque colour, rounded to nearest.
-        r = (r * alpha + background[0] * (255 - alpha) + 127) / 255 | 0; g = (g * alpha + background[1] * (255 - alpha) + 127) / 255 | 0; b = (b * alpha + background[2] * (255 - alpha) + 127) / 255 | 0;
-      } else {
-        if (alpha !== 0 && alpha !== 255) partialAlpha++;
-        if (alpha < 128) { pixels[i] = -1; transparent = true; continue; }
-      }
-      const color = r << 16 | g << 8 | b;
-      pixels[i] = color;
-      if (!colors.has(color)) { colors.set(color, colors.size); if (!all.has(color)) all.set(color, all.size); }
+// Reads one RGBA frame as indices into its own colours, numbered in the order they first appear. Pixels below 50%
+// alpha become transparent and the rest opaque; with `background` ([r, g, b]) every pixel is blended onto that colour
+// instead. A transparent frame keeps index 0 for transparency. `describe` names the frame in the error raised when it
+// needs more than 256 entries.
+function indexFrame(data, area, background, describe) {
+  const colors = new Map(), wide = new Uint16Array(area);
+  let transparent = false, partialAlpha = 0, last = -1, lastIndex = 0;
+  for (let i = 0, at = 0; i < area; i++, at += 4) {
+    const alpha = data[at + 3];
+    let r = data[at], g = data[at + 1], b = data[at + 2];
+    if (background) {
+      // Integer source-over onto an opaque colour, rounded to nearest.
+      r = (r * alpha + background[0] * (255 - alpha) + 127) / 255 | 0; g = (g * alpha + background[1] * (255 - alpha) + 127) / 255 | 0; b = (b * alpha + background[2] * (255 - alpha) + 127) / 255 | 0;
+    } else {
+      if (alpha !== 0 && alpha !== 255) partialAlpha++;
+      if (alpha < 128) { transparent = true; continue; }
     }
-    if (colors.size + (transparent ? 1 : 0) > 256) throw new PixelError('gif', `frame ${position + 1} of the animation uses ${colors.size} colours${transparent ? ' beside transparency' : ''}; a GIF frame holds 256 and PixelForge does not quantize. Reduce the colours${background ? '' : ', or blend onto a background if partial alpha causes them'}.`);
-    transparency ||= transparent;
-    indexed.push({ colors, pixels, transparent });
+    // Runs of one colour are common, so the last lookup is reused. Index 0 is left for transparency until the end.
+    const color = r << 16 | g << 8 | b;
+    if (color !== last) {
+      last = color; lastIndex = colors.get(color);
+      if (lastIndex === undefined) colors.set(color, lastIndex = colors.size + 1);
+    }
+    if (lastIndex <= 256) wide[i] = lastIndex;
   }
-  // One shared table when the whole animation fits, otherwise a table per frame. Index 0 is the transparent one.
+  if (colors.size + (transparent ? 1 : 0) > 256) throw new PixelError('gif', `${describe()} uses ${colors.size} colours${transparent ? ' beside transparency' : ''}; a GIF frame holds 256 and PixelForge does not quantize. Reduce the colours${background ? '' : ', or blend onto a background if partial alpha causes them'}.`);
+  const indices = new Uint8Array(area), shift = transparent ? 0 : 1;
+  for (let i = 0; i < area; i++) indices[i] = wide[i] - shift;
+  return { colors: [...colors.keys()], indices, transparent, partialAlpha };
+}
+
+// Writes indexed frames ({ colors, indices, transparent, delay: centiseconds }) as GIF89a. One shared colour table
+// when the whole animation fits in 256 entries, otherwise a table per frame, so frames may differ completely in
+// colour. `loops` is how many times the animation plays: 0 for ever, 1 once (no loop extension), n written as n − 1
+// repeats. When no frame is transparent, each frame after the first stores only the rectangle that changed.
+function writeGIF(indexed, width, height, { loops = 0, scale = 1 } = {}) {
+  const area = width * height, transparency = indexed.some(frame => frame.transparent), all = new Map();
+  for (const frame of indexed) for (const color of frame.colors) if (!all.has(color)) all.set(color, all.size);
   const shared = all.size + (transparency ? 1 : 0) <= 256;
   const table = (colors, offset) => {
-    const bits = bitsFor(colors.size + offset), bytes = new Uint8Array(3 << bits);
-    for (const [color, index] of colors) bytes.set([color >> 16, color >> 8 & 255, color & 255], (index + offset) * 3);
+    const bits = bitsFor(colors.length + offset), bytes = new Uint8Array(3 << bits);
+    for (const [index, color] of colors.entries()) bytes.set([color >> 16, color >> 8 & 255, color & 255], (index + offset) * 3);
     return { bits, bytes };
   };
   const chunks = [], push = (...values) => chunks.push(Uint8Array.from(values)), word = value => [value & 255, value >> 8];
-  const globalTable = shared ? table(all, transparency ? 1 : 0) : null;
+  const globalTable = shared ? table([...all.keys()], transparency ? 1 : 0) : null;
   chunks.push(Uint8Array.from('GIF89a', character => character.charCodeAt(0)));
   push(...word(width * scale), ...word(height * scale), globalTable ? 0xf0 | globalTable.bits - 1 : 0x70, 0, 0);
   if (globalTable) chunks.push(globalTable.bytes);
-  if (loop) { push(0x21, 0xff, 11); chunks.push(Uint8Array.from('NETSCAPE2.0', character => character.charCodeAt(0))); push(3, 1, 0, 0, 0); }
-  const slots = new Uint32Array(1 << 20), state = { generation: 0 }, delays = [];
-  let carry = 0;
-  for (const [position, { colors, pixels, transparent }] of indexed.entries()) {
-    // Delays are centiseconds; the rounding remainder moves to the next frame so a sequence keeps its length.
-    // Browsers play anything under 20 ms at 100 ms, so 20 ms is the floor.
-    const exact = frames[position].duration + carry, delay = Math.max(2, Math.round(exact / 10));
-    carry = exact < 20 ? 0 : exact - delay * 10; delays.push(delay * 10);
-    const offset = (shared ? transparency : transparent) ? 1 : 0, local = shared ? null : table(colors, offset), lookup = shared ? all : colors, minimum = Math.max(2, (local ?? globalTable).bits);
-    const indices = new Uint8Array(area * scale * scale);
-    for (let y = 0; y < height; y++) {
-      const row = y * scale * width * scale;
-      for (let x = 0; x < width; x++) { const pixel = pixels[y * width + x]; indices.fill(pixel === -1 ? 0 : lookup.get(pixel) + offset, row + x * scale, row + (x + 1) * scale); }
-      for (let copy = 1; copy < scale; copy++) indices.copyWithin(row + copy * width * scale, row, row + width * scale);
+  if (loops !== 1) { push(0x21, 0xff, 11); chunks.push(Uint8Array.from('NETSCAPE2.0', character => character.charCodeAt(0))); push(3, 1, ...word(loops ? loops - 1 : 0), 0); }
+  const slots = new Uint32Array(1 << 20), state = { generation: 0 }, lookup = new Uint8Array(256);
+  let previous = null;
+  for (const frame of indexed) {
+    const { colors, indices, transparent } = frame, offset = transparent ? 1 : 0;
+    // Frame indices become table indices: the shared table's, or the frame's own with transparency first.
+    if (shared) { for (const [index, color] of colors.entries()) lookup[index + offset] = all.get(color) + (transparency ? 1 : 0); if (transparent) lookup[0] = 0; }
+    else for (let index = 0; index < 256; index++) lookup[index] = index;
+    const local = shared ? null : table(colors, offset), minimum = Math.max(2, (local ?? globalTable).bits);
+    // Without transparency nothing is cleared between frames, so only the rectangle that differs from the previous
+    // frame is stored (at least one pixel).
+    let left = 0, top = 0, right = width - 1, bottom = height - 1;
+    if (previous && !transparency) {
+      left = width; top = height; right = -1; bottom = -1;
+      for (let y = 0, i = 0; y < height; y++) for (let x = 0; x < width; x++, i++) {
+        if (colors[indices[i]] === previous.colors[previous.indices[i]]) continue;
+        if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; bottom = y;
+      }
+      if (right < 0) left = top = right = bottom = 0;
     }
-    // Disposal 2 clears the frame before the next one, so transparent pixels never show an earlier frame.
-    push(0x21, 0xf9, 4, (transparency ? 2 : 1) << 2 | (transparent ? 1 : 0), ...word(delay), 0, 0);
-    push(0x2c, 0, 0, 0, 0, ...word(width * scale), ...word(height * scale), local ? 0x80 | local.bits - 1 : 0);
+    previous = frame;
+    const w = (right - left + 1) * scale, h = (bottom - top + 1) * scale, out = new Uint8Array(w * h);
+    for (let y = top; y <= bottom; y++) {
+      const row = (y - top) * scale * w;
+      for (let x = left; x <= right; x++) out.fill(lookup[indices[y * width + x]], row + (x - left) * scale, row + (x - left + 1) * scale);
+      for (let copy = 1; copy < scale; copy++) out.copyWithin(row + copy * w, row, row + w);
+    }
+    // Disposal 2 clears the frame before the next one, so transparent pixels never show an earlier frame; without
+    // transparency, disposal 1 keeps it under the next frame's rectangle.
+    push(0x21, 0xf9, 4, (transparency ? 2 : 1) << 2 | (transparent ? 1 : 0), ...word(frame.delay), 0, 0);
+    push(0x2c, ...word(left * scale), ...word(top * scale), ...word(w), ...word(h), local ? 0x80 | local.bits - 1 : 0);
     if (local) chunks.push(local.bytes);
-    const packed = compress(indices, minimum, slots, state);
+    const packed = compress(out, minimum, slots, state);
     push(minimum);
     for (let at = 0; at < packed.length; at += 255) { const block = packed.subarray(at, at + 255); push(block.length); chunks.push(block); }
     push(0);
@@ -107,7 +124,83 @@ export function encodeGIF(frames, width, height, { loop = true, scale = 1, backg
   const data = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
   let at = 0;
   for (const chunk of chunks) { data.set(chunk, at); at += chunk.length; }
-  return { data, width: width * scale, height: height * scale, colors: all.size, transparent: transparency, delays, partialAlpha };
+  return { data, colors: all.size, shared, transparent: transparency };
+}
+
+// `frames` are { data: RGBA bytes, duration: ms } at width × height. Pixels below 50% alpha become transparent and
+// the rest opaque; pass `background` ([r, g, b]) to blend every pixel over one colour instead. Returns the file with
+// the delays actually written (ms) and how many partly transparent pixels lost their alpha.
+export function encodeGIF(frames, width, height, { loop = true, scale = 1, background = null } = {}) {
+  if (!Array.isArray(frames) || !frames.length) throw new PixelError('gif', 'at least one frame is required');
+  if (!Number.isInteger(scale) || scale < 1 || scale > 16) throw new PixelError('gif.scale', 'expected a whole number from 1 to 16');
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * scale > 65535 || height * scale > 65535) throw new PixelError('gif', 'invalid dimensions');
+  if (frames.length * width * height * scale * scale > MAX_PIXELS) throw new PixelError('gif', `${frames.length} frames at ${width * scale}×${height * scale} exceed 67,108,864 pixels; lower the scale or shorten the animation`);
+  const area = width * height, indexed = [], delays = [];
+  let partialAlpha = 0, carry = 0;
+  for (const [position, frame] of frames.entries()) {
+    if (frame.data.length !== area * 4) throw new PixelError('gif', 'RGBA buffer does not match the dimensions');
+    if (!Number.isInteger(frame.duration) || frame.duration < 1 || frame.duration > 60000) throw new PixelError('gif', 'frame durations must be 1–60000ms');
+    // Delays are centiseconds; the rounding remainder moves to the next frame so a sequence keeps its length.
+    // Browsers play anything under 20 ms at 100 ms, so 20 ms is the floor.
+    const exact = frame.duration + carry, delay = Math.max(2, Math.round(exact / 10));
+    carry = exact < 20 ? 0 : exact - delay * 10; delays.push(delay * 10);
+    const entry = indexFrame(frame.data, area, background, () => `frame ${position + 1} of the animation`);
+    partialAlpha += entry.partialAlpha;
+    indexed.push({ ...entry, delay });
+  }
+  const gif = writeGIF(indexed, width, height, { loops: loop ? 0 : 1, scale });
+  return { data: gif.data, width: width * scale, height: height * scale, colors: gif.colors, transparent: gif.transparent, delays, partialAlpha };
+}
+
+const MAX_FRAMES_PIXELS = 134217728, MAX_FRAMES = 18000;
+const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+// A GIF of video frames at a constant frame rate: `frames` is an iterable of { data, width, height, name? } (RGBA),
+// read one at a time, so only one byte per pixel is kept. `fps` is a fraction { numerator, denominator, label? }
+// (see parseFrameRate in sequence.js). Frame k starts at k × 1000 × denominator / numerator ms, rounded to GIF's
+// centiseconds, so the delays may alternate (30 fps is 30, 40, 30 ms) while the loop keeps its length. `loops` is
+// the number of plays, 0 for ever. Colours are exact as in encodeGIF; frames that use different colours get tables
+// of their own. `notes` say in words what GIF changed.
+export function framesGIF(frames, { fps, loops = 0, background = null } = {}) {
+  const { numerator, denominator } = fps ?? {};
+  if (!Number.isInteger(numerator) || !Number.isInteger(denominator) || numerator < 1 || denominator < 1 || numerator > 240 * denominator) throw new PixelError('gif.fps', 'expected a frame rate above 0 and up to 240 frames per second');
+  if (denominator > 60 * numerator) throw new PixelError('gif.fps', 'a frame may last at most 60 seconds; expected at least 1/60 frames per second');
+  if (!Number.isInteger(loops) || loops < 0 || loops > 65536) throw new PixelError('gif.loops', 'expected 0 (play for ever) or the number of plays, 1 to 65536');
+  if (background !== null && (!Array.isArray(background) || background.length < 3 || background.slice(0, 3).some(value => !Number.isInteger(value) || value < 0 || value > 255))) throw new PixelError('gif.background', 'expected [r, g, b]');
+  if (typeof frames?.[Symbol.iterator] !== 'function') throw new PixelError('gif', 'expected frames as a list or other iterable of { data, width, height }');
+  const indexed = [];
+  let width = 0, height = 0, partialAlpha = 0, fewest = Infinity, most = 0;
+  for (const frame of frames) {
+    if (indexed.length === MAX_FRAMES) throw new PixelError('gif', `more than ${MAX_FRAMES} frames; shorten the loop`);
+    const label = frame.name ?? `frame ${indexed.length + 1}`;
+    if (!indexed.length) {
+      ({ width, height } = frame);
+      if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 65535 || height > 65535) throw new PixelError('gif', `${label} has invalid dimensions`);
+    } else if (frame.width !== width || frame.height !== height) throw new PixelError('gif', `${label} is ${frame.width}×${frame.height}, but the first frame is ${width}×${height}; every frame must be the same size`);
+    if (frame.data?.length !== width * height * 4) throw new PixelError('gif', `${label}: RGBA buffer does not match its dimensions`);
+    if ((indexed.length + 1) * width * height > MAX_FRAMES_PIXELS) throw new PixelError('gif', `more than ${Math.floor(MAX_FRAMES_PIXELS / (width * height))} frames at ${width}×${height} exceed 134,217,728 pixels; shorten the loop or use smaller frames`);
+    const entry = indexFrame(frame.data, width * height, background, () => label);
+    partialAlpha += entry.partialAlpha; fewest = Math.min(fewest, entry.colors.length); most = Math.max(most, entry.colors.length);
+    indexed.push(entry);
+  }
+  if (!indexed.length) throw new PixelError('gif', 'at least one frame is required');
+  // Exact start times in centiseconds, rounded half up; each delay is the step to the next start.
+  const start = k => Math.floor((2 * k * 100 * denominator + numerator) / (2 * numerator)), count = indexed.length;
+  let raised = 0;
+  for (const [k, entry] of indexed.entries()) {
+    const step = start(k + 1) - start(k);
+    if (step < 2) raised++;
+    entry.delay = Math.max(2, step);
+  }
+  const gif = writeGIF(indexed, width, height, { loops }), delays = indexed.map(entry => entry.delay * 10);
+  const frameMs = 1000 * denominator / numerator, exact = count * frameMs, duration = delays.reduce((sum, delay) => sum + delay, 0), round = value => Math.round(value * 1000) / 1000;
+  const used = new Map();
+  for (const delay of delays) used.set(delay, (used.get(delay) ?? 0) + 1);
+  const label = fps.label ?? (denominator === 1 ? String(numerator) : `${numerator}/${denominator}`), notes = [];
+  if (partialAlpha) notes.push(`${plural(partialAlpha, 'partly transparent pixel')} across the frames became fully transparent (below 50% alpha) or fully opaque; GIF has no partial transparency. Pass a background colour to blend them instead.`);
+  if (raised) notes.push(`At ${label} fps a frame lasts ${round(frameMs)} ms, faster than GIF plays: browsers show delays under 20 ms at 100 ms, so ${raised} of ${count} delays were raised to 20 ms and the loop lasts ${duration} ms instead of ${round(exact)} ms. Use 50 fps or less.`);
+  else if (used.size > 1 || !Number.isInteger(frameMs / 10)) notes.push(`At ${label} fps a frame lasts ${round(frameMs)} ms, which GIF's 10 ms steps cannot hold: the delays are ${[...used].map(([delay, times]) => `${delay} ms × ${times}`).join(', ')}, keeping every frame within 5 ms of its time${duration === exact ? ` and the loop at exactly ${duration} ms` : `; the loop lasts ${duration} ms instead of ${round(exact)} ms`}.`);
+  if (!gif.shared) notes.push(`The frames use ${gif.colors} colours in all (${fewest === most ? most : `${fewest}–${most}`} per frame), more than one 256-colour table holds, so each frame carries its own table; every colour is exact.`);
+  return { data: gif.data, width, height, frames: count, fps: { label, numerator, denominator }, frameMs: round(frameMs), duration, delays: Object.fromEntries(used), loops, colors: gif.colors, colorsPerFrame: { fewest, most }, tables: gif.shared ? 'shared' : 'per frame', transparent: gif.transparent, partialAlpha, notes };
 }
 
 // One animation of a rendered project as a GIF. The default scale is the largest whole number that keeps the longer

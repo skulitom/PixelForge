@@ -45,7 +45,7 @@ const LIMITS = { effects: 64, emitters: 16, spawned: 4096, alive: 1024, operatio
 
 function readEmitter(emitter, path, context) {
   fields(emitter, ['name', 'at', 'area', 'burst', 'rate', 'start', 'end', 'life', 'angle', 'speed', 'gravity', 'drag', 'attract', 'sway', 'floor', 'bounce', 'shapes', 'play', 'remaps', 'trail', 'dissolve', 'pattern'], path);
-  const { frames, symbols, palette, loop } = context;
+  const { frames, symbols, palette, loop, seed } = context;
   if (emitter.name !== undefined) identifier(emitter.name, `${path}.name`);
   if ((emitter.burst === undefined) === (emitter.rate === undefined)) fail(path, 'use exactly one of burst (particles at start) or rate (particles per frame)');
   const start = integer(emitter.start ?? 0, `${path}.start`, 0, frames - 1);
@@ -92,7 +92,8 @@ function readEmitter(emitter, path, context) {
     sway = { amplitude: pair(emitter.sway.amplitude, `${path}.sway.amplitude`, 0, 32), period: number(emitter.sway.period ?? 8, `${path}.sway.period`, 1, 256) };
   }
   if (emitter.bounce !== undefined && emitter.floor === undefined) fail(`${path}.bounce`, 'bounce applies at a floor');
-  // The dissolve pattern takes the same forms as the dither operation: a Bayer name or a matrix of ranks.
+  // The dissolve pattern takes the same forms as the dither operation: a Bayer name, noise (ordered by the effect's
+  // seed) or a matrix of ranks.
   const pattern = emitter.pattern ?? 'bayer4', problem = patternProblem(pattern);
   if (problem) fail(`${path}.pattern${problem[0]}`, problem[1]);
   if (emitter.pattern !== undefined && emitter.dissolve === undefined) fail(`${path}.pattern`, 'pattern shapes the dissolve; set dissolve too');
@@ -109,7 +110,7 @@ function readEmitter(emitter, path, context) {
     floor: emitter.floor === undefined ? null : integer(emitter.floor, `${path}.floor`, -4096, 4096),
     bounce: number(emitter.bounce ?? 0, `${path}.bounce`, 0, 1),
     dissolve: emitter.dissolve === undefined ? 0 : number(emitter.dissolve, `${path}.dissolve`, 0, 1),
-    threshold: ditherThreshold(pattern)
+    threshold: ditherThreshold(pattern, [0, 0], seed)
   };
 }
 
@@ -220,9 +221,9 @@ export function compileEffects(source) {
       ? (effect.duration.length === count ? effect.duration.map((d, i) => integer(d, `${path}.duration[${i}]`, 1, 60000)) : fail(`${path}.duration`, `expected one duration or ${count}`))
       : Array(count).fill(integer(effect.duration ?? 100, `${path}.duration`, 1, 60000));
     if (!Array.isArray(effect.emitters) || !effect.emitters.length || effect.emitters.length > LIMITS.emitters) fail(`${path}.emitters`, `expected 1–${LIMITS.emitters} emitters`);
-    const context = { frames: count, loop, symbols: source.symbols, palette, width, height, path };
+    const seed = integer(effect.seed ?? 1, `${path}.seed`, 0, 2147483647), context = { frames: count, loop, seed, symbols: source.symbols, palette, width, height, path };
     const emitters = effect.emitters.map((emitter, i) => readEmitter(emitter, `${path}.emitters[${i}]`, context));
-    const run = simulate({ frames: count, loop, seed: integer(effect.seed ?? 1, `${path}.seed`, 0, 2147483647), emitters }, context);
+    const run = simulate({ frames: count, loop, seed, emitters }, context);
     const spawned = run.stats.reduce((sum, s) => sum + s.spawned, 0);
     if (spawned > LIMITS.spawned) fail(`${path}.emitters`, `more than ${LIMITS.spawned} particles; lower burst, rate or frames`);
     const names = run.output.map((ops, i) => {

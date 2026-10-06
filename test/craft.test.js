@@ -36,9 +36,28 @@ test('dither draws a canvas-anchored ordered pattern, ramps density and respects
   assert.equal(ditherThreshold('bayer2')(0, 0), 0.125);
   assert.throws(() => draw([{ op: 'dither', color: 'r', erase: true }]), /dither needs a color, or erase/);
   assert.throws(() => draw([{ op: 'dither', color: 'r', direction: 'up' }]), /density ramp/);
-  assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'bayer16' }]), /bayer2, bayer4, bayer8/);
+  assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'bayer16' }]), /bayer2, bayer4, bayer8, noise/);
   assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: [[0, 4]] }]), /pattern\[0\]\[1\]/);
   assert.throws(() => draw([{ op: 'dither', color: 'r', density: 2 }]), /density: expected a number from 0 to 1/);
+});
+
+test('noise dither is seeded and non-periodic, and a rising density only ever adds pixels', () => {
+  const field = (density, seed = 7, extra = {}) => rows(draw([{ op: 'dither', color: 'r', density, pattern: 'noise', seed, ...extra }], 64, 64));
+  const half = field(0.5), quarter = field(0.25);
+  // About the asked share of pixels, never the same 64-pixel row twice, and a different seed gives a different field.
+  assert.ok(Math.abs(count(half, 'r') - 2048) < 160, String(count(half, 'r')));
+  assert.equal(new Set(half).size, 64);
+  assert.notDeepEqual(field(0.5, 8), half);
+  assert.deepEqual(field(0.5), half);
+  // Each pixel keeps its threshold, so pixels on at 0.25 stay on at 0.5: a dissolve that never flickers back.
+  assert.ok(quarter.every((line, y) => [...line].every((char, x) => char !== 'r' || half[y][x] === 'r')));
+  assert.equal(count(field(1), 'r'), 4096); assert.equal(count(field(0), 'r'), 0);
+  // The field follows canvas coordinates: a region continues it, and offset shifts it.
+  assert.deepEqual(rows(draw([{ op: 'dither', x: 10, y: 3, w: 20, h: 1, color: 'r', pattern: 'noise', seed: 7 }], 64, 64))[3].slice(10, 30), half[3].slice(10, 30));
+  assert.deepEqual(field(0.5, 7, { offset: [1, 0] })[5].slice(0, 63), half[5].slice(1));
+  assert.equal(ditherThreshold('noise', [0, 0], 7)(3, 4), ditherThreshold('noise', [1, 0], 7)(2, 4));
+  assert.throws(() => draw([{ op: 'dither', color: 'r', seed: 3 }]), /seed: seed chooses the noise pattern's order; set pattern to noise/);
+  assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'noise', seed: -1 }]), /seed: expected an integer from 0 to 2147483647/);
 });
 
 test('outline adds inside, middle, width and direction masks', () => {

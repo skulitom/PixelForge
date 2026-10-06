@@ -1,19 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFile, readdir, mkdtemp, rm, access } from 'node:fs/promises';
+import { readFile, readdir, mkdtemp, rm, access, mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderProject, PixelError } from '../src/core.js';
-import { encodeGIF, animationGIF } from '../src/gif.js';
+import { encodeGIF, animationGIF, framesGIF } from '../src/gif.js';
+import { numberedFrames } from '../src/frame-folder.js';
+import { encodePNG } from '../src/png.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-// A separate, plain reading of the GIF89a structure and its LZW stream: it shares no code with the encoder.
+// A separate, plain reading of the GIF89a structure and its LZW stream: it shares no code with the encoder. Frames
+// are composited the way a viewer shows them: a frame paints its rectangle over what the last one left, and
+// disposal 2 clears that rectangle afterwards.
 function decodeGIF(bytes) {
   assert.equal(Buffer.from(bytes.subarray(0, 6)).toString('latin1'), 'GIF89a');
   const word = at => bytes[at] | bytes[at + 1] << 8, gif = { width: word(6), height: word(8), loop: null, frames: [] };
-  let at = 13, control = null;
+  let at = 13, control = null, canvas = Array(gif.width * gif.height).fill('clear');
   const table = flags => { const colors = bytes.subarray(at, at + (3 << (flags & 7) + 1)); at += colors.length; return colors; };
   const blocks = () => { const parts = []; for (let size = bytes[at++]; size; size = bytes[at++]) { parts.push(bytes.subarray(at, at + size)); at += size; } return Buffer.concat(parts); };
   const shared = bytes[10] & 0x80 ? table(bytes[10]) : null;
@@ -27,8 +31,8 @@ function decodeGIF(bytes) {
       continue;
     }
     assert.equal(marker, 0x2c);
-    assert.deepEqual([word(at), word(at + 2), word(at + 4), word(at + 6)], [0, 0, gif.width, gif.height]);
-    const flags = bytes[at + 8]; at += 9;
+    const rect = [word(at), word(at + 2), word(at + 4), word(at + 6)], flags = bytes[at + 8]; at += 9;
+    assert.ok(rect[2] && rect[3] && rect[0] + rect[2] <= gif.width && rect[1] + rect[3] <= gif.height, 'frame rectangle inside the canvas');
     const colors = flags & 0x80 ? table(flags) : shared, minimum = bytes[at++], data = blocks(), clear = 1 << minimum, indices = [];
     let size = minimum + 1, buffer = 0, bits = 0, read = 0, dictionary = [], previous = null;
     for (;;) {
@@ -43,8 +47,12 @@ function decodeGIF(bytes) {
       if (dictionary.length === 1 << size && size < 12) size++;
       previous = entry;
     }
-    assert.equal(read, data.length, 'bytes after the end code'); assert.equal(indices.length, gif.width * gif.height);
-    gif.frames.push({ ...control, local: Boolean(flags & 0x80), pixels: indices.map(index => index === control.transparent ? 'clear' : Buffer.from(colors.subarray(index * 3, index * 3 + 3)).toString('hex')) });
+    assert.equal(read, data.length, 'bytes after the end code'); assert.equal(indices.length, rect[2] * rect[3]);
+    const pixels = canvas.slice(), inside = (callback) => { for (let y = 0; y < rect[3]; y++) for (let x = 0; x < rect[2]; x++) callback((rect[1] + y) * gif.width + rect[0] + x, y * rect[2] + x); };
+    inside((to, from) => { if (indices[from] !== control.transparent) pixels[to] = Buffer.from(colors.subarray(indices[from] * 3, indices[from] * 3 + 3)).toString('hex'); });
+    gif.frames.push({ ...control, local: Boolean(flags & 0x80), colors: colors.length / 3, rect, pixels });
+    canvas = pixels.slice();
+    if (control.disposal === 2) inside(to => { canvas[to] = 'clear'; });
   }
   assert.equal(at, bytes.length);
   return gif;
@@ -155,4 +163,81 @@ test('MCP pixel_render writes GIFs on request and leaves nothing behind when one
   // A refused GIF writes nothing at all: no revision and no half-made export folder.
   assert.deepEqual(await readdir(path.join(dir, 'refused')).catch(() => []), []);
   await assert.rejects(access(path.join(dir, 'refused', 'gifs')));
+});
+test('framesGIF times frames on the frame-rate grid, counts plays and keeps every colour of every frame', () => {
+  // Three frames per colour set, 40 colours each and 120 in all; nothing is transparent.
+  const frame = (shift, size = 8) => ({ width: size, height: 5, data: rgba(...Array.from({ length: size * 5 }, (_, i) => [i % 40 + shift, 200 - i % 40, shift, 255])) });
+  const tick = framesGIF([frame(0), frame(0), frame(100)], { fps: { numerator: 30, denominator: 1 } });
+  // 33.333 ms frames start at 0, 33.3 and 66.7 ms: 0, 30 and 70 ms after rounding, so the loop stays 100 ms long.
+  assert.deepEqual([tick.delays, tick.duration, tick.frameMs, tick.fps.label, tick.loops], [{ 30: 2, 40: 1 }, 100, 33.333, '30', 0]);
+  assert.match(tick.notes[0], /^At 30 fps a frame lasts 33\.333 ms, which GIF's 10 ms steps cannot hold: the delays are 30 ms × 2, 40 ms × 1, keeping every frame within 5 ms of its time and the loop at exactly 100 ms\.$/);
+  const decoded = decodeGIF(tick.data);
+  assert.deepEqual(decoded.frames.map(entry => entry.delay), [30, 40, 30]);
+  const hex = ({ data }) => Array.from({ length: data.length / 4 }, (_, i) => Buffer.from(data.subarray(i * 4, i * 4 + 3)).toString('hex'));
+  assert.deepEqual(decoded.frames.map(entry => entry.pixels), [hex(frame(0)), hex(frame(0)), hex(frame(100))]);
+  // An unchanged frame stores one pixel; later frames store only what changed.
+  assert.deepEqual(decoded.frames.map(entry => entry.rect), [[0, 0, 8, 5], [0, 0, 1, 1], [0, 0, 8, 5]]);
+  // Plays: 0 loops for ever, 1 plays once (no loop extension), 3 is written as two repeats.
+  for (const [loops, written] of [[0, 0], [1, null], [3, 2]]) assert.equal(decodeGIF(framesGIF([frame(0)], { fps: { numerator: 25, denominator: 1 }, loops }).data).loop, written);
+  const many = framesGIF(Array.from({ length: 8 }, (_, i) => frame(i * 30)), { fps: { numerator: 25, denominator: 1 } }), table = decodeGIF(many.data);
+  assert.deepEqual([many.colors, many.tables, many.colorsPerFrame, many.delays, table.shared, table.frames.every(entry => entry.local)], [320, 'per frame', { fewest: 40, most: 40 }, { 40: 8 }, false, true]);
+  assert.deepEqual(table.frames.map(entry => entry.pixels), Array.from({ length: 8 }, (_, i) => hex(frame(i * 30))));
+  assert.match(many.notes[0], /320 colours in all \(40 per frame\), more than one 256-colour table holds, so each frame carries its own table/);
+  // 60 fps is faster than GIF plays; 29.97 cannot keep the loop's exact length.
+  const fast = framesGIF([frame(0), frame(1), frame(2)], { fps: { numerator: 60, denominator: 1 } });
+  assert.deepEqual([fast.delays, fast.duration], [{ 20: 3 }, 60]);
+  assert.match(fast.notes[0], /1 of 3 delays were raised to 20 ms and the loop lasts 60 ms instead of 50 ms\. Use 50 fps or less\./);
+  assert.match(framesGIF([frame(0), frame(1)], { fps: { numerator: 30000, denominator: 1001 } }).notes[0], /delays are 30 ms × 1, 40 ms × 1, .*the loop lasts 70 ms instead of 66\.733 ms/);
+  for (const [options, where] of [[{}, 'gif.fps'], [{ fps: { numerator: 1, denominator: 61 } }, 'gif.fps'], [{ fps: { numerator: 25, denominator: 1 }, loops: -1 }, 'gif.loops'], [{ fps: { numerator: 25, denominator: 1 }, background: '#fff' }, 'gif.background']]) assert.throws(() => framesGIF([frame(0)], options), error => error instanceof PixelError && error.path === where, where);
+  assert.throws(() => framesGIF([frame(0), { ...frame(0, 9), name: 'b.png' }], { fps: { numerator: 25, denominator: 1 } }), /b\.png is 9×5, but the first frame is 8×5/);
+  assert.throws(() => framesGIF([], { fps: { numerator: 25, denominator: 1 } }), /at least one frame/);
+});
+test('numbered frames are read in number order, with gaps and other files reported and mixed sequences refused', () => {
+  const found = numberedFrames(['shot_10.png', 'shot_9.png', 'shot_0001.png', 'sequence.json', 'poster.png', 'shot_2.PNG']);
+  assert.deepEqual([found.prefix, found.frames.map(entry => entry.file), found.gaps, found.others], ['shot_', ['shot_0001.png', 'shot_2.PNG', 'shot_9.png', 'shot_10.png'], [[3, 8]], ['poster.png']]);
+  assert.throws(() => numberedFrames(['a_1.png', 'b_1.png', 'b_2.png']), error => error.path === 'frames.prefix' && /2 numbered sequences: "a_" \(1\), "b_" \(2\); choose one with --prefix/.test(error.message));
+  assert.deepEqual(numberedFrames(['a_1.png', 'b_1.png', 'b_2.png'], { prefix: 'b_' }).others, ['a_1.png']);
+  assert.throws(() => numberedFrames(['a_1.png', 'a_01.png']), /a_01\.png and a_1\.png have the same number|a_1\.png and a_01\.png have the same number/);
+  assert.throws(() => numberedFrames(['notes.txt', 'cover.png']), /no numbered PNG frames .*found cover\.png/);
+  assert.throws(() => numberedFrames(['a_1.png'], { prefix: 'z' }), /no frames are named z<number>\.png/);
+});
+test('CLI gif-frames turns a folder of PNG frames into an exact GIF and writes only --out', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-gif-frames-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const frames = path.join(dir, 'frames'), out = path.join(dir, 'loop.gif');
+  await mkdir(frames);
+  // Four frames numbered 1, 2, 3 and 5, one pixel half transparent, a sidecar and a stray PNG.
+  const pixels = [[RED, BLUE, CLEAR, [0, 255, 0, 200]], [BLUE, BLUE, RED, RED], [RED, [9, 9, 9, 100], BLUE, BLUE], [CLEAR, CLEAR, RED, BLUE]];
+  for (const [i, number] of [1, 2, 3, 5].entries()) await writeFile(path.join(frames, `glow_${String(number).padStart(4, '0')}.png`), encodePNG(rgba(...pixels[i]), 2, 2));
+  await writeFile(path.join(frames, 'sequence.json'), '{}');
+  await writeFile(path.join(frames, 'cover.png'), encodePNG(rgba(RED), 1, 1));
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'gif-frames', ...args], { cwd: root, encoding: 'utf8' });
+  const written = run(frames, '--fps', '12.5', '--out', out, '--loops', '2');
+  assert.equal(written.status, 0, written.stderr);
+  const report = JSON.parse(written.stdout);
+  assert.deepEqual([report.frames, report.width, report.delays, report.duration, report.loops, report.colors, report.tables, report.transparent, report.partialAlpha, report.file, report.data], [4, 2, { 80: 4 }, 320, 2, 3, 'shared', true, 2, out, undefined]);
+  assert.deepEqual([report.source.prefix, report.source.first, report.source.last, report.source.gaps], ['glow_', 'glow_0001.png', 'glow_0005.png', [[4, 4]]]);
+  assert.match(report.notes[0], /^The numbering skips 4\. The GIF holds only the frames that exist/);
+  assert.ok(report.notes.some(note => /2 partly transparent pixels/.test(note)) && report.notes.some(note => /1 other PNG file was left out: cover\.png/.test(note)));
+  assert.deepEqual((await readdir(dir)).sort(), ['frames', 'loop.gif']);
+  const decoded = decodeGIF(await readFile(out));
+  assert.deepEqual([decoded.loop, decoded.frames.map(frame => frame.pixels)], [1, [['ff0000', '0000ff', 'clear', '00ff00'], ['0000ff', '0000ff', 'ff0000', 'ff0000'], ['ff0000', 'clear', '0000ff', '0000ff'], ['clear', 'clear', 'ff0000', '0000ff']]]);
+  // A background blends partial alpha instead; existing files are kept unless --force.
+  assert.match(JSON.parse(run(frames, '--fps', '25', '--out', out).stderr).error, /already exists/);
+  const matte = JSON.parse(run(frames, '--fps', '25', '--out', out, '--background', '#000000', '--force').stdout);
+  assert.deepEqual([matte.transparent, matte.partialAlpha, decodeGIF(await readFile(out)).frames[2].pixels[1]], [false, 0, '040404']);
+  const refused = (args, pattern) => { const result = run(...args); assert.equal(result.status, 1); assert.match(JSON.parse(result.stderr).error, pattern); };
+  refused([frames, '--out', path.join(dir, 'x.gif')], /requires --fps/);
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.png')], /--out <new\.gif>/);
+  refused([path.join(dir, 'missing'), '--fps', '25', '--out', path.join(dir, 'x.gif')], /no folder at/);
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--loops', '1.5'], /gif\.loops/);
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--scale', '2'], /--scale is not supported by gif-frames/);
+  await writeFile(path.join(frames, 'glow_0006.png'), encodePNG(rgba(...Array.from({ length: 300 }, (_, i) => [i & 255, i >> 8, 1, 255])), 300, 1));
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif')], /glow_0006\.png is 300×1, but the first frame is 2×2/);
+  await writeFile(path.join(frames, 'glow_0006.png'), encodePNG(rgba(...Array.from({ length: 4 }, () => RED)), 2, 2));
+  await writeFile(path.join(frames, 'other_0001.png'), encodePNG(rgba(...Array.from({ length: 300 }, () => RED)), 300, 1));
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif')], /2 numbered sequences: "glow_" \(5\), "other_" \(1\)/);
+  await writeFile(path.join(frames, 'other_0002.png'), encodePNG(rgba(...Array.from({ length: 300 }, (_, i) => [i & 255, i >> 8, 1, 255])), 300, 1));
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--prefix', 'other_'], /other_0002\.png uses 300 colours; a GIF frame holds 256 and PixelForge does not quantize/);
+  assert.equal(run(frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--prefix', 'glow_').status, 0);
 });

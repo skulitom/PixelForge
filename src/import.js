@@ -37,18 +37,27 @@ export function decodePNG(bytes) {
   let raw;
   try { raw = inflateSync(Buffer.concat(chunks), { maxOutputLength: expected }); } catch { fail('invalid or oversized compressed pixels'); }
   if (raw.length !== expected) fail('incorrect decompressed pixel length');
+  // Unfiltered in place, one row and one filter at a time: a = left, b = above, c = above-left.
   const pixels = new Uint8Array(stride * height);
-  const paeth = (a, b, c) => { const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c); return pa <= pb && pa <= pc ? a : pb <= pc ? b : c; };
   for (let y = 0; y < height; y++) {
-    const filter = raw[y * (stride + 1)]; if (filter > 4) fail('invalid PNG filter');
+    const filter = raw[y * (stride + 1)], from = y * (stride + 1) + 1, row = y * stride, up = row - stride;
+    if (filter > 4) fail('invalid PNG filter');
     for (let x = 0; x < stride; x++) {
-      const at = y * stride + x, a = x >= channels ? pixels[at - channels] : 0, b = y ? pixels[at - stride] : 0, c = y && x >= channels ? pixels[at - stride - channels] : 0;
-      const predictor = [0, a, b, Math.floor((a + b) / 2), paeth(a, b, c)][filter];
-      pixels[at] = (raw[y * (stride + 1) + x + 1] + predictor) & 255;
+      const a = x >= channels ? pixels[row + x - channels] : 0, b = y ? pixels[up + x] : 0;
+      let predictor = 0;
+      if (filter === 1) predictor = a;
+      else if (filter === 2) predictor = b;
+      else if (filter === 3) predictor = (a + b) >> 1;
+      else if (filter === 4) {
+        const c = y && x >= channels ? pixels[up + x - channels] : 0, p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        predictor = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      pixels[row + x] = (raw[from + x] + predictor) & 255;
     }
   }
   const data = new Uint8ClampedArray(width * height * 4);
-  for (let i = 0; i < width * height; i++) { data.set(pixels.subarray(i * channels, i * channels + channels), i * 4); if (channels === 3) data[i * 4 + 3] = 255; }
+  if (channels === 4) data.set(pixels);
+  else for (let i = 0, at = 0; i < width * height; i++, at += 3) { data[i * 4] = pixels[at]; data[i * 4 + 1] = pixels[at + 1]; data[i * 4 + 2] = pixels[at + 2]; data[i * 4 + 3] = 255; }
   return { data, width, height };
 }
 export function importPNG(bytes, { name = 'imported', atlas } = {}) {

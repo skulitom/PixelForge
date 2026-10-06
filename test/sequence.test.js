@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { renderProject, PixelError } from '../src/core.js';
 import { prepareScene, renderScene } from '../src/scene.js';
 import { decodePNG } from '../src/import.js';
-import { parseFrameRate, planSequence, placeSprite, createSequence, createSceneSequence, VIDEO_SIZES } from '../src/sequence.js';
+import { parseFrameRate, planSequence, placeSprite, createSequence, createSceneSequence, frameGrid, VIDEO_SIZES } from '../src/sequence.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fps = value => parseFrameRate(value);
@@ -203,4 +203,33 @@ test('MCP render and scene tools write a sequence on request, beside what they a
     assert.equal(refused.isError, true, JSON.stringify(refused)); assert.match(JSON.parse(refused.content[0].text).path, /^sequence/);
   }
   assert.deepEqual(await readdir(path.join(dir, 'refused')).catch(() => []), []);
+});
+test('validate --fps lists durations off the video frame grid and agrees with the sequence it predicts', async t => {
+  const project = renderProject(recipe), grid = frameGrid(project, 30);
+  // 100 ms is three frames at 30 fps; 50 ms is 1.5. Frames start at 100 and 133.3 ms in the half pose and at 166.7 ms
+  // in blue, so half gets two frames and blue one; 200 ms closes.
+  assert.deepEqual([grid.fps, grid.frameMs, grid.offGrid], ['30', 33.333, [{ frame: 'half', duration: 50, videoFrames: 1.5 }, { frame: 'blue', duration: 50, videoFrames: 1.5 }]]);
+  assert.deepEqual(grid.animations.cycle, { duration: 200, loop: true, videoFrames: 6, closes: true, changed: [{ position: 1, frame: 'half', wanted: 50, got: 66.667, videoFrames: 2 }, { position: 2, frame: 'blue', wanted: 50, got: 33.333, videoFrames: 1 }] });
+  assert.deepEqual(grid.notes, ['2 of 3 frame durations are not whole video frames of 33.333 ms; at integer milliseconds, whole frames at 30 fps are multiples of 100 ms.', 'cycle: 2 positions change length.', 'once: 1 position changes length.']);
+  // At 8 fps frames start at 0 and 125 ms: no frame starts during blue (150–200 ms), so it is never shown, and one
+  // pass of 200 ms is 1.6 frames; 5 loops close.
+  const slow = frameGrid(project, 8);
+  assert.deepEqual([slow.animations.cycle.neverShown, slow.animations.cycle.closes, slow.animations.cycle.loopsThatFit], [[{ position: 2, frame: 'blue', duration: 50 }], false, 5]);
+  // Every count matches what the sequence command writes.
+  for (const rate of [8, 24, 25, 30, '29.97', 60]) for (const animation of ['cycle', 'once']) {
+    const written = createSequence(project, { fps: rate, animation }).info, predicted = frameGrid(project, rate).animations[animation];
+    assert.deepEqual(written.timing.flatMap((entry, position) => entry.frames && entry.got !== entry.wanted ? [[position, entry.got]] : []), (predicted.changed ?? []).map(entry => [entry.position, entry.got]), `${rate} ${animation}`);
+    assert.deepEqual(written.timing.flatMap((entry, position) => entry.frames ? [] : [position]), (predicted.neverShown ?? []).map(entry => entry.position));
+    assert.equal(written.loop.passFrames, predicted.videoFrames);
+  }
+  assert.throws(() => frameGrid(project, 'fast'), error => error instanceof PixelError && error.path === 'validate.fps');
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-validate-fps-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const cli = spawnSync(process.execPath, ['bin/pixelforge.js', 'validate', 'examples/caption.json', '--fps', '60'], { cwd: root, encoding: 'utf8' });
+  assert.deepEqual(JSON.parse(cli.stdout).frameGrid.notes, []);
+  assert.equal(JSON.parse(spawnSync(process.execPath, ['bin/pixelforge.js', 'validate', 'examples/caption.json'], { cwd: root, encoding: 'utf8' }).stdout).frameGrid, undefined);
+  const messages = [{ jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'pixel_validate', arguments: { project: recipe, fps: '29.97' } } }];
+  const mcp = spawnSync(process.execPath, ['bin/pixelforge.js', 'mcp', '--out', dir], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8' });
+  const validated = JSON.parse(JSON.parse(mcp.stdout.trim().split('\n')[1]).result.content[0].text);
+  assert.deepEqual([validated.frameGrid.fps, validated.frameGrid.numerator, validated.frameGrid.offGrid.length], ['29.97', 30000, 3]);
 });

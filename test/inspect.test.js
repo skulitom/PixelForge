@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { renderProject, inspectProject } from '../src/core.js';
 
 const pixel = (sheet, x, y) => [...sheet.data.slice((y * sheet.width + x) * 4, (y * sheet.width + x) * 4 + 4)];
@@ -51,4 +52,33 @@ test('automatic layout picks the largest readable scale and enforces size limits
   assert.throws(() => inspectProject(big, { scale: 16 }), /4096-pixel limit/);
   assert.throws(() => inspectProject(big, { grid: true }), /inspect\.grid: grids are limited/);
   assert.equal(inspectProject(big, { grid: true, region: { x: 0, y: 0, w: 128, h: 128 } }).grids[0].rows.length, 128);
+});
+test('a stride picks the A or B frames of a strobe that evenly spaced samples would mix', () => {
+  // 192 frames alternate between an A pose and a B pose, as a strobe does.
+  const frames = Array.from({ length: 192 }, (_, i) => ({ name: `${i % 2 ? 'b' : 'a'}-${i}`, ops: [{ op: 'pixel', color: i % 2 ? '#fff' : '#000' }] }));
+  const project = renderProject({ version: 1, name: 'strobe', width: 2, height: 2, frames, animations: { flash: { frames: frames.map(frame => frame.name) } } });
+  const kinds = view => [...new Set(view.cells.map(cell => cell.frame[0]))];
+  assert.deepEqual(kinds(inspectProject(project, { maxCells: 16 })), ['a', 'b']);
+  const a = inspectProject(project, { step: 2 }), b = inspectProject(project, { animation: 'flash', step: 2, offset: 1, maxCells: 12 });
+  assert.deepEqual([kinds(a), a.cells.length, a.sampling.positions.slice(0, 3), a.sampling.step, a.sampling.offset, a.sampling.method], [['a'], 96, [0, 2, 4], 2, 0, 'every 2nd position from 0; durations are original, not playback timing']);
+  // The stride comes first, then maxCells samples what it kept; positions stay those of the whole selection.
+  assert.deepEqual([kinds(b), b.cells.length, b.sampling.total, b.sampling.positions.slice(0, 3), b.sampling.positions.at(-1), b.sampling.method], [['b'], 12, 192, [1, 17, 35], 191, 'every 2nd position from 1, then evenly spaced, including endpoints; durations are original, not playback timing']);
+  // Onion neighbours follow the original playback positions.
+  const onion = inspectProject(project, { animation: 'flash', view: 'onion', step: 96, offset: 1, scale: 1, background: 'transparent' });
+  assert.deepEqual([onion.cells.map(cell => cell.frame), onion.sampling.positions], [['b-1', 'b-97'], [1, 97]]);
+  assert.deepEqual([inspectProject(project, { step: 13 }).sampling.method, inspectProject(project, { step: 21 }).sampling.method, inspectProject(project, { offset: 190 }).cells.map(cell => cell.frame)], ['every 13th position from 0; durations are original, not playback timing', 'every 21st position from 0; durations are original, not playback timing', ['a-190', 'b-191']]);
+  assert.equal(inspectProject(project, { step: 1, offset: 0 }).sampling, undefined);
+  // * and ? in a frame name select every matching frame, in project order.
+  assert.deepEqual(inspectProject(project, { frames: ['b-1?', 'a-0'] }).cells.map(cell => cell.frame), ['b-11', 'b-13', 'b-15', 'b-17', 'b-19', 'a-0']);
+  assert.equal(inspectProject(project, { frames: ['a-*'] }).cells.length, 96);
+  for (const [options, message] of [[{ offset: 192 }, /inspect\.offset: the selection has 192 positions, numbered from 0; choose an offset below 192/], [{ step: 0 }, /inspect\.step/], [{ step: 1.5 }, /inspect\.step/], [{ frames: ['c-*'] }, /inspect\.frames\[0\]: no frame matches "c-\*"/], [{ frames: ['a.*'] }, /inspect\.frames\[0\]: unknown frame/]]) assert.throws(() => inspectProject(project, options), message);
+  assert.equal(inspectProject(project, { frames: Array(5).fill('*'), maxCells: 4 }).sampling.total, 960);
+  assert.throws(() => inspectProject(project, { frames: Array(6).fill('*') }), /inspect\.frames: the names and patterns select 1152 frames; at most 1,024 cells/);
+});
+test('CLI inspect takes --step and --offset', () => {
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'inspect', 'examples/forest-spirit.json', ...args], { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
+  const view = JSON.parse(run('--animation', 'idle', '--step', '2', '--offset', '1').stdout);
+  assert.deepEqual([view.cells.map(cell => cell.frame), view.sampling.positions], [['rise', 'blink', 'fall'], [1, 3, 5]]);
+  assert.match(JSON.parse(run('--step', '2x').stderr).error, /--step expects a whole number/);
+  assert.match(JSON.parse(run('--offset', '1.5').stderr).error, /--offset expects a whole number/);
 });

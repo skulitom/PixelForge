@@ -45,7 +45,7 @@ node bin/pixelforge.js inspect hero.pixel.json --out hero-frames.png
 node bin/pixelforge.js render hero.pixel.json --out output/hero
 ```
 
-`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` and `--region` narrow the view. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. `gif hero.pixel.json --out hero.gif` saves one animation as a GIF for sharing. Command results except help and the preview server are JSON. Errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
+`inspect` saves a contact sheet of every frame and lists each frame's timing. Add `--grid` to read frames back as palette-key text; `--animation`, `--frames` (names or patterns such as `'flash-*'`) and `--region` narrow the view, and `--step 2 --offset 1` keeps every second cell from the second, so a strobe's A and B frames can be read apart. `validate hero.pixel.json --fps 30` also lists the durations that are not whole video frames at that rate and what a video sequence would do to each animation. `patch hero.pixel.json --changes fix.json` previews targeted edits and reports every pixel they change; add `--out` to save the new recipe. `gif hero.pixel.json --out hero.gif` saves one animation as a GIF for sharing. Command results except help and the preview server are JSON. Errors go to stderr and exit with code 1. Use `-` instead of a filename to read JSON from stdin. Existing output files are protected; add `--force` to replace them. You can optionally run `npm link` for the `pixelforge` command. No `npm install` is needed.
 
 ## Play the local Emberfall demo
 
@@ -127,7 +127,7 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 | `name.pixel.json` | Editable source recipe |
 | `preview.html` | Standalone preview you can open directly in a browser |
 
-APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling, copy rectangles from template symbols, outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer or custom patterns, and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
+APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling or per layer for a flash that leaves the rest of the frame alone, copy rectangles from template symbols or earlier frames (with exact colour swaps), outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer, custom or seeded non-periodic noise patterns, and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets with `pixelforge autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
 
 Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelforge compile`. See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
@@ -141,6 +141,15 @@ node bin/pixelforge.js gif hero.pixel.json --animation blink --scale 8 --backgro
 ```
 
 Colours are exact: nothing is quantized or dithered, and a frame that needs more than 256 colours is refused with an error instead of being approximated. GIF has no partial transparency, so pixels below 50% alpha become transparent and the rest opaque; `--background` (a palette name or opaque hex colour) blends every pixel onto one colour instead, which keeps soft shadows. Frame times are rounded to GIF's 10 ms steps with the remainder carried to the next frame, and raised to 20 ms where shorter. The JSON result's `notes` say which of these happened. The studio's **GIF** button downloads the current animation at the current zoom, and MCP `pixel_render` takes `"gif": {}`. The export bundle itself is unchanged.
+
+`pixelforge gif-frames` makes a GIF from a folder of numbered PNG frames, such as a `sequence` folder or frames a video or effects tool wrote, by the same rules:
+
+```sh
+node bin/pixelforge.js gif-frames shots/prism --fps 25 --out prism.gif
+node bin/pixelforge.js gif-frames shots/prism --fps 30 --loops 3 --background "#101828" --prefix prism_ --out prism-3x.gif
+```
+
+Files are read in number order (`prism_0001.png`, `prism_0002.png` …); gaps in the numbering, other PNGs in the folder and a folder holding two sequences (choose one with `--prefix`) are reported, never guessed around. Each frame keeps its exact colours: one with more than 256 is refused by name, and when the frames use different colours, each frame carries a colour table of its own, so a loop of 48 frames at 1080 × 1080 with about 120 colours per frame and 4,345 in all decodes back pixel for pixel, where a palette generator would shift some colours. Frame k starts at k × 1000 / fps ms rounded to GIF's centiseconds: 25 fps is 40 ms per frame, 30 fps alternates 30 and 40 ms and keeps the loop's length, and above 50 fps delays are raised to 20 ms, which the notes report with the new length. `--loops` is the number of plays, 0 (the default) for ever. Without transparency, each frame after the first stores only the rectangle that changed. The PNGs must be 8-bit RGB or RGBA and the same size; the loop may hold 134,217,728 pixels (115 frames at 1080 × 1080).
 
 ### Pixel text
 
@@ -203,8 +212,8 @@ args = ["/absolute/path/to/PixelForge/bin/pixelforge.js", "mcp", "--out", "/abso
 The eight tools are:
 
 - **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes, autotile or fx schemas.
-- **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location.
-- **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. Optional bounded samples expose omissions. Saves its recipe revision.
+- **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location; `"fps": 30` adds `frameGrid`, the durations off that video frame grid and what a sequence would do to each animation.
+- **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. `frames` takes `*`/`?` patterns, `step`/`offset` keep every nth cell, and optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
 - **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Add `"gif": {}` (or `{ "scale": 8, "background": "#17191d" }`) to also write every animation as a GIF in `gifs/`, with notes on any alpha or timing change, and `"sequence": { "fps": 30, "size": "1080p" }` to write one animation as numbered PNG frames for a video editor in `sequence/`. Every call writes a fresh folder inside the configured output directory.
 - **`pixel_compile`**: compile a `pixelforge-poses` source (including rotated parts and tweened in-betweens), a `pixelforge-autotile` template or a `pixelforge-fx` particle source into a recipe revision, with a contact sheet and optional metadata.
@@ -265,7 +274,7 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF, folderGIF, frameGrid } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
@@ -275,6 +284,8 @@ const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
 const { recipe: effects } = compileEffects(fxSource); // seeded particles baked into an ordinary recipe
 const gif = animationGIF(project, 'idle', { scale: 8 }); // { data, width, height, notes, ... }
+const loop = folderGIF('shots/prism', { fps: 25 }); // GIF from numbered PNG frames; framesGIF takes RGBA frames
+const grid = frameGrid(project, 30); // durations off a 30 fps video frame grid
 ```
 
 `src/core.js`, `src/craft.js`, `src/font.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
@@ -286,7 +297,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs (including ones made from PNG folders) and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 

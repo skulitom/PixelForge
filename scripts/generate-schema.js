@@ -36,7 +36,9 @@ const schema = {
       anchor: point, points: { type: 'object', maxProperties: 64, propertyNames: id, additionalProperties: point, description: 'Named frame positions (hands, hit points, glyph advance), exported in the atlas in exported pixels.' },
       ops: array(ref('op')), layers: array(ref('layer'), 64), pixels: { ...array(ref('pixel'), 65536), description: 'Final canvas-coordinate RGBA replacements after ops and layers. Coordinates must be inside this canvas. Later entries win; transparent erases.' } }, ['name']),
     pixel: object({ x: int(0, 255), y: int(0, 255), color }, ['x', 'y', 'color']),
-    layer: object({ name: id, visible: bool, opacity: { type: 'number', minimum: 0, maximum: 1 }, ...xy, ops: array(ref('op')) }),
+    layer: object({ name: id, visible: bool, opacity: { type: 'number', minimum: 0, maximum: 1 }, ...xy,
+      palette: { type: 'object', maxProperties: 256, additionalProperties: color, description: 'Recolor project palette keys for this layer\'s drawing only, on top of the frame palette: a flash or cycle on one layer leaves other drawing that shares the key alone. Keys must exist in the project palette; values are colours or project palette names.' },
+      ops: array(ref('op')) }),
     op: { oneOf: [
       operation('pixel', { ...xy, color }, ['color']),
       operation('rect', { ...xy, ...wh, color, filled: bool }, ['w', 'h', 'color']),
@@ -49,7 +51,7 @@ const schema = {
       operation('stamp', { ...xy, symbol: id, ...transform, remap }, ['symbol']),
       { ...operation('text', { ...xy, text: { type: 'string', minLength: 1, maxLength: 512, description: 'Printable ASCII, western European accented letters and common symbols; \\n starts a new line (at most 64).' }, color, align: { enum: ['left', 'center', 'right'], description: 'What x is: the left edge of the text (default), its centre or its right edge. Lines align the same way.' }, spacing: int(0, 16, 'Pixels between glyphs; default 1.'), lineHeight: int(1, 64, 'Pixels from the top of one line to the top of the next; default 10.'), ...transform }, ['text', 'color']),
         description: 'Draw text in the built-in pixel font. y is the top of the capitals; a line is 8 rows: capitals 7 tall, lowercase 5, descenders 1 below, and the accent of a capital reaches 2 rows above y. Glyphs are 1 to 5 pixels wide (© ® — Œ œ are 7), digits always 5, a space 3. One line of n average characters is about 6n pixels wide.' },
-      { ...operation('copy', { ...xy, from: id, symbol: id, sx: int(0, 255), sy: int(0, 255), w: int(1, 256), h: int(1, 256), ...transform, remap }), oneOf: [{ required: ['from'] }, { required: ['symbol'] }], description: 'Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA).' },
+      { ...operation('copy', { ...xy, from: id, symbol: id, sx: int(0, 255), sy: int(0, 255), w: int(1, 256), h: int(1, 256), ...transform, remap: { type: 'object', maxProperties: 256, propertyNames: { minLength: 1, maxLength: 64 }, additionalProperties: color, description: 'Symbol copies: recolor grid characters (one character each) → palette name or colour. Frame copies: swap exact colours, named by project palette key or hex (#RGB to #RRGGBBAA), for a palette name or colour.' } }), oneOf: [{ required: ['from'] }, { required: ['symbol'] }], description: 'Copy a rectangle of a symbol (palette characters) or an earlier frame (exact RGBA).' },
       { ...operation('autotile', { ...xy, symbol: id, mask: int(0, 255, 'Neighbour mask. Blob: N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128, reduced so a diagonal counts only with both of its sides. Cardinal: N=1, E=2, S=4, W=8.'), mode: { enum: ['blob', 'cardinal'], description: 'blob (default) or cardinal.' }, remap }, ['symbol', 'mask']),
         description: 'Draw one autotile tile from a template symbol two tiles wide and three tall: the four quarters the mask selects (see the autotile template format). The autotile compiler emits one per frame, so editing the template redraws every tile.' },
       { ...operation('outline', { color, diagonal: bool, position: { enum: ['outside', 'inside', 'middle'], description: 'outside (default) surrounds the visible pixels; inside recolors their edge pixels; middle splits the width, the odd pixel outside.' }, width: int(1, 8, 'Rings of pixels; default 1.'),
@@ -57,8 +59,9 @@ const schema = {
       { ...operation('dither', { ...xy, ...wh, color, erase: { type: 'boolean', description: 'Clear the pattern pixels instead of drawing a color.' },
         density: { oneOf: [num(0, 1), pairOf(num(0, 1))], description: 'Share of pixels drawn, 0–1 (default 0.5), or [from, to] ramping along direction.' },
         direction: { enum: ['down', 'up', 'right', 'left', 'radial'], description: 'Ramp direction for a [from, to] density; radial runs from the centre to the edge.' },
-        pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1, description: 'Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5.' }], description: 'bayer4 by default. Patterns follow canvas coordinates, so neighbouring areas line up.' },
+        pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1, description: 'Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5.' }], description: 'bayer4 by default. noise is seeded white noise with no repeating grid. Patterns follow canvas coordinates, so neighbouring areas line up.' },
         offset: { ...point, description: 'Shift the pattern, for example to crawl it between frames.' },
+        seed: int(0, 2147483647, 'Orders the noise pattern (default 0): the same seed keeps every pixel\'s threshold, so a rising density dissolves in a fixed order; another seed reshuffles it.'),
         over: { oneOf: [color, { ...array(color, 64), minItems: 1 }], description: 'Only change pixels whose exact current color is listed (transparent included).' } }), anyOf: [{ required: ['color'] }, { required: ['erase'] }], description: 'Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density. x/y default to 0 and w/h reach the canvas edge.' },
       { ...operation('rewrite', { ...xy, ...wh, rules: { ...array(object({ match: ruleRows, replace: ruleRows }, ['match', 'replace']), 16), minItems: 1 },
         empty: { type: 'string', minLength: 1, maxLength: 1, description: 'A non-palette character meaning a transparent pixel in match and erasure in replace.' },
@@ -132,7 +135,7 @@ const emitter = object({
   remaps: { ...array(remap, 64), description: 'Colour variants; each particle picks one.' },
   trail: { ...object({ color, length: int(1, 16, 'Frames back the streak reaches; default 2.') }, ['color']), description: 'A one-pixel streak from an earlier position, drawn under the particle.' },
   dissolve: num(0, 1, 'Share of the life, at its end, during which the particle thins out through an ordered-dither pattern.'),
-  pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dissolve pattern, as for the dither operation: bayer2, bayer4 (default), bayer8 or a matrix of ranks, e.g. [[0, 1, 2], [1, 2, 0], [2, 0, 1]] for diagonal stripes.' }
+  pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dissolve pattern, as for the dither operation: bayer2, bayer4 (default), bayer8, noise (ordered by the effect\'s seed) or a matrix of ranks, e.g. [[0, 1, 2], [1, 2, 0], [2, 0, 1]] for diagonal stripes.' }
 }, ['at', 'shapes']);
 const fx = {
   $schema: schema.$schema, title: 'PixelForge particle effects',

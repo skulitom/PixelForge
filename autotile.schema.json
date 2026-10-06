@@ -292,6 +292,15 @@
           "minimum": -4096,
           "maximum": 4096
         },
+        "palette": {
+          "type": "object",
+          "maxProperties": 256,
+          "additionalProperties": {
+            "type": "string",
+            "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
+          },
+          "description": "Recolor project palette keys for this layer's drawing only, on top of the frame palette: a flash or cycle on one layer leaves other drawing that shares the key alone. Keys must exist in the project palette; values are colours or project palette names."
+        },
         "ops": {
           "type": "array",
           "items": {
@@ -795,15 +804,16 @@
             },
             "remap": {
               "type": "object",
+              "maxProperties": 256,
               "propertyNames": {
                 "minLength": 1,
-                "maxLength": 1
+                "maxLength": 64
               },
               "additionalProperties": {
                 "type": "string",
                 "description": "Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA."
               },
-              "description": "Recolor grid characters for this operation only: character → palette name or colour."
+              "description": "Symbol copies: recolor grid characters (one character each) → palette name or colour. Frame copies: swap exact colours, named by project palette key or hex (#RGB to #RRGGBBAA), for a palette name or colour."
             }
           },
           "required": [
@@ -994,7 +1004,8 @@
                   "enum": [
                     "bayer2",
                     "bayer4",
-                    "bayer8"
+                    "bayer8",
+                    "noise"
                   ]
                 },
                 {
@@ -1014,7 +1025,7 @@
                   "description": "Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5."
                 }
               ],
-              "description": "bayer4 by default. Patterns follow canvas coordinates, so neighbouring areas line up."
+              "description": "bayer4 by default. noise is seeded white noise with no repeating grid. Patterns follow canvas coordinates, so neighbouring areas line up."
             },
             "offset": {
               "type": "array",
@@ -1026,6 +1037,12 @@
               "maxItems": 2,
               "minItems": 2,
               "description": "Shift the pattern, for example to crawl it between frames."
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647,
+              "description": "Orders the noise pattern (default 0): the same seed keeps every pixel's threshold, so a rising density dissolves in a fixed order; another seed reshuffles it."
             },
             "over": {
               "oneOf": [

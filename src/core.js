@@ -139,7 +139,7 @@ export function renderProject(spec, options = {}) {
         copy: ['x', 'y', 'from', 'symbol', 'sx', 'sy', 'w', 'h', ...transform, 'remap'],
         autotile: ['x', 'y', 'symbol', 'mask', 'mode', 'remap'],
         outline: ['color', 'diagonal', 'position', 'width', 'directions'],
-        dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'over'],
+        dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'seed', 'over'],
         rewrite: ['x', 'y', 'w', 'h', 'rules', 'empty', 'steps', 'chance', 'limit', 'seed', 'rotate', 'mirror']
       };
       if (typeof op.op !== 'string' || !own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
@@ -231,9 +231,19 @@ export function renderProject(spec, options = {}) {
           [sourceWidth, sourceHeight, read] = [grid.width, grid.height, (sx, sy) => sample(grid.rows[sy][sx])];
         } else {
           if (typeof op.from !== 'string' || !rendered.has(op.from)) fail(`${p}.from`, 'must name an earlier frame');
-          if (op.remap !== undefined) fail(`${p}.remap`, 'remap applies to palette characters; frame copies keep exact RGBA');
-          const source = rendered.get(op.from).data;
-          [sourceWidth, sourceHeight, read] = [width, height, (sx, sy) => { const at = (sy * width + sx) * 4; return source[at + 3] ? source.subarray(at, at + 4) : null; }];
+          // A frame copy keeps exact RGBA; remap swaps exact colours, named by project palette key or hex, for others.
+          const source = rendered.get(op.from).data, swaps = new Map();
+          if (op.remap !== undefined) {
+            object(op.remap, `${p}.remap`);
+            if (Object.keys(op.remap).length > 256) fail(`${p}.remap`, 'at most 256 colours');
+            for (const [key, value] of Object.entries(op.remap)) {
+              const from = parseColor(key, palette, `${p}.remap.${key}`), id = pixelId(from, 0);
+              if (!from[3]) fail(`${p}.remap.${key}`, 'frame copies skip transparent pixels; remap visible colours');
+              if (swaps.has(id)) fail(`${p}.remap.${key}`, `another key already names ${toHex(from)}`);
+              swaps.set(id, color(value, `${p}.remap.${key}`));
+            }
+          }
+          [sourceWidth, sourceHeight, read] = [width, height, (sx, sy) => { const at = (sy * width + sx) * 4; return source[at + 3] ? swaps.get(pixelId(source, at)) ?? source.subarray(at, at + 4) : null; }];
         }
         const sx = integer(op.sx ?? 0, `${p}.sx`, 0, sourceWidth - 1), sy = integer(op.sy ?? 0, `${p}.sy`, 0, sourceHeight - 1);
         const w = integer(op.w ?? sourceWidth - sx, `${p}.w`, 1, sourceWidth - sx), h = integer(op.h ?? sourceHeight - sy, `${p}.h`, 1, sourceHeight - sy);
@@ -309,7 +319,9 @@ export function renderProject(spec, options = {}) {
         if (!['down', 'up', 'right', 'left', 'radial'].includes(direction)) fail(`${p}.direction`, 'expected down, up, right, left or radial');
         const pattern = op.pattern ?? 'bayer4', problem = patternProblem(pattern);
         if (problem) fail(`${p}.pattern${problem[0]}`, problem[1]);
-        const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`));
+        if (op.seed !== undefined && pattern !== 'noise') fail(`${p}.seed`, 'seed chooses the noise pattern\'s order; set pattern to noise');
+        const seed = integer(op.seed ?? 0, `${p}.seed`, 0, 2147483647);
+        const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`), seed);
         const over = op.over === undefined ? null : new Set((typeof op.over === 'string' ? [op.over] : list(op.over, `${p}.over`, 64)).map((value, i) => pixelId(color(value, typeof op.over === 'string' ? `${p}.over` : `${p}.over[${i}]`), 0)));
         spend(w * h);
         for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
@@ -424,15 +436,30 @@ export function renderProject(spec, options = {}) {
     }
     drawOps(data, frame.ops ?? [], `${p}.ops`);
     list(frame.layers ?? [], `${p}.layers`, 64);
+    const framePalette = activePalette, layerPalettes = [];
     for (const [li, layer] of (frame.layers ?? []).entries()) {
       const lp = `${p}.layers[${li}]`;
-      object(layer, lp, ['name', 'visible', 'opacity', 'x', 'y', 'ops']);
+      object(layer, lp, ['name', 'visible', 'opacity', 'x', 'y', 'palette', 'ops']);
       if (layer.name !== undefined) name(layer.name, `${lp}.name`);
+      // A layer palette recolors keys for this layer's drawing only, on top of the frame's palette, so one layer can
+      // flash or cycle while other drawing that shares the key keeps its colour.
+      let layerOverrides = null;
+      if (layer.palette !== undefined) {
+        object(layer.palette, `${lp}.palette`);
+        layerOverrides = {};
+        for (const [key, value] of Object.entries(layer.palette)) {
+          if (!own(palette, key)) fail(`${lp}.palette.${key}`, 'layer palettes recolor keys declared in the project palette');
+          layerOverrides[key] = toHex(parseColor(value, palette, `${lp}.palette.${key}`));
+        }
+        layerPalettes.push({ layer: layer.name ?? li, palette: layerOverrides });
+      }
+      activePalette = layerOverrides ? { ...framePalette, ...layerOverrides } : framePalette;
       const visible = boolean(layer.visible ?? true, `${lp}.visible`), opacity = layer.opacity ?? 1;
       if (typeof opacity !== 'number' || !Number.isFinite(opacity) || opacity < 0 || opacity > 1) fail(`${lp}.opacity`, 'expected a number from 0 to 1');
       const lx = integer(layer.x ?? 0, `${lp}.x`), ly = integer(layer.y ?? 0, `${lp}.y`);
       const pixels = new Uint8ClampedArray(data.length);
       drawOps(pixels, layer.ops ?? [], `${lp}.ops`);
+      activePalette = framePalette;
       if (visible && opacity > 0) {
         spend(width * height);
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
@@ -452,7 +479,7 @@ export function renderProject(spec, options = {}) {
       data.set(color(pixel.color, `${pp}.color`), (y * width + x) * 4);
     }
     activePalette = palette;
-    const result = { name: frameName, duration, data, ...(frameAnchor && { anchor: frameAnchor }), ...(points && { points }), ...(overrides && { palette: overrides }) };
+    const result = { name: frameName, duration, data, ...(frameAnchor && { anchor: frameAnchor }), ...(points && { points }), ...(overrides && { palette: overrides }), ...(layerPalettes.length && { layerPalettes }) };
     rendered.set(frameName, result);
     return result;
   });
@@ -682,7 +709,7 @@ export function tileReport(data, width, height) {
 }
 
 export function inspectProject(project, options = {}) {
-  object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'view', 'native', 'diagnostics', 'maxCells']);
+  object(options, 'inspect', ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'view', 'native', 'diagnostics', 'maxCells', 'step', 'offset']);
   const { width, height, frames } = project;
   if (options.frames !== undefined && options.animation !== undefined) fail('inspect', 'choose frames or animation, not both');
   let cells = frames.map((_, i) => i);
@@ -692,11 +719,18 @@ export function inspectProject(project, options = {}) {
   } else if (options.frames !== undefined) {
     list(options.frames, 'inspect.frames', 1024);
     if (!options.frames.length) fail('inspect.frames', 'select at least one frame');
-    cells = options.frames.map((ref, i) => {
+    // A name with * (any run of characters) or ? (one character) selects every matching frame in project order.
+    cells = options.frames.flatMap((ref, i) => {
+      if (typeof ref === 'string' && /^[a-zA-Z0-9_*?-]+$/.test(ref) && /[*?]/.test(ref)) {
+        const pattern = new RegExp(`^${ref.replaceAll('*', '.*').replaceAll('?', '.')}$`), matches = frames.flatMap((f, index) => (pattern.test(f.name) ? [index] : []));
+        if (!matches.length) fail(`inspect.frames[${i}]`, `no frame matches ${JSON.stringify(ref)}`);
+        return matches;
+      }
       const index = frames.findIndex(f => f.name === ref);
       if (index < 0) fail(`inspect.frames[${i}]`, `unknown frame ${JSON.stringify(ref)}`);
-      return index;
+      return [index];
     });
+    if (cells.length > 1024) fail('inspect.frames', `the names and patterns select ${cells.length} frames; at most 1,024 cells`);
   }
   const mode = options.view ?? 'color';
   if (!['color', 'silhouette', 'grayscale', 'onion', 'tile'].includes(mode)) fail('inspect.view', 'expected color, silhouette, grayscale, onion or tile');
@@ -712,15 +746,25 @@ export function inspectProject(project, options = {}) {
   const scale = options.scale === undefined ? undefined : integer(options.scale, 'inspect.scale', 1, 16);
   const background = (options.background ?? 'checker') === 'checker' ? null : parseColor(options.background, project.palette, 'inspect.background');
   const native = boolean(options.native ?? false, 'inspect.native'), diagnostics = boolean(options.diagnostics ?? false, 'inspect.diagnostics');
-  const total = cells.length;
+  const total = cells.length, methods = [];
   let positions = cells.map((_, i) => i);
+  // A stride picks every step-th position from offset, so a strobe that alternates A and B frames can be read as all
+  // A frames (offset 0, step 2) or all B frames (offset 1); evenly spaced samples would alias between them.
+  const step = options.step === undefined ? 1 : integer(options.step, 'inspect.step', 1, 1024);
+  const offset = options.offset === undefined ? 0 : integer(options.offset, 'inspect.offset', 0, 2047);
+  if (offset >= total) fail('inspect.offset', `the selection has ${total} position${total === 1 ? '' : 's'}, numbered from 0; choose an offset below ${total}`);
+  if (step > 1 || offset > 0) {
+    positions = positions.filter(i => i >= offset && (i - offset) % step === 0);
+    const suffix = step % 100 >= 11 && step % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][step % 10] ?? 'th';
+    methods.push(step === 1 ? `every position from ${offset}` : `every ${step}${suffix} position from ${offset}`);
+  }
   if (options.maxCells !== undefined) {
     const requested = integer(options.maxCells, 'inspect.maxCells', 1, 256);
     const side = mode === 'tile' ? Math.max(width, height) * 3 : Math.max(region.w, region.h);
-    const count = Math.min(total, requested, Math.max(1, Math.floor(4094 / (side + 2)) ** 2));
-    if (count < total) positions = Array.from({ length: count }, (_, i) => count === 1 ? 0 : Math.floor(i * (total - 1) / (count - 1)));
-    cells = positions.map(i => cells[i]);
+    const count = Math.min(positions.length, requested, Math.max(1, Math.floor(4094 / (side + 2)) ** 2));
+    if (count < positions.length) { const chosen = positions; positions = Array.from({ length: count }, (_, i) => chosen[count === 1 ? 0 : Math.floor(i * (chosen.length - 1) / (count - 1))]); methods.push('evenly spaced, including endpoints'); }
   }
+  cells = positions.map(i => cells[i]);
   const unique = [...new Set(cells)];
   if (grid && unique.length * region.w * region.h > 16384) fail('inspect.grid', `grids are limited to 16,384 pixels, not ${unique.length} × ${region.w}×${region.h}; select fewer frames or a smaller region`);
   let view;
@@ -736,7 +780,7 @@ export function inspectProject(project, options = {}) {
     if (mode !== 'color') view.mode = mode;
     if (native) view.nativeSheet = drawSheet(sources, width, region, { scale: 1, background });
   }
-  if (total !== cells.length) view.sampling = { total, shown: cells.length, omitted: total - cells.length, positions, method: 'evenly spaced, including endpoints; durations are original, not playback timing' };
+  if (total !== cells.length) view.sampling = { total, shown: cells.length, omitted: total - cells.length, positions, ...((step > 1 || offset > 0) && { step, offset }), method: `${methods.join(', then ')}; durations are original, not playback timing` };
   if (diagnostics) view.diagnostics = analyzeProject(project);
   if (options.animation !== undefined && (diagnostics || mode === 'onion')) {
     const a = project.animations[options.animation]; let start = 0;
@@ -797,8 +841,9 @@ export function analyzeProject(project) {
   const known = new Set(Object.values(project.palette).map(color => colorId(parseColor(color), 0)));
   const stats = frames.map(frame => {
     const colors = new Set(), outside = new Set(), isolated = [], unlisted = [];
-    // Colors a frame palette introduces are declared for that frame.
-    const declared = frame.palette ? new Set([...known, ...Object.values(frame.palette).map(color => colorId(parseColor(color), 0))]) : known;
+    // Colors a frame or layer palette introduces are declared for that frame.
+    const introduced = [...Object.values(frame.palette ?? {}), ...(frame.layerPalettes ?? []).flatMap(entry => Object.values(entry.palette))];
+    const declared = introduced.length ? new Set([...known, ...introduced.map(color => colorId(parseColor(color), 0))]) : known;
     let visible = 0, isolatedCount = 0, hash = 2166136261;
     for (let at = 0; at < frame.data.length; at += 4) {
       const id = frame.data[at + 3] ? colorId(frame.data, at) : 0;

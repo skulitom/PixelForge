@@ -62,6 +62,35 @@ export function planSequence(durations, { fps, loop = true, loops = 1, seconds, 
   };
 }
 
+// How a project's timing sits on the frame grid of a video at `fps`, without making the sequence: the frames whose
+// durations are not whole video frames, and for each animation which positions a sequence would lengthen, shorten or
+// never show, and whether one pass ends on the grid. Video frame j starts at j × 1000 × denominator / numerator ms
+// and shows the pose active then, as in planSequence; counts are exact integer arithmetic.
+export function frameGrid(project, fps, path = 'validate.fps') {
+  const rate = parseFrameRate(fps, path), { numerator, denominator } = rate, unit = 1000 * denominator, frameMs = unit / numerator;
+  const round = value => Math.round(value * 1000) / 1000, round6 = value => Math.round(value * 1e6) / 1e6, ceilDiv = (a, b) => Math.floor((a + b - 1) / b);
+  const offGrid = project.frames.filter(frame => frame.duration * numerator % unit).map(frame => ({ frame: frame.name, duration: frame.duration, videoFrames: round6(frame.duration * numerator / unit) }));
+  const animations = {}, notes = [];
+  for (const [name, animation] of Object.entries(project.animations)) {
+    const changed = [], neverShown = [];
+    let start = 0;
+    for (const [position, index] of animation.frames.entries()) {
+      const { name: frame, duration } = project.frames[index], shown = ceilDiv((start + duration) * numerator, unit) - ceilDiv(start * numerator, unit);
+      if (!shown) neverShown.push({ position, frame, duration });
+      else if (shown * unit !== duration * numerator) changed.push({ position, frame, wanted: duration, got: round(shown * frameMs), videoFrames: shown });
+      start += duration;
+    }
+    const closes = animation.duration * numerator % unit === 0;
+    let loopsThatFit = null;
+    for (let n = 2; n <= 240 && !closes && loopsThatFit === null; n++) if (n * animation.duration * numerator % unit === 0) loopsThatFit = n;
+    animations[name] = { duration: animation.duration, loop: animation.loop, videoFrames: round6(animation.duration * numerator / unit), closes, ...(loopsThatFit && { loopsThatFit }), ...(changed.length && { changed }), ...(neverShown.length && { neverShown }) };
+    const problems = [changed.length && `${changed.length} position${changed.length === 1 ? ' changes' : 's change'} length`, neverShown.length && `${neverShown.length} ${neverShown.length === 1 ? 'is' : 'are'} never shown`, animation.loop && !closes && `the loop does not close on the grid${loopsThatFit ? ` (${loopsThatFit} loops do)` : ''}`].filter(Boolean);
+    if (problems.length) notes.push(`${name}: ${problems.join(', ')}.`);
+  }
+  if (offGrid.length) notes.unshift(`${offGrid.length} of ${project.frames.length} frame durations are not whole video frames of ${round(frameMs)} ms; at integer milliseconds, whole frames at ${rate.label} fps are multiples of ${unit / gcd(unit, numerator)} ms.`);
+  return { fps: rate.label, numerator, denominator, frameMs: round(frameMs), offGrid, animations, notes };
+}
+
 // Where a w × h sprite goes on the canvas. Without `size` the canvas is the sprite at `scale`. With `size`, `fit`
 // chooses the default scale: "contain" (the default) is the largest whole number at which the whole sprite fits;
 // "cover" is the smallest at which it covers the canvas, and what overhangs is cropped.

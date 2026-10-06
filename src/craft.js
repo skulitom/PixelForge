@@ -5,7 +5,7 @@
 // Inputs are validated by the callers, which own the error paths. No I/O and no imports.
 
 // ---- Ordered dither ----------------------------------------------------------------------------------------------
-export const DITHER_PATTERNS = ['bayer2', 'bayer4', 'bayer8'];
+export const DITHER_PATTERNS = ['bayer2', 'bayer4', 'bayer8', 'noise'];
 function bayer(size) {
   let matrix = [[0]];
   while (matrix.length < size) {
@@ -34,8 +34,11 @@ export function patternProblem(pattern) {
 }
 // Returns threshold(x, y) in (0, 1) for a named Bayer pattern or a custom matrix of ranks. A matrix whose highest rank
 // is n has n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5. A pixel is on when its threshold is below the
-// density. Thresholds follow canvas coordinates, so neighbouring areas line up.
-export function ditherThreshold(pattern, [ox, oy] = [0, 0]) {
+// density. Thresholds follow canvas coordinates, so neighbouring areas line up. `noise` is seeded white noise with no
+// period, so a large area shows no repeating grid: each pixel keeps its threshold for a given seed, so a density
+// that rises frame by frame dissolves pixels in one fixed order, and another seed gives another order.
+export function ditherThreshold(pattern, [ox, oy] = [0, 0], seed = 0) {
+  if (pattern === 'noise') return (x, y) => ((hash(seed, x + ox, y + oy) >>> 8) + 0.5) / 16777216;
   const matrix = typeof pattern === 'string' ? bayer({ bayer2: 2, bayer4: 4, bayer8: 8 }[pattern]) : pattern;
   const h = matrix.length, w = matrix[0].length, levels = Math.max(...matrix.flat()) + 1;
   return (x, y) => (matrix[(((y + oy) % h) + h) % h][(((x + ox) % w) + w) % w] + 0.5) / levels;

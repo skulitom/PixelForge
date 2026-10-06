@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, animationGIF, createSequence, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, animationGIF, createSequence, frameGrid, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
   pixelforge init [file.json]              Create an editable example
-  pixelforge validate <file.json|->        Validate and describe a project
+  pixelforge validate <file.json|-> [--fps 30]
+                                           Validate and describe a project; --fps lists durations off that video frame grid
   pixelforge inspect <file.json|-> [--out sheet.png] [--grid]
                                            See every frame; writes only --out
   pixelforge patch <file.json|-> --changes <changes.json|-> [--out new.json] [--image diff.png]
@@ -14,6 +15,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge render <file.json|-> --out dir Export a complete asset bundle
   pixelforge gif <file.json|-> --out anim.gif [--animation name] [--scale 1-16] [--background color]
                                            Share one animation as a GIF; writes only --out
+  pixelforge gif-frames <folder> --fps 25 --out loop.gif [--loops 0] [--background color] [--prefix name_]
+                                           A GIF from numbered PNG frames (name_0001.png ...); writes only --out
   pixelforge sequence <recipe|source|scene.json> --out folder --fps 30 [--size 1080p|WxH] [--scale n]
                     [--fit contain|cover] [--align center] [--offset x,y] [--background color] [--animation name]
                     [--loops n | --seconds s] [--step n]
@@ -33,15 +36,19 @@ const HELP = `PixelForge — text to pixels, without dependencies
 
 Options: --force allows overwriting exported files. '-' reads JSON from stdin.
 Palette references ({"$ref": "palette.json"}) and scene asset files resolve from the input file's folder.
-Inspect: --frames a,b or --animation name picks cells; --region x,y,w,h crops;
+Inspect: --frames a,b or --animation name picks cells (* and ? in a name match frames: --frames 'flash-*');
+--step n [--offset k] keeps every nth cell from position k (0 is the first); --region x,y,w,h crops;
 --grid adds palette-key rows; --scale 1-16 and --background color style the sheet.
 --view color|silhouette|grayscale|onion|tile; --native adds a 1x PNG; --diagnostics adds advisory evidence.
---max-cells 1-256 samples long sequences with explicit omission metadata.
+--max-cells 1-256 samples long sequences with explicit omission metadata; evenly spaced samples can alias with a
+repeating pattern (a strobe alternating A and B), so pick positions with --step and --offset.
 Patch accepts correction overlays as --changes; a changed base fails with a fingerprint conflict.
 A cleanup change ({"cleanup": "frames[run-2]", "value": {"corners": true, "strays": true}}) previews
 proposed fixes for doubled corners and stray pixels; --diagnostics counts both per frame.
 GIF keeps exact colours (at most 256 per frame, never quantized), 1-bit transparency unless --background blends
 onto a colour, and 10 ms timing steps; the result's notes list what changed. Default scale: up to 256 pixels.
+gif-frames reads the folder's numbered PNGs in number order, one GIF frame each, by the same rules; frames whose
+colours differ get colour tables of their own. --loops is the number of plays (0, the default, loops for ever).
 Sequence writes one PNG per video frame with alpha, plus sequence.json and a README with the ffmpeg command for a
 .mov. --size is 720p, 1080p, 1440p, 4k, vertical, square or WIDTHxHEIGHT; the sprite is enlarged by a whole number
 (the largest that fits, or --scale; --fit cover takes the smallest that covers the canvas and crops the rest) and
@@ -55,7 +62,7 @@ function parseArgs(args) {
   const positional = [], options = {};
   for (let i = 0; i < args.length; i++) {
     if (['--force', '--grid', '--native', '--diagnostics', '--open'].includes(args[i])) options[args[i].slice(2)] = true;
-    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root', '--fps', '--size', '--align', '--offset', '--loops', '--seconds', '--step', '--fit'].includes(args[i])) {
+    else if (['--out', '--port', '--frames', '--animation', '--region', '--scale', '--background', '--changes', '--image', '--view', '--max-cells', '--metadata', '--selections', '--atlas', '--name', '--layers', '--reference', '--root', '--fps', '--size', '--align', '--offset', '--loops', '--seconds', '--step', '--fit', '--prefix'].includes(args[i])) {
       const key = args[i].slice(2);
       if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`--${key} requires a value`);
       options[key] = args[++i];
@@ -84,10 +91,11 @@ function linkPalette(recipe, input, outFile) {
   const shared = path.resolve(input.baseDir, link.reference), reference = path.relative(path.dirname(path.resolve(outFile)), shared).split(path.sep).join('/');
   return restorePaletteReference({ palette: { $ref: reference } }, recipe, { palettes: [{ ...link, where: 'project' }] });
 }
-function inspectOptions({ frames, animation, region, grid, scale, background, view, native, diagnostics, 'max-cells': maxCells }) {
+function inspectOptions({ frames, animation, region, grid, scale, background, view, native, diagnostics, 'max-cells': maxCells, step, offset }) {
+  for (const [key, value] of [['step', step], ['offset', offset]]) if (value !== undefined && !/^\d+$/.test(value)) throw new Error(`--${key} expects a whole number`);
   if (region !== undefined && !/^\d+,\d+,\d+,\d+$/.test(region)) throw new Error('--region expects four whole numbers: x,y,w,h');
   const [x, y, w, h] = region?.split(',').map(Number) ?? [];
-  return { ...(frames !== undefined && { frames: frames.split(',') }), ...(animation !== undefined && { animation }), ...(region !== undefined && { region: { x, y, w, h } }), ...(grid && { grid }), ...(scale !== undefined && { scale: Number(scale) }), ...(background !== undefined && { background }), ...(view !== undefined && { view }), ...(native && { native }), ...(diagnostics && { diagnostics }), ...(maxCells !== undefined && { maxCells: Number(maxCells) }) };
+  return { ...(frames !== undefined && { frames: frames.split(',') }), ...(animation !== undefined && { animation }), ...(region !== undefined && { region: { x, y, w, h } }), ...(grid && { grid }), ...(scale !== undefined && { scale: Number(scale) }), ...(background !== undefined && { background }), ...(view !== undefined && { view }), ...(native && { native }), ...(diagnostics && { diagnostics }), ...(maxCells !== undefined && { maxCells: Number(maxCells) }), ...(step !== undefined && { step: Number(step) }), ...(offset !== undefined && { offset: Number(offset) }) };
 }
 // Checks every target before writing any, so a refused overwrite leaves nothing half-written.
 async function writeOutputs(targets, force) {
@@ -114,7 +122,7 @@ try {
   else {
     const { positional, options } = parseArgs(rest);
     if (positional.length > 1) throw new Error('Too many positional arguments');
-    const allowed = { init: ['force'], validate: [], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], sequence: ['out', 'fps', 'animation', 'size', 'scale', 'fit', 'align', 'offset', 'background', 'loops', 'seconds', 'step', 'force'], preview: ['port', 'open'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
+    const allowed = { init: ['force'], validate: ['fps'], inspect: ['frames', 'animation', 'region', 'grid', 'scale', 'background', 'out', 'force', 'view', 'native', 'diagnostics', 'max-cells', 'step', 'offset', 'layers', 'reference'], patch: ['changes', 'out', 'image', 'force'], render: ['out', 'force'], gif: ['out', 'animation', 'scale', 'background', 'force'], 'gif-frames': ['out', 'fps', 'loops', 'background', 'prefix', 'force'], sequence: ['out', 'fps', 'animation', 'size', 'scale', 'fit', 'align', 'offset', 'background', 'loops', 'seconds', 'step', 'force'], preview: ['port', 'open'], mcp: ['out', 'root'], schema: [], compile: ['out', 'metadata', 'force'], autotile: ['out', 'metadata', 'force'], scene: ['out', 'force'], overlay: ['changes', 'selections', 'out', 'force'], import: ['out', 'name', 'atlas', 'metadata', 'force'] };
     if (!Object.hasOwn(allowed, command)) throw new Error(`Unknown command: ${command}. Run pixelforge help.`);
     for (const key of Object.keys(options)) if (!allowed[command].includes(key)) throw new Error(`--${key} is not supported by ${command}`);
     if (['schema', 'mcp'].includes(command) && positional.length) throw new Error(`${command} does not accept a filename`);
@@ -211,9 +219,17 @@ try {
       const { data, ...gif } = animationGIF(project, options.animation, { ...(options.scale !== undefined && { scale: Number(options.scale) }), ...(options.background !== undefined && { background: options.background }) });
       const written = await writeOutputs({ file: [options.out, data] }, options.force);
       console.log(JSON.stringify({ ok: true, name: project.name, ...gif, ...written, warnings: project.warnings, ...referenced(input) }, null, 2));
+    } else if (command === 'gif-frames') {
+      if (!positional[0] || positional[0] === '-') throw new Error('gif-frames requires a folder of numbered PNG frames');
+      if (!options.out || !/\.gif$/i.test(options.out)) throw new Error('gif-frames requires --out <new.gif>');
+      if (options.fps === undefined) throw new Error('gif-frames requires --fps, for example 12, 24, 25 or 30');
+      const { folderGIF } = await import('../src/frame-folder.js');
+      const { data, ...gif } = folderGIF(positional[0], { fps: options.fps, ...(options.loops !== undefined && { loops: Number(options.loops) }), ...(options.background !== undefined && { background: options.background }), ...(options.prefix !== undefined && { prefix: options.prefix }) });
+      const written = await writeOutputs({ file: [options.out, data] }, options.force);
+      console.log(JSON.stringify({ ok: true, ...gif, bytes: data.length, ...written }, null, 2));
     } else {
       const input = await readResolved(positional[0]);
-      if (command === 'validate') console.log(JSON.stringify({ ok: true, ...summary(renderProject(input.document)), ...referenced(input) }));
+      if (command === 'validate') { const project = renderProject(input.document); console.log(JSON.stringify({ ok: true, ...summary(project), ...(options.fps !== undefined && { frameGrid: frameGrid(project, options.fps) }), ...referenced(input) })); }
       else {
         if (!options.out) throw new Error('render requires --out <directory>');
         const bundle = await createBundle(input.document), files = await writeBundle(bundle, options.out, options);

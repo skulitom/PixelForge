@@ -233,6 +233,33 @@ with tempfile.TemporaryDirectory() as temporary:
         assert worst <= 3, worst
         video = f'ffmpeg made a {stream["pix_fmt"]} ProRes video of {stream["nb_read_frames"]} frames with exact alpha and colours within {worst} of 255'
     sequence_frames = info['frames']
+    # The sequence folder back as a GIF at its own rate. Each frame must be its PNG with alpha below 128 cleared, and
+    # each delay the step between frame starts rounded to centiseconds, worked out here with fractions.
+    looped = Path(temporary) / 'sequence.gif'
+    report = json.loads(subprocess.check_output(['node', 'bin/pixelforge.js', 'gif-frames', str(out), '--fps', '29.97', '--loops', '3', '--out', str(looped)], cwd=root))
+    image = Image.open(looped)
+    assert image.n_frames == info['frames'] == report['frames'] and image.info.get('loop') == 2, (image.n_frames, image.info.get('loop'))
+    starts = [(Fraction(k * 100 * 1001, 30000) + Fraction(1, 2)) // 1 for k in range(info['frames'] + 1)]
+    for number in range(1, info['frames'] + 1):
+        image.seek(number - 1)
+        assert image.info['duration'] == max(2, starts[number] - starts[number - 1]) * 10, (number, image.info['duration'])
+        source = Image.open(out / (info['pattern'] % number)).convert('RGBA')
+        wanted = bytes(channel for r, g, b, a in source.getdata() for channel in ((r, g, b, 255) if a >= 128 else (0, 0, 0, 0)))
+        assert image.convert('RGBA').tobytes() == wanted, number
+    # Frames whose colours differ: 1,200 in all, 200 per frame, some one level apart. Each frame needs a table of its
+    # own, and every colour must come back exactly.
+    many = Path(temporary) / 'many'
+    many.mkdir()
+    for number in range(6):
+        frame = Image.new('RGB', (40, 30))
+        frame.putdata([((i * 7 + number * 31) % 256, (i * 13 + number) % 256, number * 40 + i % 2) for i in range(200)] * 6)
+        frame.save(many / f'flash_{number + 1:03d}.png')
+    report = json.loads(subprocess.check_output(['node', 'bin/pixelforge.js', 'gif-frames', str(many), '--fps', '25', '--out', str(Path(temporary) / 'many.gif')], cwd=root))
+    assert (report['colors'], report['tables'], report['loops']) == (1200, 'per frame', 0), report
+    image = Image.open(Path(temporary) / 'many.gif')
+    for number in range(6):
+        image.seek(number)
+        assert image.info['duration'] == 40 and image.convert('RGB').tobytes() == Image.open(many / f'flash_{number + 1:03d}.png').tobytes(), number
     # Cover: 24 pixels cover 100 × 60 five times (120 × 120); from the top-right corner, 20 pixels are cut on the left
     # and 60 at the bottom. Pillow crops the same enlarged pose itself.
     cover = Path(temporary) / 'cover'
@@ -246,4 +273,4 @@ with tempfile.TemporaryDirectory() as temporary:
     actual = Image.open(cover / (covered['pattern'] % 1))
     assert actual.mode == 'RGBA' and actual.size == (100, 60) and actual.tobytes() == expected.tobytes()
 
-print(f'Independent decode passed: a {sequence_frames}-frame image sequence at 29.97 with exact pixels and alpha ({video}), a cover-cropped frame, {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')
+print(f'Independent decode passed: a {sequence_frames}-frame image sequence at 29.97 with exact pixels and alpha ({video}), a cover-cropped frame, the sequence back as a GIF and 1,200 colours over 6 GIF frames from PNG folders, {len(gifs)} GIFs with exact pixels, delays and loop flags, sprite sheet, {len(atlas["frames"])} frames, {len(atlas["animations"])} APNGs, exact timing/alpha, {count}-file ZIP, a {len(view["cells"])}-cell contact sheet, a {len(diff["frames"])}-row patch comparison, and MCP painting/restart/all-frame preview.')
