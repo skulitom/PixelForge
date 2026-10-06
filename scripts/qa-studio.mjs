@@ -204,18 +204,20 @@ try {
 
   console.log('Editing');
   const original = await evaluate(`document.getElementById('source').value`), edited = original.replace('"#72b58d"', '"#ff00ff"');
+  // Each edit waits for what the studio's recompile shows, since a busy machine can run it later than type()'s pause.
   await check('an edit to the recipe updates the preview', async () => {
     assert.notEqual(edited, original);
-    await type(edited); await click('#timeline .frame:nth-child(1)');
+    await type(edited);
+    await until(`[...document.querySelectorAll('#palette .swatch')].some(swatch => swatch.title.includes('#ff00ff'))`, 'the palette to show the new colour');
+    await click('#timeline .frame:nth-child(1)');
     assert.ok((await canvas()).colors.includes('ff00ff'), 'the new colour is not in the preview');
-    assert.ok(await evaluate(`[...document.querySelectorAll('#palette .swatch')].some(swatch => swatch.title.includes('#ff00ff'))`), 'the palette does not show the new colour');
   });
   await check('a broken recipe shows what is wrong, and the studio recovers when it is mended', async () => {
-    await type(edited.slice(0, -3));
+    await type(edited.slice(0, -3)); await until(`!document.getElementById('error').hidden`, 'the broken recipe\'s error');
     assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [false, true]);
     const message = await text('error'); assert.ok(message.length > 5); assert.match(await text('compile-status'), /Fix the recipe/);
     await studio.shot('broken-recipe');
-    await type(edited);
+    await type(edited); await until(`document.getElementById('error').hidden`, 'the mended recipe to recompile');
     assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [true, false]);
     return message.slice(0, 60);
   });
