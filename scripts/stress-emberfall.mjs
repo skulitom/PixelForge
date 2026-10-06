@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import os from 'node:os';
 import assert from 'node:assert/strict';
-import {renderProject,inspectProject,patchRecipe,compareProjects,createBundle,createZip} from '../src/index.js';
+import {renderProject,inspectProject,patchRecipe,compareProjects,createBundle} from '../src/index.js';
 const root=fileURLToPath(new URL('../',import.meta.url)),stressRoot=path.join(root,'output','emberfall','stress');await mkdir(stressRoot,{recursive:true});
 const out=await mkdtemp(path.join(stressRoot,'run-'));
 const report={date:new Date().toISOString(),node:process.version,platform:`${process.platform} ${process.arch}`,baseline:'092b457',assets:[],checks:[],findings:[]};
