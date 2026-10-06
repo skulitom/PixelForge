@@ -5,11 +5,9 @@
   --line:#33363f;
   --accent:#c4b9f3;
   --selection:#302d3e;
-  --lavender:#25272e;
   --secondary:#a89aca;
   --surface:#1d2025;
   --raised:#252930;
-  --active:#393444;
   --body:'Segoe UI',Arial,sans-serif;
   --mono:Consolas,'Courier New',monospace;
   font-family:var(--body);
