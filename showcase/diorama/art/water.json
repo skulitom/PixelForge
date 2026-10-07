@@ -1,0 +1,1214 @@
+{
+  "version": 1,
+  "name": "water",
+  "width": 8,
+  "height": 8,
+  "palette": { "$ref": "palette.json" },
+  "symbols": {
+    "template": [
+      "cccccccckcccccck",
+      "ccccc1ccccccc1cc",
+      "cccccccccccccccc",
+      "cccccccccccccccc",
+      "cc2ccccccc2ccccc",
+      "cccccccccccccccc",
+      "cccccc1ccccccc1c",
+      "cccccccckcccccck",
+      ".kkkkkkkkkkkkkk.",
+      "kttttttttttttttk",
+      "kssssssssssssssk",
+      "kdbbbbbbbbbbbbdk",
+      "kd2ccccccc2cccdk",
+      "kdccccccccccccdk",
+      "kdcccc1cccccccdk",
+      "kdccccccccccccdk",
+      "kdccccccccccccdk",
+      "kdccc1ccccccc1dk",
+      "kdccccccccccccdk",
+      "kdccccccccccccdk",
+      "kd2ccccccc2cccdk",
+      "kdccccccccccccdk",
+      "kddddddddddddddk",
+      ".kkkkkkkkkkkkkk."
+    ]
+  },
+  "frames": [
+    {
+      "name": "water-0-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 0 }]
+    },
+    {
+      "name": "water-0-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 0 }]
+    },
+    {
+      "name": "water-0-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 0 }]
+    },
+    {
+      "name": "water-0-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 0 }]
+    },
+    {
+      "name": "water-1-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 1 }]
+    },
+    {
+      "name": "water-1-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 1 }]
+    },
+    {
+      "name": "water-1-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 1 }]
+    },
+    {
+      "name": "water-1-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 1 }]
+    },
+    {
+      "name": "water-4-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 4 }]
+    },
+    {
+      "name": "water-4-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 4 }]
+    },
+    {
+      "name": "water-4-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 4 }]
+    },
+    {
+      "name": "water-4-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 4 }]
+    },
+    {
+      "name": "water-5-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 5 }]
+    },
+    {
+      "name": "water-5-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 5 }]
+    },
+    {
+      "name": "water-5-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 5 }]
+    },
+    {
+      "name": "water-5-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 5 }]
+    },
+    {
+      "name": "water-7-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 7 }]
+    },
+    {
+      "name": "water-7-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 7 }]
+    },
+    {
+      "name": "water-7-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 7 }]
+    },
+    {
+      "name": "water-7-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 7 }]
+    },
+    {
+      "name": "water-16-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 16 }]
+    },
+    {
+      "name": "water-16-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 16 }]
+    },
+    {
+      "name": "water-16-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 16 }]
+    },
+    {
+      "name": "water-16-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 16 }]
+    },
+    {
+      "name": "water-17-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 17 }]
+    },
+    {
+      "name": "water-17-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 17 }]
+    },
+    {
+      "name": "water-17-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 17 }]
+    },
+    {
+      "name": "water-17-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 17 }]
+    },
+    {
+      "name": "water-20-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 20 }]
+    },
+    {
+      "name": "water-20-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 20 }]
+    },
+    {
+      "name": "water-20-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 20 }]
+    },
+    {
+      "name": "water-20-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 20 }]
+    },
+    {
+      "name": "water-21-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 21 }]
+    },
+    {
+      "name": "water-21-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 21 }]
+    },
+    {
+      "name": "water-21-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 21 }]
+    },
+    {
+      "name": "water-21-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 21 }]
+    },
+    {
+      "name": "water-23-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 23 }]
+    },
+    {
+      "name": "water-23-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 23 }]
+    },
+    {
+      "name": "water-23-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 23 }]
+    },
+    {
+      "name": "water-23-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 23 }]
+    },
+    {
+      "name": "water-28-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 28 }]
+    },
+    {
+      "name": "water-28-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 28 }]
+    },
+    {
+      "name": "water-28-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 28 }]
+    },
+    {
+      "name": "water-28-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 28 }]
+    },
+    {
+      "name": "water-29-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 29 }]
+    },
+    {
+      "name": "water-29-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 29 }]
+    },
+    {
+      "name": "water-29-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 29 }]
+    },
+    {
+      "name": "water-29-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 29 }]
+    },
+    {
+      "name": "water-31-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 31 }]
+    },
+    {
+      "name": "water-31-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 31 }]
+    },
+    {
+      "name": "water-31-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 31 }]
+    },
+    {
+      "name": "water-31-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 31 }]
+    },
+    {
+      "name": "water-64-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 64 }]
+    },
+    {
+      "name": "water-64-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 64 }]
+    },
+    {
+      "name": "water-64-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 64 }]
+    },
+    {
+      "name": "water-64-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 64 }]
+    },
+    {
+      "name": "water-65-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 65 }]
+    },
+    {
+      "name": "water-65-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 65 }]
+    },
+    {
+      "name": "water-65-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 65 }]
+    },
+    {
+      "name": "water-65-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 65 }]
+    },
+    {
+      "name": "water-68-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 68 }]
+    },
+    {
+      "name": "water-68-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 68 }]
+    },
+    {
+      "name": "water-68-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 68 }]
+    },
+    {
+      "name": "water-68-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 68 }]
+    },
+    {
+      "name": "water-69-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 69 }]
+    },
+    {
+      "name": "water-69-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 69 }]
+    },
+    {
+      "name": "water-69-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 69 }]
+    },
+    {
+      "name": "water-69-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 69 }]
+    },
+    {
+      "name": "water-71-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 71 }]
+    },
+    {
+      "name": "water-71-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 71 }]
+    },
+    {
+      "name": "water-71-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 71 }]
+    },
+    {
+      "name": "water-71-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 71 }]
+    },
+    {
+      "name": "water-80-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 80 }]
+    },
+    {
+      "name": "water-80-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 80 }]
+    },
+    {
+      "name": "water-80-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 80 }]
+    },
+    {
+      "name": "water-80-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 80 }]
+    },
+    {
+      "name": "water-81-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 81 }]
+    },
+    {
+      "name": "water-81-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 81 }]
+    },
+    {
+      "name": "water-81-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 81 }]
+    },
+    {
+      "name": "water-81-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 81 }]
+    },
+    {
+      "name": "water-84-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 84 }]
+    },
+    {
+      "name": "water-84-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 84 }]
+    },
+    {
+      "name": "water-84-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 84 }]
+    },
+    {
+      "name": "water-84-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 84 }]
+    },
+    {
+      "name": "water-85-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 85 }]
+    },
+    {
+      "name": "water-85-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 85 }]
+    },
+    {
+      "name": "water-85-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 85 }]
+    },
+    {
+      "name": "water-85-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 85 }]
+    },
+    {
+      "name": "water-87-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 87 }]
+    },
+    {
+      "name": "water-87-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 87 }]
+    },
+    {
+      "name": "water-87-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 87 }]
+    },
+    {
+      "name": "water-87-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 87 }]
+    },
+    {
+      "name": "water-92-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 92 }]
+    },
+    {
+      "name": "water-92-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 92 }]
+    },
+    {
+      "name": "water-92-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 92 }]
+    },
+    {
+      "name": "water-92-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 92 }]
+    },
+    {
+      "name": "water-93-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 93 }]
+    },
+    {
+      "name": "water-93-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 93 }]
+    },
+    {
+      "name": "water-93-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 93 }]
+    },
+    {
+      "name": "water-93-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 93 }]
+    },
+    {
+      "name": "water-95-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 95 }]
+    },
+    {
+      "name": "water-95-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 95 }]
+    },
+    {
+      "name": "water-95-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 95 }]
+    },
+    {
+      "name": "water-95-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 95 }]
+    },
+    {
+      "name": "water-112-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 112 }]
+    },
+    {
+      "name": "water-112-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 112 }]
+    },
+    {
+      "name": "water-112-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 112 }]
+    },
+    {
+      "name": "water-112-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 112 }]
+    },
+    {
+      "name": "water-113-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 113 }]
+    },
+    {
+      "name": "water-113-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 113 }]
+    },
+    {
+      "name": "water-113-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 113 }]
+    },
+    {
+      "name": "water-113-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 113 }]
+    },
+    {
+      "name": "water-116-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 116 }]
+    },
+    {
+      "name": "water-116-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 116 }]
+    },
+    {
+      "name": "water-116-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 116 }]
+    },
+    {
+      "name": "water-116-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 116 }]
+    },
+    {
+      "name": "water-117-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 117 }]
+    },
+    {
+      "name": "water-117-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 117 }]
+    },
+    {
+      "name": "water-117-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 117 }]
+    },
+    {
+      "name": "water-117-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 117 }]
+    },
+    {
+      "name": "water-119-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 119 }]
+    },
+    {
+      "name": "water-119-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 119 }]
+    },
+    {
+      "name": "water-119-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 119 }]
+    },
+    {
+      "name": "water-119-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 119 }]
+    },
+    {
+      "name": "water-124-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 124 }]
+    },
+    {
+      "name": "water-124-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 124 }]
+    },
+    {
+      "name": "water-124-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 124 }]
+    },
+    {
+      "name": "water-124-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 124 }]
+    },
+    {
+      "name": "water-125-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 125 }]
+    },
+    {
+      "name": "water-125-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 125 }]
+    },
+    {
+      "name": "water-125-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 125 }]
+    },
+    {
+      "name": "water-125-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 125 }]
+    },
+    {
+      "name": "water-127-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 127 }]
+    },
+    {
+      "name": "water-127-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 127 }]
+    },
+    {
+      "name": "water-127-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 127 }]
+    },
+    {
+      "name": "water-127-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 127 }]
+    },
+    {
+      "name": "water-193-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 193 }]
+    },
+    {
+      "name": "water-193-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 193 }]
+    },
+    {
+      "name": "water-193-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 193 }]
+    },
+    {
+      "name": "water-193-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 193 }]
+    },
+    {
+      "name": "water-197-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 197 }]
+    },
+    {
+      "name": "water-197-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 197 }]
+    },
+    {
+      "name": "water-197-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 197 }]
+    },
+    {
+      "name": "water-197-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 197 }]
+    },
+    {
+      "name": "water-199-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 199 }]
+    },
+    {
+      "name": "water-199-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 199 }]
+    },
+    {
+      "name": "water-199-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 199 }]
+    },
+    {
+      "name": "water-199-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 199 }]
+    },
+    {
+      "name": "water-209-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 209 }]
+    },
+    {
+      "name": "water-209-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 209 }]
+    },
+    {
+      "name": "water-209-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 209 }]
+    },
+    {
+      "name": "water-209-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 209 }]
+    },
+    {
+      "name": "water-213-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 213 }]
+    },
+    {
+      "name": "water-213-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 213 }]
+    },
+    {
+      "name": "water-213-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 213 }]
+    },
+    {
+      "name": "water-213-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 213 }]
+    },
+    {
+      "name": "water-215-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 215 }]
+    },
+    {
+      "name": "water-215-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 215 }]
+    },
+    {
+      "name": "water-215-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 215 }]
+    },
+    {
+      "name": "water-215-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 215 }]
+    },
+    {
+      "name": "water-221-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 221 }]
+    },
+    {
+      "name": "water-221-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 221 }]
+    },
+    {
+      "name": "water-221-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 221 }]
+    },
+    {
+      "name": "water-221-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 221 }]
+    },
+    {
+      "name": "water-223-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 223 }]
+    },
+    {
+      "name": "water-223-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 223 }]
+    },
+    {
+      "name": "water-223-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 223 }]
+    },
+    {
+      "name": "water-223-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 223 }]
+    },
+    {
+      "name": "water-241-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 241 }]
+    },
+    {
+      "name": "water-241-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 241 }]
+    },
+    {
+      "name": "water-241-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 241 }]
+    },
+    {
+      "name": "water-241-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 241 }]
+    },
+    {
+      "name": "water-245-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 245 }]
+    },
+    {
+      "name": "water-245-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 245 }]
+    },
+    {
+      "name": "water-245-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 245 }]
+    },
+    {
+      "name": "water-245-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 245 }]
+    },
+    {
+      "name": "water-247-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 247 }]
+    },
+    {
+      "name": "water-247-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 247 }]
+    },
+    {
+      "name": "water-247-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 247 }]
+    },
+    {
+      "name": "water-247-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 247 }]
+    },
+    {
+      "name": "water-253-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 253 }]
+    },
+    {
+      "name": "water-253-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 253 }]
+    },
+    {
+      "name": "water-253-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 253 }]
+    },
+    {
+      "name": "water-253-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 253 }]
+    },
+    {
+      "name": "water-255-v0",
+      "duration": 180,
+      "palette": { "1": "c", "2": "d" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 255 }]
+    },
+    {
+      "name": "water-255-v1",
+      "duration": 180,
+      "palette": { "1": "d", "2": "e" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 255 }]
+    },
+    {
+      "name": "water-255-v2",
+      "duration": 180,
+      "palette": { "1": "e", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 255 }]
+    },
+    {
+      "name": "water-255-v3",
+      "duration": 180,
+      "palette": { "1": "c", "2": "c" },
+      "ops": [{ "op": "autotile", "symbol": "template", "mask": 255 }]
+    }
+  ],
+  "animations": {
+    "water-0": { "frames": ["water-0-v0", "water-0-v1", "water-0-v2", "water-0-v3"] },
+    "water-1": { "frames": ["water-1-v0", "water-1-v1", "water-1-v2", "water-1-v3"] },
+    "water-4": { "frames": ["water-4-v0", "water-4-v1", "water-4-v2", "water-4-v3"] },
+    "water-5": { "frames": ["water-5-v0", "water-5-v1", "water-5-v2", "water-5-v3"] },
+    "water-7": { "frames": ["water-7-v0", "water-7-v1", "water-7-v2", "water-7-v3"] },
+    "water-16": { "frames": ["water-16-v0", "water-16-v1", "water-16-v2", "water-16-v3"] },
+    "water-17": { "frames": ["water-17-v0", "water-17-v1", "water-17-v2", "water-17-v3"] },
+    "water-20": { "frames": ["water-20-v0", "water-20-v1", "water-20-v2", "water-20-v3"] },
+    "water-21": { "frames": ["water-21-v0", "water-21-v1", "water-21-v2", "water-21-v3"] },
+    "water-23": { "frames": ["water-23-v0", "water-23-v1", "water-23-v2", "water-23-v3"] },
+    "water-28": { "frames": ["water-28-v0", "water-28-v1", "water-28-v2", "water-28-v3"] },
+    "water-29": { "frames": ["water-29-v0", "water-29-v1", "water-29-v2", "water-29-v3"] },
+    "water-31": { "frames": ["water-31-v0", "water-31-v1", "water-31-v2", "water-31-v3"] },
+    "water-64": { "frames": ["water-64-v0", "water-64-v1", "water-64-v2", "water-64-v3"] },
+    "water-65": { "frames": ["water-65-v0", "water-65-v1", "water-65-v2", "water-65-v3"] },
+    "water-68": { "frames": ["water-68-v0", "water-68-v1", "water-68-v2", "water-68-v3"] },
+    "water-69": { "frames": ["water-69-v0", "water-69-v1", "water-69-v2", "water-69-v3"] },
+    "water-71": { "frames": ["water-71-v0", "water-71-v1", "water-71-v2", "water-71-v3"] },
+    "water-80": { "frames": ["water-80-v0", "water-80-v1", "water-80-v2", "water-80-v3"] },
+    "water-81": { "frames": ["water-81-v0", "water-81-v1", "water-81-v2", "water-81-v3"] },
+    "water-84": { "frames": ["water-84-v0", "water-84-v1", "water-84-v2", "water-84-v3"] },
+    "water-85": { "frames": ["water-85-v0", "water-85-v1", "water-85-v2", "water-85-v3"] },
+    "water-87": { "frames": ["water-87-v0", "water-87-v1", "water-87-v2", "water-87-v3"] },
+    "water-92": { "frames": ["water-92-v0", "water-92-v1", "water-92-v2", "water-92-v3"] },
+    "water-93": { "frames": ["water-93-v0", "water-93-v1", "water-93-v2", "water-93-v3"] },
+    "water-95": { "frames": ["water-95-v0", "water-95-v1", "water-95-v2", "water-95-v3"] },
+    "water-112": { "frames": ["water-112-v0", "water-112-v1", "water-112-v2", "water-112-v3"] },
+    "water-113": { "frames": ["water-113-v0", "water-113-v1", "water-113-v2", "water-113-v3"] },
+    "water-116": { "frames": ["water-116-v0", "water-116-v1", "water-116-v2", "water-116-v3"] },
+    "water-117": { "frames": ["water-117-v0", "water-117-v1", "water-117-v2", "water-117-v3"] },
+    "water-119": { "frames": ["water-119-v0", "water-119-v1", "water-119-v2", "water-119-v3"] },
+    "water-124": { "frames": ["water-124-v0", "water-124-v1", "water-124-v2", "water-124-v3"] },
+    "water-125": { "frames": ["water-125-v0", "water-125-v1", "water-125-v2", "water-125-v3"] },
+    "water-127": { "frames": ["water-127-v0", "water-127-v1", "water-127-v2", "water-127-v3"] },
+    "water-193": { "frames": ["water-193-v0", "water-193-v1", "water-193-v2", "water-193-v3"] },
+    "water-197": { "frames": ["water-197-v0", "water-197-v1", "water-197-v2", "water-197-v3"] },
+    "water-199": { "frames": ["water-199-v0", "water-199-v1", "water-199-v2", "water-199-v3"] },
+    "water-209": { "frames": ["water-209-v0", "water-209-v1", "water-209-v2", "water-209-v3"] },
+    "water-213": { "frames": ["water-213-v0", "water-213-v1", "water-213-v2", "water-213-v3"] },
+    "water-215": { "frames": ["water-215-v0", "water-215-v1", "water-215-v2", "water-215-v3"] },
+    "water-221": { "frames": ["water-221-v0", "water-221-v1", "water-221-v2", "water-221-v3"] },
+    "water-223": { "frames": ["water-223-v0", "water-223-v1", "water-223-v2", "water-223-v3"] },
+    "water-241": { "frames": ["water-241-v0", "water-241-v1", "water-241-v2", "water-241-v3"] },
+    "water-245": { "frames": ["water-245-v0", "water-245-v1", "water-245-v2", "water-245-v3"] },
+    "water-247": { "frames": ["water-247-v0", "water-247-v1", "water-247-v2", "water-247-v3"] },
+    "water-253": { "frames": ["water-253-v0", "water-253-v1", "water-253-v2", "water-253-v3"] },
+    "water-255": { "frames": ["water-255-v0", "water-255-v1", "water-255-v2", "water-255-v3"] }
+  }
+}

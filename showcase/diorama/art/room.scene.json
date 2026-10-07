@@ -1,0 +1,247 @@
+{
+  "format": "pixelforge-scene",
+  "version": 1,
+  "name": "diorama-stone",
+  "width": 160,
+  "height": 128,
+  "duration": 2400,
+  "background": "#0d0f16",
+  "assets": {
+    "tiles": "tiles.json",
+    "cap": "cap.json",
+    "water": "water.json",
+    "moss": "moss.json",
+    "props": "props.json",
+    "hero": "hero.json",
+    "slash": "slash.json",
+    "shards": "shards.json"
+  },
+  "instances": [
+    {
+      "name": "floor",
+      "asset": "tiles",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          "..................",
+          "..................",
+          "...BFFFF..FFFFB...",
+          "...FFFFF..FFFFB...",
+          ".BFFFFFF..FFFFFFB.",
+          ".BFFFF......FFFFB.",
+          ".BFFFF......FFFFB.",
+          ".BFFFFFFFFFFFFFBB.",
+          "...FFFFFFFFFFFB...",
+          "...BBBBFFFFBBBB...",
+          ".......BFFF.......",
+          ".......BBBF.......",
+          "..................",
+          ".................."
+        ],
+        "legend": {
+          "F": { "frames": ["floor-0", "floor-0", "floor-3", "floor-1", "floor-2", "floor-0"] },
+          "b": "brick-0",
+          "B": "brick-1"
+        }
+      }
+    },
+    {
+      "name": "water",
+      "asset": "water",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          "..................",
+          "........vv........",
+          "........pp........",
+          "........pp........",
+          "........pp........",
+          "......pppppp......",
+          "......pppppp......",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          ".................."
+        ],
+        "legend": { "p": { "animation": "water-{mask}", "autotile": "blob", "match": "pv" }, "v": null }
+      }
+    },
+    { "name": "moss", "asset": "moss", "at": [8, 6], "frame": "moss" },
+    { "name": "bricks-c", "asset": "props", "frame": "bricks-c", "at": [116, 35], "anchor": "frame" },
+    { "name": "bricks-b", "asset": "props", "frame": "bricks-b", "at": [95, 45], "anchor": "frame" },
+    { "name": "plank", "asset": "props", "frame": "plank", "at": [58, 53], "anchor": "frame" },
+    { "name": "bricks-b", "asset": "props", "frame": "bricks-b", "at": [133, 63], "anchor": "frame" },
+    { "name": "plank-d", "asset": "props", "frame": "plank-d", "at": [110, 67], "anchor": "frame" },
+    { "name": "bricks-a", "asset": "props", "frame": "bricks-a", "at": [28, 69], "anchor": "frame" },
+    { "name": "bricks-c", "asset": "props", "frame": "bricks-c", "at": [60, 85], "anchor": "frame" },
+    { "name": "plank", "asset": "props", "frame": "plank", "at": [100, 86], "anchor": "frame" },
+    {
+      "name": "faces",
+      "asset": "tiles",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          "..................",
+          "..................",
+          "...nnnnn..nnnnn...",
+          "..................",
+          ".nn............nn.",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          ".................."
+        ],
+        "legend": { "n": "nface-0", "N": "nface-1" }
+      }
+    },
+    {
+      "name": "cliffs",
+      "asset": "tiles",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "cc..............cc",
+          "..................",
+          "..cccc......cccc..",
+          "..................",
+          "......cccccc......"
+        ],
+        "legend": { "c": "cliff-0", "C": "cliff-1" }
+      }
+    },
+    {
+      "name": "caps",
+      "asset": "cap",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          ".......WWWW.......",
+          "..WWWWWW..WWWWWW..",
+          "..W............W..",
+          "WWW............WWW",
+          "W................W",
+          "W................W",
+          "W................W",
+          "W................W",
+          "WWW............WWW",
+          "..W............W..",
+          "..WWWWW....WWWWW..",
+          "......W....W......",
+          "......WWWWWW......",
+          ".................."
+        ],
+        "legend": { "W": { "frames": ["cap-{mask}", "cap-{mask}", "capb-{mask}"], "autotile": "blob" } }
+      }
+    },
+    {
+      "name": "falls",
+      "asset": "tiles",
+      "at": [8, 6],
+      "tilemap": {
+        "rows": [
+          "..................",
+          "........LR........",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          "..................",
+          ".................."
+        ],
+        "legend": { "L": { "animation": "fall-l" }, "R": { "animation": "fall-r" } }
+      }
+    },
+    { "name": "cobweb", "asset": "props", "frame": "cobweb", "at": [19, 43], "anchor": "frame" },
+    { "name": "cobweb", "asset": "props", "frame": "cobweb-r", "at": [141, 43], "anchor": "frame" },
+    { "name": "foam", "asset": "props", "animation": "foam", "at": [80, 24], "anchor": "frame" },
+    { "name": "torch", "asset": "props", "animation": "torch", "at": [52, 23], "anchor": "frame" },
+    { "name": "torch", "asset": "props", "animation": "torch", "at": [108, 23], "anchor": "frame" },
+    { "name": "pillar", "asset": "props", "frame": "pillar", "at": [36, 30], "anchor": "frame" },
+    { "name": "pillar", "asset": "props", "frame": "pillar", "at": [124, 30], "anchor": "frame" },
+    { "name": "rubble", "asset": "props", "frame": "rubble", "at": [100, 36], "anchor": "frame" },
+    { "name": "pot", "asset": "props", "frame": "pot", "at": [133, 44], "anchor": "frame" },
+    { "name": "barrel", "asset": "props", "frame": "barrel", "at": [20, 45], "anchor": "frame" },
+    { "name": "pot", "asset": "props", "frame": "pot", "at": [30, 45], "anchor": "frame" },
+    { "name": "pot", "asset": "props", "frame": "pot", "at": [140, 45], "anchor": "frame" },
+    { "name": "urn", "asset": "props", "frame": "urn", "at": [140, 53], "anchor": "frame" },
+    { "name": "barrel", "asset": "props", "frame": "barrel", "at": [21, 54], "anchor": "frame" },
+    { "name": "skull", "asset": "props", "frame": "skull", "at": [108, 61], "anchor": "frame" },
+    { "name": "bones", "asset": "props", "frame": "bones", "at": [52, 67], "anchor": "frame" },
+    { "name": "crate", "asset": "props", "frame": "crate", "at": [140, 69], "anchor": "frame" },
+    { "name": "rubble", "asset": "props", "frame": "rubble", "at": [52, 78], "anchor": "frame" },
+    { "name": "barrel", "asset": "props", "frame": "barrel", "at": [36, 85], "anchor": "frame" },
+    { "name": "crate", "asset": "props", "frame": "crate", "at": [124, 85], "anchor": "frame" },
+    { "name": "pot", "asset": "props", "frame": "pot", "at": [46, 86], "anchor": "frame" },
+    { "name": "pot", "asset": "props", "frame": "pot", "at": [117, 86], "anchor": "frame" },
+    { "name": "candles", "asset": "props", "frame": "candles", "at": [90, 100], "anchor": "frame" },
+    { "name": "candles", "asset": "props", "frame": "candles", "at": [66, 100], "anchor": "frame" },
+    {
+      "name": "chest",
+      "asset": "props",
+      "frame": "chest",
+      "at": [80, 100],
+      "anchor": "frame",
+      "sequence": [{ "time": 2000, "animation": "chest-open" }]
+    },
+    {
+      "name": "target-pot",
+      "asset": "props",
+      "frame": "pot",
+      "at": [107, 75],
+      "anchor": "frame",
+      "sequence": [{ "time": 1290, "animation": "pot-break" }]
+    },
+    {
+      "name": "hero",
+      "asset": "hero",
+      "animation": "right",
+      "at": [93, 75],
+      "anchor": "frame",
+      "trajectory": [{ "time": 0, "at": [44, 75] }, { "time": 1200, "at": [93, 75] }],
+      "sequence": [{ "time": 1200, "animation": "attack" }, { "time": 1900, "animation": "idle" }]
+    },
+    {
+      "name": "slash",
+      "asset": "slash",
+      "animation": "idle",
+      "at": [96, 71],
+      "anchor": "frame",
+      "sequence": [{ "time": 1270, "animation": "slash" }]
+    },
+    {
+      "name": "shards",
+      "asset": "shards",
+      "frame": "none",
+      "at": [91, 54],
+      "sequence": [{ "time": 1290, "animation": "burst" }]
+    },
+    { "name": "chain", "asset": "props", "frame": "chain", "at": [35, 102], "anchor": "frame" },
+    { "name": "chain", "asset": "props", "frame": "chain", "at": [115, 102], "anchor": "frame" },
+    { "name": "chain", "asset": "props", "frame": "chain", "at": [75, 118], "anchor": "frame" },
+    { "name": "chain", "asset": "props", "frame": "chain", "at": [91, 118], "anchor": "frame" },
+    { "name": "banner", "asset": "props", "frame": "banner", "at": [44, 99], "anchor": "frame" }
+  ]
+}
