@@ -6,7 +6,6 @@
   "palette": { "$ref": "palette.json" },
   "anchor": [2, 9],
   "frames": [
-    { "name": "none", "duration": 60 },
     {
       "name": "slash-0",
       "duration": 60,
@@ -91,8 +90,5 @@
       ]
     }
   ],
-  "animations": {
-    "idle": { "frames": ["none"] },
-    "slash": { "frames": ["slash-0", "slash-1", "slash-2", "none"], "loop": false }
-  }
+  "animations": { "slash": { "frames": ["slash-0", "slash-1", "slash-2"], "loop": false } }
 }

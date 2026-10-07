@@ -5,11 +5,11 @@ To **use** PixelForge for artwork, start with [the pixel art skill](skills/pixel
 This is an agent-first pixel art toolkit. Keep the core and runtime free of dependencies. Use standard Node.js APIs for the CLI, PNG/APNG encoding, ZIP and the local server. No build step is required.
 
 - `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
-- `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing and engine-independent trigonometry. Keep new randomness seeded and new maths polynomial so output stays identical across JavaScript engines.
+- `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered, noise and value-noise dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing and engine-independent trigonometry. Keep new randomness seeded and new maths polynomial so output stays identical across JavaScript engines.
 - `src/font.js`: browser-compatible built-in pixel font (printable ASCII, western European accented letters, common symbols) and text layout for the `text` drawing operation. Glyph changes change rendered pixels, so treat them as format changes: regenerate examples and review.
 - `src/fx.js`: browser-compatible `pixelforge-fx` compiler that bakes seeded particle emitters into ordinary recipes.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
-- `src/autotile.js`: browser-compatible blob/cardinal neighbour masks and template quarter layout, shared by scene tilemaps and the autotile compiler in `src/authoring.js`.
+- `src/autotile.js`: browser-compatible blob/cardinal neighbour masks, template quarter layout and tilemap legends (variants, weights, neighbour rules), shared by scene tilemaps, the recipe `tilemap` operation and the autotile compiler in `src/authoring.js`. It imports `craft.js`, so copies of it (Tidewatch's game) need both.
 - `src/resolve.js`: Node-side resolution of shared palette files and scene asset references; the renderer itself never reads files.
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.

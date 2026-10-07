@@ -16,6 +16,39 @@ const hex = '^(transparent|#([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8}))$';
 const pairOf = item => ({ ...array(item, 2), minItems: 2 });
 const ruleRows = { ...array({ type: 'string', minLength: 1, maxLength: 8 }, 8), minItems: 1, description: 'Equal-width rows of palette keys; dot or space matches anything (match) or keeps the pixel (replace); the empty character stands for transparent.' };
 const ease = { enum: EASINGS, description: 'linear (default), hold (jump at the end), in, out, inOut, overshoot or bounce.' };
+const names64 = { ...array({ type: 'string', minLength: 1 }, 64), minItems: 1 };
+// Tilemap legends are shared by scene tilemaps (frames and animations) and the recipe tilemap operation (symbols and
+// autotile templates); `kinds` are the singular names, each also with a plural for variants.
+const legend = (kinds, describe) => {
+  const draws = Object.fromEntries(kinds.flatMap(kind => [[kind, { type: 'string', description: describe[kind] }], [`${kind}s`, { ...names64, description: `Variants of ${kind}, picked by cell position (seeded when the tilemap has a seed).` }]]));
+  const shared = { ...draws, weights: { ...array(int(1, 1000), 64), minItems: 1, description: 'One whole-number weight per variant name; heavier names are picked more often.' },
+    autotile: { enum: ['blob', 'cardinal'], description: 'Pick by neighbour mask: 47-value blob or 16-value cardinal.' }, match: { type: 'string', minLength: 1, description: 'Characters counted as the same terrain for the mask; default: this character.' } };
+  const rule = object({ ...shared,
+    where: { ...array({ type: 'string', minLength: 3, maxLength: 3 }, 3), minItems: 3, description: '3×3 characters centred on the cell. A dot matches anything, the tilemap\'s empty character matches empty cells (and cells beyond the map), a class matches its members, any other character matches itself.' },
+    chance: num(0, 1, 'Seeded probability that a matching rule draws.'), offset: { ...pairOf(int(-8, 8)), description: '[columns, rows] to draw into another cell; it draws over that cell\'s own tiles.' },
+    stop: { type: 'boolean', description: 'When this rule draws, skip the rest of the cell\'s rules.' } });
+  return { type: 'object', propertyNames: { minLength: 1, maxLength: 1 }, description: 'Map characters to what they draw. Dot and space are empty cells.', additionalProperties: { oneOf: [
+    { type: 'string', description: describe[kinds[0]] },
+    object(shared),
+    { ...object({ rules: { ...array(rule, 32), minItems: 1, description: 'Every rule that matches draws, in order, until one with stop draws.' } }, ['rules']) },
+    { type: 'null', description: 'Context cell: never drawn, but it counts for other entries\' match and for rules.' }] } };
+};
+const tilemapFields = {
+  rows: { ...array({ type: 'string', minLength: 1, maxLength: 256 }, 256), minItems: 1 },
+  outside: { enum: ['empty', 'match'], description: 'Cells beyond the map: empty (default), or matching every mask and rule pattern.' },
+  empty: { type: 'string', minLength: 1, maxLength: 1, description: 'A character, not a legend key, that stands for empty cells in rule patterns.' },
+  classes: { type: 'object', propertyNames: { minLength: 1, maxLength: 1 }, additionalProperties: { type: 'string', minLength: 1, maxLength: 64 }, description: 'Characters that stand for several map characters in rule patterns, e.g. {"#": "WV"}; include the empty character to match empty cells too.' },
+  seed: int(0, 2147483647, 'Reorders seeded variant picks and rule chances; default 0 keeps position-based picks.')
+};
+const densityFields = {
+  density: { oneOf: [num(0, 1), pairOf(num(0, 1))], description: 'Share of pixels changed, 0–1, or [from, to] ramping along direction.' },
+  direction: { enum: ['down', 'up', 'right', 'left', 'radial'], description: 'Ramp direction for a [from, to] density; radial runs from the centre to the edge.' },
+  pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1, description: 'Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5.' }], description: 'bayer4 by default. noise is seeded white noise with no repeating grid; value is seeded smooth noise that forms clumps about scale pixels across. Patterns follow canvas coordinates, so neighbouring areas line up.' },
+  offset: { ...point, description: 'Shift the pattern, for example to crawl it between frames.' },
+  seed: int(0, 2147483647, 'Orders the noise or value pattern (default 0): the same seed keeps every pixel\'s threshold, so a rising density grows in a fixed order; another seed reshuffles it.'),
+  scale: int(1, 64, 'Clump size of the value pattern in pixels; default 4.'),
+  over: { oneOf: [color, { ...array(color, 64), minItems: 1 }], description: 'Only change pixels whose exact current color is listed (transparent included).' }
+};
 const schema = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   title: 'PixelForge project',
@@ -23,6 +56,7 @@ const schema = {
     $schema: { type: 'string' }, version: { const: 1 }, name: id,
     width: int(1, 256), height: int(1, 256),
     palette: { type: 'object', maxProperties: 257, properties: { $ref: { type: 'string', description: 'Shared palette file, resolved by the CLI and MCP relative to this recipe. Local entries add to or override it.' } }, additionalProperties: { type: 'string', pattern: hex } },
+    ramps: { ...array({ ...array({ type: 'string', minLength: 1, maxLength: 64 }, 32), minItems: 2 }, 64), description: 'Palette keys from dark to light, one list per material. shade and scene ramp lighting move a colour along its ramp instead of inventing one. A key belongs to one ramp. A shared palette file ({"palette": {...}, "ramps": [...]}) can supply them.' },
     background: color, symbols: { type: 'object', propertyNames: id, additionalProperties: ref('rows') },
     anchor: { ...point, description: 'Default pivot for every frame, exported to the atlas as anchor (exported pixels) and pivot (anchor / source size).' },
     frames: { ...array(ref('frame'), 256), minItems: 1 },
@@ -56,13 +90,12 @@ const schema = {
         description: 'Draw one autotile tile from a template symbol two tiles wide and three tall: the four quarters the mask selects (see the autotile template format). The autotile compiler emits one per frame, so editing the template redraws every tile.' },
       { ...operation('outline', { color, diagonal: bool, position: { enum: ['outside', 'inside', 'middle'], description: 'outside (default) surrounds the visible pixels; inside recolors their edge pixels; middle splits the width, the odd pixel outside.' }, width: int(1, 8, 'Rings of pixels; default 1.'),
         directions: { ...array({ type: 'string', pattern: '^[x.]{3}$' }, 3), minItems: 3, description: '3×3 grid centred on a visible pixel, with a dot in the centre: x marks the sides that get the line, e.g. ["...", "...", "..x"] for a drop shadow or [".x.", "...", "..."] for a top rim. Replaces diagonal.' } }, ['color']), description: 'Outline every visible pixel in this buffer (frame or layer): outside rings, inside edge rings or both, in chosen directions.' },
-      { ...operation('dither', { ...xy, ...wh, color, erase: { type: 'boolean', description: 'Clear the pattern pixels instead of drawing a color.' },
-        density: { oneOf: [num(0, 1), pairOf(num(0, 1))], description: 'Share of pixels drawn, 0–1 (default 0.5), or [from, to] ramping along direction.' },
-        direction: { enum: ['down', 'up', 'right', 'left', 'radial'], description: 'Ramp direction for a [from, to] density; radial runs from the centre to the edge.' },
-        pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1, description: 'Rows of ranks from 0 to cells − 1; low ranks turn on first, and a highest rank n gives n + 1 levels, so [[0, 1], [1, 0]] is a checkerboard at 0.5.' }], description: 'bayer4 by default. noise is seeded white noise with no repeating grid. Patterns follow canvas coordinates, so neighbouring areas line up.' },
-        offset: { ...point, description: 'Shift the pattern, for example to crawl it between frames.' },
-        seed: int(0, 2147483647, 'Orders the noise pattern (default 0): the same seed keeps every pixel\'s threshold, so a rising density dissolves in a fixed order; another seed reshuffles it.'),
-        over: { oneOf: [color, { ...array(color, 64), minItems: 1 }], description: 'Only change pixels whose exact current color is listed (transparent included).' } }), anyOf: [{ required: ['color'] }, { required: ['erase'] }], description: 'Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density. x/y default to 0 and w/h reach the canvas edge.' },
+      { ...operation('dither', { ...xy, ...wh, color, erase: { type: 'boolean', description: 'Clear the pattern pixels instead of drawing a color.' }, ...densityFields }), anyOf: [{ required: ['color'] }, { required: ['erase'] }], description: 'Ordered dither between the current pixels and color: draws (or erases) where a canvas-anchored threshold pattern is below the density (default 0.5). x/y default to 0 and w/h reach the canvas edge.' },
+      { ...operation('shade', { ...xy, ...wh, steps: int(-8, 8, 'Steps along each colour\'s ramp: negative darkens (default -1), positive lightens. Clamped at the ramp\'s ends; not 0.'), shape: { enum: ['rect', 'ellipse'], description: 'rect (default) or the ellipse inside the region.' }, ...densityFields }),
+        description: 'Move every pixel of the region along its colour\'s ramp (see ramps), so shadows and light keep the palette on any surface. Colours on no ramp stay. density (default 1) and pattern give a dithered edge. x/y default to 0 and w/h reach the canvas edge.' },
+      { ...operation('tilemap', { ...xy, tile: { ...pairOf(int(1, 256)), description: 'Cell size [width, height] in pixels.' }, ...tilemapFields,
+        legend: legend(['symbol', 'template'], { symbol: 'A symbol drawn at the cell\'s top-left; with autotile, {mask} in its name becomes the neighbour mask.', template: 'An autotile template symbol (two tiles wide, three tall) drawn with the cell\'s neighbour mask; needs autotile.' }) }, ['tile', 'rows', 'legend']),
+        description: 'Draw a character map from this recipe\'s symbols and autotile templates, with variants, weights and neighbour rules, so later operations see the composed result (dither over its floor, rewrite rules at its corners).' },
       { ...operation('rewrite', { ...xy, ...wh, rules: { ...array(object({ match: ruleRows, replace: ruleRows }, ['match', 'replace']), 16), minItems: 1 },
         empty: { type: 'string', minLength: 1, maxLength: 1, description: 'A non-palette character meaning a transparent pixel in match and erasure in replace.' },
         steps: int(1, 64, 'Passes over every rule; stops early when a pass changes nothing.'), chance: num(0, 1, 'Seeded probability that each match is applied.'), limit: int(1, 65536, 'Most replacements per rule per step.'),
@@ -89,22 +122,30 @@ const poses = {
   }, ['format', 'version', 'name', 'width', 'height', 'parts', 'poses']), $defs: schema.$defs
 };
 const recipeSchema = { ...schema }; delete recipeSchema.$schema; delete recipeSchema.$defs; delete recipeSchema.title;
+const themePalette = description => ({ oneOf: [{ type: 'string', description: 'Palette file, resolved by the CLI relative to the scene or inside the MCP root.' }, { type: 'object', additionalProperties: { type: 'string', pattern: hex } }], description });
+const cueTime = (maximum, description) => ({ oneOf: [int(0, maximum), { type: 'string', pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}([+-][0-9]{1,5})?$' }], description });
 const assetRef = { oneOf: [ref('recipe'), { type: 'string', description: 'Recipe file, resolved by the CLI relative to the scene or inside the MCP root.' }, object({ revision: { type: 'string', pattern: '^[a-f0-9]{12}$' } }, ['revision'])] };
-const legendEntry = { oneOf: [{ type: 'string', description: 'Frame name.' }, object({ frame: { type: 'string' }, frames: array({ type: 'string' }, 64), animation: { type: 'string' }, animations: array({ type: 'string' }, 64),
-  autotile: { enum: ['blob', 'cardinal'], description: 'Substitute {mask} in the names with the 47-value blob or 16-value cardinal neighbour mask.' }, match: { type: 'string', description: 'Characters counted as the same terrain; default: this character.' } }),
-  { type: 'null', description: 'Context cell: never drawn, but other entries can match it (for example terrain just outside a reviewed window of a larger map).' }] };
 const scene = {
   $schema: schema.$schema, title: 'PixelForge scene review',
   ...object({ format: { const: 'pixelforge-scene' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), background: color, duration: int(1, 60000),
-    assets: { type: 'object', maxProperties: 64, additionalProperties: { oneOf: [assetRef, object({ recipe: assetRef, normal: assetRef, emissive: assetRef }, ['recipe'])] } },
+    palette: themePalette('A theme for every asset: colours for palette keys the recipes share (keys a recipe lacks are ignored), or a palette file resolved by the CLI and MCP.'),
+    cues: { type: 'object', maxProperties: 64, propertyNames: id, additionalProperties: int(0, 60000), description: 'Named times in milliseconds; sequence and trajectory times may say "name", "name+90" or "name-20".' },
+    assets: { type: 'object', maxProperties: 64, additionalProperties: { oneOf: [assetRef, object({ recipe: assetRef, normal: assetRef, emissive: assetRef, palette: themePalette('A theme for this asset, applied after the scene palette.') }, ['recipe'])] } },
     instances: array(object({ name: { type: 'string' }, asset: { type: 'string' }, at: point,
       anchor: { oneOf: [point, { const: 'frame' }], description: '[x, y] in asset pixels placed at `at` (default [0, 0]), or "frame" to place every drawn frame by its own atlas anchor, so animated placements follow per-frame anchors. Tilemaps take [x, y] only.' }, scale: int(1, 16), frame: id, animation: id,
+      hidden: { type: 'boolean', description: 'Start hidden; a later frame or animation cue shows the placement.' },
       repeat: { ...array(int(1, 32), 2), minItems: 2 }, step: point,
-      trajectory: { ...array(object({ time: int(0, 60000), at: point, ease: { ...ease, description: `Shape of the segment starting at this key: ${ease.description} Positions round to whole pixels.` } }, ['time', 'at']), 256), minItems: 2 },
-      sequence: array(object({ time: int(0, 59999), frame: id, animation: id }, ['time']), 64),
-      tilemap: object({ tile: point, rows: { ...array({ type: 'string', minLength: 1, maxLength: 256 }, 256), minItems: 1 }, legend: { type: 'object', propertyNames: { minLength: 1, maxLength: 1 }, additionalProperties: legendEntry }, outside: { enum: ['empty', 'match'] } }, ['rows', 'legend'])
+      trajectory: { ...array(object({ time: cueTime(60000, 'Milliseconds or a named cue.'), at: point, ease: { ...ease, description: `Shape of the segment starting at this key: ${ease.description} Positions round to whole pixels.` } }, ['time', 'at']), 256), minItems: 2 },
+      sequence: array(object({ time: cueTime(59999, 'Milliseconds or a named cue.'), frame: id, animation: id, hide: { const: true, description: 'Hide the placement from this time until a later frame or animation cue.' } }, ['time']), 64),
+      attach: { ...object({ instance: { type: 'string', description: 'Name of an earlier, uniquely named placement.' }, point: id }, ['instance', 'point']), description: 'Follow a named frame point of another placement; at becomes the offset from it. Not drawn while that frame has no such point.' },
+      sort: { const: 'ground', description: 'Draw among the other sorted placements by ground line (the y of the placement point), where the first of them is listed.' },
+      shade: int(-8, 8, 'Draw no colours: wherever the frame is opaque, move the pixels beneath this many steps along the asset recipe\'s ramps (negative darkens). Not 0.'),
+      tilemap: object({ tile: point, ...tilemapFields, legend: legend(['frame', 'animation'], { frame: 'Frame name; with autotile, {mask} becomes the neighbour mask.', animation: 'Animation name; with autotile, {mask} becomes the neighbour mask.' }) }, ['rows', 'legend'])
     }, ['asset', 'at']), 256),
-    lighting: object({ ambient: { type: 'number', minimum: 0, maximum: 1 }, bands: int(2, 16), scope: { enum: ['passes', 'all'], description: 'passes (default) lights only assets with normal/emissive passes; all also lights plain assets as flat surfaces.' }, lights: array(object({ at: point, height: int(1, 256), radius: int(1, 512), color }, ['at']), 8) })
+    lighting: object({ ambient: { type: 'number', minimum: 0, maximum: 1 }, bands: int(2, 16), scope: { enum: ['passes', 'all'], description: 'passes (default) lights only assets with normal/emissive passes; all also lights plain assets as flat surfaces.' },
+      mode: { enum: ['multiply', 'ramp'], description: 'multiply (default) scales colours by the light; ramp moves each colour along its recipe\'s ramps instead, so the lit scene keeps its palette (light colour then only sets brightness).' },
+      steps: int(1, 8, 'Ramp lighting: steps per unit of brightness away from 1; default 2.'),
+      lights: array(object({ at: point, height: int(1, 256), radius: int(1, 512), color }, ['at']), 8) })
   }, ['format', 'version', 'name', 'width', 'height', 'assets', 'instances']), $defs: { ...schema.$defs, recipe: recipeSchema }
 };
 const autotile = {
@@ -113,7 +154,7 @@ const autotile = {
   ...object({ format: { const: 'pixelforge-autotile' }, version: { const: 1 }, name: id, tile: int(2, 128, 'Even tile size in pixels.'), mode: { enum: ['blob', 'cardinal'] }, palette: schema.properties.palette,
     template: { ...ref('rows'), description: 'tile × 3 rows of tile × 2 characters.' },
     frame: { type: 'string', pattern: '\\{mask\\}', description: 'Frame name template; {mask} is the neighbour mask and {variant} the variant name.' },
-    variants: { ...array(object({ name: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,16}$' }, duration: int(1, 60000), palette: { type: 'object', additionalProperties: color } }, ['name']), 16), minItems: 1 },
+    variants: { ...array(object({ name: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,16}$' }, duration: int(1, 60000), palette: { type: 'object', additionalProperties: color }, template: { ...ref('rows'), description: 'Redraw this variant from its own template of the same size (compiled as the symbol template-<name>): cracked or mossy stone with the base set\'s edges.' } }, ['name']), 16), minItems: 1 },
     animation: { type: 'string', pattern: '\\{mask\\}', description: 'Optional per-mask animation over the variants, in order.' },
     sheet: schema.properties.sheet
   }, ['format', 'version', 'name', 'tile', 'template', 'frame']), $defs: schema.$defs

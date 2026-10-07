@@ -56,8 +56,27 @@ test('noise dither is seeded and non-periodic, and a rising density only ever ad
   assert.deepEqual(rows(draw([{ op: 'dither', x: 10, y: 3, w: 20, h: 1, color: 'r', pattern: 'noise', seed: 7 }], 64, 64))[3].slice(10, 30), half[3].slice(10, 30));
   assert.deepEqual(field(0.5, 7, { offset: [1, 0] })[5].slice(0, 63), half[5].slice(1));
   assert.equal(ditherThreshold('noise', [0, 0], 7)(3, 4), ditherThreshold('noise', [1, 0], 7)(2, 4));
-  assert.throws(() => draw([{ op: 'dither', color: 'r', seed: 3 }]), /seed: seed chooses the noise pattern's order; set pattern to noise/);
+  assert.throws(() => draw([{ op: 'dither', color: 'r', seed: 3 }]), /seed: seed chooses the noise or value pattern; set pattern to noise or value/);
   assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'noise', seed: -1 }]), /seed: expected an integer from 0 to 2147483647/);
+});
+
+test('value dither grows seeded clumps of a chosen size and keeps density as the share of pixels drawn', () => {
+  const field = (density, extra = {}) => rows(draw([{ op: 'dither', color: 'r', density, pattern: 'value', seed: 3, ...extra }], 96, 96));
+  // Neighbours agree far more often than in white noise: that is what makes clumps instead of speckle.
+  const agreement = lines => { let same = 0; lines.forEach((line, y) => { for (let x = 1; x < line.length; x++) if (line[x] === line[x - 1]) same++; }); return same / (lines.length * (lines[0].length - 1)); };
+  const smooth = field(0.5), speckle = rows(draw([{ op: 'dither', color: 'r', density: 0.5, pattern: 'noise', seed: 3 }], 96, 96));
+  assert.ok(agreement(smooth) > 0.75 && agreement(speckle) < 0.6, `${agreement(smooth)} vs ${agreement(speckle)}`);
+  // Larger scales make larger clumps, and thresholds are equalized, so coverage follows density.
+  assert.ok(agreement(field(0.5, { scale: 12 })) > agreement(field(0.5, { scale: 2 })));
+  for (const density of [0.2, 0.5, 0.8]) assert.ok(Math.abs(count(field(density, { scale: 3 }), 'r') / 9216 - density) < 0.08, String(density));
+  // Deterministic, seeded, canvas-anchored, and a rising density only adds pixels.
+  assert.deepEqual(field(0.5), smooth);
+  assert.notDeepEqual(field(0.5, { seed: 4 }), smooth);
+  assert.ok(field(0.3).every((line, y) => [...line].every((char, x) => char !== 'r' || smooth[y][x] === 'r')));
+  assert.equal(ditherThreshold('value', [2, 0], 3, 6)(5, 9), ditherThreshold('value', [0, 0], 3, 6)(7, 9));
+  assert.equal(count(field(1), 'r'), 9216); assert.equal(count(field(0), 'r'), 0);
+  assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'noise', scale: 4 }]), /scale: scale sets the size of the value pattern's clumps; set pattern to value/);
+  assert.throws(() => draw([{ op: 'dither', color: 'r', pattern: 'value', scale: 65 }]), /scale: expected an integer from 1 to 64/);
 });
 
 test('outline adds inside, middle, width and direction masks', () => {

@@ -1,7 +1,7 @@
 // Exports every Tidewatch recipe through PixelForge's own reference resolver, renderer, atlas packer and PNG/APNG
 // encoders. Output: game/assets/<name>.png + <name>.json (TexturePacker-style atlases with durations, animations,
 // anchors, marker points and trimmed rectangles), aligned -normal/-emissive atlases, gallery contact sheets and
-// APNG previews, and a copy of PixelForge's browser runtime and autotile masks for the game to import.
+// APNG previews, and a copy of PixelForge's browser runtime, autotile masks and the craft helpers they import.
 // Usage: node tools/build-assets.mjs [--check]   (--check compares without writing)
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -51,8 +51,9 @@ for (const name of RECIPES) {
   }
 }
 emit(path.join(out, 'font.map.json'), readFileSync(path.join(root, 'art/recipes/font.map.json')));
-// The game server only serves game/, so the PixelForge modules the game imports are copied beside its code.
-for (const module of ['runtime.js', 'autotile.js']) emit(path.join(root, 'game/src/pixelforge', module), readFileSync(new URL(`../../../src/${module}`, import.meta.url)));
+// The game server only serves game/, so the PixelForge modules the game imports are copied beside its code
+// (autotile.js imports craft.js).
+for (const module of ['runtime.js', 'autotile.js', 'craft.js']) emit(path.join(root, 'game/src/pixelforge', module), readFileSync(new URL(`../../../src/${module}`, import.meta.url)));
 emit(path.join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 if (check) { console.log(differing.length ? `Out of date:\n${differing.join('\n')}` : 'All exported assets match their recipes.'); process.exitCode = differing.length ? 1 : 0; }
 else console.log(`Wrote ${written} files for ${RECIPES.length} recipes.`);

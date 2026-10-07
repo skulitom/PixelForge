@@ -184,9 +184,16 @@ export function compileAutotile(source) {
   const variants = source.variants ?? [{ name: '' }];
   if (!Array.isArray(variants) || !variants.length || variants.length > 16) fail('autotile.variants', 'expected 1–16 variants');
   if (source.variants !== undefined && !source.frame.includes('{variant}')) fail('autotile.frame', 'with variants, the frame template must contain {variant}');
+  // A variant may recolour the set (palette), time it (duration) or redraw it from its own template of the same size:
+  // cracked or mossy stone, say, that keeps the base set's edge geometry. Its template becomes the symbol
+  // template-<variant>.
+  const symbols = { template };
   variants.forEach((variant, i) => {
-    fields(variant, ['name', 'duration', 'palette'], `autotile.variants[${i}]`);
+    fields(variant, ['name', 'duration', 'palette', 'template'], `autotile.variants[${i}]`);
     if (typeof variant.name !== 'string' || (source.variants !== undefined && !/^[A-Za-z0-9_-]{1,16}$/.test(variant.name))) fail(`autotile.variants[${i}].name`, 'expected 1–16 letters, digits, hyphens or underscores');
+    if (variant.template === undefined) return;
+    if (!Array.isArray(variant.template) || variant.template.length !== tile * 3 || variant.template.some(row => typeof row !== 'string' || row.length !== tile * 2)) fail(`autotile.variants[${i}].template`, `expected ${tile * 3} rows of ${tile * 2} characters, the size of the base template`);
+    symbols[`template-${variant.name}`] = variant.template;
   });
   if (source.animation !== undefined && (typeof source.animation !== 'string' || !source.animation.includes('{mask}'))) fail('autotile.animation', 'expected an animation name template containing {mask}');
   const frames = [], animations = {};
@@ -195,11 +202,11 @@ export function compileAutotile(source) {
     for (const variant of variants) {
       const name = source.frame.replaceAll('{mask}', String(mask)).replaceAll('{variant}', variant.name);
       names.push(name);
-      frames.push({ name, ...(variant.duration !== undefined && { duration: variant.duration }), ...(variant.palette !== undefined && { palette: variant.palette }), ops: [{ op: 'autotile', symbol: 'template', mask, ...(mode === 'cardinal' && { mode }) }] });
+      frames.push({ name, ...(variant.duration !== undefined && { duration: variant.duration }), ...(variant.palette !== undefined && { palette: variant.palette }), ops: [{ op: 'autotile', symbol: variant.template === undefined ? 'template' : `template-${variant.name}`, mask, ...(mode === 'cardinal' && { mode }) }] });
     }
     if (source.animation !== undefined) animations[source.animation.replaceAll('{mask}', String(mask))] = { frames: names };
   }
-  const recipe = { version: 1, name: source.name, width: tile, height: tile, palette: source.palette ?? {}, symbols: { template }, frames, ...(source.animation !== undefined && { animations }), ...(source.sheet !== undefined && { sheet: source.sheet }) };
+  const recipe = { version: 1, name: source.name, width: tile, height: tile, palette: source.palette ?? {}, symbols, frames, ...(source.animation !== undefined && { animations }), ...(source.sheet !== undefined && { sheet: source.sheet }) };
   renderProject(recipe);
   return plain({ recipe, metadata: { format: 'pixelforge-autotile-metadata', version: 1, mode, masks: mode === 'cardinal' ? [...CARDINAL_MASKS] : [...BLOB_MASKS], bits: mode === 'cardinal' ? { n: 1, e: 2, s: 4, w: 8 } : { n: 1, ne: 2, e: 4, se: 8, s: 16, sw: 32, w: 64, nw: 128 } } });
 }

@@ -130,8 +130,7 @@
       "name": "burst-9",
       "duration": 50,
       "ops": [{ "op": "stamp", "symbol": "a", "x": 23, "y": 17 }, { "op": "stamp", "symbol": "d", "x": 21, "y": 19 }]
-    },
-    { "name": "none" }
+    }
   ],
   "animations": {
     "burst": {

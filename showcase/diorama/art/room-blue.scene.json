@@ -129,5 +129,6 @@
     { "name": "chain", "asset": "props", "frame": "chain", "at": [91, 118], "anchor": "frame" },
     { "name": "banner", "asset": "props", "frame": "banner", "at": [44, 99], "anchor": "frame" }
   ],
-  "name": "diorama"
+  "name": "diorama-blue",
+  "palette": "palette-blue.json"
 }

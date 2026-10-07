@@ -2,6 +2,34 @@
 
 7 October 2026 · Toolkit `1285180` (0.7.1) · Linux, Node v22.22.0 · Study: [`showcase/diorama/`](../../showcase/diorama/README.md)
 
+## Update: the seven changes are implemented
+
+Later on 7 October 2026, all seven proposals below were implemented, tested and used to rebuild the study. The findings that follow are unchanged, as the record of what the first build ran into; the first study is at commit `42dab33`. The images in this report now show the rebuilt room.
+
+| ID | What changed | Acceptance, measured on the rebuilt study |
+| --- | --- | --- |
+| DG-1 | Tilemap legends take `rules`: 3×3 `where` patterns with an `empty` character and `classes`, `chance`, `offset` into a neighbouring cell and `stop`; variants take `weights`; a tilemap `seed` reshuffles picks. Shared by scenes and recipes (`expandTilemap` in `src/autotile.js`). | No script-computed maps remain. Faces (14 cells), cliffs (18) and waterfall halves (2) land on exactly the cells the old script computed. Wall-side bricks now come from a seeded `chance` (8 of 30 wall-side cells), so they differ from the first render there. The waterfall halves are scene rule tiles. |
+| DG-2 | An autotile variant may carry its own `template` (compiled as the symbol `template-<name>`); legend `frames` take `weights`. | Implemented and tested. The study no longer compiles cap sets: its room recipe draws both cap templates with weighted `templates`, so the merge code is gone. |
+| DG-3 | Recipes declare `ramps` (also from a shared palette file); a `shade` operation moves pixels along them; scene `shade` placements darken what lies beneath; `lighting.mode: "ramp"` lights by ramp steps. | Prop shadows are `shade` ellipses and land correctly on moss and bricks. The hero's shadow is a shade placement. The torch-lit scene renders 29 colours, all from the palette; a test checks all three scenes at four times. |
+| DG-4 | A `tilemap` drawing operation draws a character map from a recipe's symbols and autotile templates. | The room is one recipe: one `tilemap` operation, then moss, decals and shadows that see the composed room. The painted floor mask is gone. |
+| DG-5 | `dither` takes `pattern: "value"` with a `scale`: seeded smooth noise with equalized thresholds, so density stays the share drawn. | Moss is one value-noise dither per patch plus one for highlights, with no clean-up rules. One `rewrite` rule remains, shading each clump's lower edge. |
+| DG-6 | Scenes take named `cues` (`"strike+90"`), `hidden` placements and `hide` cues, `attach` to another placement's frame point, and `sort: "ground"`. | The strike is one named time. The hero walks behind the barrel in the middle of the room (tested). The smear rides the hero's `blade` point; the smear and shards have no empty frames. |
+| DG-7 | Scenes and asset entries take a `palette` (a map or a palette file the CLI and MCP resolve) that overrides the keys each recipe has. | One `art/` folder renders grey stone, blue stone and torchlight from three small scene files. |
+
+The rebuilt generator is about as long as the first (301 lines against 304) but does more, and the art it writes shrank from 129 KB to 74 KB:
+
+- **Gone:** four computed character maps, the cap merge, the painted moss mask and clean-up rules, the empty frames and the patched effect.
+- **Added:** prop shadows, a hero shadow, a barrel to walk behind, a theme scene and a torch-lit scene.
+
+Supporting changes:
+
+- **Schemas.** They are regenerated, and a new test checks that every field they list for operations and scenes is one the renderer accepts.
+- **Tidewatch.** The game vendors `craft.js` beside `autotile.js`, which now imports it.
+- **Docs.** The authoring guide, art workflow, skill, README and `llms.txt` describe the new fields.
+- **Tests.** 197 tests pass.
+
+![The rebuilt room by torchlight: ramp lighting keeps the palette](../images/diorama/room-night.png)
+
 The question was whether PixelForge can produce pixel art at the level of four short reference clips (procedurally generated top-down dungeon rooms, shared as a Twitter GIF download), and what would have to change. To answer from evidence rather than from the feature list, I decoded the clips, measured them, and then built an original room in the same style with the toolkit exactly as it is. Everything below is either a measurement or something that happened during that build.
 
 ![The study room: an original 160×128 dungeon diorama rendered by PixelForge, shown at 4×](../images/diorama/room.png)
@@ -216,12 +244,14 @@ PixelForge makes each revision cheap and exact, and the review tools (`--view ti
 ## Reproduce
 
 ```sh
-node showcase/diorama/build.mjs --force                 # writes showcase/diorama/art/
+node showcase/diorama/build.mjs --force                 # writes showcase/diorama/art/ (--check compares instead)
 node bin/pixelforge.js preview showcase/diorama/art/room.scene.json
 node bin/pixelforge.js sequence showcase/diorama/art/room.scene.json --out output/diorama --fps 20 --seconds 2.4 --scale 3
 node bin/pixelforge.js gif-frames output/diorama --fps 20 --out output/diorama.gif
-node showcase/diorama/build.mjs --theme blue --force    # writes showcase/diorama/art-blue/
+node bin/pixelforge.js scene showcase/diorama/art/room-blue.scene.json --out output/diorama-blue
 ```
+
+The first study, with its `--theme blue` copy, is `git show 42dab33:showcase/diorama/build.mjs`.
 
 Checks run for this report:
 

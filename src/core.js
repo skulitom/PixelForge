@@ -1,6 +1,6 @@
 // Browser-compatible, deterministic rasterizer. No I/O and no dependencies.
 import { patternProblem, ditherThreshold, traceLine, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
-import { reduceBlobMask, quadrantPieces, templatePiece } from './autotile.js';
+import { reduceBlobMask, quadrantPieces, templatePiece, expandTilemap } from './autotile.js';
 import { layoutText } from './font.js';
 export class PixelError extends Error {
   constructor(path, message) { super(`${path}: ${message}`); this.name = 'PixelError'; this.path = path; }
@@ -50,6 +50,20 @@ export function parseColor(value, palette = {}, path = 'color') {
   return [0, 2, 4, 6].map(i => parseInt(hex.slice(i, i + 2), 16));
 }
 
+// Moves an exact colour (a pixel id) along the ramp that lists it, clamped at the ramp's ends: shift(id, -1) is one
+// step darker. Ramps are lists of palette keys; a colour shared by keys in two ramps follows the first. Returns null
+// for colours on no ramp.
+export function rampShifter(palette, ramps) {
+  const colours = ramps.map(keys => keys.map(key => parseColor(key, palette))), place = new Map();
+  colours.forEach((ramp, r) => ramp.forEach((rgba, i) => { const id = pixelId(rgba, 0); if (id && !place.has(id)) place.set(id, [r, i]); }));
+  return (id, steps) => {
+    const at = place.get(id);
+    if (!at) return null;
+    const ramp = colours[at[0]];
+    return ramp[Math.max(0, Math.min(ramp.length - 1, at[1] + steps))];
+  };
+}
+
 function blend(data, i, color, opacity = 1) {
   const a = color[3] / 255 * opacity;
   if (a === 0) return;
@@ -87,7 +101,7 @@ export function renderProject(spec, options = {}) {
     for (const frame of isolated.frames) { delete frame.ops; delete frame.pixels; frame.layers = (frame.layers ?? []).filter(layer => options.layers.includes(layer.name)); }
     return renderProject(isolated);
   }
-  object(spec, 'project', ['$schema', 'version', 'name', 'width', 'height', 'palette', 'background', 'symbols', 'frames', 'animations', 'sheet', 'anchor']);
+  object(spec, 'project', ['$schema', 'version', 'name', 'width', 'height', 'palette', 'ramps', 'background', 'symbols', 'frames', 'animations', 'sheet', 'anchor']);
   if (spec.version !== 1) fail('project.version', 'expected 1');
   const projectName = name(spec.name, 'project.name');
   const width = integer(spec.width, 'project.width', 1, 256), height = integer(spec.height, 'project.height', 1, 256);
@@ -99,6 +113,18 @@ export function renderProject(spec, options = {}) {
     if (!key || key.length > 64 || key === '.' || key === ' ' || key === 'transparent') fail(`project.palette.${key}`, 'invalid or reserved palette name');
     parseColor(value, {}, `project.palette.${key}`);
   }
+  // Ramps list palette keys from dark to light. `shade` and scene ramp lighting move a colour along its ramp instead of
+  // inventing a darker one, so shading keeps the palette. A key belongs to one ramp.
+  const ramps = spec.ramps === undefined ? [] : list(spec.ramps, 'project.ramps', 64), rampKeys = new Set();
+  ramps.forEach((ramp, r) => {
+    list(ramp, `project.ramps[${r}]`, 32);
+    if (ramp.length < 2) fail(`project.ramps[${r}]`, 'a ramp lists 2–32 palette keys from dark to light');
+    ramp.forEach((key, i) => {
+      if (typeof key !== 'string' || !own(palette, key)) fail(`project.ramps[${r}][${i}]`, 'expected a key of the project palette');
+      if (rampKeys.has(key)) fail(`project.ramps[${r}][${i}]`, `${JSON.stringify(key)} is already in a ramp; a key belongs to one ramp`);
+      rampKeys.add(key);
+    });
+  });
   // Frames may recolor palette keys for their own drawing; everything else resolves against the project palette.
   let activePalette = palette;
   const color = (value, path) => parseColor(value, activePalette, path);
@@ -138,8 +164,10 @@ export function renderProject(spec, options = {}) {
         text: ['x', 'y', 'text', 'color', 'align', 'spacing', 'lineHeight', ...transform],
         copy: ['x', 'y', 'from', 'symbol', 'sx', 'sy', 'w', 'h', ...transform, 'remap'],
         autotile: ['x', 'y', 'symbol', 'mask', 'mode', 'remap'],
+        tilemap: ['x', 'y', 'tile', 'rows', 'legend', 'outside', 'empty', 'classes', 'seed'],
         outline: ['color', 'diagonal', 'position', 'width', 'directions'],
-        dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'seed', 'over'],
+        dither: ['x', 'y', 'w', 'h', 'color', 'erase', 'density', 'direction', 'pattern', 'offset', 'seed', 'scale', 'over'],
+        shade: ['x', 'y', 'w', 'h', 'steps', 'shape', 'density', 'direction', 'pattern', 'offset', 'seed', 'scale', 'over'],
         rewrite: ['x', 'y', 'w', 'h', 'rules', 'empty', 'steps', 'chance', 'limit', 'seed', 'rotate', 'mirror']
       };
       if (typeof op.op !== 'string' || !own(fields, op.op)) fail(`${p}.op`, `unknown operation ${JSON.stringify(op.op)}`);
@@ -183,6 +211,52 @@ export function renderProject(spec, options = {}) {
           else if (rotate === 180) [px, py] = [w - 1 - px, h - 1 - py];
           else if (rotate === 270) [px, py] = [py, w - 1 - px];
           for (let sy = 0; sy < scale; sy++) for (let sx = 0; sx < scale; sx++) put(left + px * scale + sx, top + py * scale + sy, c);
+        }
+      };
+      // The canvas-anchored threshold field shared by dither and shade: a region from x/y (to the canvas edge unless w/h
+      // say otherwise), a density or [from, to] ramp along a direction, and a pattern. The returned function visits
+      // every pixel of the region, optionally limited by `inside(i, j, w, h)`, whose threshold is below the density.
+      const densityField = (fallback, inside = null) => {
+        const w = integer(op.w ?? Math.max(1, width - x), `${p}.w`, 1, 512), h = integer(op.h ?? Math.max(1, height - y), `${p}.h`, 1, 512);
+        const ramp = Array.isArray(op.density);
+        if (ramp && op.density.length !== 2) fail(`${p}.density`, 'expected a number from 0 to 1, or [from, to]');
+        const [from, to] = ramp ? op.density : [op.density ?? fallback, op.density ?? fallback];
+        number(from, `${p}.density${ramp ? '[0]' : ''}`, 0, 1); number(to, `${p}.density${ramp ? '[1]' : ''}`, 0, 1);
+        if (op.direction !== undefined && !ramp) fail(`${p}.direction`, 'direction applies to a density ramp such as [0, 1]');
+        const direction = op.direction ?? 'down';
+        if (!['down', 'up', 'right', 'left', 'radial'].includes(direction)) fail(`${p}.direction`, 'expected down, up, right, left or radial');
+        const pattern = op.pattern ?? 'bayer4', problem = patternProblem(pattern);
+        if (problem) fail(`${p}.pattern${problem[0]}`, problem[1]);
+        if (op.seed !== undefined && pattern !== 'noise' && pattern !== 'value') fail(`${p}.seed`, 'seed chooses the noise or value pattern; set pattern to noise or value');
+        if (op.scale !== undefined && pattern !== 'value') fail(`${p}.scale`, 'scale sets the size of the value pattern\'s clumps; set pattern to value');
+        const seed = integer(op.seed ?? 0, `${p}.seed`, 0, 2147483647), clumps = integer(op.scale ?? 4, `${p}.scale`, 1, 64);
+        const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`), seed, clumps);
+        return visit => {
+          spend(w * h);
+          for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+            if (inside && !inside(i, j, w, h)) continue;
+            let s = 0;
+            if (direction === 'radial') { const u = (i + 0.5) / w * 2 - 1, v = (j + 0.5) / h * 2 - 1; s = Math.min(1, Math.sqrt(u * u + v * v)); }
+            else s = direction === 'down' ? (j + 0.5) / h : direction === 'up' ? 1 - (j + 0.5) / h : direction === 'right' ? (i + 0.5) / w : 1 - (i + 0.5) / w;
+            const px = x + i, py = y + j;
+            if (!(threshold(px, py) < from + (to - from) * s)) continue;
+            if (px < 0 || py < 0 || px >= width || py >= height) { clip(p); continue; }
+            visit(px, py);
+          }
+        };
+      };
+      // `over`: only pixels whose exact current colour is listed.
+      const overSet = () => op.over === undefined ? null : new Set((typeof op.over === 'string' ? [op.over] : list(op.over, `${p}.over`, 64)).map((value, i) => pixelId(color(value, typeof op.over === 'string' ? `${p}.over` : `${p}.over[${i}]`), 0)));
+      // One autotile tile at left/top: the four quarters that a neighbour mask selects from a template symbol two tiles
+      // wide and three tall (see autotile.js). Blob masks are reduced (a diagonal counts only with both of its sides).
+      const drawTemplate = (grid, mask, mode, left, top, sample, where) => {
+        const tile = grid.width / 2;
+        if (!Number.isInteger(tile) || tile % 2 || grid.height !== tile * 3) fail(where, 'an autotile template is two tiles wide and three tall, with an even tile size');
+        const pieces = quadrantPieces(mode, mode === 'cardinal' ? mask : reduceBlobMask(mask)), q = tile / 2;
+        spend(tile * tile);
+        for (const [position, [ox, oy]] of [['tl', [0, 0]], ['tr', [q, 0]], ['bl', [0, q]], ['br', [q, q]]]) {
+          const [sx, sy] = templatePiece(tile, position, pieces[position]);
+          for (let gy = 0; gy < q; gy++) for (let gx = 0; gx < q; gx++) { const c = sample(grid.rows[sy + gy][sx + gx]); if (c) put(left + ox + gx, top + oy + gy, c); }
         }
       };
       if (op.op === 'pixel') { spend(1); put(x, y, color(op.color, `${p}.color`)); }
@@ -249,22 +323,27 @@ export function renderProject(spec, options = {}) {
         const w = integer(op.w ?? sourceWidth - sx, `${p}.w`, 1, sourceWidth - sx), h = integer(op.h ?? sourceHeight - sy, `${p}.h`, 1, sourceHeight - sy);
         drawCells(w, h, (gx, gy) => read(sx + gx, sy + gy));
       } else if (op.op === 'autotile') {
-        // One tile of an autotile set: the four quarters a neighbour mask selects from a template symbol two tiles wide
-        // and three tall (see autotile.js). The autotile compiler emits one per frame, so editing the template
-        // redraws every tile. Blob masks are reduced (a diagonal counts only with both of its sides).
+        // One tile of an autotile set. The autotile compiler emits one per frame, so editing the template redraws every tile.
         if (typeof op.symbol !== 'string') fail(`${p}.symbol`, 'expected a string naming a template symbol');
         const grid = symbols[op.symbol];
         if (!grid) fail(`${p}.symbol`, `unknown symbol ${JSON.stringify(op.symbol)}`);
-        const tile = grid.width / 2;
-        if (!Number.isInteger(tile) || tile % 2 || grid.height !== tile * 3) fail(`${p}.symbol`, 'an autotile template is two tiles wide and three tall, with an even tile size');
         const mode = op.mode ?? 'blob';
         if (!['blob', 'cardinal'].includes(mode)) fail(`${p}.mode`, 'expected blob or cardinal');
-        const mask = integer(op.mask, `${p}.mask`, 0, mode === 'cardinal' ? 15 : 255);
-        const pieces = quadrantPieces(mode, mode === 'cardinal' ? mask : reduceBlobMask(mask)), q = tile / 2, sample = paletteSampler();
-        spend(tile * tile);
-        for (const [position, [ox, oy]] of [['tl', [0, 0]], ['tr', [q, 0]], ['bl', [0, q]], ['br', [q, q]]]) {
-          const [sx, sy] = templatePiece(tile, position, pieces[position]);
-          for (let gy = 0; gy < q; gy++) for (let gx = 0; gx < q; gx++) { const c = sample(grid.rows[sy + gy][sx + gx]); if (c) put(x + ox + gx, y + oy + gy, c); }
+        drawTemplate(grid, integer(op.mask, `${p}.mask`, 0, mode === 'cardinal' ? 15 : 255), mode, x, y, paletteSampler(), `${p}.symbol`);
+      } else if (op.op === 'tilemap') {
+        // A character map drawn from this recipe's symbols and autotile templates, with the legend, variants and rules of
+        // scene tilemaps (see expandTilemap in autotile.js). Later operations see the composed result: dither over its
+        // floor colours, rewrite rules at its corners, an outline around it.
+        if (op.tile === undefined) fail(`${p}.tile`, 'expected [width, height]: the distance between cells in pixels');
+        const tile = point(op.tile, `${p}.tile`);
+        if (tile.some(n => n < 1 || n > 256)) fail(`${p}.tile`, 'cells are 1–256 pixels wide and tall');
+        const expanded = expandTilemap(op, { path: p, fail, kinds: ['symbol', 'template'], text: 'symbol', masked: kind => kind !== 'template', exists: (kind, key) => own(symbols, key) });
+        const sample = paletteSampler();
+        for (const cell of expanded.cells) {
+          const grid = symbols[cell.name], left = x + cell.x * tile[0], top = y + cell.y * tile[1];
+          if (cell.kind === 'template') { drawTemplate(grid, cell.mask, cell.mode, left, top, sample, `${p}.legend: template ${JSON.stringify(cell.name)}`); continue; }
+          spend(grid.width * grid.height);
+          for (let gy = 0; gy < grid.height; gy++) for (let gx = 0; gx < grid.width; gx++) { const c = sample(grid.rows[gy][gx]); if (c) put(left + gx, top + gy, c); }
         }
       } else if (op.op === 'outline') {
         // Outside rings surround the visible pixels drawn so far in this buffer (frame or layer); inside rings recolor
@@ -306,34 +385,27 @@ export function renderProject(spec, options = {}) {
         for (let i = 0; i < paint.length; i++) if (paint[i]) blend(data, i * 4, c);
       } else if (op.op === 'dither') {
         // Ordered dither: draws `color` (or erases) where the canvas-anchored pattern's threshold is below the density.
-        // The region runs from x/y to the canvas edge unless w/h say otherwise.
-        const w = integer(op.w ?? Math.max(1, width - x), `${p}.w`, 1, 512), h = integer(op.h ?? Math.max(1, height - y), `${p}.h`, 1, 512);
         const erase = boolean(op.erase ?? false, `${p}.erase`);
         if (erase === (op.color !== undefined)) fail(p, 'dither needs a color, or erase: true to clear pixels');
-        const c = erase ? null : color(op.color, `${p}.color`), ramp = Array.isArray(op.density);
-        if (ramp && op.density.length !== 2) fail(`${p}.density`, 'expected a number from 0 to 1, or [from, to]');
-        const [from, to] = ramp ? op.density : [op.density ?? 0.5, op.density ?? 0.5];
-        number(from, `${p}.density${ramp ? '[0]' : ''}`, 0, 1); number(to, `${p}.density${ramp ? '[1]' : ''}`, 0, 1);
-        if (op.direction !== undefined && !ramp) fail(`${p}.direction`, 'direction applies to a density ramp such as [0, 1]');
-        const direction = op.direction ?? 'down';
-        if (!['down', 'up', 'right', 'left', 'radial'].includes(direction)) fail(`${p}.direction`, 'expected down, up, right, left or radial');
-        const pattern = op.pattern ?? 'bayer4', problem = patternProblem(pattern);
-        if (problem) fail(`${p}.pattern${problem[0]}`, problem[1]);
-        if (op.seed !== undefined && pattern !== 'noise') fail(`${p}.seed`, 'seed chooses the noise pattern\'s order; set pattern to noise');
-        const seed = integer(op.seed ?? 0, `${p}.seed`, 0, 2147483647);
-        const threshold = ditherThreshold(pattern, op.offset === undefined ? [0, 0] : point(op.offset, `${p}.offset`), seed);
-        const over = op.over === undefined ? null : new Set((typeof op.over === 'string' ? [op.over] : list(op.over, `${p}.over`, 64)).map((value, i) => pixelId(color(value, typeof op.over === 'string' ? `${p}.over` : `${p}.over[${i}]`), 0)));
-        spend(w * h);
-        for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-          let s = 0;
-          if (direction === 'radial') { const u = (i + 0.5) / w * 2 - 1, v = (j + 0.5) / h * 2 - 1; s = Math.min(1, Math.sqrt(u * u + v * v)); }
-          else s = direction === 'down' ? (j + 0.5) / h : direction === 'up' ? 1 - (j + 0.5) / h : direction === 'right' ? (i + 0.5) / w : 1 - (i + 0.5) / w;
-          const px = x + i, py = y + j;
-          if (!(threshold(px, py) < from + (to - from) * s)) continue;
-          if (px < 0 || py < 0 || px >= width || py >= height) { clip(p); continue; }
-          if (over && !over.has(pixelId(data, (py * width + px) * 4))) continue;
-          put(px, py, c, erase);
-        }
+        const c = erase ? null : color(op.color, `${p}.color`), field = densityField(0.5), over = overSet();
+        field((px, py) => { if (!over || over.has(pixelId(data, (py * width + px) * 4))) put(px, py, c, erase); });
+      } else if (op.op === 'shade') {
+        // Moves every pixel of the region `steps` along its colour's ramp (negative darkens), clamped at the ramp's ends,
+        // so a shadow or a pool of light keeps the palette whatever it falls on. Colours on no ramp stay as they are. The
+        // density field gives a dithered edge; shape "ellipse" keeps to the ellipse inside the region.
+        if (!ramps.length) fail(p, 'shade moves colours along the recipe\'s ramps; declare ramps, lists of palette keys from dark to light');
+        const steps = integer(op.steps ?? -1, `${p}.steps`, -8, 8);
+        if (!steps) fail(`${p}.steps`, 'expected a nonzero number of steps: negative darkens, positive lightens');
+        const shape = op.shape ?? 'rect';
+        if (!['rect', 'ellipse'].includes(shape)) fail(`${p}.shape`, 'expected rect or ellipse');
+        const ellipse = (i, j, w, h) => ((i + .5 - w / 2) / (w / 2)) ** 2 + ((j + .5 - h / 2) / (h / 2)) ** 2 <= 1;
+        const shift = rampShifter(activePalette, ramps), field = densityField(1, shape === 'ellipse' ? ellipse : null), over = overSet();
+        field((px, py) => {
+          const at = (py * width + px) * 4, id = pixelId(data, at);
+          if (!id || (over && !over.has(id))) return;
+          const next = shift(id, steps);
+          if (next) data.set(next, at);
+        });
       } else if (op.op === 'rewrite') {
         // Markov-style rules: small palette grids matched against exact RGBA and replaced in place (see craft.js).
         const rx = integer(op.x ?? 0, `${p}.x`, 0, width - 1), ry = integer(op.y ?? 0, `${p}.y`, 0, height - 1);
@@ -513,7 +585,7 @@ export function renderProject(spec, options = {}) {
   const warnings = [], clipping = [...clipped].map(([path, pixels]) => ({ path, pixels }));
   if (clipping.length) warnings.push(`Some drawing falls outside the canvas and is clipped: ${clipping[0].path} (${clipping[0].pixels} px)${clipping.length > 1 ? ` and ${clipping.length - 1} more location${clipping.length > 2 ? 's' : ''}` : ''}.`);
   return {
-    name: projectName, width, height, frames, animations, palette,
+    name: projectName, width, height, frames, animations, palette, ramps,
     sheet: { columns, padding, scale, width: sheetWidth, height: sheetHeight, ...(layout && { trim: true, layout: layout.cells }) },
     warnings, ...(clipping.length && { clipping: clipping.slice(0, 64), ...(clipping.length > 64 && { clippingOmitted: clipping.length - 64 }) })
   };

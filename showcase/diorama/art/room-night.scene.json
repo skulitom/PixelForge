@@ -129,5 +129,16 @@
     { "name": "chain", "asset": "props", "frame": "chain", "at": [91, 118], "anchor": "frame" },
     { "name": "banner", "asset": "props", "frame": "banner", "at": [44, 99], "anchor": "frame" }
   ],
-  "name": "diorama"
+  "name": "diorama-night",
+  "lighting": {
+    "mode": "ramp",
+    "scope": "all",
+    "ambient": 0.5,
+    "bands": 3,
+    "steps": 2,
+    "lights": [
+      { "at": [52, 19], "height": 10, "radius": 56, "color": "#ffd38a" },
+      { "at": [108, 19], "height": 10, "radius": 56, "color": "#ffd38a" }
+    ]
+  }
 }

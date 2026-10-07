@@ -9,7 +9,6 @@
     {
       "name": "barrel",
       "ops": [
-        { "op": "ellipse", "x": 3, "y": 14, "w": 10, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 4,
@@ -32,7 +31,6 @@
     {
       "name": "pot",
       "ops": [
-        { "op": "ellipse", "x": 4, "y": 14, "w": 9, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 5,
@@ -52,7 +50,6 @@
     {
       "name": "pot-break-0",
       "ops": [
-        { "op": "ellipse", "x": 4, "y": 14, "w": 9, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 5,
@@ -104,7 +101,6 @@
     {
       "name": "urn",
       "ops": [
-        { "op": "ellipse", "x": 4, "y": 14, "w": 9, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 5,
@@ -125,7 +121,6 @@
     {
       "name": "crate",
       "ops": [
-        { "op": "ellipse", "x": 3, "y": 14, "w": 10, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 4,
@@ -147,7 +142,6 @@
     {
       "name": "pillar",
       "ops": [
-        { "op": "ellipse", "x": 3, "y": 14, "w": 11, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 4,
@@ -174,7 +168,6 @@
     {
       "name": "chest",
       "ops": [
-        { "op": "ellipse", "x": 3, "y": 14, "w": 11, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 4,
@@ -195,7 +188,6 @@
     {
       "name": "chest-open",
       "ops": [
-        { "op": "ellipse", "x": 3, "y": 14, "w": 11, "h": 4, "color": "f" },
         {
           "op": "grid",
           "x": 4,
@@ -209,52 +201,6 @@
             "kxyyyyyxk",
             "kxxxxxxxk",
             ".kkkkkkk."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "bones",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 14,
-          "rows": [
-            ".l...L",
-            "lLLl.l",
-            "..l.kk"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "skull",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 6,
-          "y": 13,
-          "rows": [
-            ".kkk.",
-            "kLLLk",
-            "kkLkk",
-            ".kLk."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "rubble",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 14,
-          "rows": [
-            "..kk..k",
-            ".kuvkku",
-            "kuvukvk"
           ]
         }
       ]
@@ -315,125 +261,6 @@
             "kuk",
             ".k.",
             ".u."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "cobweb",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 11,
-          "rows": [
-            "lLlLl.",
-            "L.l.l.",
-            "ll.L..",
-            "L.l...",
-            "l.....",
-            "......"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "cobweb-r",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 11,
-          "rows": [
-            ".lLlLl",
-            ".l.l.L",
-            "..L.ll",
-            "...l.L",
-            ".....l",
-            "......"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "bricks-a",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 3,
-          "y": 12,
-          "rows": [
-            ".rrrrr.rrrr",
-            "rrhgrrrghr.",
-            ".rrrrrrrrrr",
-            "..rghrr.rgr",
-            "..rrrr..rrr"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "bricks-b",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 4,
-          "y": 12,
-          "rows": [
-            "rrrr.rrr",
-            "rghrrghr",
-            "rrrrrrrr",
-            ".rrhgr..",
-            ".rrrrr.."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "bricks-c",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 12,
-          "rows": [
-            ".rrrrrr",
-            ".rghrhr",
-            "rrrrrrr",
-            "rhgr...",
-            "rrrr..."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "plank",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 5,
-          "y": 14,
-          "rows": [
-            ".kkkkk",
-            "kyzzyk",
-            "kkkkk."
-          ]
-        }
-      ]
-    },
-    {
-      "name": "plank-d",
-      "ops": [
-        {
-          "op": "grid",
-          "x": 6,
-          "y": 12,
-          "rows": [
-            "..kk.",
-            ".kzyk",
-            "kzyk.",
-            "kyk..",
-            ".k..."
           ]
         }
       ]
