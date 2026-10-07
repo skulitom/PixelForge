@@ -145,7 +145,7 @@ try {
   const canvas = () => evaluate(`(() => { const c = document.getElementById('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, colors = new Set(); let drawn = 0, hash = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 3]) { drawn++; colors.add((d[i] << 16 | d[i + 1] << 8 | d[i + 2]).toString(16).padStart(6, '0')); } hash = (hash * 31 + d[i] + d[i + 1] * 3 + d[i + 2] * 7 + d[i + 3] * 11) >>> 0; } return { width: c.width, height: c.height, shown: c.style.width, drawn, hash, colors: [...colors] }; })()`);
   const pressed = id => evaluate(`document.getElementById(${JSON.stringify(id)}).getAttribute('aria-pressed')`);
   const ready = () => until(`document.querySelectorAll('#examples .example').length > 0 && document.getElementById('example-count').textContent !== '' && document.getElementById('source').value.length > 0 && document.getElementById('timeline').children.length > 0`, 'the studio to finish loading');
-  // Replaces the whole recipe the way typing does, then waits for the preview to follow (or for the error to show).
+  // Replaces the whole recipe the way typing does, then pauses; each caller waits for what the recompile shows.
   const type = async recipe => {
     await evaluate(`(() => { const source = document.getElementById('source'); source.focus(); source.select(); })()`);
     await studio.page('Input.insertText', { text: recipe });
@@ -204,18 +204,20 @@ try {
 
   console.log('Editing');
   const original = await evaluate(`document.getElementById('source').value`), edited = original.replace('"#72b58d"', '"#ff00ff"');
+  // Each edit waits for what the studio's recompile shows, since a busy machine can run it later than type()'s pause.
   await check('an edit to the recipe updates the preview', async () => {
     assert.notEqual(edited, original);
-    await type(edited); await click('#timeline .frame:nth-child(1)');
+    await type(edited);
+    await until(`[...document.querySelectorAll('#palette .swatch')].some(swatch => swatch.title.includes('#ff00ff'))`, 'the palette to show the new colour');
+    await click('#timeline .frame:nth-child(1)');
     assert.ok((await canvas()).colors.includes('ff00ff'), 'the new colour is not in the preview');
-    assert.ok(await evaluate(`[...document.querySelectorAll('#palette .swatch')].some(swatch => swatch.title.includes('#ff00ff'))`), 'the palette does not show the new colour');
   });
   await check('a broken recipe shows what is wrong, and the studio recovers when it is mended', async () => {
-    await type(edited.slice(0, -3));
+    await type(edited.slice(0, -3)); await until(`!document.getElementById('error').hidden`, 'the error for the broken recipe');
     assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [false, true]);
     const message = await text('error'); assert.ok(message.length > 5); assert.match(await text('compile-status'), /Fix the recipe/);
     await studio.shot('broken-recipe');
-    await type(edited);
+    await type(edited); await until(`document.getElementById('error').hidden`, 'the mended recipe to recompile');
     assert.deepEqual([await evaluate(`document.getElementById('error').hidden`), await evaluate(`document.getElementById('export').disabled`)], [true, false]);
     return message.slice(0, 60);
   });
@@ -298,7 +300,10 @@ try {
 
   console.log('Draft recovery');
   await check('an unsaved edit is offered back after the page is reloaded, restored on request, and gone once saved', async () => {
-    await type(edited.replace('"name": "forest-spirit"', '"name": "draft-walk"')); await sleep(300);
+    await type(edited.replace('"name": "forest-spirit"', '"name": "draft-walk"'));
+    // The draft keeps the file name the editor shows, which changes only when the studio recompiles (350 ms after the
+    // last keystroke, later on a busy machine). Reloading before that would keep the draft under the old name.
+    await until(`document.getElementById('source-filename').textContent === 'draft-walk.json'`, 'the editor to show draft-walk.json before the reload');
     await studio.reload(); await ready();
     assert.equal(await evaluate(`document.getElementById('draft').hidden`), false, 'no draft was offered after the reload'); assert.match(await text('draft-text'), /draft-walk\.json/);
     await studio.shot('draft-offered');
