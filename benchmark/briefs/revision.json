@@ -1,0 +1,28 @@
+{
+  "format": "pixelforge-benchmark-brief",
+  "version": 1,
+  "id": "revision",
+  "revision": 1,
+  "title": "Shorter tail for the lantern skink",
+  "tests": "A precise revision of existing art: the requested change in exactly the frames named, with no unrequested pixel anywhere else, including frames that share the edited part.",
+  "setup": {
+    "width": 32,
+    "height": 26,
+    "base": "../../examples/quality/skink.json",
+    "colors": ["#0b1020", "#182239", "#26354c", "#3d5364", "#477975", "#72967d", "#afc4a0", "#e7ce89", "#f7edc4", "#cc8762", "#8d5260", "#573b57", "#75bfbc", "#3a8eaa"]
+  },
+  "brief": [
+    "Revise the lantern skink in examples/quality/skink.json (32×26, 12 frames; for an editor, its frames are the PNG sprite sheet and atlas that `pixelforge render` writes). Coordinates are 0-based, x to the right, y down.",
+    "Make the tail 3 pixels shorter in the `idle` and `blink` frames: its tip ends 3 pixels further right, at x 3 instead of x 0, while the tail keeps its taper and curve and still joins the body where it does now.",
+    "Change nothing else. Every other frame stays pixel for pixel identical, and in `idle` and `blink` no pixel outside the tail area (x 0–8, y 14–20) changes. Keep the palette, the frame names, the durations and the animations as they are.",
+    "This brief is complete: do not ask me to confirm it. In your final report, list every pixel you changed."
+  ],
+  "criteria": [
+    { "id": "canvas", "text": "The canvas is still 32×26.", "check": { "type": "canvas", "width": 32, "height": 26 } },
+    { "id": "palette", "text": "Only the skink's own colours, with no partly transparent pixels.", "check": { "type": "colors", "colors": "setup" } },
+    { "id": "tip", "text": "In idle and blink the leftmost opaque pixel is at x 3.", "check": { "type": "extent", "frames": ["idle", "blink"], "left": 3 } },
+    { "id": "unrequested", "text": "No pixel changes outside the tail area of idle and blink; every other frame, duration and animation is unchanged.", "check": { "type": "unchanged", "except": ["idle", "blink"], "region": { "x": 0, "y": 14, "w": 9, "h": 7 } } },
+    { "id": "match", "text": "The tail area of idle and blink is identical, so the blink does not twitch the tail.", "check": { "type": "same-pixels", "frames": ["idle", "blink"], "region": { "x": 0, "y": 14, "w": 9, "h": 7 } } },
+    { "id": "taper", "text": "The shorter tail still tapers and curves, and joins the body naturally.", "judge": true }
+  ]
+}

@@ -5,7 +5,7 @@ To **use** PixelForge for artwork, start with [the pixel art skill](skills/pixel
 This is an agent-first pixel art toolkit. Keep the core and runtime free of dependencies. Use standard Node.js APIs for the CLI, PNG/APNG encoding, ZIP and the local server. No build step is required.
 
 - `src/core.js`: browser-compatible recipe validation/rasterization/atlas packing, inspection (contact sheets, palette-key grids) and revision comparison.
-- `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered, noise and value-noise dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing and engine-independent trigonometry. Keep new randomness seeded and new maths polynomial so output stays identical across JavaScript engines.
+- `src/craft.js`: browser-compatible pixel-art helpers shared by the renderer, patches and compilers: ordered, noise and value-noise dither, De-Corner/De-Stray cleanup, RotSprite-style rotation, rewrite rules, easing, seeded hashing, engine-independent trigonometry and OKLab colour for diagnostics. Keep new randomness seeded and new maths polynomial (or Newton iterations on `+ - * /` instead of `Math.pow` or `Math.cbrt`) so output stays identical across JavaScript engines.
 - `src/font.js`: browser-compatible built-in pixel font (printable ASCII, western European accented letters, common symbols) and text layout for the `text` drawing operation. Glyph changes change rendered pixels, so treat them as format changes: regenerate examples and review.
 - `src/fx.js`: browser-compatible `pixelforge-fx` compiler that bakes seeded particle emitters into ordinary recipes.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
@@ -23,6 +23,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `scripts/qa-studio.mjs`: walks the studio in an installed Edge or Chrome, headless with a throwaway profile, over the DevTools protocol with Node's own WebSocket. No browser-automation dependency; run it after studio changes. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
 - `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.
+- `benchmark/`: fixed art briefs whose machine criteria `node benchmark/check.mjs` runs on rendered pixels, with the run and blind-scoring procedure. Contributor tooling: it is not in the package, so shipped docs link to it by URL. A changed brief gets a new `revision`.
 
 Run `npm test` after functional changes. Keep the schema, authoring reference and runtime validation aligned. Binary export changes should also be checked with an independent image decoder. Do not replace the text-first workflow with a UI-only drawing tool.
 

@@ -95,8 +95,8 @@ test('comparison reports changed, inherited, added and retimed frames with exact
     { set: 'frames[a].layers[body].ops[0].color', value: 'w' }, { set: 'frames[b].duration', value: 150 },
     { insert: 'frames[-]', value: { name: 'c', ops: [{ op: 'pixel', color: '#f00' }] } }, { set: 'animations.idle.loop', value: false }
   ]);
-  const report = compareProjects(renderProject(recipe()), renderProject(next)), change = { pixels: 1, box: { x: 0, y: 0, w: 1, h: 1 }, changes: [{ x: 0, y: 0, from: 'k', to: 'w' }] };
-  assert.deepEqual(report.frames, { changed: [{ frame: 'a', ...change }, { frame: 'b', ...change }], unchanged: [], added: ['c'], durations: [{ frame: 'b', from: 100, to: 150 }] });
+  const report = compareProjects(renderProject(recipe()), renderProject(next)), change = { pixels: 1, share: 0.5, box: { x: 0, y: 0, w: 1, h: 1 }, changes: [{ x: 0, y: 0, from: 'k', to: 'w' }] };
+  assert.deepEqual(report.frames, { changed: [{ frame: 'a', ...change, share: 1 }, { frame: 'b', ...change }], unchanged: [], added: ['c'], durations: [{ frame: 'b', from: 100, to: 150 }] });
   assert.deepEqual(report.animations, { changed: [{ animation: 'idle', loop: { from: true, to: false } }] });
   assert.deepEqual(report.image.frames, [{ frame: 'a', status: 'changed' }, { frame: 'b', status: 'changed' }, { frame: 'c', status: 'added' }]);
   assert.deepEqual([report.image.region, report.image.sheet.columns, report.image.sheet.rows], [{ x: 0, y: 0, w: 4, h: 2 }, 2, 3]);
@@ -104,9 +104,13 @@ test('comparison reports changed, inherited, added and retimed frames with exact
 test('comparison crops to the change, summarizes recolors and reports resized canvases', () => {
   const big = { version: 1, name: 'big', width: 32, height: 32, palette: { k: '#000', w: '#fff' }, frames: [{ name: 'a', ops: [{ op: 'rect', x: 4, y: 4, w: 20, h: 10, color: 'k' }] }, { name: 'b', ops: [{ op: 'pixel', color: 'w' }] }] };
   const recolor = compareProjects(renderProject(big), renderProject(patchRecipe(big, [{ set: 'palette.k', value: '#123456' }]).recipe));
-  assert.deepEqual(recolor.frames, { changed: [{ frame: 'a', pixels: 200, box: { x: 4, y: 4, w: 20, h: 10 }, transitions: [{ from: '0', to: 'k', pixels: 200 }] }], unchanged: ['b'] });
+  assert.deepEqual(recolor.frames, { changed: [{ frame: 'a', pixels: 200, share: 1, box: { x: 4, y: 4, w: 20, h: 10 }, transitions: [{ from: '0', to: 'k', pixels: 200 }] }], unchanged: ['b'] });
   assert.deepEqual(recolor.legend, { 0: { color: '#000000' } });
   assert.deepEqual(recolor.image.region, { x: 2, y: 2, w: 24, h: 14 });
+  // share counts changed pixels against those visible before or after: one of the rectangle's 200, then 2 of 201.
+  const dot = paint => compareProjects(renderProject(big), renderProject(patchRecipe(big, [{ paint: 'frames[a]', value: paint }]).recipe)).frames.changed[0].share;
+  assert.equal(dot([{ x: 5, y: 5, color: 'w' }]), 0.005);
+  assert.equal(dot([{ x: 5, y: 5, color: 'w' }, { x: 0, y: 0, color: 'w' }]), 0.01);
   const resized = compareProjects(renderProject(big), renderProject(patchRecipe(big, [{ set: 'width', value: 16 }]).recipe));
   assert.deepEqual(resized.canvas, { from: { w: 32, h: 32 }, to: { w: 16, h: 32 } });
   assert.deepEqual(resized.frames.changed, [{ frame: 'a' }, { frame: 'b' }]); assert.equal(resized.image, undefined);

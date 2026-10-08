@@ -134,7 +134,7 @@ test('MCP revisions let pixel_patch edit, compare and export without resending t
   const report = JSON.parse(patched.content[0].text);
   assert.equal(report.base, base); assert.notEqual(report.revision, base);
   assert.deepEqual(report.edits, [{ set: 'frames[a].ops[0].x', at: 'frames[0].ops[0].x', before: 11 }, { set: 'frames[b].duration', at: 'frames[1].duration', created: true }]);
-  assert.deepEqual(report.frames, { changed: [{ frame: 'a', pixels: 2, box: { x: 10, y: 1, w: 2, h: 1 }, changes: [{ x: 10, y: 1, from: '.', to: 'k' }, { x: 11, y: 1, from: 'k', to: '.' }] }], unchanged: ['b'], durations: [{ frame: 'b', from: 100, to: 150 }] });
+  assert.deepEqual(report.frames, { changed: [{ frame: 'a', pixels: 2, share: 1, box: { x: 10, y: 1, w: 2, h: 1 }, changes: [{ x: 10, y: 1, from: '.', to: 'k' }, { x: 11, y: 1, from: 'k', to: '.' }] }], unchanged: ['b'], durations: [{ frame: 'b', from: 100, to: 150 }] });
   assert.equal(patched.content[1].mimeType, 'image/png');
   const rendered = JSON.parse((await call('pixel_render', { revision: report.revision })).content[0].text);
   const saved = JSON.parse(await readFile(path.join(rendered.directory, rendered.files.find(file => file.endsWith('.pixel.json'))), 'utf8'));

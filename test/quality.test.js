@@ -82,6 +82,30 @@ test('diagnostics expose deliberate isolated pixels, undeclared colors and a loo
   const clean = analyzeProject(renderProject({ ...tiny, frames: [{ name: 'empty' }] }));
   assert.ok(clean.findings.some(f => f.code === 'empty'));
 });
+test('diagnostics measure ramps, near-duplicate colours and translucent pixels as advisory evidence', () => {
+  const recipe = { version: 1, name: 'ramps', width: 6, height: 2,
+    // Brick hue-shifts from plum to orange; moss only darkens; a and A are near-duplicates; z is listed out of order.
+    palette: { r: '#3f2629', q: '#6b3731', p: '#8f5141', m: '#353d23', n: '#525c2d', o: '#73803a', a: '#3a3a40', A: '#3c3d43', z: '#202020', y: '#606060', s: '#00000080', u: '#3c3d43' },
+    ramps: [['r', 'q', 'p'], ['m', 'n', 'o'], ['y', 'z']],
+    frames: [{ name: 'f', ops: [{ op: 'grid', rows: ['rqpmno', 'aAzys.'] }] }] };
+  const report = analyzeProject(renderProject(recipe));
+  assert.deepEqual(report.ramps.map(ramp => ramp.keys.join('')), ['rqp', 'mno', 'yz']);
+  assert.deepEqual(report.ramps[0].lightness, [30.1, 40.2, 50.4]);
+  assert.ok(report.ramps[0].hueShift > 20 && report.ramps[1].hueShift < 10);
+  assert.equal(report.ramps[2].hueShift, null);
+  const codes = report.findings.map(f => `${f.code}:${f.keys?.join('') ?? ''}`);
+  assert.deepEqual(codes.filter(c => /ramp|near/.test(c)).sort(), ['flat-ramp:mno', 'near-duplicate:aA', 'ramp-order:yz']);
+  assert.equal(report.findings.find(f => f.code === 'ramp-order').key, 'z');
+  assert.equal(report.findings.find(f => f.code === 'near-duplicate').distance, 1.07);
+  assert.equal(report.frames[0].translucent, 1);
+  // Unused colours and keys that alias one exact colour are not near-duplicates.
+  const nearDuplicates = rows => analyzeProject(renderProject({ ...recipe, frames: [{ name: 'f', ops: [{ op: 'grid', rows }] }] })).findings.filter(f => f.code === 'near-duplicate');
+  assert.equal(nearDuplicates(['a.....', 'z.....']).length, 0);
+  assert.equal(nearDuplicates(['A.....', 'u.....']).length, 0);
+  assert.deepEqual(nearDuplicates(['a.....', 'u.....']).map(f => f.keys), [['a', 'A']]);
+  const plain = analyzeProject(renderProject(tiny));
+  assert.equal(plain.ramps, undefined); assert.equal(plain.frames[0].translucent, 0);
+});
 const plant = { version: 1, name: 'fern', width: 5, height: 4, palette: { g: '#496', h: '#bd8' }, frames: [
   { name: 'base', ops: [{ op: 'grid', rows: ['..g..', '.ggg.', '..g..', '..g..'] }], pixels: [{ x: 2, y: 0, color: 'h' }] },
   { name: 'sway', from: 'base', translate: [1, 0] }

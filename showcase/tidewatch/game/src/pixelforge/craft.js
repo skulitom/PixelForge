@@ -1,7 +1,8 @@
 // Browser-compatible pixel-art helpers shared by the renderer, patches and authoring compilers: ordered dither,
-// cleanup of doubled corners and stray pixels, pixel-art rotation of palette grids, rewrite rules, easing and seeded
-// hashing. Several follow node designs from Pixel Composer (MIT). Everything is deterministic: integer hashing
-// instead of Math.random, and polynomial trigonometry instead of Math.sin, whose last bit may differ between engines.
+// cleanup of doubled corners and stray pixels, pixel-art rotation of palette grids, rewrite rules, easing, seeded
+// hashing and perceptual colour. Several follow node designs from Pixel Composer (MIT). Everything is deterministic:
+// integer hashing instead of Math.random, polynomial trigonometry instead of Math.sin and Newton roots instead of
+// Math.cbrt, whose last bit may differ between engines.
 // Inputs are validated by the callers, which own the error paths. No I/O and no imports.
 
 // ---- Ordered dither ----------------------------------------------------------------------------------------------
@@ -101,6 +102,12 @@ export function sinDeg(degrees) {
   switch (quadrant % 4) { case 0: return sinCore(x); case 1: return cosCore(x); case 2: return -sinCore(x); default: return -cosCore(x); }
 }
 export const cosDeg = degrees => sinDeg(degrees + 90);
+// The angle in [0°, 180°] whose cosine is c, by bisection on cosDeg, which falls monotonically over that range.
+export function acosDeg(c) {
+  let low = 0, high = 180;
+  for (let i = 0; i < 48; i++) { const mid = (low + high) / 2; if (cosDeg(mid) > c) low = mid; else high = mid; }
+  return (low + high) / 2;
+}
 
 // Easing presets for authored motion that is later rounded to whole pixels. Polynomials only, for the same reason.
 export const EASINGS = ['linear', 'hold', 'in', 'out', 'inOut', 'overshoot', 'bounce'];
@@ -119,6 +126,54 @@ export function ease(name, t) {
     const u = t - 2.625 / 2.75; return 7.5625 * u * u + 0.984375;
   }
   return t;
+}
+
+// ---- Perceptual colour ---------------------------------------------------------------------------------------------
+// OKLab (Björn Ottosson, 2020): lightness L and the a/b opponent axes, where equal distances look roughly equally
+// different and constant-hue lines stay straight, so a ramp's hue shift can be measured. Math.pow and Math.cbrt may
+// differ between engines in the last bit, so roots are Newton iterations from above, using only correctly rounded
+// arithmetic, stopped as soon as they stop falling.
+function root(a, n) {
+  if (a <= 0) return 0;
+  let y = Math.max(1, a);
+  for (let i = 0; i < 200; i++) {
+    let power = 1;
+    for (let k = 1; k < n; k++) power *= y;
+    const next = ((n - 1) * y + a / power) / n;
+    if (next >= y) break;
+    y = next;
+  }
+  return y;
+}
+let linearChannel = null;
+// sRGB channel 0–255 to linear light; the 2.4 power is x² · (x²)^(1/5).
+function linear(channel) {
+  linearChannel ??= Float64Array.from({ length: 256 }, (_, c) => {
+    const x = c / 255;
+    if (x <= 0.04045) return x / 12.92;
+    const t = (x + 0.055) / 1.055;
+    return t * t * root(t * t, 5);
+  });
+  return linearChannel[channel];
+}
+export function oklab([r, g, b]) {
+  const R = linear(r), G = linear(g), B = linear(b);
+  const l = root(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B, 3);
+  const m = root(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B, 3);
+  const s = root(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B, 3);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+// Euclidean OKLab distance. About 0.02 is the smallest difference most viewers notice between large swatches.
+export function oklabDistance(p, q) {
+  const dl = p[0] - q[0], da = p[1] - q[1], db = p[2] - q[2];
+  return Math.sqrt(dl * dl + da * da + db * db);
+}
+export const oklabChroma = ([, a, b]) => Math.sqrt(a * a + b * b);
+// Hue difference in degrees between two coloured OKLab values (0 when either is grey).
+export function hueShiftDeg(p, q) {
+  const cp = oklabChroma(p), cq = oklabChroma(q);
+  if (!cp || !cq) return 0;
+  return acosDeg(Math.max(-1, Math.min(1, (p[1] * q[1] + p[2] * q[2]) / (cp * cq))));
 }
 
 // ---- Lines ---------------------------------------------------------------------------------------------------------

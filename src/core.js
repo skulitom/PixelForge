@@ -1,5 +1,5 @@
 // Browser-compatible, deterministic rasterizer. No I/O and no dependencies.
-import { patternProblem, ditherThreshold, traceLine, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds } from './craft.js';
+import { patternProblem, ditherThreshold, traceLine, pixelId, colorOf, idsOf, cleanupIds, ruleVariants, rewriteIds, oklab, oklabDistance, oklabChroma, hueShiftDeg } from './craft.js';
 import { reduceBlobMask, quadrantPieces, templatePiece, expandTilemap } from './autotile.js';
 import { layoutText } from './font.js';
 export class PixelError extends Error {
@@ -911,17 +911,19 @@ export function onionPixels(project, animation, position) {
 export function analyzeProject(project) {
   const { width, height, frames } = project, findings = [], hashes = new Map(), cleanup = new Map();
   const known = new Set(Object.values(project.palette).map(color => colorId(parseColor(color), 0)));
+  const used = new Set();
   const stats = frames.map(frame => {
     const colors = new Set(), outside = new Set(), isolated = [], unlisted = [];
     // Colors a frame or layer palette introduces are declared for that frame.
     const introduced = [...Object.values(frame.palette ?? {}), ...(frame.layerPalettes ?? []).flatMap(entry => Object.values(entry.palette))];
     const declared = introduced.length ? new Set([...known, ...introduced.map(color => colorId(parseColor(color), 0))]) : known;
-    let visible = 0, isolatedCount = 0, hash = 2166136261;
+    let visible = 0, translucent = 0, isolatedCount = 0, hash = 2166136261;
     for (let at = 0; at < frame.data.length; at += 4) {
       const id = frame.data[at + 3] ? colorId(frame.data, at) : 0;
       hash = Math.imul(hash ^ id, 16777619) >>> 0;
       if (!id) continue;
-      visible++; colors.add(id);
+      visible++; colors.add(id); used.add(id);
+      if (frame.data[at + 3] < 255) translucent++;
       const x = at / 4 % width, y = Math.floor(at / 4 / width);
       if (!declared.has(id) && !outside.has(id)) { outside.add(id); if (unlisted.length < 32) unlisted.push({ x, y, color: toHex(frame.data.subarray(at, at + 4)) }); }
       let neighbor = false;
@@ -943,8 +945,10 @@ export function analyzeProject(project) {
       const ids = visible ? idsOf(frame.data) : null;
       cleanup.set(frame.name, ids ? { corners: cleanupIds(ids, width, height, { corners: true }).length, strays: cleanupIds(ids, width, height, { strays: true }).length } : { corners: 0, strays: 0 });
     } else cleanup.set(frame.name, cleanup.get(same.name));
-    return { frame: frame.name, visible, colors: colors.size, ...cleanup.get(frame.name) };
+    return { frame: frame.name, visible, colors: colors.size, translucent, ...cleanup.get(frame.name) };
   });
+  findings.push(...nearDuplicateColors(project.palette, used));
+  const ramps = project.ramps?.length ? project.ramps.map((keys, index) => rampReport(project.palette, keys, index, findings)) : null;
   const difference = (a, b) => {
     let pixels = 0, left = width, top = height, right = -1, bottom = -1;
     for (let at = 0; at < a.length; at += 4) if (colorId(a, at) !== colorId(b, at) && (a[at + 3] || b[at + 3])) {
@@ -960,7 +964,44 @@ export function analyzeProject(project) {
     if (a.loop && boundary.pixels > Math.max(4, median * 3)) findings.push({ code: 'loop-jump', animation: name, from: frames[a.frames.at(-1)].name, to: frames[a.frames[0]].name, ...boundary, note: 'Loop boundary changes over three times the median nonzero adjacent change. Intentional cuts are exempt.' });
     return { animation: name, duration: a.duration, entries: a.frames.length, repeatedAdjacent: deltas.filter(n => !n).length, boundary };
   });
-  return { advisory: true, frames: stats, animations, findings };
+  return { advisory: true, frames: stats, animations, ...(ramps && { ramps }), findings };
+}
+
+// OKLab values are reported ×100, so lightness runs 0–100 and a distance of 2 is about the smallest visible difference.
+const perceptual = value => Math.round(value * 1000) / 10;
+const NEAR_DUPLICATE = 0.02, FLAT_RAMP_DEGREES = 10, COLOURED = 0.03;
+
+// Pairs of opaque palette colours the frames actually use that are hard to tell apart at pixel scale: usually two keys
+// doing one job, which blurs a ramp and spends a palette slot. Keys that alias one exact colour are not reported.
+function nearDuplicateColors(palette, used) {
+  const colours = new Map();
+  for (const [key, value] of Object.entries(palette)) {
+    const rgba = parseColor(value), id = colorId(rgba, 0);
+    if (rgba[3] === 255 && used.has(id) && !colours.has(id)) colours.set(id, { key, rgba, lab: oklab(rgba) });
+  }
+  const list = [...colours.values()], pairs = [];
+  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const distance = oklabDistance(list[i].lab, list[j].lab);
+    if (distance < NEAR_DUPLICATE) pairs.push({ a: list[i], b: list[j], distance });
+  }
+  return pairs.sort((p, q) => p.distance - q.distance).slice(0, 16).map(({ a, b, distance }) => ({
+    code: 'near-duplicate', keys: [a.key, b.key], colors: [toHex(a.rgba), toHex(b.rgba)], distance: Math.round(distance * 10000) / 100,
+    note: 'Two used palette colours that few viewers can tell apart at pixel scale (OKLab distance ×100 below 2). Merge them unless they deliberately encode different data, as in normal maps.'
+  }));
+}
+
+// Lightness and chroma per step (OKLab ×100) and the hue shift between the darkest and lightest coloured steps.
+// `shade` and ramp lighting move colours along this order, so it must run from dark to light.
+// Steps with partial alpha are listed but not judged: their look depends on what lies beneath.
+function rampReport(palette, keys, index, findings) {
+  const steps = keys.map(key => { const rgba = parseColor(key, palette); return { key, opaque: rgba[3] === 255, lab: oklab(rgba) }; });
+  const lightness = steps.map(step => perceptual(step.lab[0])), chroma = steps.map(step => perceptual(oklabChroma(step.lab)));
+  const opaque = steps.filter(step => step.opaque), coloured = opaque.filter(step => oklabChroma(step.lab) >= COLOURED);
+  const hueShift = coloured.length >= 2 ? Math.round(hueShiftDeg(coloured[0].lab, coloured.at(-1).lab) * 10) / 10 : null;
+  const backwards = opaque.find((step, i) => i && step.lab[0] <= opaque[i - 1].lab[0]);
+  if (backwards) findings.push({ code: 'ramp-order', ramp: index, keys, lightness, key: backwards.key, note: `${JSON.stringify(backwards.key)} is not lighter than the step before it. Ramps list keys from dark to light, so shading along this one moves the wrong way there.` });
+  if (hueShift !== null && hueShift < FLAT_RAMP_DEGREES) findings.push({ code: 'flat-ramp', ramp: index, keys, hueShift, note: `The coloured steps keep one hue from dark to light (${hueShift}° apart). Shadows usually turn toward a cooler or contrasting hue and highlights toward the light's colour, or the material reads flat. A deliberately monochrome material is exempt.` });
+  return { keys, lightness, chroma, hueShift };
 }
 
 // Compares two rendered revisions, matching frames by name, so a patch can report every visible effect.
@@ -973,10 +1014,12 @@ export function compareProjects(before, after) {
     if (!old) { added.push(frame.name); shown.push({ frame: frame.name, status: 'added', before: null, after: frame.data }); continue; }
     if (old.duration !== frame.duration) durations.push({ frame: frame.name, from: old.duration, to: frame.duration });
     if (resized) { changed.push({ frame: frame.name }); continue; }
-    let pixels = 0, left = width, top = height, right = -1, bottom = -1;
+    let pixels = 0, visible = 0, left = width, top = height, right = -1, bottom = -1;
     const changes = [], transitions = new Map();
     for (let at = 0; at < frame.data.length; at += 4) {
-      if (colorId(frame.data, at) === colorId(old.data, at) || (!frame.data[at + 3] && !old.data[at + 3])) continue;
+      if (!frame.data[at + 3] && !old.data[at + 3]) continue;
+      visible++;
+      if (colorId(frame.data, at) === colorId(old.data, at)) continue;
       const x = at / 4 % width, y = Math.floor(at / 4 / width), from = namer.char(old.data, at), to = namer.char(frame.data, at);
       pixels++; left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
       if (changes.length < 16) changes.push({ x, y, from, to });
@@ -985,7 +1028,8 @@ export function compareProjects(before, after) {
     if (!pixels) { unchanged.push(frame.name); continue; }
     const box = { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
     const detail = pixels <= 16 ? { changes } : { transitions: [...transitions].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([pair, count]) => ({ from: pair[0], to: pair[1], pixels: count })) };
-    changed.push({ frame: frame.name, pixels, box, ...detail });
+    // share: changed pixels over pixels visible before or after; a fix that changes much of a frame is a redraw.
+    changed.push({ frame: frame.name, pixels, share: Math.round(pixels / visible * 1000) / 1000, box, ...detail });
     shown.push({ frame: frame.name, status: 'changed', before: old.data, after: frame.data, box });
   }
   const removed = before.frames.filter(frame => !kept.has(frame.name)).map(frame => frame.name);

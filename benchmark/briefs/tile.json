@@ -1,0 +1,30 @@
+{
+  "format": "pixelforge-benchmark-brief",
+  "version": 1,
+  "id": "tile",
+  "revision": 1,
+  "title": "Mossy flagstone floor tiles",
+  "tests": "Seamless terrain at 16×16 with an interchangeable variant: repetition, seams, value control and texture without noise.",
+  "setup": {
+    "width": 16,
+    "height": 16,
+    "colors": ["#000000", "#1d2b53", "#7e2553", "#008751", "#ab5236", "#5f574f", "#c2c3c7", "#fff1e8", "#ff004d", "#ffa300", "#ffec27", "#00e436", "#29adff", "#83769c", "#ff77a8", "#ffccaa"]
+  },
+  "brief": [
+    "Draw two 16×16 floor tiles for a top-down dungeon game. `flagstone`: worn grey flagstones with moss growing in some of the joints. `flagstone-cracked`: the same stones with one slab cracked across.",
+    "Use only these 16 colours (the PICO-8 palette): #000000, #1d2b53, #7e2553, #008751, #ab5236, #5f574f, #c2c3c7, #fff1e8, #ff004d, #ffa300, #ffec27, #00e436, #29adff, #83769c, #ff77a8, #ffccaa, and at most 8 of them in each tile. Every pixel is fully opaque.",
+    "Each tile repeats seamlessly in both directions: no line doubles where tiles meet and nothing changes abruptly across the edge. Any cell of a floor of `flagstone` can be swapped for `flagstone-cracked` without a seam, so both tiles have exactly the same outermost ring of pixels. In a 4×4 repeat no single feature should draw the eye in every cell. Light comes from the upper left.",
+    "Make exactly these two frames. This brief is complete: do not ask me to confirm it. Decide anything it leaves open and list those decisions in your final report."
+  ],
+  "criteria": [
+    { "id": "canvas", "text": "The canvas is 16×16.", "check": { "type": "canvas", "width": 16, "height": 16 } },
+    { "id": "frames", "text": "Exactly the frames flagstone and flagstone-cracked.", "check": { "type": "frames", "names": ["flagstone", "flagstone-cracked"], "exact": true } },
+    { "id": "palette", "text": "Only the 16 listed colours.", "check": { "type": "colors", "colors": "setup" } },
+    { "id": "colour-count", "text": "At most 8 colours in each tile.", "check": { "type": "color-count", "max": 8 } },
+    { "id": "opaque", "text": "Every pixel is fully opaque.", "check": { "type": "opaque" } },
+    { "id": "seamless", "text": "PixelForge's tile seam evidence (doubled edge lines, value steps across the wrap) flags neither tile.", "check": { "type": "seamless" } },
+    { "id": "interchangeable", "text": "Both tiles share their outermost ring of pixels.", "check": { "type": "same-edges", "frames": ["flagstone", "flagstone-cracked"] } },
+    { "id": "read", "text": "A 4×4 repeat reads as a mossy flagstone floor, with no feature that repeats as a visible pattern.", "judge": true },
+    { "id": "variant", "text": "The cracked slab reads as cracked and sits in a floor of plain tiles without drawing attention to the tile grid.", "judge": true }
+  ]
+}

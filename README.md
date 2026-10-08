@@ -96,11 +96,13 @@ Use PixelForge to create or revise pixel sprites, tiles, icons, effects and shor
 | [llms.txt](llms.txt) | Compact documentation index with direct links for agents |
 | [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
 | [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
+| [Craft reference](docs/craft-reference.md) | Starting points for ramps, value, lines, size budgets and timing, and the signs of generated art |
+| [Fresh-eyes review](skills/pixel-art/review.md) and [rubric](docs/review-rubric.md) | Instructions for a reviewer who did not make the art, and the 0–4 craft rubric it scores |
 | [JSON Schema](schema.json) | Machine-readable recipe structure |
 | [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing and a particle effects source |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
-Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
+Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelforge inspect`, revise with targeted patches, have finished art reviewed by fresh eyes, then render to a fresh output directory. Validation checks the format; image inspection checks the art. The review loop, the rubric, palette and ramp diagnostics and the [benchmark](https://github.com/skulitom/PixelForge/blob/main/benchmark/README.md) for measuring whether any of it helps are adapted from [aseprite-ai-artist](https://github.com/with-pebbly/aseprite-ai-artist) ([what was adopted](docs/competitive-review.md#adopted-from-aseprite-ai-artist)).
 
 ## A tiny animation
 

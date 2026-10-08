@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderProject, analyzeProject } from '../src/core.js';
 import { patchRecipe } from '../src/patch.js';
 import { createOverlay, applyOverlay } from '../src/overlays.js';
-import { cleanupIds, rotateRows, ease, EASINGS, sinDeg, cosDeg, ditherThreshold } from '../src/craft.js';
+import { cleanupIds, rotateRows, ease, EASINGS, sinDeg, cosDeg, acosDeg, ditherThreshold, oklab, oklabDistance, hueShiftDeg } from '../src/craft.js';
 
 const palette = { r: '#f00', b: '#00f', g: '#0f0', k: '#000', s: '#888', m: '#0a0' };
 const names = new Map(Object.entries(palette).map(([key, hex]) => [renderProject({ version: 1, name: 'p', width: 1, height: 1, palette, frames: [{ name: 'a', ops: [{ op: 'pixel', color: hex }] }] }).frames[0].data.join(), key]));
@@ -180,4 +180,26 @@ test('easing presets start at 0, end at 1 and keep their character', () => {
   assert.ok(ease('in', 0.5) < 0.5 && ease('out', 0.5) > 0.5 && ease('inOut', 0.5) === 0.5);
   assert.ok(Math.max(...Array.from({ length: 99 }, (_, i) => ease('overshoot', (i + 1) / 100))) > 1);
   assert.ok(Math.abs(ease('bounce', 1 / 2.75) - 1) < 1e-12);
+});
+
+test('OKLab colour uses only exact arithmetic and matches the published transform', () => {
+  // Reference values from the transform with Math.cbrt and Math.pow; ours must agree without using them.
+  const close = (actual, expected) => actual.forEach((v, i) => assert.ok(Math.abs(v - expected[i]) < 1e-9, `${actual} vs ${expected}`));
+  close(oklab([255, 0, 0]), [0.6279553606145516, 0.22486306106597398, 0.1258462985307351]);
+  assert.deepEqual(oklab([0, 0, 0]), [0, 0, 0]);
+  const samples = [[255, 255, 255], [128, 128, 128], [1, 2, 3], ...Array.from({ length: 18 }, (_, i) => [i * 15, 255 - i * 15, (i * 105) % 256])];
+  for (const rgb of samples) {
+    const linear = x => (x /= 255) <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+    const [r, g, b] = rgb.map(linear);
+    const lms = [[0.4122214708, 0.5363325363, 0.0514459929], [0.2119034982, 0.6806995451, 0.1073969566], [0.0883024619, 0.2817188376, 0.6299787005]].map(([x, y, z]) => Math.cbrt(x * r + y * g + z * b));
+    const expected = [[0.2104542553, 0.7936177850, -0.0040720468], [1.9779984951, -2.4285922050, 0.4505937099], [0.0259040371, 0.7827717662, -0.8086757660]].map(([x, y, z]) => x * lms[0] + y * lms[1] + z * lms[2]);
+    close(oklab(rgb), expected);
+  }
+  assert.equal(oklabDistance(oklab([12, 34, 56]), oklab([12, 34, 56])), 0);
+  assert.ok(oklabDistance(oklab([58, 58, 64]), oklab([60, 61, 67])) < 0.02);
+  for (const degrees of [0, 30, 60, 90, 135, 180]) assert.ok(Math.abs(acosDeg(cosDeg(degrees)) - degrees) < 1e-5, `${degrees}`);
+  // Opposite hues are 180 degrees apart, a darker shade of the same colour shares its hue, and grey has none.
+  assert.ok(Math.abs(hueShiftDeg([0.5, 0.1, 0], [0.5, -0.1, 0]) - 180) < 1e-5);
+  assert.ok(hueShiftDeg(oklab([200, 60, 40]), oklab([100, 30, 20])) < 1);
+  assert.equal(hueShiftDeg([0.5, 0, 0], [0.5, 0.1, 0]), 0);
 });
