@@ -164,7 +164,8 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       return run.stdout.split(/\r?\n/).filter(line => line && (windows || line.includes(dir + path.sep))).map(line => line.trim());
     };
     const settled = async () => { for (let i = 0; ; i++) { const left = running(); if (!left.length || i === 20) return left; await sleep(500); } };
-    const stop = child => windows ? spawnSync(path.join(system, 'taskkill.exe'), ['/pid', String(child.pid), '/t', '/f'], { windowsHide: true }) : child.kill('SIGTERM');
+    // taskkill takes about a second each time, so the launchers are stopped together rather than one after another.
+    const stop = child => windows ? new Promise(resolve => spawn(path.join(system, 'taskkill.exe'), ['/pid', String(child.pid), '/t', '/f'], { windowsHide: true, stdio: 'ignore' }).once('error', resolve).once('close', resolve)) : child.kill('SIGTERM');
     const launchers = [];
     // `dropped` is a file handed to the launcher, as Explorer does for one dragged onto it; `file` picks the script.
     const launch = (dropped, file = names.studio) => new Promise((resolve, reject) => {
@@ -256,7 +257,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       assert.match(bundle.get('preview.html').read().toString(), /^<!doctype html>/); return `${bundle.size} files`;
     });
     await check('stopping the launchers leaves no process behind', async () => {
-      for (const child of launchers) stop(child);
+      await Promise.all(launchers.map(stop));
       assert.deepEqual(await settled(), []);
       await assert.rejects(fetch(first.url), 'the studio still answers after its launcher was stopped');
     });
