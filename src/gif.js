@@ -70,7 +70,7 @@ function indexFrame(data, area, background, describe) {
 // colour. `loops` is how many times the animation plays: 0 for ever, 1 once (no loop extension), n written as n − 1
 // repeats. When no frame is transparent, each frame after the first stores only the rectangle that changed.
 function writeGIF(indexed, width, height, { loops = 0, scale = 1 } = {}) {
-  const area = width * height, transparency = indexed.some(frame => frame.transparent), all = new Map();
+  const transparency = indexed.some(frame => frame.transparent), all = new Map();
   for (const frame of indexed) for (const color of frame.colors) if (!all.has(color)) all.set(color, all.size);
   const shared = all.size + (transparency ? 1 : 0) <= 256;
   const table = (colors, offset) => {
