@@ -32,4 +32,6 @@ External contributors should use a branch in their fork and submit a focused pul
 
 Keep the core and runtime dependency-free. Use Node.js standard APIs for the CLI, file formats and local server. Preserve the text-first workflow, overwrite protection, loopback binding and explicit server asset allowlist.
 
+For MCPB releases and the separate MCP Registry publication step, see [Publishing](docs/PUBLISHING.md).
+
 New code, documentation and original example artwork contributed to this repository are covered by its [MIT license](LICENSE). Only contribute material you have the right to license this way.
