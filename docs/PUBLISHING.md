@@ -46,7 +46,7 @@ Check the listing at <https://registry.modelcontextprotocol.io/v0.1/servers?sear
 node scripts/build-mcpb.mjs --check
 node scripts/verify-mcpb.mjs dist/mcpb/pixelforge.mcpb
 npx --yes @anthropic-ai/mcpb@2.1.2 validate dist/mcpb/manifest.json
-node scripts/build-mcpb.mjs --registry-entry --tag v0.7.1 --bundle dist/mcpb/pixelforge.mcpb  # the tag of package.json's version
+node scripts/build-mcpb.mjs --registry-entry --tag v0.7.2 --bundle dist/mcpb/pixelforge.mcpb  # v + package.json's version
 ```
 
 The dependency-free builder reads an explicit set of runtime inputs from disk, normalizes UTF-8 text from CRLF to LF, sorts ZIP entries and uses a fixed date. Use a clean checkout and the same Node/zlib version to reproduce bytes. `--check` builds twice and compares; differing existing artifacts require a fresh `--out` folder. No version agreement with `server.json` is required for ordinary tests or builds; release and registry entry creation enforce it.
