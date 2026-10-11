@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.skulitom/pixelforge",
+  "title": "PixelForge pixel art toolkit",
+  "description": "Pixel art and sprite animation for agents: JSON recipes to PNG, APNG, GIF and sprite sheets.",
+  "version": "0.7.1",
+  "websiteUrl": "https://github.com/skulitom/PixelForge#readme",
+  "repository": {
+    "url": "https://github.com/skulitom/PixelForge",
+    "source": "github",
+    "id": "1389891909"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "manifest_version": "0.3",
+  "name": "pixelforge",
+  "display_name": "PixelForge",
+  "description": "Pixel art and sprite animation for agents: JSON recipes to PNG, APNG, GIF and sprite sheets.",
+  "long_description": "Create, inspect and revise pixel art from editable JSON recipes. Export sprites, animations, atlases and scenes with eight local MCP tools. The server makes no network requests. Choose a workspace for local recipe references and generated artwork.",
+  "author": {
+    "name": "skulitom",
+    "url": "https://github.com/skulitom"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skulitom/PixelForge"
+  },
+  "homepage": "https://github.com/skulitom/PixelForge#readme",
+  "documentation": "https://github.com/skulitom/PixelForge/blob/main/docs/agent-guide.md",
+  "support": "https://github.com/skulitom/PixelForge/issues",
+  "server": {
+    "type": "node",
+    "entry_point": "bin/pixelforge.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/bin/pixelforge.js", "mcp", "--root", "${user_config.workspace}", "--out", "${user_config.workspace}/PixelForge"]
+    }
+  },
+  "tools": [
+    { "name": "pixel_help", "description": "Read the authoring guide, schemas and a complete editable example." },
+    { "name": "pixel_validate", "description": "Validate a recipe, report dimensions and timing, and save an immutable revision." },
+    { "name": "pixel_inspect", "description": "Inspect frames as contact sheets and palette-key grids, with optional diagnostics." },
+    { "name": "pixel_patch", "description": "Apply targeted recipe edits, canvas corrections or overlays and compare the result." },
+    { "name": "pixel_render", "description": "Export sprites, atlases, animations and a Canvas player into a new unique folder." },
+    { "name": "pixel_compile", "description": "Compile poses, autotile templates or seeded particle effects into editable recipes." },
+    { "name": "pixel_scene", "description": "Render and inspect scene placements and tilemaps, with optional scene or frame exports." },
+    { "name": "pixel_import", "description": "Import an 8-bit RGB/RGBA PNG as an editable recipe without changing its pixels." }
+  ],
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": { "node": ">=20.0.0" }
+  },
+  "user_config": {
+    "workspace": {
+      "type": "directory",
+      "title": "Workspace",
+      "description": "Folder PixelForge may read recipe and PNG references from. Renders and revisions go in its PixelForge subfolder, created on first use. Choose a project folder to keep its files together.",
+      "required": true,
+      "default": "${HOME}"
+    }
+  },
+  "keywords": ["pixel-art", "sprites", "sprite-animation", "game-assets", "png", "apng", "gif", "mcp"],
+  "license": "MIT"
+}
