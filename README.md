@@ -6,25 +6,29 @@
 
 **Text to pixels. A zero-dependency pixel art and sprite animation toolkit for AI agents and game developers.**
 
+![A library drawn with PixelForge: books circle the chandelier, a lectern book turns its page and a grey tabby sleeps on a shelf](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/library.gif)
+
 Write a JSON recipe with palettes, text grids, reusable symbols and drawing operations. Get transparent PNGs, sprite sheets, animated PNGs, GIFs for sharing, numbered frames for video editors, and the metadata and player needed to use them. Inspect and edit the recipe in a local browser studio.
 
 Zero runtime dependencies. No build step, API key, image model, network service or native graphics library. Requires **Node.js 20 or newer**. Works from a checkout on Windows, macOS and Linux.
 
-![PixelForge's local studio showing the forest spirit sprite, animation frames, editable JSON recipe and palette](docs/images/studio.png)
+[Gallery](#gallery) · [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelforge-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
 
-[Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelforge-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
+## Gallery
 
-## Art quality workflow
+An AI agent drew these with PixelForge. Its scripts write the recipes, particle sources and scenes; PixelForge renders every sprite to a transparent sheet with an atlas, plays each 240×135 room as a scene and writes the GIFs. They are shown at 3×.
 
-The [original Listening Hollow study](docs/art-quality-lab.md) demonstrates silhouette/value/native-size review, animation-aware onion skins, masked regional corrections, authored parts and attachments, guarded rebuild overlays, a small scene, PNG interchange and aligned normal/emissive passes. See the [format and workflow guide](docs/art-workflow.md) for the supported boundaries. This is a self-reviewed improvement study; it does not claim Animal Well parity.
+![An observatory: a porthole onto a ringed planet, a telescope, an armillary with a blooming crystal and a cat asleep on the window seat](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/observatory.gif)
 
-![The Listening Hollow, an original PixelForge art study](docs/images/quality/hollow.png)
+![A workshop: a half-built brass automaton, a gear clock, glass coils that arc and a clockwork mouse](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/workshop.gif)
 
-```sh
-npm run review:quality
-node bin/pixelforge.js preview examples/quality/skink.json
-node bin/pixelforge.js inspect examples/quality/skink.json --animation run --view onion --native --diagnostics
-```
+![Eight potions, each popping its cork: green, red, blue, purple, orange, frost, shadow and rainbow](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/potions.gif)
+
+![Four bell jars: a sprouting bloom, glowcap mushrooms, a snapping flytrap and a succulent](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/bell-jars.gif)
+
+![Three clockwork familiars: a brass owl, a koi in its bowl and a crystal moth over a lantern](https://raw.githubusercontent.com/skulitom/PixelForge/main/showcase/gallery/familiars.gif)
+
+[Two more rooms and how these were made](https://github.com/skulitom/PixelForge/blob/main/showcase/gallery/README.md)
 
 ## Start
 
@@ -35,6 +39,8 @@ node bin/pixelforge.js preview
 ```
 
 Open **http://127.0.0.1:4747**, or add `--open` to have your default browser opened for you. If that port is in use, a free one is taken and printed instead; `--port N` insists on one port and fails when it is busy. `preview hero.pixel.json` starts with your own recipe. Pick the forest spirit, campfire or coin; edit the JSON; inspect the animation or sprite sheet; download the asset ZIP. The studio includes playback speed, frame selection, integer zoom, a pixel grid, onion skinning, palette inspection, source save/open, a GIF download of the current animation, numbered frames for a video editor, recovery of unsaved edits and live error messages. All assets and fonts are local.
+
+![PixelForge's local studio showing the forest spirit sprite, animation frames, editable JSON recipe and palette](docs/images/studio.png)
 
 Or generate an asset without opening a browser:
 
@@ -83,9 +89,17 @@ An original 3/4 top-down dungeon room in the style of procedurally generated "fl
 node bin/pixelforge.js preview showcase/diorama/art/room.scene.json
 ```
 
-![The diorama study at 4×](https://raw.githubusercontent.com/skulitom/PixelForge/main/docs/images/diorama/room.png)
+[Study details and images](https://github.com/skulitom/PixelForge/blob/main/showcase/diorama/README.md) · [Feasibility report: what the style asked of PixelForge](docs/reports/diorama-feasibility-2026-10-07.md)
 
-[Study details](https://github.com/skulitom/PixelForge/blob/main/showcase/diorama/README.md) · [Feasibility report: what the style asked of PixelForge](docs/reports/diorama-feasibility-2026-10-07.md)
+## Art quality workflow
+
+The [original Listening Hollow study](docs/art-quality-lab.md) demonstrates silhouette/value/native-size review, animation-aware onion skins, masked regional corrections, authored parts and attachments, guarded rebuild overlays, a small scene, PNG interchange and aligned normal/emissive passes. See the [format and workflow guide](docs/art-workflow.md) for the supported boundaries. This is a self-reviewed improvement study; it does not claim Animal Well parity.
+
+```sh
+npm run review:quality
+node bin/pixelforge.js preview examples/quality/skink.json
+node bin/pixelforge.js inspect examples/quality/skink.json --animation run --view onion --native --diagnostics
+```
 
 ## For agents
 
