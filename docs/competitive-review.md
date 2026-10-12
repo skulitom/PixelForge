@@ -39,6 +39,18 @@ Not adopted: the node graph and editor (AGENTS.md keeps the workflow text-first)
 
 Validation: Tidewatch's effects recipe was rebuilt from a `pixelforge-fx` source ([report](reports/tidewatch-showcase-report.md#update-2-effects-rebuilt-with-the-particle-compiler)). The source is about the size of the particle code it replaced, but it is declarative, validated and tested for freshness, and it compiles to a recipe 43% smaller that reuses symbols. Hand-drawn frames (hit, sparkle) passed through unchanged.
 
+## Reviewed: Pixel Art Lighter
+
+Reviewed 12 October 2026 from Moonfell RPG's announcement video of version 3.2.8, which is not yet released, so no source was read. It loads a colour PNG, generates and edits a normal map and a "luminance" mask (how much light each pixel takes), and previews them under a point light with height, falloff, brightness, ambient and colour, with views of the lit image and of each pass.
+
+| Pixel Art Lighter | PixelForge | Adaptation |
+| --- | --- | --- |
+| Generate a normal map | `pixelforge-normals` compiler | Each shape is rounded from its silhouette, with optional ramp-aware relief, and quantized to 17 named directions, so the result is an editable recipe aligned frame for frame. Every lit asset in our showcases had been drawn by a one-off script, and Tidewatch's pickups shipped a flat placeholder normal. |
+| Modify the normal map | `patch` and overlays on the generated recipe | Direction keys are keypad digits and keyboard letters, so a fix is an ordinary grid edit that survives recompiling where frames are unchanged. |
+| Light cursor with height, falloff, ambient and colour | Scene viewer light controls | Drag a light on the canvas; its height, radius and colour and the ambient light change live and save with the scene. |
+
+Not adopted: the luminance mask, a material-mask pass (ramp lighting already leaves colours on no ramp, such as outlines, unlit, and brightens only within the palette); brightness above the authored colour (multiply lighting deliberately stops there); background detection (PNG import is lossless and does not guess a background); and reloading when files change on disk.
+
 ## Where PixelForge is already behind
 
 The toolkit now has deterministic JSON recipes, palettes, text grids, symbols, frame inheritance, layers, PNG/APNG/atlas/CSS exports, a Canvas player, a local studio and eight MCP tools. Inspection supports region readback, silhouette, grayscale, onion and tile views, and advisory diagnostics; targeted patches include exact canvas-coordinate painting, regional edits and cleanup proposals. Immutable MCP recipe revisions survive restarts, and render previews show all frames or a selected animation's playback order. Pose sources, autotile templates and particle effect sources compile to ordinary recipes, and lossless PNG import brings externally edited art back. Remaining gaps include palette quantization, ready-made motion templates, persistent browser editing history, GIF export and native Aseprite interchange. Inline MCP contact sheets are static; exported APNGs and the HTML preview provide actual playback. (Updated 28 September 2026.)

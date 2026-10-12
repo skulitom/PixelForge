@@ -1,5 +1,5 @@
 import { writeFile, mkdir } from 'node:fs/promises';
-import { compileEffects, compilePoses, formatJSON } from '../src/index.js';
+import { compileEffects, compilePoses, compileNormals, formatJSON } from '../src/index.js';
 const rows = source => source.map(row => row.padEnd(16, '.'));
 const spirit = rows([
   '........dd',
@@ -119,9 +119,17 @@ const caption = { version: 1, name: 'caption', width: 240, height: 32, palette: 
   animations: { in: { frames: ['bar', 'open-1', 'open-2', 'open-3', 'type-1', 'type-2', 'type-3', 'shown'], loop: false }, hold: { frames: ['shown'] } },
   sheet: { columns: 2, padding: 1 } };
 
+// A normal pass derived from the spirit, and a small night scene that lights it. Move the light in the scene viewer
+// (pixelforge preview examples/forest-spirit-lit.scene.json) to see the form turn toward it.
+const spiritNormals = { format: 'pixelforge-normals', version: 1, recipe: 'forest-spirit.json' };
+const litSpirit = { format: 'pixelforge-scene', version: 1, name: 'forest-spirit-lit', width: 72, height: 40, duration: 1200, background: '#141a2a',
+  assets: { spirit: { recipe: 'forest-spirit.json', normal: 'forest-spirit-normal.json' } },
+  instances: [{ name: 'spirit', asset: 'spirit', at: [24, 8], animation: 'idle' }],
+  lighting: { ambient: 0.35, bands: 4, lights: [{ at: [14, 10], height: 12, radius: 48, color: '#fff2d6' }] } };
+
 await mkdir(new URL('../examples/', import.meta.url), { recursive: true });
 // Authored sources are pretty-printed; compiled recipes use the CLI's compact formatting.
-const authored = { 'forest-spirit': forest, ember, coin, shrine, caption, 'effects.fx': effects, 'swing.poses': swing };
-const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe };
+const authored = { 'forest-spirit': forest, ember, coin, shrine, caption, 'effects.fx': effects, 'swing.poses': swing, 'forest-spirit.normals': spiritNormals, 'forest-spirit-lit.scene': litSpirit };
+const compiled = { effects: compileEffects(effects).recipe, swing: compilePoses(swing).recipe, 'forest-spirit-normal': compileNormals({ ...spiritNormals, recipe: forest }).recipe };
 for (const [name, value] of Object.entries(authored)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
 for (const [name, value] of Object.entries(compiled)) await writeFile(new URL(`../examples/${name}.json`, import.meta.url), formatJSON(value));

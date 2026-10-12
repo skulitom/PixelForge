@@ -84,7 +84,7 @@ test('text errors name the field and the character', () => {
   ]) assert.throws(() => draw(8, 8, [{ op: 'text', x: 0, y: 0, ...op }]), error => error instanceof PixelError && error.path === `project.frames[0].ops[0].${where}` && message.test(error.message), `${where}: ${JSON.stringify(op).slice(0, 60)}`);
 });
 test('the schema describes the text operation the renderer accepts', async () => {
-  for (const file of ['schema.json', 'poses.schema.json', 'scene.schema.json', 'autotile.schema.json', 'fx.schema.json']) {
+  for (const file of ['schema.json', 'poses.schema.json', 'scene.schema.json', 'autotile.schema.json', 'fx.schema.json', 'normals.schema.json']) {
     const text = JSON.parse(await readFile(path.join(root, file), 'utf8')).$defs.op.oneOf.find(op => op.properties.op.const === 'text');
     assert.deepEqual([Object.keys(text.properties).sort(), text.required, text.additionalProperties], [['align', 'color', 'flipX', 'flipY', 'lineHeight', 'op', 'rotate', 'scale', 'spacing', 'text', 'x', 'y'], ['op', 'text', 'color'], false], file);
     assert.deepEqual([text.properties.text.maxLength, text.properties.align.enum, text.properties.spacing.maximum, text.properties.lineHeight.maximum], [512, ['left', 'center', 'right'], 16, 64], file);

@@ -10,7 +10,8 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `src/fx.js`: browser-compatible `pixelforge-fx` compiler that bakes seeded particle emitters into ordinary recipes.
 - `src/patch.js`: browser-compatible targeted recipe edits and canvas-coordinate painting addressed by error-style paths.
 - `src/autotile.js`: browser-compatible blob/cardinal neighbour masks, template quarter layout and tilemap legends (variants, weights, neighbour rules), shared by scene tilemaps, the recipe `tilemap` operation and the autotile compiler in `src/authoring.js`. It imports `craft.js`, so copies of it (Tidewatch's game) need both.
-- `src/resolve.js`: Node-side resolution of shared palette files and scene asset references; the renderer itself never reads files.
+- `src/authoring.js`: browser-compatible compilers whose output is an ordinary recipe: poses, autotile templates and normal passes derived from a colour recipe (`compileNormals`; deterministic, no trigonometry).
+- `src/resolve.js`: Node-side resolution of shared palette files, scene asset references and a normals source's recipe; the renderer itself never reads files.
 - `src/revisions.js`: immutable on-disk MCP recipe snapshots under the configured output directory.
 - `src/export.js`, `src/png.js`: deterministic file exports.
 - `src/gif.js`: browser-compatible GIF89a export for sharing, used by the CLI, MCP and studio. Exact colours only: it never quantizes or dithers, and reports what GIF cannot keep (partial alpha, sub-10 ms timing) instead of hiding it. `framesGIF` writes frames made elsewhere at a frame rate, with a colour table per frame when the loop needs more than 256 colours.
@@ -21,7 +22,7 @@ This is an agent-first pixel art toolkit. Keep the core and runtime free of depe
 - `studio/`: plain HTML/CSS/JS preview studio; it shares the core renderer. `studio/draft.js` keeps one unsaved recipe in the browser's own storage; draft recovery must stay in the browser, never a server endpoint.
 - `packaging/`: launcher scripts, START HERE and notices for the portable builds: `common/` for every system (START HERE.txt is one text with `#if windows|macos|linux` blocks), `windows/` batch files, `unix/` shell scripts for macOS and Linux, `macos/` double-click `.command` files. `scripts/build-studio.mjs` packs them with the `npm pack` file list and the pinned official Node.js runtime into a reproducible archive per target under `dist/`; `scripts/verify-studio.mjs` tests a built archive on its own system.
 - `scripts/qa-studio.mjs`: walks the studio in an installed Edge or Chrome, headless with a throwaway profile, over the DevTools protocol with Node's own WebSocket. No browser-automation dependency; run it after studio changes. Packaging adds nothing to `package.json`'s dependencies or `files`, and its scripts only print or serve: they never edit a user's configuration.
-- `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`: generated with `node scripts/generate-schema.js`.
+- `schema.json`, `poses.schema.json`, `scene.schema.json`, `autotile.schema.json`, `fx.schema.json`, `normals.schema.json`: generated with `node scripts/generate-schema.js`.
 - `examples/`: generated with `node scripts/generate-examples.js`.
 
 Run `npm test` after functional changes. Keep the schema, authoring reference and runtime validation aligned. Binary export changes should also be checked with an independent image decoder. Do not replace the text-first workflow with a UI-only drawing tool.

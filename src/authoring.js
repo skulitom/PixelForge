@@ -1,5 +1,5 @@
 // Optional authoring compilers. All output is ordinary, editable version-1 recipe data.
-import { PixelError, renderProject } from './core.js';
+import { PixelError, parseColor, renderProject } from './core.js';
 import { BLOB_MASKS, CARDINAL_MASKS } from './autotile.js';
 import { EASINGS, ease, rotateRows } from './craft.js';
 
@@ -209,4 +209,96 @@ export function compileAutotile(source) {
   const recipe = { version: 1, name: source.name, width: tile, height: tile, palette: source.palette ?? {}, symbols, frames, ...(source.animation !== undefined && { animations }), ...(source.sheet !== undefined && { sheet: source.sheet }) };
   renderProject(recipe);
   return plain({ recipe, metadata: { format: 'pixelforge-autotile-metadata', version: 1, mode, masks: mode === 'cardinal' ? [...CARDINAL_MASKS] : [...BLOB_MASKS], bits: mode === 'cardinal' ? { n: 1, e: 2, s: 4, w: 8 } : { n: 1, ne: 2, e: 4, se: 8, s: 16, sw: 32, w: 64, nw: 128 } } });
+}
+
+// Normal directions as palette keys (+X right, +Y down, +Z toward the viewer). Digits are laid out like a numeric
+// keypad and tilt 30° from facing (5 faces the viewer, 8 leans up, 3 down-right); the letters q w e / a d / z x c
+// sit the same way on a keyboard and tilt 60°, so a generated pass reads as letters around its rims and digits
+// across its faces. Built from exact constants, without trigonometry, so every engine encodes the same colours.
+const KEYPAD = { 7: [-1, -1], 8: [0, -1], 9: [1, -1], 4: [-1, 0], 6: [1, 0], 1: [-1, 1], 2: [0, 1], 3: [1, 1] };
+const STEEP = { q: '7', w: '8', e: '9', a: '4', d: '6', z: '1', x: '2', c: '3' };
+const direction = ([x, y], lean) => { const across = x && y ? lean * Math.SQRT1_2 : lean; return Object.freeze([x * across, y * across, Math.sqrt(1 - lean * lean)]); };
+export const NORMAL_DIRECTIONS = Object.freeze({ 5: Object.freeze([0, 0, 1]), ...Object.fromEntries(Object.entries(KEYPAD).map(([key, way]) => [key, direction(way, 0.5)])), ...Object.fromEntries(Object.entries(STEEP).map(([key, digit]) => [key, direction(KEYPAD[digit], Math.sqrt(0.75))])) });
+const encodeNormal = vector => '#' + vector.map(v => Math.round((v + 1) * 127.5).toString(16).padStart(2, '0')).join('');
+
+// Derives a normal pass from a colour recipe's rendered frames: each separate shape is inflated from its silhouette
+// into a rounded surface (a quarter circle `bevel` pixels wide, or reaching the shape's thickest point), lighter
+// colours are optionally raised by `detail` (a colour's step along its ramp, or its brightness on no ramp), and each
+// pixel's slope is quantized to the nearest of NORMAL_DIRECTIONS. Transparent pixels are edges; the canvas border is
+// not, so tiles and shapes cut by the frame stay open, and frames with `wrap` read their slopes across the border.
+// The output is an ordinary recipe aligned with the colour recipe: same size, frame names and durations, animations
+// and atlas layout. Mirrored frames get mirrored normals because they are derived from the drawn pixels.
+export function compileNormals(source) {
+  fields(source, ['format', 'version', 'name', 'recipe', 'bevel', 'detail'], 'normals');
+  if (source.format !== 'pixelforge-normals' || source.version !== 1) fail('normals', 'expected version-1 pixelforge-normals');
+  const spec = source.recipe;
+  if (typeof spec === 'string' || (spec && typeof spec === 'object' && spec.revision !== undefined && spec.version === undefined)) fail('normals.recipe', 'file and revision references are resolved by the CLI and MCP; inline the recipe to compile here');
+  if (!spec || typeof spec !== 'object' || Array.isArray(spec)) fail('normals.recipe', 'expected the colour recipe, inline or as a file reference');
+  if (spec.format !== undefined) fail('normals.recipe', `expected a recipe, not a ${spec.format} source; compile it first and derive normals from the result`);
+  if (source.bevel !== undefined && (!Number.isInteger(source.bevel) || source.bevel < 1 || source.bevel > 64)) fail('normals.bevel', 'expected 1–64 pixels from the edge to the flat top; omit it to round each shape up to its thickest point');
+  const detail = source.detail ?? 0;
+  if (typeof detail !== 'number' || !Number.isFinite(detail) || detail < 0 || detail > 1) fail('normals.detail', 'expected 0 (shape only) to 1');
+  const project = renderProject(spec), { width: w, height: h } = project, size = w * h;
+  if (source.name === undefined && project.name.length > 57) fail('normals.name', `${project.name}-normal would exceed 64 characters; name the normal recipe`);
+  const name = source.name ?? `${project.name}-normal`;
+  // Brightness from 0 to 1 per colour: its step along the first ramp that holds it, otherwise its luma.
+  const value = new Map();
+  for (const ramp of project.ramps) ramp.forEach((key, i) => { const [r, g, b] = parseColor(key, project.palette); const id = `${r},${g},${b}`; if (!value.has(id)) value.set(id, i / (ramp.length - 1)); });
+  const brightness = (data, at) => value.get(`${data[at]},${data[at + 1]},${data[at + 2]}`) ?? (0.2126 * data[at] + 0.7152 * data[at + 1] + 0.0722 * data[at + 2]) / 255;
+  const keys = Object.keys(NORMAL_DIRECTIONS), counts = Object.create(null);
+  const frames = project.frames.map((frame, index) => {
+    const data = frame.data, solid = i => data[i * 4 + 3] > 0, wrap = spec.frames?.[index]?.wrap === true;
+    // Chamfer distance to the nearest transparent pixel (3 per step, 4 per diagonal step), in two passes.
+    const distance = new Float64Array(size);
+    for (let i = 0; i < size; i++) distance[i] = solid(i) ? Infinity : 0;
+    const relax = (x, y, dx, dy, cost) => { const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < w && ny < h) distance[y * w + x] = Math.min(distance[y * w + x], distance[ny * w + nx] + cost); };
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (solid(y * w + x)) { relax(x, y, -1, 0, 3); relax(x, y, 0, -1, 3); relax(x, y, -1, -1, 4); relax(x, y, 1, -1, 4); }
+    for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) if (solid(y * w + x)) { relax(x, y, 1, 0, 3); relax(x, y, 0, 1, 3); relax(x, y, 1, 1, 4); relax(x, y, -1, 1, 4); }
+    // Each 8-connected shape is rounded on its own, so separate props in one frame each get a full dome.
+    const shape = new Int32Array(size).fill(-1), thickest = [];
+    for (let start = 0; start < size; start++) if (solid(start) && shape[start] < 0) {
+      const label = thickest.length, stack = [start];
+      let deepest = 0;
+      shape[start] = label;
+      while (stack.length) {
+        const i = stack.pop(), x = i % w, y = (i - x) / w;
+        deepest = Math.max(deepest, distance[i]);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy, j = ny * w + nx;
+          if (nx >= 0 && ny >= 0 && nx < w && ny < h && solid(j) && shape[j] < 0) { shape[j] = label; stack.push(j); }
+        }
+      }
+      thickest.push(deepest);
+    }
+    const height = new Float64Array(size);
+    for (let i = 0; i < size; i++) if (solid(i)) {
+      // A shape with no transparent pixel around it (a filled tile) has no rim and stays flat apart from detail.
+      const reach = source.bevel ?? (Number.isFinite(thickest[shape[i]]) ? thickest[shape[i]] / 3 : 0);
+      const t = reach ? Math.min(distance[i] / 3, reach) / reach : 1;
+      height[i] = reach * Math.sqrt(1 - (1 - t) * (1 - t)) + detail * 2 * brightness(data, i * 4);
+    }
+    const at = (x, y) => {
+      if (wrap) { x = ((x % w) + w) % w; y = ((y % h) + h) % h; } else { x = Math.max(0, Math.min(w - 1, x)); y = Math.max(0, Math.min(h - 1, y)); }
+      return height[y * w + x];
+    };
+    const rows = [];
+    for (let y = 0; y < h; y++) {
+      let row = '';
+      for (let x = 0; x < w; x++) {
+        if (!solid(y * w + x)) { row += '.'; continue; }
+        // Sobel slopes in pixels of height per pixel; the surface normal leans downhill.
+        const gx = (at(x + 1, y - 1) + 2 * at(x + 1, y) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x - 1, y) - at(x - 1, y + 1)) / 8;
+        const gy = (at(x - 1, y + 1) + 2 * at(x, y + 1) + at(x + 1, y + 1) - at(x - 1, y - 1) - 2 * at(x, y - 1) - at(x + 1, y - 1)) / 8;
+        let best = '5', score = -Infinity;
+        for (const key of keys) { const [nx, ny, nz] = NORMAL_DIRECTIONS[key], s = -gx * nx - gy * ny + nz; if (s > score) { score = s; best = key; } }
+        row += best; counts[best] = (counts[best] ?? 0) + 1;
+      }
+      rows.push(row);
+    }
+    return { name: frame.name, duration: frame.duration, ops: [{ op: 'grid', x: 0, y: 0, rows }] };
+  });
+  const used = keys.filter(key => counts[key]);
+  const recipe = { version: 1, name, width: w, height: h, palette: Object.fromEntries(keys.map(key => [key, encodeNormal(NORMAL_DIRECTIONS[key])])), frames, ...(spec.animations !== undefined && { animations: spec.animations }), ...(spec.sheet !== undefined && { sheet: spec.sheet }) };
+  renderProject(recipe);
+  return plain({ recipe, metadata: { format: 'pixelforge-normals-metadata', version: 1, encoding: 'RGB = (XYZ + 1) × 127.5; +X right, +Y down, +Z toward the viewer', bevel: source.bevel ?? 'each shape to its thickest point', detail, directions: Object.fromEntries(keys.map(key => [key, NORMAL_DIRECTIONS[key].map(v => Math.round(v * 1e4) / 1e4)])), pixels: Object.fromEntries(used.map(key => [key, counts[key]])) } });
 }

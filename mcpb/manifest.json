@@ -29,7 +29,7 @@
     { "name": "pixel_inspect", "description": "Inspect frames as contact sheets and palette-key grids, with optional diagnostics." },
     { "name": "pixel_patch", "description": "Apply targeted recipe edits, canvas corrections or overlays and compare the result." },
     { "name": "pixel_render", "description": "Export sprites, atlases, animations and a Canvas player into a new unique folder." },
-    { "name": "pixel_compile", "description": "Compile poses, autotile templates or seeded particle effects into editable recipes." },
+    { "name": "pixel_compile", "description": "Compile poses, autotile templates, seeded particle effects or derived lighting normal passes into editable recipes." },
     { "name": "pixel_scene", "description": "Render and inspect scene placements and tilemaps, with optional scene or frame exports." },
     { "name": "pixel_import", "description": "Import an 8-bit RGB/RGBA PNG as an editable recipe without changing its pixels." }
   ],

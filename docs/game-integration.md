@@ -23,6 +23,17 @@ Keep the default untrimmed layout and set `sheet.padding` to `0`. Cell dimension
 
 Alternatively, import the PNGs in `frames/`, which removes any need for atlas slicing. Transfer the duration in milliseconds for each frame into the engine's frame-delay or keyframe controls. The source canvas is not trimmed, so the same pivot/origin keeps frames aligned.
 
+## Normal and emissive passes
+
+`pixelforge scene <scene.json> --out <dir>` exports each lit asset's `color.png`, `normal.png` and `emissive.png` on one shared atlas grid, with `alignment.json` naming the files. A normal recipe on its own renders with `pixelforge render` like any recipe; a generated pass (`pixelforge-normals`) has exactly the colour recipe's frame rectangles, trimmed or not, so one atlas JSON slices both.
+
+Normal RGB encodes XYZ from −1 to +1 as `(v + 1) × 127.5`, with +X right, +Y down and +Z toward the viewer. That is the "Y−" or DirectX convention, which Unreal also uses. Godot and Unity expect +Y up, so flip the green channel when importing, or lights above a sprite shade it as if they were below:
+
+- **Godot 4**: select the normal PNG, enable **Normal Map Invert Y** in the Import dock, set the compression mode to Lossless and reimport. Use it as the `normal_texture` of a `CanvasTexture` whose `diffuse_texture` is the colour atlas, and light it with `PointLight2D` nodes.
+- **Unity**: set the texture type to **Normal map**, enable **Flip Green Channel** (`TextureImporter.flipGreenChannel` in scripts), turn compression off and use point filtering. Add it to the colour sprite as the `_NormalMap` secondary texture for the 2D renderer's lights.
+
+Keep normal and emissive textures uncompressed with nearest filtering: compression and smoothing blend neighbouring directions and colours, and pixel-art lighting depends on each pixel keeping its own.
+
 ## Canvas
 
 The exported `player.js` provides a complete player, without an engine or runtime package dependency:

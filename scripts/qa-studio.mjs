@@ -364,6 +364,28 @@ try {
     assert.ok(drawn > 0); assert.equal(await text('error'), ''); await studio.shot('scene');
     return await text('name');
   });
+  await check('dragging on the scene moves a light, its controls relight the scene live, and saving keeps what changed', async () => {
+    const pixels = `(() => { const c = document.getElementById('scene'); return Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data).join(); })()`;
+    if (await text('play') === 'Pause') await click('#play');
+    const before = await evaluate(pixels), source = await evaluate(`fetch('./scene.json').then(r => r.json())`);
+    const box = await evaluate(`(() => { const c = document.getElementById('scene'); c.scrollIntoView({ block: 'center' }); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, width: c.width, height: c.height }; })()`);
+    // Press on the first light's marker and drag it a little way, so it still reaches what it lights.
+    const from = source.lighting.lights[0].at, to = [from[0] - 12, from[1] + 6], screen = ([x, y]) => ({ x: box.x + (x + 0.5) * box.w / box.width, y: box.y + (y + 0.5) * box.h / box.height });
+    await studio.page('Input.dispatchMouseEvent', { type: 'mousePressed', ...screen(from), button: 'left', buttons: 1, clickCount: 1 });
+    await studio.page('Input.dispatchMouseEvent', { type: 'mouseMoved', ...screen(to), button: 'left', buttons: 1 });
+    await studio.page('Input.dispatchMouseEvent', { type: 'mouseReleased', ...screen(to), button: 'left', clickCount: 1 });
+    assert.deepEqual([Number(await evaluate(`document.getElementById('light-x').value`)), Number(await evaluate(`document.getElementById('light-y').value`))], to);
+    const moved = await evaluate(pixels);
+    assert.notEqual(moved, before, 'moving the light changes the lit scene');
+    assert.equal(await evaluate(`document.querySelectorAll('#light-marks circle').length`), source.lighting.lights.length * 2);
+    await evaluate(`(() => { const input = document.getElementById('light-height'); input.value = '6'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    assert.notEqual(await evaluate(pixels), moved, 'a lower light changes the lit scene');
+    assert.equal(await text('light-height-value'), '6 px');
+    await studio.shot('scene-light');
+    const saved = JSON.parse(await readFile(await download(() => click('#save')), 'utf8')), light = saved.lighting.lights[0], original = source.lighting.lights[0];
+    assert.deepEqual([light.at, light.height, light.radius, light.color], [to, 6, original.radius, original.color]);
+    return `light moved to ${to.join(', ')}`;
+  });
 
   console.log('Afterwards');
   await check('no page reported an error, and no request left this computer', () => {

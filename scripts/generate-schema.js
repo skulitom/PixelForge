@@ -188,4 +188,13 @@ const fx = {
     sheet: schema.properties.sheet
   }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: schema.$defs
 };
-for (const [file, value] of [['poses.schema.json', poses], ['scene.schema.json', scene], ['autotile.schema.json', autotile], ['fx.schema.json', fx]]) await writeFile(new URL(`../${file}`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
+const normals = {
+  $schema: schema.$schema, title: 'PixelForge normal pass',
+  description: 'Derives a lighting normal pass from a colour recipe and compiles it to an ordinary recipe aligned with it (same size, frame names and durations, animations and atlas layout), ready for a scene asset\'s normal and editable like any recipe. Each separate shape is rounded from its silhouette, lighter colours can be raised by detail, and every pixel takes the nearest of 17 directions: palette key 5 faces the viewer, the keypad digits 1–4 and 6–9 lean 30° the way they sit around 5, and q w e a d z x c lean 60° the same way.',
+  ...object({ format: { const: 'pixelforge-normals' }, version: { const: 1 }, name: { ...id, description: 'Name of the normal recipe; default <recipe name>-normal.' },
+    recipe: { ...assetRef, description: 'The colour recipe: inline, a file resolved by the CLI relative to this source (or inside the MCP root), or {"revision": id} through MCP.' },
+    bevel: int(1, 64, 'Pixels from the edge to the flat top. Default: each shape rounds all the way to its thickest point, like a cushion.'),
+    detail: num(0, 1, 'How far lighter colours stand out of the surface, up to 2 pixels: 0 (default) keeps only the silhouette\'s shape; 0.5–1 embosses textured surfaces such as brick, bark or rock. A colour on a ramp counts its step along the ramp, any other its brightness.')
+  }, ['format', 'version', 'recipe']), $defs: { ...schema.$defs, recipe: recipeSchema }
+};
+for (const [file, value] of [['poses.schema.json', poses], ['scene.schema.json', scene], ['autotile.schema.json', autotile], ['fx.schema.json', fx], ['normals.schema.json', normals]]) await writeFile(new URL(`../${file}`, import.meta.url), JSON.stringify(value, null, 2) + '\n');

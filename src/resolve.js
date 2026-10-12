@@ -40,6 +40,19 @@ async function resolvePalette(document, baseDir, context, where) {
   context.palettes.push({ where, reference: $ref, shared, ...(inherit && { ramps }) });
   return { ...document, palette: { ...shared, ...local }, ...(inherit && { ramps }) };
 }
+// A pixelforge-normals source names the colour recipe it derives from: a file, a saved revision or an inline recipe.
+async function loadRecipe(entry, baseDir, context, where) {
+  if (typeof entry === 'string') {
+    const file = locate(entry, baseDir, context.root, where);
+    context.files.add(file);
+    return resolvePalette(await readJSON(file, where), path.dirname(file), context, where);
+  }
+  if (isObject(entry) && Object.keys(entry).length === 1 && typeof entry.revision === 'string') {
+    if (!context.revisions) fail(where, 'revision references are only available through the MCP server');
+    return resolvePalette(await context.revisions(entry.revision), baseDir, context, where);
+  }
+  return resolvePalette(entry, baseDir, context, where);
+}
 async function resolveScene(scene, baseDir, context) {
   if (!isObject(scene.assets)) return scene;
   // A theme: a palette file for the whole scene or for one asset overrides the keys the recipes share.
@@ -48,19 +61,7 @@ async function resolveScene(scene, baseDir, context) {
   const assets = {};
   for (const [id, value] of Object.entries(scene.assets)) {
     const where = `scene.assets.${id}`;
-    const load = async (entry, key) => {
-      const at = key ? `${where}.${key}` : where;
-      if (typeof entry === 'string') {
-        const file = locate(entry, baseDir, context.root, at);
-        context.files.add(file);
-        return resolvePalette(await readJSON(file, at), path.dirname(file), context, at);
-      }
-      if (isObject(entry) && Object.keys(entry).length === 1 && typeof entry.revision === 'string') {
-        if (!context.revisions) fail(at, 'revision references are only available through the MCP server');
-        return resolvePalette(await context.revisions(entry.revision), baseDir, context, at);
-      }
-      return resolvePalette(entry, baseDir, context, at);
-    };
+    const load = (entry, key) => loadRecipe(entry, baseDir, context, key ? `${where}.${key}` : where);
     if (isObject(value) && (value.recipe !== undefined || value.normal !== undefined || value.emissive !== undefined) && value.version === undefined) {
       assets[id] = {};
       for (const key of ['recipe', 'normal', 'emissive']) if (value[key] !== undefined) assets[id][key] = await load(value[key], key);
@@ -71,12 +72,15 @@ async function resolveScene(scene, baseDir, context) {
 }
 /**
  * Returns the document with references inlined, plus the files it read. Works for recipes, pose sources,
- * autotile templates, effect sources and scenes. `revisions(id)` supplies saved recipes for `{ "revision": id }` scene assets.
+ * autotile templates, effect sources, normal sources and scenes. `revisions(id)` supplies saved recipes for
+ * `{ "revision": id }` scene assets and normal sources.
  */
 export async function resolveReferences(document, { baseDir = process.cwd(), root, revisions } = {}) {
   const context = { root, revisions, files: new Set(), palettes: [] };
   const sidecars = { 'pixelforge-poses': 'poses', 'pixelforge-autotile': 'autotile', 'pixelforge-fx': 'fx' };
-  const resolved = document?.format === 'pixelforge-scene' ? await resolveScene(document, baseDir, context) : await resolvePalette(document, baseDir, context, sidecars[document?.format] ?? 'project');
+  const resolved = document?.format === 'pixelforge-scene' ? await resolveScene(document, baseDir, context)
+    : document?.format === 'pixelforge-normals' && document.recipe !== undefined ? { ...document, recipe: await loadRecipe(document.recipe, baseDir, context, 'normals.recipe') }
+      : await resolvePalette(document, baseDir, context, sidecars[document?.format] ?? 'project');
   return { document: resolved, files: [...context.files], palettes: context.palettes };
 }
 /**

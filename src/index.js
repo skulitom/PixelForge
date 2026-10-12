@@ -6,7 +6,7 @@ export { encodeGIF, animationGIF, framesGIF } from './gif.js';
 export { numberedFrames, folderGIF } from './frame-folder.js';
 export { createSequence, createSceneSequence, planSequence, placeSprite, parseFrameRate, frameGrid, VIDEO_SIZES } from './sequence.js';
 export { createBundle, writeBundle, createZip, generateCSS, formatJSON } from './export.js';
-export { compilePoses, compileAutotile } from './authoring.js';
+export { compilePoses, compileAutotile, compileNormals, NORMAL_DIRECTIONS } from './authoring.js';
 export { compileEffects } from './fx.js';
 export { DITHER_PATTERNS, EASINGS, ease, ditherThreshold, cleanupIds, rotateRows, ruleVariants, rewriteIds } from './craft.js';
 export { BLOB_MASKS, CARDINAL_MASKS, neighbourMask, quadrantPieces, templatePiece } from './autotile.js';

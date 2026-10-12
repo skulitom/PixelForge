@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, animationGIF, createSequence, frameGrid, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, animationGIF, createSequence, frameGrid, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, compileNormals, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `PixelForge — text to pixels, without dependencies
 
@@ -22,7 +22,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
                     [--loops n | --seconds s] [--step n]
                                            Numbered PNG frames for a video editor, at a constant frame rate
   pixelforge compile <source.json> --out recipe.json [--metadata meta.json]
-                                           Build a recipe from authored poses, an autotile template or particle effects
+                                           Build a recipe from authored poses, an autotile template, particle effects
+                                           or a normals source (a lighting normal pass derived from a colour recipe)
   pixelforge autotile <template.json> --out recipe.json [--metadata masks.json]
                                            Build a 47-tile blob or 16-tile cardinal set
   pixelforge scene <scene.json> --out dir  Export a bounded scene review and aligned material passes
@@ -35,7 +36,8 @@ const HELP = `PixelForge — text to pixels, without dependencies
   pixelforge schema                       Print the JSON Schema
 
 Options: --force allows overwriting exported files. '-' reads JSON from stdin.
-Palette references ({"$ref": "palette.json"}) and scene asset files resolve from the input file's folder.
+Palette references ({"$ref": "palette.json"}), scene asset files and a normals source's recipe resolve from the
+input file's folder.
 Inspect: --frames a,b or --animation name picks cells (* and ? in a name match frames: --frames 'flash-*');
 --step n [--offset k] keeps every nth cell from position k (0 is the first); --region x,y,w,h crops;
 --grid adds palette-key rows; --scale 1-16 and --background color style the sheet.
@@ -113,7 +115,7 @@ async function writeOutputs(targets, force) {
   return Object.fromEntries(entries.map(([label, target]) => [label, target]));
 }
 // Sidecar sources compile by their format; `autotile` remains a dedicated command for templates.
-const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': compileAutotile, 'pixelforge-fx': compileEffects };
+const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': compileAutotile, 'pixelforge-fx': compileEffects, 'pixelforge-normals': compileNormals };
 const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings, ...(project.clipping && { clipping: project.clipping }) });
 const referenced = input => input.resolution.files.length ? { resolved: input.resolution.files } : {};
 try {
@@ -143,7 +145,7 @@ try {
       const port = options.port === undefined ? STUDIO_PORT : Number(options.port);
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be an integer from 0 to 65535');
       let project = positional[0] ? (await readResolved(positional[0])).document : undefined;
-      // Pose, autotile and effect sources open as the recipe they compile to.
+      // Pose, autotile, effect and normals sources open as the recipe they compile to.
       if (project && Object.hasOwn(COMPILERS, project.format ?? '')) project = COMPILERS[project.format](project).recipe;
       // A port you name is used or refused; the usual one gives way to any free port when something else has it.
       const server = await startStudio({ port, project, fallback: options.port === undefined });

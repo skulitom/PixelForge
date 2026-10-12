@@ -11,7 +11,7 @@
   "engines": { "node": ">=20" },
   "bin": { "pixelforge": "./bin/pixelforge.js" },
   "exports": { ".": "./src/index.js", "./core": "./src/core.js", "./runtime": "./src/runtime.js", "./authoring": "./src/authoring.js", "./scene": "./src/scene.js", "./autotile": "./src/autotile.js", "./fx": "./src/fx.js", "./craft": "./src/craft.js", "./gif": "./src/gif.js", "./font": "./src/font.js" },
-  "files": ["bin", "src", "studio", "examples", "schema.json", "poses.schema.json", "scene.schema.json", "autotile.schema.json", "fx.schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
+  "files": ["bin", "src", "studio", "examples", "schema.json", "poses.schema.json", "scene.schema.json", "autotile.schema.json", "fx.schema.json", "normals.schema.json", "docs", "skills", "README.md", "AGENTS.md", "CONTRIBUTING.md", "llms.txt", "LICENSE"],
   "scripts": {
     "test": "node --test",
     "start": "node bin/pixelforge.js preview",
