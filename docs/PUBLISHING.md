@@ -16,7 +16,13 @@ Pushing a version tag runs **Release**: tests, a reproducible MCPB build, its is
    git push origin vX.Y.Z
    ```
 
-   The tag must already exist for a manual Release rerun. Never reuse a tag for changed bytes.
+   The tag must already exist for a manual Release rerun, and the run must start from the tag, because the provenance attestation names the run's own commit:
+
+   ```sh
+   gh workflow run release.yml -R skulitom/PixelForge --ref vX.Y.Z -f tag=vX.Y.Z
+   ```
+
+   A release left as a draft (by an interrupted run, or made by hand) is published by the rerun once every asset matches. Never reuse a tag for changed bytes.
 
 ## Test the release, then list it
 
