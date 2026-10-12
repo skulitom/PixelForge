@@ -29,7 +29,11 @@ function compress(indices, minimum, slots, state) {
     else { if (next >= 1 << size) size++; slots[key] = state.generation << 12 | next++; }
     prefix = index;
   }
-  emit(prefix); emit(end);
+  emit(prefix);
+  // A decoder adds one more entry on reading that last code, and widens its codes if the table just filled, before it
+  // reads the end code. A decoder that doesn't widen still reads the same value from the wider code.
+  if (next === 1 << size && size < 12) size++;
+  emit(end);
   if (bits) { size = 8 - bits; emit(0); }
   return bytes.subarray(0, length);
 }

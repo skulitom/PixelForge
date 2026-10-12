@@ -156,6 +156,12 @@ test('a busy opaque animation keeps unchanged pixels under a transparent index a
   assert.ok(later.filter(entry => entry.transparent === 120).length > 90);
   assert.deepEqual(framesGIF(frames, { fps: { numerator: 100, denominator: 7 } }).data, gif.data);
 });
+test('GIF writes the end code as wide as a decoder reads it after the last code fills the table', () => {
+  // Here the last code takes the table to 32 entries, so a decoder reads the end code with 6 bits, not 5; the test's
+  // decoder fails on bytes left over, or missing, after the end code.
+  const four = [RED, BLUE, [0, 255, 0, 255], [9, 9, 9, 255]], row = { data: rgba(...Array.from({ length: 15 }, (_, i) => four[(i * 7 + (i >> 2)) % 4])), duration: 100 };
+  assert.deepEqual(decodeGIF(encodeGIF([row], 15, 1).data).frames[0].pixels, hexPixels(row));
+});
 test('a sprite with transparency is cleared only where a pixel turns transparent, also when the loop restarts', () => {
   // A sprite appears, steps right, grows, holds a frame and jumps; the green block never changes. Frame 1 is clear where
   // the last frame's sprite is, so the last frame must be cleared too.
@@ -192,7 +198,7 @@ test('GIF keeps unchanged pixels only where a table has room, and stays exact wh
   const split = encodeGIF(own, 16, 16), tables = decodeGIF(split.data);
   assert.deepEqual([split.colors, tables.shared, tables.frames.map(entry => [entry.local, entry.transparent, entry.rect])], [301, false, [[true, null, [0, 0, 16, 16]], [true, 151, [0, 0, 16, 4]], [true, null, [0, 0, 16, 16]]]]);
   for (const [position, frame] of own.entries()) assert.deepEqual(tables.frames[position].pixels, hexPixels(frame));
-  // A power of two (128 colours) would double the shared table for the spare entry: both layouts are tried, and both read back exactly.
+  // 128 colours: a spare entry would double the shared table, so the file is written both ways; the one kept reads back exactly.
   const even = Array.from({ length: 3 }, (_, f) => ({ data: rgba(...Array.from({ length: 256 }, (_, i) => [(i + (i > 200 ? f : 0)) % 128, 1, 2, 255])), duration: 100 }));
   const doubled = decodeGIF(encodeGIF(even, 16, 16).data);
   for (const [position, frame] of even.entries()) assert.deepEqual(doubled.frames[position].pixels, hexPixels(frame));
