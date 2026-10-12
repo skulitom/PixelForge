@@ -68,57 +68,79 @@ function indexFrame(data, area, background, describe) {
 // Writes indexed frames ({ colors, indices, transparent, delay: centiseconds }) as GIF89a. One shared colour table
 // when the whole animation fits in 256 entries, otherwise a table per frame, so frames may differ completely in
 // colour. `loops` is how many times the animation plays: 0 for ever, 1 once (no loop extension), n written as n − 1
-// repeats. When no frame is transparent, each frame after the first stores only the rectangle that changed.
-function writeGIF(indexed, width, height, { loops = 0, scale = 1 } = {}) {
+// repeats. An opaque animation needs one spare shared entry to keep pixels (see writeFrames); when that doubles the
+// table, the file is written both ways and the smaller kept.
+function writeGIF(indexed, width, height, options = {}) {
   const transparency = indexed.some(frame => frame.transparent), all = new Map();
   for (const frame of indexed) for (const color of frame.colors) if (!all.has(color)) all.set(color, all.size);
-  const shared = all.size + (transparency ? 1 : 0) <= 256;
-  const table = (colors, offset) => {
-    const bits = bitsFor(colors.length + offset), bytes = new Uint8Array(3 << bits);
+  const shared = all.size + (transparency ? 1 : 0) <= 256, write = spare => writeFrames(indexed, width, height, options, all, shared, transparency, spare);
+  if (!shared || transparency || indexed.length < 2 || all.size === 256) return write(false);
+  if (bitsFor(all.size + 1) === bitsFor(all.size)) return write(true);
+  const plain = write(false), spare = write(true);
+  return spare.data.length < plain.data.length ? spare : plain;
+}
+
+// The first frame covers the canvas. Each later frame stores only the rectangle where the picture changes (at least
+// one pixel), and inside it either every pixel or only the changed ones over a transparent index that keeps what is
+// underneath, whichever compresses smaller. A frame stays under the next one (disposal 1) unless the next frame, or
+// the first again when the loop restarts, is transparent where this one is not: then its rectangle grows to cover
+// those pixels and is cleared after it is shown (disposal 2). The keep index is the transparency index when the
+// animation has one, else a spare entry: `spare` in the shared table, or one more entry in a frame's own table.
+function writeFrames(indexed, width, height, { loops = 0, scale = 1 }, all, shared, transparency, spare) {
+  const table = (colors, offset, extra) => {
+    const bits = bitsFor(colors.length + offset + extra), bytes = new Uint8Array(3 << bits);
     for (const [index, color] of colors.entries()) bytes.set([color >> 16, color >> 8 & 255, color & 255], (index + offset) * 3);
     return { bits, bytes };
   };
   const chunks = [], push = (...values) => chunks.push(Uint8Array.from(values)), word = value => [value & 255, value >> 8];
-  const globalTable = shared ? table([...all.keys()], transparency ? 1 : 0) : null;
+  const globalTable = shared ? table([...all.keys()], transparency ? 1 : 0, spare ? 1 : 0) : null;
   chunks.push(Uint8Array.from('GIF89a', character => character.charCodeAt(0)));
   push(...word(width * scale), ...word(height * scale), globalTable ? 0xf0 | globalTable.bits - 1 : 0x70, 0, 0);
   if (globalTable) chunks.push(globalTable.bytes);
   if (loops !== 1) { push(0x21, 0xff, 11); chunks.push(Uint8Array.from('NETSCAPE2.0', character => character.charCodeAt(0))); push(3, 1, ...word(loops ? loops - 1 : 0), 0); }
   const slots = new Uint32Array(1 << 20), state = { generation: 0 }, lookup = new Uint8Array(256);
-  let previous = null;
-  for (const frame of indexed) {
-    const { colors, indices, transparent } = frame, offset = transparent ? 1 : 0;
+  // What a viewer shows at each pixel before the frame is drawn: a colour, or -1 where nothing is.
+  const area = width * height, canvas = new Int32Array(area).fill(-1), changed = new Uint8Array(area);
+  for (const [position, frame] of indexed.entries()) {
+    const { colors, indices, transparent } = frame, offset = transparent ? 1 : 0, next = indexed[(position + 1) % indexed.length];
     // Frame indices become table indices: the shared table's, or the frame's own with transparency first.
     if (shared) { for (const [index, color] of colors.entries()) lookup[index + offset] = all.get(color) + (transparency ? 1 : 0); if (transparent) lookup[0] = 0; }
     else for (let index = 0; index < 256; index++) lookup[index] = index;
-    const local = shared ? null : table(colors, offset), minimum = Math.max(2, (local ?? globalTable).bits);
-    // Without transparency nothing is cleared between frames, so only the rectangle that differs from the previous
-    // frame is stored (at least one pixel).
-    let left = 0, top = 0, right = width - 1, bottom = height - 1;
-    if (previous && !transparency) {
-      left = width; top = height; right = -1; bottom = -1;
-      for (let y = 0, i = 0; y < height; y++) for (let x = 0; x < width; x++, i++) {
-        if (colors[indices[i]] === previous.colors[previous.indices[i]]) continue;
-        if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; bottom = y;
+    let left = width, top = height, right = -1, bottom = -1, clears = false, count = 0;
+    for (let y = 0, i = 0; y < height; y++) for (let x = 0; x < width; x++, i++) {
+      const value = indices[i], color = transparent ? (value ? colors[value - 1] : -1) : colors[value];
+      const differs = color !== canvas[i], cleared = color !== -1 && next.transparent && next.indices[i] === 0;
+      changed[i] = differs ? 1 : 0;
+      if (!differs && !cleared) continue;
+      // Transparency only keeps what is underneath, so a pixel can turn transparent only where the last frame cleared.
+      if (color === -1) throw new Error('GIF encoder: a transparent pixel would show an earlier frame');
+      if (differs) { canvas[i] = color; count++; }
+      if (cleared) clears = true;
+      if (x < left) left = x; if (x > right) right = x; if (y < top) top = y; bottom = y;
+    }
+    if (!position) { left = top = 0; right = width - 1; bottom = height - 1; }
+    else if (right < 0) left = top = right = bottom = 0;
+    const keep = shared ? (transparency ? 0 : spare ? all.size : -1) : transparent ? 0 : colors.length < 256 ? colors.length : -1;
+    const w = (right - left + 1) * scale, h = (bottom - top + 1) * scale;
+    const encode = keeping => {
+      const local = shared ? null : table(colors, offset, keeping && !transparent ? 1 : 0), minimum = Math.max(2, (local ?? globalTable).bits), out = new Uint8Array(w * h);
+      for (let y = top; y <= bottom; y++) {
+        const row = (y - top) * scale * w;
+        for (let x = left, i = y * width + left; x <= right; x++, i++) out.fill(keeping && !changed[i] ? keep : lookup[indices[i]], row + (x - left) * scale, row + (x - left + 1) * scale);
+        for (let copy = 1; copy < scale; copy++) out.copyWithin(row + copy * w, row, row + w);
       }
-      if (right < 0) left = top = right = bottom = 0;
-    }
-    previous = frame;
-    const w = (right - left + 1) * scale, h = (bottom - top + 1) * scale, out = new Uint8Array(w * h);
-    for (let y = top; y <= bottom; y++) {
-      const row = (y - top) * scale * w;
-      for (let x = left; x <= right; x++) out.fill(lookup[indices[y * width + x]], row + (x - left) * scale, row + (x - left + 1) * scale);
-      for (let copy = 1; copy < scale; copy++) out.copyWithin(row + copy * w, row, row + w);
-    }
-    // Disposal 2 clears the frame before the next one, so transparent pixels never show an earlier frame; without
-    // transparency, disposal 1 keeps it under the next frame's rectangle.
-    push(0x21, 0xf9, 4, (transparency ? 2 : 1) << 2 | (transparent ? 1 : 0), ...word(frame.delay), 0, 0);
-    push(0x2c, ...word(left * scale), ...word(top * scale), ...word(w), ...word(h), local ? 0x80 | local.bits - 1 : 0);
-    if (local) chunks.push(local.bytes);
-    const packed = compress(out, minimum, slots, state);
-    push(minimum);
-    for (let at = 0; at < packed.length; at += 255) { const block = packed.subarray(at, at + 255); push(block.length); chunks.push(block); }
+      const packed = compress(out, minimum, slots, state);
+      return { local, minimum, packed, size: packed.length + (local ? local.bytes.length : 0), transparent: keeping || transparent, index: keeping ? keep : 0 };
+    };
+    let best = encode(false);
+    if (position && keep >= 0 && count < (right - left + 1) * (bottom - top + 1)) { const kept = encode(true); if (kept.size < best.size) best = kept; }
+    push(0x21, 0xf9, 4, (clears ? 2 : 1) << 2 | (best.transparent ? 1 : 0), ...word(frame.delay), best.index, 0);
+    push(0x2c, ...word(left * scale), ...word(top * scale), ...word(w), ...word(h), best.local ? 0x80 | best.local.bits - 1 : 0);
+    if (best.local) chunks.push(best.local.bytes);
+    push(best.minimum);
+    for (let at = 0; at < best.packed.length; at += 255) { const block = best.packed.subarray(at, at + 255); push(block.length); chunks.push(block); }
     push(0);
+    if (clears) for (let y = top; y <= bottom; y++) canvas.fill(-1, y * width + left, y * width + right + 1);
   }
   push(0x3b);
   const data = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));

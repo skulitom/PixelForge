@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFile, readdir, mkdtemp, rm, access, mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -68,8 +69,9 @@ test('GIF frames, colours, timing and loop flag are read back exactly by a separ
   // Each source pixel becomes a 2×2 block; alpha 200 turns opaque and alpha 100 transparent.
   const block = (a, b, c, d) => [a, a, b, b, a, a, b, b, c, c, d, d, c, c, d, d];
   assert.deepEqual(decoded.frames.map(frame => frame.pixels), [block('ff0000', '0000ff', 'clear', '00ff00'), block('0000ff', '0000ff', 'clear', 'ff0000')]);
-  // Disposal 2 restores the background, so a transparent pixel never shows the frame before it.
-  assert.deepEqual(decoded.frames.map(({ disposal, delay, transparent, local }) => [disposal, delay, transparent, local]), [[2, 100, 0, false], [2, 250, 0, false]]);
+  // No pixel turns transparent between the frames (or when the loop restarts), so each frame stays under the next
+  // (disposal 1); the transparent pixel is transparent in both and never shows an earlier colour.
+  assert.deepEqual(decoded.frames.map(({ disposal, delay, transparent, local }) => [disposal, delay, transparent, local]), [[1, 100, 0, false], [1, 250, 0, false]]);
   assert.deepEqual(encodeGIF(frames, 2, 2, { scale: 2 }).data, gif.data);
   const once = decodeGIF(encodeGIF([{ data: rgba(RED, BLUE), duration: 40 }], 2, 1, { loop: false }).data);
   assert.deepEqual([once.loop, once.frames[0].disposal, once.frames[0].transparent, once.frames[0].pixels], [null, 1, null, ['ff0000', '0000ff']]);
@@ -107,6 +109,93 @@ test('GIF compression survives dictionary resets and 12-bit codes on noisy frame
   const decoded = decodeGIF(encodeGIF(frames, 160, 120).data);
   assert.deepEqual(decoded.frames[0].pixels, Array.from({ length: 160 * 120 }, (_, i) => Buffer.from(data.subarray(i * 4, i * 4 + 3)).toString('hex')));
   assert.equal(decoded.frames[1].pixels.length, 160 * 120);
+});
+// A busy opaque scene like the asset team's RTS vignette of 2026-10-09: a textured field with small machines animating
+// all over it and units walking across, so each frame's changed rectangle spans most of the canvas while most pixels
+// in it stay the same. 96 frames of 128×72 enlarged 2× with nearest neighbour, as an exported sequence is, in 120
+// colours. Integer arithmetic only, so the frames, and the ffmpeg size measured from them, never drift.
+function busyScene() {
+  const width = 128, height = 72, scale = 2, frames = [];
+  const hash = (x, y) => { let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return (h ^ h >>> 16) >>> 0; };
+  const ground = Array.from({ length: 48 }, (_, i) => [40 + i * 3, 70 + i * 2, 20 + i * 7 % 48]);
+  const lights = Array.from({ length: 72 }, (_, i) => [130 + i * 17 % 120, 20 + i * 3, 160 + i * 11 % 90]);
+  const base = Array.from({ length: width * height }, (_, i) => { const x = i % width, y = i / width | 0; return ground[((x >> 4) + (y >> 4) & 7) * 6 + hash(x >> 1, y >> 1) % 6]; });
+  const machines = Array.from({ length: 18 }, (_, i) => { const col = i % 6, row = i / 6 | 0; return { x: 6 + col * 20 + (hash(col, row) & 3), y: 6 + row * 22 + (hash(row, col) & 3), period: 4 + (col + row) % 5 * 2, light: i * 4 }; });
+  for (let f = 0; f < 96; f++) {
+    const picture = base.slice();
+    for (const machine of machines) for (let v = 0; v < 10; v++) for (let u = 0; u < 10; u++) {
+      if ((2 * u - 9) ** 2 + (2 * v - 9) ** 2 > 80) continue;
+      picture[(machine.y + v) * width + machine.x + u] = lights[(machine.light + (u + v + f % machine.period * 2 >> 1)) % 72];
+    }
+    for (let k = 0; k < 5; k++) { const x = (f * (1 + k % 2) + k * 25) % (width - 3), y = 12 + k * 13; for (let v = 0; v < 3; v++) for (let u = 0; u < 3; u++) picture[(y + v) * width + x + u] = lights[60 + k * 2]; }
+    const data = new Uint8Array(width * scale * height * scale * 4);
+    for (let y = 0; y < height * scale; y++) for (let x = 0; x < width * scale; x++) data.set([...picture[(y >> 1) * width + (x >> 1)], 255], (y * width * scale + x) * 4);
+    frames.push({ width: width * scale, height: height * scale, data });
+  }
+  return frames;
+}
+// SHA-256 of busyScene()'s RGBA frames in order, and the bytes ffmpeg 9.0 wrote for those frames saved as numbered PNGs,
+// with the asset team's command: ffmpeg -framerate 100/7 -i busy_%04d.png -vf "split[a][b];[a]palettegen=max_colors=256:
+// stats_mode=full:reserve_transparent=1[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" -loop 0 busy.gif
+const BUSY_SHA256 = 'e778ec4f7cb3328366243f2114f836fef28caada53a0427b2ae6f9cddb8d811c', FFMPEG_BUSY_BYTES = 247195;
+const hexPixels = ({ data }) => Array.from({ length: data.length / 4 }, (_, i) => data[i * 4 + 3] < 128 ? 'clear' : Buffer.from(data.subarray(i * 4, i * 4 + 3)).toString('hex'));
+const firstDifference = (a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) return `pixel ${i}: ${a[i]} instead of ${b[i]}`; return null; };
+
+test('a busy opaque animation keeps unchanged pixels under a transparent index and stays within 1.5x of ffmpeg, every frame exact', () => {
+  const frames = busyScene(), digest = createHash('sha256');
+  for (const frame of frames) digest.update(frame.data);
+  // FFMPEG_BUSY_BYTES was measured from exactly these frames.
+  assert.equal(digest.digest('hex'), BUSY_SHA256);
+  const gif = framesGIF(frames, { fps: { numerator: 100, denominator: 7 } }), decoded = decodeGIF(gif.data);
+  assert.deepEqual([gif.colors, gif.tables, gif.transparent, decoded.frames.length], [120, 'shared', false, 96]);
+  assert.ok(gif.data.length <= 1.5 * FFMPEG_BUSY_BYTES, `${gif.data.length} bytes; ffmpeg wrote ${FFMPEG_BUSY_BYTES}`);
+  for (const [position, frame] of frames.entries()) assert.equal(firstDifference(decoded.frames[position].pixels, hexPixels(frame)), null, `frame ${position + 1}`);
+  // The changed rectangles span most of the canvas, and the pixels kept inside them use the spare entry 120.
+  const later = decoded.frames.slice(1);
+  assert.ok(later.every(entry => entry.disposal === 1 && entry.rect[2] * entry.rect[3] > 256 * 144 / 2));
+  assert.ok(later.filter(entry => entry.transparent === 120).length > 90);
+  assert.deepEqual(framesGIF(frames, { fps: { numerator: 100, denominator: 7 } }).data, gif.data);
+});
+test('a sprite with transparency is cleared only where a pixel turns transparent, also when the loop restarts', () => {
+  // A sprite appears, steps right, grows, holds a frame and jumps; the green block never changes. Frame 1 is clear where
+  // the last frame's sprite is, so the last frame must be cleared too.
+  const colors = { '.': CLEAR, r: RED, b: BLUE, g: [0, 160, 0, 255] }, picture = (...rows) => ({ data: rgba(...rows.join('').split('').map(key => colors[key])), duration: 100 });
+  const frames = [
+    picture('..........gg', '..........gg', '............', '............'),
+    picture('rrr.......gg', 'rbr.......gg', '............', '............'),
+    picture('..rrr.....gg', '..rbr.....gg', '............', '............'),
+    picture('..rrr.....gg', '..rbr.....gg', '..rrr.......', '............'),
+    picture('..rrr.....gg', '..rbr.....gg', '..rrr.......', '............'),
+    picture('......rrr.gg', '......rbr.gg', '......rrr...', '............'),
+  ];
+  const gif = encodeGIF(frames, 12, 4), decoded = decodeGIF(gif.data);
+  for (const [position, frame] of frames.entries()) assert.deepEqual(decoded.frames[position].pixels, hexPixels(frame), `frame ${position + 1}`);
+  // Disposal 2 only before a frame that turns one of this frame's pixels transparent; each rectangle covers those pixels.
+  assert.deepEqual(decoded.frames.map(entry => entry.disposal), [1, 2, 1, 1, 2, 2]);
+  assert.deepEqual(decoded.frames.map(entry => entry.rect), [[0, 0, 12, 4], [0, 0, 3, 2], [2, 0, 3, 2], [2, 2, 3, 1], [2, 0, 3, 3], [6, 0, 3, 3]]);
+  // A viewer that composites the restarted loop over the last frame still sees frame 1 exactly.
+  const last = decoded.frames.at(-1), after = last.pixels.slice(), [x0, y0, w, h] = last.rect;
+  if (last.disposal === 2) for (let y = y0; y < y0 + h; y++) after.fill('clear', y * 12 + x0, y * 12 + x0 + w);
+  assert.deepEqual(after.map((pixel, i) => decoded.frames[0].pixels[i] === 'clear' ? pixel : 'clear'), Array(48).fill('clear'));
+});
+test('GIF keeps unchanged pixels only where a table has room, and stays exact when it has none', () => {
+  // 256 colours fill the shared table, so no index is spare: frames store every pixel of their rectangle, as before.
+  const colours = Array.from({ length: 256 }, (_, i) => [i, 255 - i, 3, 255]), swapped = colours.slice();
+  [swapped[7], swapped[8]] = [swapped[8], swapped[7]];
+  const full = [colours, swapped].map(pixels => ({ data: rgba(...pixels), duration: 100 }));
+  const packed = decodeGIF(encodeGIF(full, 16, 16).data);
+  assert.deepEqual([packed.shared, packed.frames.map(entry => [entry.transparent, entry.colors, entry.rect])], [true, [[null, 256, [0, 0, 16, 16]], [null, 256, [7, 0, 2, 1]]]]);
+  for (const [position, frame] of full.entries()) assert.deepEqual(packed.frames[position].pixels, hexPixels(frame));
+  // Frames that need their own tables keep pixels with one more entry in their table. Frame 2 changes 20 pixels to a
+  // new colour (151 colours, so entry 151 keeps the rest of its rectangle); frame 3 changes every pixel to new colours.
+  const own = [0, 1, 2].map(f => ({ data: rgba(...Array.from({ length: 256 }, (_, i) => f === 2 ? [i % 150, 7, 200, 255] : f === 1 && (i < 10 || i >= 40 && i < 50) ? [250, 250, 250, 255] : [i % 150, 7, 100, 255])), duration: 100 }));
+  const split = encodeGIF(own, 16, 16), tables = decodeGIF(split.data);
+  assert.deepEqual([split.colors, tables.shared, tables.frames.map(entry => [entry.local, entry.transparent, entry.rect])], [301, false, [[true, null, [0, 0, 16, 16]], [true, 151, [0, 0, 16, 4]], [true, null, [0, 0, 16, 16]]]]);
+  for (const [position, frame] of own.entries()) assert.deepEqual(tables.frames[position].pixels, hexPixels(frame));
+  // A power of two (128 colours) would double the shared table for the spare entry: both layouts are tried, and both read back exactly.
+  const even = Array.from({ length: 3 }, (_, f) => ({ data: rgba(...Array.from({ length: 256 }, (_, i) => [(i + (i > 200 ? f : 0)) % 128, 1, 2, 255])), duration: 100 }));
+  const doubled = decodeGIF(encodeGIF(even, 16, 16).data);
+  for (const [position, frame] of even.entries()) assert.deepEqual(doubled.frames[position].pixels, hexPixels(frame));
 });
 test('an animation exports as a GIF with a default scale, notes about what GIF cannot keep, and named errors', async () => {
   const project = renderProject(JSON.parse(await readFile(path.join(root, 'examples', 'forest-spirit.json'), 'utf8')));
