@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>PixelForge · Sprite studio</title>
+  <title>Pixelbolt · Sprite studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/studio.css">
   <script type="module" src="/studio.js"></script>
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="/" aria-label="PixelForge home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h12v3h4v12h-4v3H4z" fill="currentColor"/><path d="M8 7h7v3h3v4h-7v4H8z" fill="#eef6e9"/></svg><span>PixelForge</span><span class="edition">Sprite studio</span></a>
+    <a class="brand" href="/" aria-label="Pixelbolt home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h12v3h4v12h-4v3H4z" fill="currentColor"/><path d="M8 7h7v3h3v4h-7v4H8z" fill="#eef6e9"/></svg><span>Pixelbolt</span><span class="edition">Sprite studio</span></a>
     <div class="header-actions"><span class="local"><i></i> Local workspace</span><button id="open" class="button quiet">Open project</button><button id="export" class="button primary">Export assets <span aria-hidden="true">↗</span></button></div>
     <input id="file" type="file" accept=".json,application/json" hidden>
   </header>
@@ -47,7 +47,7 @@
     </aside>
   </div>
   <dialog id="guide"><div class="dialog-header"><h2>From text to tiny worlds</h2><button id="guide-close" class="icon-button" aria-label="Close guide">✕</button></div><p>Each project is a JSON recipe. Add colors to the palette, then draw with text grids or pixel, line, rectangle and ellipse operations.</p><pre>{ "op": "grid", "x": 2, "y": 2,
-  "rows": [".gg.", "ghhg", ".gg."] }</pre><p>Each character names a palette color. A dot leaves the pixel untouched. In the editor Tab indents; press Escape and then Tab to move on with the keyboard. Save reusable grids as <code>symbols</code> and place them with <code>stamp</code>.</p><p>Reuse a previous frame with <code>from</code>, then draw the changes. Set each frame’s <code>duration</code> in milliseconds and group frames into named animations.</p><p>Open a project from your computer or try a sample on the left. Edits appear automatically. <strong>Save JSON</strong> keeps your editable recipe. <strong>Export assets</strong> downloads a ZIP ready for a game or web app, and <strong>GIF</strong> downloads the current animation at the current zoom for sharing.</p><p>Unsaved edits are kept as a draft in this browser and offered back the next time you open the studio at the same address. A draft is a safety net, not a file: use Save JSON to keep your work.</p><p class="guide-foot">Run <code>node bin/pixelforge.js help</code> for the command line, or <code>mcp</code> to connect an agent.</p></dialog>
+  "rows": [".gg.", "ghhg", ".gg."] }</pre><p>Each character names a palette color. A dot leaves the pixel untouched. In the editor Tab indents; press Escape and then Tab to move on with the keyboard. Save reusable grids as <code>symbols</code> and place them with <code>stamp</code>.</p><p>Reuse a previous frame with <code>from</code>, then draw the changes. Set each frame’s <code>duration</code> in milliseconds and group frames into named animations.</p><p>Open a project from your computer or try a sample on the left. Edits appear automatically. <strong>Save JSON</strong> keeps your editable recipe. <strong>Export assets</strong> downloads a ZIP ready for a game or web app, and <strong>GIF</strong> downloads the current animation at the current zoom for sharing.</p><p>Unsaved edits are kept as a draft in this browser and offered back the next time you open the studio at the same address. A draft is a safety net, not a file: use Save JSON to keep your work.</p><p class="guide-foot">Run <code>node bin/pixelbolt.js help</code> for the command line, or <code>mcp</code> to connect an agent.</p></dialog>
   <dialog id="frames-dialog" aria-labelledby="frames-title"><div class="dialog-header"><h2 id="frames-title">Frames for a video editor</h2><button id="frames-close" class="icon-button" aria-label="Close">✕</button></div>
     <p>Numbered PNG frames of the current animation, one per video frame, with alpha, enlarged by whole pixels. The ZIP holds a README with how to import them and the ffmpeg command for one video file.</p>
     <div class="frames-options"><label>Frame rate <select id="frames-fps"><option>24</option><option>25</option><option>29.97</option><option selected>30</option><option>60</option></select></label><label>Canvas <select id="frames-size"><option value="1080p" selected>1080p · 1920 × 1080</option><option value="4k">4K · 3840 × 2160</option><option value="720p">720p · 1280 × 720</option><option value="vertical">Vertical · 1080 × 1920</option><option value="square">Square · 1080 × 1080</option><option value="">The sprite at the current zoom</option></select></label></div>

@@ -20,7 +20,7 @@ export class Renderer {
     if (lighting) { this.n.fillStyle = '#8080ff'; this.n.fillRect(0, 0, VIEW_W, VIEW_H); this.e.clearRect(0, 0, VIEW_W, VIEW_H); this.e.fillStyle = '#000'; this.e.fillRect(0, 0, VIEW_W, VIEW_H); }
   }
   // (x, y) is where the frame's atlas anchor lands in world pixels (its top-left corner for frames without an
-  // anchor, such as tiles). PixelForge's drawFrame restores trimmed frames and mirrors flips around the source
+  // anchor, such as tiles). Pixelbolt's drawFrame restores trimmed frames and mirrors flips around the source
   // canvas; offscreen draws are culled against that canvas.
   draw(atlas, name, x, y, { flip = false, alpha = 1, lightPasses = true } = {}) {
     const entry = atlas.frames[name];

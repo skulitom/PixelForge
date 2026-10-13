@@ -1,4 +1,4 @@
-// Optional browser QA. Install Playwright separately; keep PixelForge dependency-free.
+// Optional browser QA. Install Playwright separately; keep Pixelbolt dependency-free.
 // node scripts/qa-emberfall.mjs C:/path/to/playwright/index.mjs [url]
 import {pathToFileURL} from 'node:url';
 import {mkdir,writeFile} from 'node:fs/promises';

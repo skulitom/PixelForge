@@ -68,10 +68,10 @@ export async function startStudio({ port = STUDIO_PORT, fallback = false, projec
           res.setHeader('Content-Disposition', `attachment; filename="${bundle.project.name}.zip"`);
           reply(200, 'application/zip', createZip(bundle.files)); return;
         }
-        // Frames for a video editor, built exactly as `pixelforge sequence` builds them, sent back as one ZIP.
+        // Frames for a video editor, built exactly as `pixelbolt sequence` builds them, sent back as one ZIP.
         if (body === null || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key => key !== 'project' && key !== 'sequence')) throw new PixelError('request', 'expected { "project": recipe, "sequence": options }');
         const { info, files } = createSequence(renderProject(body.project), body.sequence ?? {}), total = [...files.values()].reduce((sum, bytes) => sum + bytes.length, 0);
-        if (total > SEQUENCE_ZIP_BYTES) { reply(413, 'application/json', JSON.stringify({ error: `These frames come to ${Math.ceil(total / 1048576)} MB, more than the studio sends at once (${SEQUENCE_ZIP_BYTES / 1048576} MB). Use pixelforge sequence, which writes them to a folder.` })); return; }
+        if (total > SEQUENCE_ZIP_BYTES) { reply(413, 'application/json', JSON.stringify({ error: `These frames come to ${Math.ceil(total / 1048576)} MB, more than the studio sends at once (${SEQUENCE_ZIP_BYTES / 1048576} MB). Use pixelbolt sequence, which writes them to a folder.` })); return; }
         res.setHeader('Content-Disposition', `attachment; filename="${info.name}-frames.zip"`);
         res.setHeader('X-PixelForge-Sequence', JSON.stringify({ frames: info.frames, width: info.width, height: info.height, fps: info.fps.label, notes: info.notes.length }));
         reply(200, 'application/zip', createZip(new Map([...files].map(([name, bytes]) => [`${info.name}/${name}`, bytes])))); return;
@@ -89,6 +89,6 @@ export async function startStudio({ port = STUDIO_PORT, fallback = false, projec
   const listen = number => new Promise((resolve, reject) => { server.once('error', reject); server.listen(number, '127.0.0.1', () => { server.off('error', reject); resolve(); }); });
   await listen(port).catch(error => { if (!fallback || error.code !== 'EADDRINUSE') throw error; return listen(0); });
   // One write, so anything reading the output sees the whole message at once.
-  if (!quiet) console.log(`PixelForge studio: http://127.0.0.1:${server.address().port}\n${port && server.address().port !== port ? `Port ${port} is in use, so this studio has another address. A draft kept at the usual address is not shown here.\n` : ''}Press Ctrl+C to stop.`);
+  if (!quiet) console.log(`Pixelbolt studio: http://127.0.0.1:${server.address().port}\n${port && server.address().port !== port ? `Port ${port} is in use, so this studio has another address. A draft kept at the usual address is not shown here.\n` : ''}Press Ctrl+C to stop.`);
   return server;
 }

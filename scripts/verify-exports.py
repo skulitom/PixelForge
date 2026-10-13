@@ -1,4 +1,4 @@
-"""Independent developer check. Requires Pillow, never used by PixelForge itself."""
+"""Independent developer check. Requires Pillow, never used by Pixelbolt itself."""
 from pathlib import Path
 import base64
 import io
@@ -103,7 +103,7 @@ for row, entry in enumerate(diff['frames']):
                     assert cell.getpixel((x, y)) == tuple(raw[at:at + 4]), (entry['frame'], side, x, y)
 
 # Exercise actual MCP responses and decode canvas corrections after a real server restart.
-with tempfile.TemporaryDirectory(prefix='pixelforge-decode-') as temporary:
+with tempfile.TemporaryDirectory(prefix='pixelbolt-decode-') as temporary:
     assert Path(temporary).resolve().is_relative_to(Path(tempfile.gettempdir()).resolve())
     recipe = {
         'version': 1, 'name': 'painted', 'width': 3, 'height': 2,
@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix='pixelforge-decode-') as temporary:
             {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize', 'params': {'protocolVersion': '2025-11-25'}},
             {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {'name': name, 'arguments': arguments}}
         ]
-        response = subprocess.check_output(['node', 'bin/pixelforge.js', 'mcp', '--out', temporary],
+        response = subprocess.check_output(['node', 'bin/pixelbolt.js', 'mcp', '--out', temporary],
                                            input=''.join(json.dumps(m) + '\n' for m in messages).encode(), cwd=root)
         result = json.loads(response.splitlines()[-1])['result']
         assert not result.get('isError'), result
@@ -190,14 +190,14 @@ for name, expected in gifs.items():
         assert image.convert('RGBA').tobytes() == decoded.resize(image.size, Image.Resampling.NEAREST).tobytes(), (name, index)
 
 # An image sequence for a video editor. Pillow reads every numbered PNG; each must be the pose that is active when
-# that video frame starts (worked out here with fractions, apart from PixelForge), enlarged by whole pixels at its
+# that video frame starts (worked out here with fractions, apart from Pixelbolt), enlarged by whole pixels at its
 # place, with the alpha left alone. If ffmpeg is installed, the command the sequence prints must then make a video
 # with the same frame count, rate and size, whose alpha is exact and whose colours are within 3 of 255.
 from fractions import Fraction
 import shutil
 with tempfile.TemporaryDirectory() as temporary:
     out = Path(temporary) / 'sequence'
-    subprocess.check_output(['node', 'bin/pixelforge.js', 'sequence', 'examples/forest-spirit.json', '--fps', '29.97', '--size', '320x180',
+    subprocess.check_output(['node', 'bin/pixelbolt.js', 'sequence', 'examples/forest-spirit.json', '--fps', '29.97', '--size', '320x180',
                              '--align', 'bottom-left', '--offset', '12,-6', '--loops', '2', '--out', str(out)], cwd=root)
     info = json.loads((out / 'sequence.json').read_text(encoding='utf-8'))
     assert (info['fps']['numerator'], info['fps']['denominator'], info['width'], info['height']) == (30000, 1001, 320, 180)
@@ -236,7 +236,7 @@ with tempfile.TemporaryDirectory() as temporary:
     # The sequence folder back as a GIF at its own rate. Each frame must be its PNG with alpha below 128 cleared, and
     # each delay the step between frame starts rounded to centiseconds, worked out here with fractions.
     looped = Path(temporary) / 'sequence.gif'
-    report = json.loads(subprocess.check_output(['node', 'bin/pixelforge.js', 'gif-frames', str(out), '--fps', '29.97', '--loops', '3', '--out', str(looped)], cwd=root))
+    report = json.loads(subprocess.check_output(['node', 'bin/pixelbolt.js', 'gif-frames', str(out), '--fps', '29.97', '--loops', '3', '--out', str(looped)], cwd=root))
     image = Image.open(looped)
     assert image.n_frames == info['frames'] == report['frames'] and image.info.get('loop') == 2, (image.n_frames, image.info.get('loop'))
     starts = [(Fraction(k * 100 * 1001, 30000) + Fraction(1, 2)) // 1 for k in range(info['frames'] + 1)]
@@ -254,7 +254,7 @@ with tempfile.TemporaryDirectory() as temporary:
         frame = Image.new('RGB', (40, 30))
         frame.putdata([((i * 7 + number * 31) % 256, (i * 13 + number) % 256, number * 40 + i % 2) for i in range(200)] * 6)
         frame.save(many / f'flash_{number + 1:03d}.png')
-    report = json.loads(subprocess.check_output(['node', 'bin/pixelforge.js', 'gif-frames', str(many), '--fps', '25', '--out', str(Path(temporary) / 'many.gif')], cwd=root))
+    report = json.loads(subprocess.check_output(['node', 'bin/pixelbolt.js', 'gif-frames', str(many), '--fps', '25', '--out', str(Path(temporary) / 'many.gif')], cwd=root))
     assert (report['colors'], report['tables'], report['loops']) == (1200, 'per frame', 0), report
     image = Image.open(Path(temporary) / 'many.gif')
     for number in range(6):
@@ -263,7 +263,7 @@ with tempfile.TemporaryDirectory() as temporary:
     # Cover: 24 pixels cover 100 × 60 five times (120 × 120); from the top-right corner, 20 pixels are cut on the left
     # and 60 at the bottom. Pillow crops the same enlarged pose itself.
     cover = Path(temporary) / 'cover'
-    subprocess.check_output(['node', 'bin/pixelforge.js', 'sequence', 'examples/forest-spirit.json', '--fps', '10', '--size', '100x60',
+    subprocess.check_output(['node', 'bin/pixelbolt.js', 'sequence', 'examples/forest-spirit.json', '--fps', '10', '--size', '100x60',
                              '--fit', 'cover', '--align', 'top-right', '--out', str(cover)], cwd=root)
     covered = json.loads((cover / 'sequence.json').read_text(encoding='utf-8'))
     assert (covered['placement']['scale'], covered['placement']['x'], covered['placement']['visible']) == (5, -20, [4, 0, 20, 12]), covered['placement']

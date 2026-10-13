@@ -76,7 +76,7 @@ test('a stride picks the A or B frames of a strobe that evenly spaced samples wo
   assert.throws(() => inspectProject(project, { frames: Array(6).fill('*') }), /inspect\.frames: the names and patterns select 1152 frames; at most 1,024 cells/);
 });
 test('CLI inspect takes --step and --offset', () => {
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'inspect', 'examples/forest-spirit.json', ...args], { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'inspect', 'examples/forest-spirit.json', ...args], { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
   const view = JSON.parse(run('--animation', 'idle', '--step', '2', '--offset', '1').stdout);
   assert.deepEqual([view.cells.map(cell => cell.frame), view.sampling.positions], [['rise', 'blink', 'fall'], [1, 3, 5]]);
   assert.match(JSON.parse(run('--step', '2x').stderr).error, /--step expects a whole number/);

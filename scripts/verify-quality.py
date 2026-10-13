@@ -80,8 +80,8 @@ for y in range(h):
 fixture = out / 'all-filters.png'
 fixture.write_bytes(b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b''))
 assert Image.open(fixture).convert('RGBA').tobytes() == pixels
-subprocess.run(['node', 'bin/pixelforge.js', 'import', str(fixture), '--out', str(out / 'imported.json')], cwd=root, check=True, capture_output=True)
-subprocess.run(['node', 'bin/pixelforge.js', 'render', str(out / 'imported.json'), '--out', str(out / 'roundtrip')], cwd=root, check=True, capture_output=True)
+subprocess.run(['node', 'bin/pixelbolt.js', 'import', str(fixture), '--out', str(out / 'imported.json')], cwd=root, check=True, capture_output=True)
+subprocess.run(['node', 'bin/pixelbolt.js', 'render', str(out / 'imported.json'), '--out', str(out / 'roundtrip')], cwd=root, check=True, capture_output=True)
 assert Image.open(out / 'roundtrip' / 'frames' / 'idle.png').convert('RGBA').tobytes() == pixels
 report = {'checks': counts, 'evidence_directory': str(out)}
 (out / 'results.json').write_text(json.dumps(report, indent=2) + '\n')

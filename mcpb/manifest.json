@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.3",
-  "name": "pixelforge",
-  "display_name": "PixelForge",
+  "name": "pixelbolt",
+  "display_name": "Pixelbolt",
   "description": "Pixel art and sprite animation for agents: JSON recipes to PNG, APNG, GIF and sprite sheets.",
   "long_description": "Create, inspect and revise pixel art from editable JSON recipes. Export sprites, animations, atlases and scenes with eight local MCP tools. The server makes no network requests. Choose a workspace for local recipe references and generated artwork.",
   "author": {
@@ -10,17 +10,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/skulitom/PixelForge"
+    "url": "https://github.com/skulitom/Pixelbolt"
   },
-  "homepage": "https://github.com/skulitom/PixelForge#readme",
-  "documentation": "https://github.com/skulitom/PixelForge/blob/main/docs/agent-guide.md",
-  "support": "https://github.com/skulitom/PixelForge/issues",
+  "homepage": "https://github.com/skulitom/Pixelbolt#readme",
+  "documentation": "https://github.com/skulitom/Pixelbolt/blob/main/docs/agent-guide.md",
+  "support": "https://github.com/skulitom/Pixelbolt/issues",
   "server": {
     "type": "node",
-    "entry_point": "bin/pixelforge.js",
+    "entry_point": "bin/pixelbolt.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/bin/pixelforge.js", "mcp", "--root", "${user_config.workspace}", "--out", "${user_config.workspace}/PixelForge"]
+      "args": ["${__dirname}/bin/pixelbolt.js", "mcp", "--root", "${user_config.workspace}", "--out", "${user_config.workspace}/Pixelbolt"]
     }
   },
   "tools": [
@@ -41,7 +41,7 @@
     "workspace": {
       "type": "directory",
       "title": "Workspace",
-      "description": "Folder PixelForge may read recipe and PNG references from. Renders and revisions go in its PixelForge subfolder, created on first use. Choose a project folder to keep its files together.",
+      "description": "Folder Pixelbolt may read recipe and PNG references from. Renders and revisions go in its Pixelbolt subfolder, created on first use. Choose a project folder to keep its files together.",
       "required": true,
       "default": "${HOME}"
     }

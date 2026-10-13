@@ -5,6 +5,6 @@ Contact sheets, onion views, tile mosaics and early drafts saved while authoring
 Regenerate a sheet with the CLI, for example:
 
 ```sh
-node bin/pixelforge.js inspect showcase/tidewatch/art/recipes/keeper.json --animation walk-r --view onion --out walk-r-onion.png
-node bin/pixelforge.js scene showcase/tidewatch/art/scenes/tidewatch-headland-night.scene.json --out night-review
+node bin/pixelbolt.js inspect showcase/tidewatch/art/recipes/keeper.json --animation walk-r --view onion --out walk-r-onion.png
+node bin/pixelbolt.js scene showcase/tidewatch/art/scenes/tidewatch-headland-night.scene.json --out night-review
 ```

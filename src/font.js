@@ -3,7 +3,7 @@
 // below the baseline, so a line is 8 rows; the accent of a capital sits in the 2 rows above it. Letters and
 // punctuation are as wide as their ink (1 to 7 pixels: only © ® — Œ œ are wider than 5); digits are all 5 wide so that counters and timers do not
 // jitter. The ASCII letter, digit and basic punctuation shapes come from the Tidewatch showcase font; all of it is
-// original PixelForge artwork.
+// original Pixelbolt artwork.
 const SHAPES = {
   A: '.###.|#...#|#...#|#####|#...#|#...#|#...#', B: '####.|#...#|#...#|####.|#...#|#...#|####.', C: '.###.|#...#|#....|#....|#....|#...#|.###.',
   D: '####.|#...#|#...#|#...#|#...#|#...#|####.', E: '#####|#....|#....|####.|#....|#....|#####', F: '#####|#....|#....|####.|#....|#....|#....',

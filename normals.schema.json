@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "PixelForge normal pass",
+  "title": "Pixelbolt normal pass",
   "description": "Derives a lighting normal pass from a colour recipe and compiles it to an ordinary recipe aligned with it (same size, frame names and durations, animations and atlas layout), ready for a scene asset's normal and editable like any recipe. Each separate shape is rounded from its silhouette, lighter colours can be raised by detail, and every pixel takes the nearest of 17 directions: palette key 5 faces the viewer, the keypad digits 1–4 and 6–9 lean 30° the way they sit around 5, and q w e a d z x c lean 60° the same way.",
   "type": "object",
   "properties": {

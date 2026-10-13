@@ -1,6 +1,6 @@
 # Diorama study
 
-An original 3/4 top-down dungeon room in the "floating diorama" style: 8-pixel tiles, wall caps with front faces, a sunken pool fed by a waterfall, moss, props, torches and a 7×10 hero who walks in, strikes and breaks a pot. It began as a test of what that style asks of PixelForge ([feasibility report](../../docs/reports/diorama-feasibility-2026-10-07.md)) and now uses the features the test called for.
+An original 3/4 top-down dungeon room in the "floating diorama" style: 8-pixel tiles, wall caps with front faces, a sunken pool fed by a waterfall, moss, props, torches and a 7×10 hero who walks in, strikes and breaks a pot. It began as a test of what that style asks of Pixelbolt ([feasibility report](../../docs/reports/diorama-feasibility-2026-10-07.md)) and now uses the features the test called for.
 
 ![The study room at 4×](../../docs/images/diorama/room.png)
 
@@ -10,7 +10,7 @@ An original 3/4 top-down dungeon room in the "floating diorama" style: 8-pixel t
 
 ```sh
 node showcase/diorama/build.mjs --force    # writes art/; --check compares instead
-node bin/pixelforge.js preview showcase/diorama/art/room.scene.json
+node bin/pixelbolt.js preview showcase/diorama/art/room.scene.json
 ```
 
 `build.mjs` is the authoritative source. It writes `art/`, refusing to overwrite existing files unless you pass `--force`; `npm test` runs `--check`.

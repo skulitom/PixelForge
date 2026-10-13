@@ -14,7 +14,7 @@ import { startMCP } from '../src/mcp.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const temp = async (t, label) => {
-  const base = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(base, `pixelforge-${label}-`));
+  const base = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(base, `pixelbolt-${label}-`));
   t.after(async () => { assert.ok(dir.startsWith(base + path.sep)); await rm(dir, { recursive: true, force: true }); });
   return dir;
 };
@@ -121,7 +121,7 @@ test('the CLI compiles a normals source whose recipe file sits beside it, keepin
   await writeFile(path.join(dir, 'palette.json'), JSON.stringify({ k: '#808080' }));
   await writeFile(path.join(dir, 'art', 'ball.json'), JSON.stringify({ ...recipe(disc(9)), name: 'ball', palette: { $ref: '../palette.json' } }));
   await writeFile(path.join(dir, 'art', 'ball.normals.json'), JSON.stringify({ format: 'pixelforge-normals', version: 1, recipe: 'ball.json', bevel: 3 }));
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', ...args], { cwd: root, encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', ...args], { cwd: root, encoding: 'utf8' });
   const out = path.join(dir, 'art', 'ball-normal.json'), compiled = run('compile', path.join(dir, 'art', 'ball.normals.json'), '--out', out);
   assert.equal(compiled.status, 0, compiled.stderr);
   const result = JSON.parse(compiled.stdout), normal = JSON.parse(await readFile(out, 'utf8'));
@@ -148,7 +148,7 @@ test('MCP compiles a normals source from a saved revision and explains the norma
   assert.deepEqual([compiled.info.name, compiled.info.frames, compiled.info.metadata.detail], ['shape-normal', 1, 0]);
   assert.equal(compiled.result.content[1].mimeType, 'image/png');
   const topic = (await request('tools/call', { name: 'pixel_help', arguments: { topic: 'normals' } })).result;
-  assert.equal(JSON.parse(topic.content[0].text).title, 'PixelForge normal pass');
+  assert.equal(JSON.parse(topic.content[0].text).title, 'Pixelbolt normal pass');
   input.end(); await running;
 });
 

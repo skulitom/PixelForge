@@ -35,7 +35,7 @@ export function createRevisionStore(directory) {
     return id;
   }
   async function read(id) {
-    if (typeof id !== 'string' || !/^[a-f0-9]{12}$/.test(id)) fail('expected a 12-character revision id from a PixelForge response');
+    if (typeof id !== 'string' || !/^[a-f0-9]{12}$/.test(id)) fail('expected a 12-character revision id from a Pixelbolt response');
     const text = await readText(path.join(folder, `${id}.json`));
     if (text !== undefined) {
       if (digest(text) !== id) fail(`stored revision ${id} is damaged; send the original project again using a fresh output directory`);

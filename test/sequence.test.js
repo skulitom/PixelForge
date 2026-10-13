@@ -154,9 +154,9 @@ test('a scene becomes a shot: each frame is the scene at that moment, and still 
   for (const [options, where] of [[{ fps: 30, step: 2 }, 'sequence.step'], [{ fps: 30, animation: 'run' }, 'sequence.animation'], [{}, 'sequence.fps']]) assert.throws(() => createSceneSequence(scene, 'x', options), error => error.path === where, where);
 });
 test('CLI sequence writes a new folder for a recipe, an effects source and a scene, and never half of one', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-sequence-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-sequence-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
-  const run = (file, ...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'sequence', file, ...args], { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+  const run = (file, ...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'sequence', file, ...args], { cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
   const coin = run('examples/coin.json', '--fps', '30', '--size', '480x270', '--align', 'bottom', '--offset', '0,-4', '--out', path.join(dir, 'coin'));
   assert.equal(coin.status, 0, coin.stderr);
   const report = JSON.parse(coin.stdout);
@@ -178,11 +178,11 @@ test('CLI sequence writes a new folder for a recipe, an effects source and a sce
   assert.deepEqual((await readdir(dir)).sort(), ['coin', 'filled', 'shot', 'sparks']);
 });
 test('MCP render and scene tools write a sequence on request, beside what they already write', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-sequence-mcp-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-sequence-mcp-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const call = (directory, name, args) => {
     const messages = [{ jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } }];
-    const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'mcp', '--out', directory], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    const result = spawnSync(process.execPath, ['bin/pixelbolt.js', 'mcp', '--out', directory], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
     assert.equal(result.status, 0, result.stderr);
     return JSON.parse(result.stdout.trim().split('\n')[1]).result;
   };
@@ -223,13 +223,13 @@ test('validate --fps lists durations off the video frame grid and agrees with th
     assert.equal(written.loop.passFrames, predicted.videoFrames);
   }
   assert.throws(() => frameGrid(project, 'fast'), error => error instanceof PixelError && error.path === 'validate.fps');
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-validate-fps-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-validate-fps-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
-  const cli = spawnSync(process.execPath, ['bin/pixelforge.js', 'validate', 'examples/caption.json', '--fps', '60'], { cwd: root, encoding: 'utf8' });
+  const cli = spawnSync(process.execPath, ['bin/pixelbolt.js', 'validate', 'examples/caption.json', '--fps', '60'], { cwd: root, encoding: 'utf8' });
   assert.deepEqual(JSON.parse(cli.stdout).frameGrid.notes, []);
-  assert.equal(JSON.parse(spawnSync(process.execPath, ['bin/pixelforge.js', 'validate', 'examples/caption.json'], { cwd: root, encoding: 'utf8' }).stdout).frameGrid, undefined);
+  assert.equal(JSON.parse(spawnSync(process.execPath, ['bin/pixelbolt.js', 'validate', 'examples/caption.json'], { cwd: root, encoding: 'utf8' }).stdout).frameGrid, undefined);
   const messages = [{ jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'pixel_validate', arguments: { project: recipe, fps: '29.97' } } }];
-  const mcp = spawnSync(process.execPath, ['bin/pixelforge.js', 'mcp', '--out', dir], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8' });
+  const mcp = spawnSync(process.execPath, ['bin/pixelbolt.js', 'mcp', '--out', dir], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8' });
   const validated = JSON.parse(JSON.parse(mcp.stdout.trim().split('\n')[1]).result.content[0].text);
   assert.deepEqual([validated.frameGrid.fps, validated.frameGrid.numerator, validated.frameGrid.offGrid.length], ['29.97', 30000, 3]);
 });

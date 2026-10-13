@@ -4,7 +4,7 @@
 // over stdio, the connect helper and its one-line commands, that nothing is written to the user's profile or temp
 // folders, and that nothing is left running afterwards. The runtime checks need the system the archive was built
 // for; elsewhere only the contents are checked.
-//   node scripts/verify-studio.mjs <PixelForgeStudio-...zip|.tar.gz> [--allow-dev] [--keep]
+//   node scripts/verify-studio.mjs <PixelboltStudio-...zip|.tar.gz> [--allow-dev] [--keep]
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { readFile, writeFile, mkdir, mkdtemp, readdir, rm, realpath, access, stat, chmod, cp, symlink } from 'node:fs/promises';
@@ -15,13 +15,13 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { NODE_VERSION, TARGETS, readZip, readTarGz, sha256 } from './build-studio.mjs';
 
-const SHARED = ['START HERE.txt', 'first-edit.json', 'BUILD-INFO.txt', 'THIRD-PARTY-NOTICES.txt', 'runtime/NODE-LICENSE.txt', 'launcher/studio.mjs', 'launcher/connect.mjs', 'launcher/layout.mjs', 'app/package.json', 'app/LICENSE', 'app/bin/pixelforge.js'];
+const SHARED = ['START HERE.txt', 'first-edit.json', 'BUILD-INFO.txt', 'THIRD-PARTY-NOTICES.txt', 'runtime/NODE-LICENSE.txt', 'launcher/studio.mjs', 'launcher/connect.mjs', 'launcher/layout.mjs', 'app/package.json', 'app/LICENSE', 'app/bin/pixelbolt.js', 'app/bin/pixelforge.js'];
 // What each system starts: the studio launcher, the command line, the connect helper, the runtime, and the names
 // START HERE must mention. On macOS the .command files are what Finder runs on a double-click.
 const SYSTEMS = {
-  windows: { studio: 'PixelForge Studio.cmd', cli: 'pixelforge.cmd', helper: 'Connect your agent.cmd', node: 'runtime/node.exe', scripts: [], named: ['PixelForge Studio.cmd', 'Connect your agent.cmd', 'first-edit.json'] },
-  macos: { studio: 'pixelforge-studio', cli: 'pixelforge', helper: 'connect-your-agent', node: 'runtime/node', scripts: ['PixelForge Studio.command', 'Connect your agent.command'], named: ['PixelForge Studio.command', 'Connect your agent.command', 'pixelforge-studio', 'connect-your-agent', 'first-edit.json'] },
-  linux: { studio: 'pixelforge-studio', cli: 'pixelforge', helper: 'connect-your-agent', node: 'runtime/node', scripts: [], named: ['pixelforge-studio', 'connect-your-agent', 'first-edit.json'] }
+  windows: { studio: 'Pixelbolt Studio.cmd', cli: 'pixelbolt.cmd', alias: 'pixelforge.cmd', helper: 'Connect your agent.cmd', node: 'runtime/node.exe', scripts: [], named: ['Pixelbolt Studio.cmd', 'Connect your agent.cmd', 'first-edit.json'] },
+  macos: { studio: 'pixelbolt-studio', cli: 'pixelbolt', alias: 'pixelforge', helper: 'connect-your-agent', node: 'runtime/node', scripts: ['Pixelbolt Studio.command', 'Connect your agent.command'], named: ['Pixelbolt Studio.command', 'Connect your agent.command', 'pixelbolt-studio', 'connect-your-agent', 'first-edit.json'] },
+  linux: { studio: 'pixelbolt-studio', cli: 'pixelbolt', alias: 'pixelforge', helper: 'connect-your-agent', node: 'runtime/node', scripts: [], named: ['pixelbolt-studio', 'connect-your-agent', 'first-edit.json'] }
 };
 const FORBIDDEN = ['demo', 'showcase', 'test', 'scripts', 'packaging', 'output', 'node_modules', '.git', '.github'];
 const COMMANDS = ['init', 'validate', 'inspect', 'patch', 'render', 'gif'];
@@ -54,7 +54,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
   let toolbox = null;
   if (windows) env.PATH = [system, systemRoot, path.join(system, 'Wbem'), path.dirname(powershell)].join(';');
   else {
-    toolbox = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-path-'));
+    toolbox = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-path-'));
     for (const tool of ['dirname', 'readlink']) await symlink(spawnSync('/bin/sh', ['-c', `command -v ${tool}`], { env: { PATH: '/usr/bin:/bin' }, encoding: 'utf8' }).stdout.trim(), path.join(toolbox, tool));
     env.PATH = toolbox;
   }
@@ -75,7 +75,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       assert.deepEqual([...new Set([...entries.keys()].map(file => file.split('/')[0]))], [name]); return `${entries.size} files`;
     });
     // mkdtemp keeps the prefix, so every later path carries the space, the accent and (off Windows) the apostrophe.
-    workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), windows ? 'PixelForge Studio vérifié ' : 'PixelForge Studio d\'été ')));
+    workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), windows ? 'Pixelbolt Studio vérifié ' : 'Pixelbolt Studio d\'été ')));
     dir = path.join(workspace, name);
     // Each system's own reader does the extracting where there is one for this kind of archive.
     const own = windows && zip ? 'Windows\' ZIP reader' : !windows && !zip ? 'the system\'s tar' : null;
@@ -91,12 +91,12 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
   const info = Object.fromEntries((await read('BUILD-INFO.txt').catch(() => '')).split(/\r?\n/).map(line => /^([^:]+): (.*)$/.exec(line)?.slice(1)).filter(Boolean));
   const start = await read('START HERE.txt').catch(() => ''), pkg = JSON.parse(await read('app/package.json').catch(() => '{}'));
   const target = TARGETS[info.Target], kind = target?.os ?? 'windows', names = SYSTEMS[kind], unix = kind !== 'windows', node = path.join(dir, names.node);
-  const executables = unix ? [names.studio, names.cli, names.helper, ...names.scripts, names.node, 'app/bin/pixelforge.js'] : [];
+  const executables = unix ? [names.studio, names.cli, names.alias, names.helper, ...names.scripts, names.node, 'app/bin/pixelbolt.js', 'app/bin/pixelforge.js'] : [];
 
   log('Contents');
   await check('the launcher, command line, helper, START HERE, BUILD-INFO, notices and runtime are present', () => {
     assert.ok(target, `BUILD-INFO names no known target: ${info.Target}`);
-    assert.deepEqual([...SHARED, names.studio, names.cli, names.helper, names.node, ...names.scripts].filter(file => !files.includes(file)), []);
+    assert.deepEqual([...SHARED, names.studio, names.cli, names.alias, names.helper, names.node, ...names.scripts].filter(file => !files.includes(file)), []);
     return `${info.Target}`;
   });
   await check('app/ holds every entry of package.json\'s files list and no demo, test or development script', () => {
@@ -104,15 +104,15 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     assert.deepEqual(files.filter(file => FORBIDDEN.some(folder => file.startsWith(`${folder}/`) || file.startsWith(`app/${folder}/`)) || /\.test\.[cm]?js$/.test(file)), []);
     return `${files.filter(file => file.startsWith('app/')).length} files`;
   });
-  await check('BUILD-INFO names the PixelForge version, the source commit and the Node.js runtime with its SHA-256', async () => {
-    assert.equal(info['PixelForge version'], pkg.version);
+  await check('BUILD-INFO names the Pixelbolt version, the source commit and the Node.js runtime with its SHA-256', async () => {
+    assert.equal(info['Pixelbolt version'], pkg.version);
     assert.match(info['Source commit'], allowDev ? /^([0-9a-f]{40}|unknown)/ : /^[0-9a-f]{40}$/, 'a release build names a clean commit; pass --allow-dev to accept a development build');
     assert.equal(info['Node.js program SHA-256'], sha256(await readFile(node)));
     if (pinned) { assert.equal(info['Node.js version'], NODE_VERSION); assert.equal(info['Node.js program SHA-256'], target.binarySha256); assert.equal(info['Node.js archive SHA-256'], target.sha256); assert.equal(info['Node.js origin'], target.url); }
-    return `PixelForge ${pkg.version} at ${info['Source commit'].slice(0, 12)}, Node.js ${info['Node.js version']}`;
+    return `Pixelbolt ${pkg.version} at ${info['Source commit'].slice(0, 12)}, Node.js ${info['Node.js version']}`;
   });
   if (unix) await check('the scripts are plain ASCII shell scripts with LF line endings, marked executable', async () => {
-    for (const file of [names.studio, names.cli, names.helper, ...names.scripts]) {
+    for (const file of [names.studio, names.cli, names.alias, names.helper, ...names.scripts]) {
       const text = await readFile(path.join(dir, file), 'latin1');
       assert.ok(text.startsWith('#!/bin/sh\n') && /^[\x09\x0a\x20-\x7e]*$/.test(text), file);
     }
@@ -132,7 +132,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
   });
   await check('START HERE is written for this system and says in one line where the Emberfall and Tidewatch demos are', () => {
     assert.ok(start.split(/\r?\n/).some(line => /Emberfall/.test(line) && /Tidewatch/.test(line) && /GitHub/.test(line)));
-    assert.match(start, /https:\/\/github\.com\/skulitom\/PixelForge/); assert.doesNotMatch(start, /^#/m);
+    assert.match(start, /https:\/\/github\.com\/skulitom\/Pixelbolt/); assert.doesNotMatch(start, /^#/m);
     for (const name of names.named) assert.ok(start.includes(name), `START HERE does not mention ${name}`);
     for (const other of Object.values(SYSTEMS).flatMap(system => [system.studio, system.helper, ...system.scripts]).filter(name => !names.named.includes(name))) assert.ok(!start.includes(`"${other}"`), `START HERE mentions ${other}, which is not in this build`);
   });
@@ -140,7 +140,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
   // Everything the build itself runs gets per-user and temp folders inside an empty trap, which must stay empty: the
   // build writes nowhere outside its own folder. PowerShell runs and this script's own helpers keep `env`, because
   // Windows PowerShell caches module data in the profile by itself.
-  const profile = kind === host ? await mkdtemp(path.join(os.tmpdir(), 'pixelforge-profile-trap-')) : null, runEnv = { ...env };
+  const profile = kind === host ? await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-profile-trap-')) : null, runEnv = { ...env };
   if (profile) for (const key of windows ? ['USERPROFILE', 'HOME', 'APPDATA', 'LOCALAPPDATA', 'TEMP', 'TMP'] : ['HOME', 'TMPDIR', 'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME']) {
     // Windows reads environment names in any case, so no second spelling may keep pointing at the real folder.
     for (const name of Object.keys(runEnv)) if (name.toUpperCase() === key) delete runEnv[name];
@@ -177,7 +177,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       launchers.push(child);
       for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => {
         text += chunk;
-        const address = /PixelForge studio: (http:\/\/127\.0\.0\.1:(\d+))/.exec(text);
+        const address = /Pixelbolt studio: (http:\/\/127\.0\.0\.1:(\d+))/.exec(text);
         if (address && /Press Ctrl\+C to stop\./.test(text)) { clearTimeout(timer); resolve({ child, url: address[1], port: Number(address[2]), text }); }
       });
       child.once('error', reject); child.once('exit', code => { clearTimeout(timer); reject(new Error(`the launcher exited with code ${code}:\n${text}`)); });
@@ -285,7 +285,14 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     }
 
     log('Command line');
-    const lines = start.split(/\r?\n/).map(line => (windows ? /^ {4}(\.\\pixelforge .+)$/ : /^ {4}(\.\/pixelforge .+)$/).exec(line)?.[1]).filter(Boolean);
+    await check('the legacy command has the same help, validation and failure output', () => {
+      for (const args of [['help'], ['validate', 'app/examples/forest-spirit.json'], ['unknown']]) {
+        const current = script(names.cli, args), legacy = script(names.alias, args);
+        assert.equal(current.status, args[0] === 'unknown' ? 1 : 0, current.stderr);
+        assert.deepEqual([legacy.status, legacy.stdout, legacy.stderr], [current.status, current.stdout, current.stderr]);
+      }
+    });
+    const lines = start.split(/\r?\n/).map(line => (windows ? /^ {4}(\.\\pixelbolt .+)$/ : /^ {4}(\.\/pixelbolt .+)$/).exec(line)?.[1]).filter(Boolean);
     await check('START HERE gives init, validate, inspect, patch, render and gif', () => assert.deepEqual(lines.map(line => line.split(' ')[1]), COMMANDS));
     for (const line of lines) await check(line, () => {
       const run = shell(line); assert.equal(run.status, 0, run.stderr || run.stdout); assert.equal(JSON.parse(run.stdout).ok, true);
@@ -322,13 +329,13 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
     await check(`the same commands work from ${other[0]}`, () => {
       const run = other[1](lines[1]);
       assert.equal(run.status, 0, run.stderr || String(run.error)); assert.equal(JSON.parse(run.stdout).ok, true);
-      assert.match(shell(`${lines[0].split(' ')[0]} help`).stdout, /pixelforge init/);
+      assert.match(shell(`${lines[0].split(' ')[0]} help`).stdout, /pixelbolt init/);
     });
     if (unix) await check('the command line also works through a symbolic link from another folder', async () => {
-      const bin = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-link-'));
+      const bin = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-link-'));
       try {
-        await symlink(path.join(dir, names.cli), path.join(bin, 'pixelforge'));
-        const run = spawnSync(path.join(bin, 'pixelforge'), ['validate', path.join(dir, 'hero.pixel.json')], { cwd: bin, env: runEnv, encoding: 'utf8' });
+        await symlink(path.join(dir, names.cli), path.join(bin, 'pixelbolt'));
+        const run = spawnSync(path.join(bin, 'pixelbolt'), ['validate', path.join(dir, 'hero.pixel.json')], { cwd: bin, env: runEnv, encoding: 'utf8' });
         assert.equal(run.status, 0, run.stderr); assert.equal(JSON.parse(run.stdout).ok, true);
       } finally { await rm(bin, { recursive: true, force: true }); }
     });
@@ -345,7 +352,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       assert.deepEqual(settings.server.args.slice(1), ['mcp', '--out', path.join(dir, 'output')]);
       assert.deepEqual(settings.clients.map(client => client.id), ['claude-code', 'claude-desktop', 'codex', 'cursor']);
       for (const client of settings.clients) {
-        const parsed = client.format === 'json' ? JSON.parse(client.text).mcpServers.pixelforge
+        const parsed = client.format === 'json' ? JSON.parse(client.text).mcpServers.pixelbolt
           : { command: JSON.parse(/^command = (.*)$/m.exec(client.text)[1]), args: JSON.parse(/^args = (.*)$/m.exec(client.text)[1]) };
         assert.deepEqual(parsed, settings.server, client.name);
         assert.ok(text.stdout.replace(/\r\n/g, '\n').includes(`${client.name} `) && text.stdout.replace(/\r\n/g, '\n').includes(client.text), `${client.name} is missing from the printed settings`);
@@ -359,7 +366,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
       const commands = Object.fromEntries(settings.clients.map(client => [client.id, client.command]));
       assert.deepEqual([commands['claude-desktop'], commands.cursor], [null, null]);
       if (windows && /["%$`]/.test(dir)) { assert.deepEqual([commands['claude-code'], commands.codex], [null, null]); return 'none offered: the folder path has a character that shells treat specially'; }
-      const stand = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-shims-')), record = path.join(stand, 'record.cjs'), seen = path.join(stand, 'seen.json');
+      const stand = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-shims-')), record = path.join(stand, 'record.cjs'), seen = path.join(stand, 'seen.json');
       try {
         await writeFile(record, 'require("node:fs").writeFileSync(process.env.PF_SEEN, JSON.stringify(process.argv.slice(2)));\n');
         for (const kindOf of windows ? ['cmd', 'ps1'] : ['sh']) await mkdir(path.join(stand, kindOf));
@@ -375,7 +382,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
           zsh: (line, shims) => spawnSync('/bin/zsh', ['-c', line], { cwd: os.tmpdir(), env: shims, encoding: 'utf8', timeout: 60000 }),
           bash: (line, shims) => spawnSync('/bin/bash', ['-c', line], { cwd: os.tmpdir(), env: shims, encoding: 'utf8', timeout: 60000 })
         };
-        const to = [settings.server.command, ...settings.server.args], expected = { 'claude-code': ['mcp', 'add', '--scope', 'user', 'pixelforge', '--', ...to], codex: ['mcp', 'add', 'pixelforge', '--', ...to] };
+        const to = [settings.server.command, ...settings.server.args], expected = { 'claude-code': ['mcp', 'add', '--scope', 'user', 'pixelbolt', '--', ...to], codex: ['mcp', 'add', 'pixelbolt', '--', ...to] };
         for (const [name, shim] of windows ? [['Command Prompt', 'cmd'], ['PowerShell', 'cmd'], ['PowerShell', 'ps1']] : [['sh', 'sh'], [other[0], 'sh']]) for (const id of ['claude-code', 'codex']) {
           await rm(seen, { force: true });
           const run = shells[name](commands[id], { ...(name === 'PowerShell' ? env : runEnv), PATH: `${path.join(stand, shim)}${path.delimiter}${env.PATH}`, PF_NODE: node, PF_RECORD: record, PF_SEEN: seen });
@@ -429,7 +436,7 @@ export async function verifyStudio({ archive, dir, pinned = true, allowDev = fal
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2), archive = args.find(argument => !argument.startsWith('--'));
-  if (!archive || args.some(argument => argument.startsWith('--') && !['--allow-dev', '--keep'].includes(argument))) { console.error('Usage: node scripts/verify-studio.mjs <PixelForgeStudio-...zip|.tar.gz> [--allow-dev] [--keep]'); process.exit(2); }
+  if (!archive || args.some(argument => argument.startsWith('--') && !['--allow-dev', '--keep'].includes(argument))) { console.error('Usage: node scripts/verify-studio.mjs <PixelboltStudio-...zip|.tar.gz> [--allow-dev] [--keep]'); process.exit(2); }
   const outcome = await verifyStudio({ archive, allowDev: args.includes('--allow-dev'), keep: args.includes('--keep') }).catch(error => { console.error(error.stack); return { ok: false, complete: true }; });
   // A run that could not exercise the build is not a pass.
   process.exitCode = !outcome.ok ? 1 : outcome.complete ? 0 : 3;

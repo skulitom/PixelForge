@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'skulitom/PixelForge'
+    if: github.repository == 'skulitom/Pixelbolt'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -59,21 +59,21 @@ jobs:
           test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
       - run: npm test
       - run: node scripts/build-mcpb.mjs --check
-      - run: node scripts/verify-mcpb.mjs dist/mcpb/pixelforge.mcpb
+      - run: node scripts/verify-mcpb.mjs dist/mcpb/pixelbolt.mcpb
       - run: npx --yes @anthropic-ai/mcpb@2.1.2 validate dist/mcpb/manifest.json
       - name: Write installable registry entry
-        run: node scripts/build-mcpb.mjs --registry-entry --tag "$RELEASE_TAG" --bundle dist/mcpb/pixelforge.mcpb
+        run: node scripts/build-mcpb.mjs --registry-entry --tag "$RELEASE_TAG" --bundle dist/mcpb/pixelbolt.mcpb
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: dist/mcpb/pixelforge.mcpb
+          subject-path: dist/mcpb/pixelbolt.mcpb
       - name: Upload MCPB and registry entry
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: pixelforge-mcpb
+          name: pixelbolt-mcpb
           path: |
-            dist/mcpb/pixelforge.mcpb
-            dist/mcpb/pixelforge.mcpb.sha256
+            dist/mcpb/pixelbolt.mcpb
+            dist/mcpb/pixelbolt.mcpb.sha256
             dist/mcpb/server.registry.json
           if-no-files-found: error
       - name: Publish GitHub release without replacing assets
@@ -90,7 +90,7 @@ jobs:
             mkdir dist/mcpb/existing
             missing=()
             # Check all existing assets before uploading any missing ones. Never use --clobber.
-            for asset in pixelforge.mcpb pixelforge.mcpb.sha256; do
+            for asset in pixelbolt.mcpb pixelbolt.mcpb.sha256; do
               if jq -e --arg name "$asset" '.assets | any(.name == $name)' dist/mcpb/release.json > /dev/null; then
                 gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p "$asset" -D dist/mcpb/existing
                 expected=$(sha256sum "dist/mcpb/$asset" | cut -d ' ' -f 1)
@@ -112,8 +112,8 @@ jobs:
               gh release edit "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" --draft=false "--latest=$latest"
             fi
           else
-            gh release create "$RELEASE_TAG" dist/mcpb/pixelforge.mcpb dist/mcpb/pixelforge.mcpb.sha256 \
-              -R "$GITHUB_REPOSITORY" --verify-tag --title "PixelForge $RELEASE_TAG" \
+            gh release create "$RELEASE_TAG" dist/mcpb/pixelbolt.mcpb dist/mcpb/pixelbolt.mcpb.sha256 \
+              -R "$GITHUB_REPOSITORY" --verify-tag --title "Pixelbolt $RELEASE_TAG" \
               --notes-file mcpb/RELEASE_NOTES.md --generate-notes "--latest=$latest"
           fi
           printf 'Release %s: MCPB and checksum attached. Test the downloaded bundle before dispatching Publish to MCP Registry.\n' "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"

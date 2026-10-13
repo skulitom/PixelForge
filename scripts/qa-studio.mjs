@@ -35,7 +35,7 @@ if (!program) { console.log('No Chromium-based browser (Edge or Chrome) was foun
 
 const out = options.out ? path.resolve(options.out) : null, results = [], notes = [];
 if (out) await mkdir(out); else await mkdir(path.join(root, 'output', 'studio-qa'), { recursive: true });
-const kept = out ?? await mkdtemp(path.join(root, 'output', 'studio-qa', 'run-')), profile = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-browser-'));
+const kept = out ?? await mkdtemp(path.join(root, 'output', 'studio-qa', 'run-')), profile = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-browser-'));
 const check = async (name, run) => {
   try { const detail = await run(); results.push({ name, ok: true }); console.log(`  ok    ${name}${detail ? ` (${detail})` : ''}`); }
   catch (error) { results.push({ name, ok: false }); console.log(`  FAIL  ${name}\n        ${String(error.message).replace(/\n/g, '\n        ')}`); }
@@ -155,7 +155,7 @@ try {
 
   console.log('Samples and playback');
   await check('the studio loads with its samples listed and counted, and the first one drawn', async () => {
-    assert.equal(await evaluate('document.title'), 'PixelForge · Sprite studio');
+    assert.equal(await evaluate('document.title'), 'Pixelbolt · Sprite studio');
     assert.ok(samples.length >= 7); assert.equal(await text('example-count'), String(samples.length).padStart(2, '0'));
     assert.equal(await evaluate(`document.getElementById('error').hidden`), true); assert.ok((await canvas()).drawn > 0);
     await studio.shot('wide'); return `${samples.length} samples`;
@@ -283,7 +283,7 @@ try {
     await click('#frames'); await until(open, 'the frames dialog');
     await choose('frames-fps', '24'); await choose('frames-size', '720p'); await studio.shot('frames-dialog');
     const call = await text('frames-call');
-    assert.ok(call.startsWith(`pixelforge sequence forest-spirit.pixel.json --fps 24 --size 720p --animation ${animation} --out frames\n`), call);
+    assert.ok(call.startsWith(`pixelbolt sequence forest-spirit.pixel.json --fps 24 --size 720p --animation ${animation} --out frames\n`), call);
     assert.ok(call.includes(`pixel_render { "revision": "…", "sequence": {"fps":"24","animation":"${animation}","size":"720p"} }`), call);
     const zip = await download(() => click('#frames-export')), entries = readZip(await readFile(zip)), info = JSON.parse(entries.get(`${base}/sequence.json`).read().toString());
     const pictures = [...entries.keys()].filter(name => name.endsWith('.png')), first = entries.get(`${base}/${base}_0001.png`).read();

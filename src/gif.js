@@ -63,7 +63,7 @@ function indexFrame(data, area, background, describe) {
     }
     if (lastIndex <= 256) wide[i] = lastIndex;
   }
-  if (colors.size + (transparent ? 1 : 0) > 256) throw new PixelError('gif', `${describe()} uses ${colors.size} colours${transparent ? ' beside transparency' : ''}; a GIF frame holds 256 and PixelForge does not quantize. Reduce the colours${background ? '' : ', or blend onto a background if partial alpha causes them'}.`);
+  if (colors.size + (transparent ? 1 : 0) > 256) throw new PixelError('gif', `${describe()} uses ${colors.size} colours${transparent ? ' beside transparency' : ''}; a GIF frame holds 256 and Pixelbolt does not quantize. Reduce the colours${background ? '' : ', or blend onto a background if partial alpha causes them'}.`);
   const indices = new Uint8Array(area), shift = transparent ? 0 : 1;
   for (let i = 0; i < area; i++) indices[i] = wide[i] - shift;
   return { colors: [...colors.keys()], indices, transparent, partialAlpha };

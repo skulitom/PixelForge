@@ -1,7 +1,7 @@
-// Exports every Tidewatch recipe through PixelForge's own reference resolver, renderer, atlas packer and PNG/APNG
+// Exports every Tidewatch recipe through Pixelbolt's own reference resolver, renderer, atlas packer and PNG/APNG
 // encoders. Output: game/assets/<name>.png + <name>.json (TexturePacker-style atlases with durations, animations,
 // anchors, marker points and trimmed rectangles), aligned -normal/-emissive atlases, gallery contact sheets and
-// APNG previews, and a copy of PixelForge's browser runtime, autotile masks and the craft helpers they import.
+// APNG previews, and a copy of Pixelbolt's browser runtime, autotile masks and the craft helpers they import.
 // Usage: node tools/build-assets.mjs [--check]   (--check compares without writing)
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -31,7 +31,7 @@ function emit(file, data) {
 }
 const manifest = {};
 for (const name of RECIPES) {
-  // Recipes link art/palette.json; resolve it the way the PixelForge CLI does.
+  // Recipes link art/palette.json; resolve it the way the Pixelbolt CLI does.
   const file = path.join(root, 'art/recipes', `${name}.json`);
   const { document: recipe } = await resolveReferences(JSON.parse(readFileSync(file, 'utf8')), { baseDir: path.dirname(file) });
   const project = renderProject(recipe), atlas = buildAtlas(project);
@@ -51,7 +51,7 @@ for (const name of RECIPES) {
   }
 }
 emit(path.join(out, 'font.map.json'), readFileSync(path.join(root, 'art/recipes/font.map.json')));
-// The game server only serves game/, so the PixelForge modules the game imports are copied beside its code
+// The game server only serves game/, so the Pixelbolt modules the game imports are copied beside its code
 // (autotile.js imports craft.js).
 for (const module of ['runtime.js', 'autotile.js', 'craft.js']) emit(path.join(root, 'game/src/pixelforge', module), readFileSync(new URL(`../../../src/${module}`, import.meta.url)));
 emit(path.join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

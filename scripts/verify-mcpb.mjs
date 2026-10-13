@@ -1,5 +1,5 @@
 // Smoke-test only the bundle's files, from an unrelated cwd and an initially absent workspace.
-// node scripts/verify-mcpb.mjs dist/mcpb/pixelforge.mcpb
+// node scripts/verify-mcpb.mjs dist/mcpb/pixelbolt.mcpb
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile, writeFile, mkdir, mkdtemp, readdir, realpath, rm, stat } from 'node:fs/promises';
@@ -15,12 +15,14 @@ const inside = (base, file) => { const relative = path.relative(base, file); ret
 export function checkManifest(manifest, pkg) {
   for (const key of ['name', 'version', 'description', 'display_name']) assert.ok(typeof manifest[key] === 'string' && manifest[key], `manifest.${key} is required`);
   assert.equal(manifest.manifest_version, '0.3', 'manifest_version must be 0.3');
-  assert.equal(manifest.name, 'pixelforge');
+  assert.equal(manifest.name, 'pixelbolt');
+  assert.equal(manifest.display_name, 'Pixelbolt');
+  assert.equal(pkg.name, 'pixelbolt');
   assert.equal(manifest.version, pkg.version, 'manifest version must equal bundled package.json version');
   assert.match(manifest.version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
   assert.ok(manifest.author?.name, 'manifest.author.name is required');
   assert.equal(manifest.server?.type, 'node');
-  assert.equal(manifest.server.entry_point, 'bin/pixelforge.js');
+  assert.equal(manifest.server.entry_point, 'bin/pixelbolt.js');
   assert.equal(manifest.server.mcp_config?.command, 'node');
   assert.ok(Array.isArray(manifest.server.mcp_config.args), 'manifest server args are required');
   assert.equal(manifest.user_config?.workspace?.type, 'directory');
@@ -35,10 +37,10 @@ export function checkManifest(manifest, pkg) {
 
 export async function verifyMcpb(bundle) {
   const entries = readZip(await readFile(bundle));
-  for (const file of ['manifest.json', 'package.json', 'bin/pixelforge.js']) assert.ok(entries.has(file), `Bundle is missing ${file}`);
+  for (const file of ['manifest.json', 'package.json', 'bin/pixelbolt.js', 'bin/pixelforge.js']) assert.ok(entries.has(file), `Bundle is missing ${file}`);
   const manifest = JSON.parse(entries.get('manifest.json').read()), pkg = JSON.parse(entries.get('package.json').read());
   checkManifest(manifest, pkg);
-  const tempRoot = path.resolve(os.tmpdir()), temp = await mkdtemp(path.join(tempRoot, 'pixelforge-mcpb-'));
+  const tempRoot = path.resolve(os.tmpdir()), temp = await mkdtemp(path.join(tempRoot, 'pixelbolt-mcpb-'));
   let child, closed, timer;
   try {
     const extension = path.join(temp, 'extension'), workspace = path.join(temp, 'new-workspace'), cwd = path.join(temp, 'cwd');
@@ -97,13 +99,14 @@ export async function verifyMcpb(bundle) {
       assert.ok(Array.isArray(result?.content), `${name} returned no content`);
       return result;
     };
-    const initialized = await request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'pixelforge-mcpb-smoke', version: '1.0.0' } });
+    const initialized = await request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'pixelbolt-mcpb-smoke', version: '1.0.0' } });
     assert.equal(initialized.serverInfo.version, pkg.version);
+    assert.equal(initialized.serverInfo.name, 'pixelbolt');
     send({ method: 'notifications/initialized' });
     const listed = await request('tools/list', {});
     assert.deepEqual(new Set(listed.tools.map(tool => tool.name)), new Set(manifest.tools.map(tool => tool.name)));
     const help = await call('pixel_help');
-    assert.match(help.content[0].text, /PixelForge/);
+    assert.match(help.content[0].text, /Pixelbolt/);
     const { schema, example } = JSON.parse(help.content[2].text);
     assert.ok(schema && example, 'pixel_help must include schema and editable example');
     for (const topic of ['poses', 'scenes', 'autotile', 'fx']) assert.ok(JSON.parse((await call('pixel_help', { topic })).content[0].text));
@@ -140,5 +143,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   Promise.resolve().then(() => {
     if (args.length !== 1) throw new Error('Usage: node scripts/verify-mcpb.mjs <bundle>');
     return verifyMcpb(args[0]);
-  }).then(result => console.log(`MCPB verified: PixelForge ${result.version}, ${result.tools} tools, ${result.files} files; help, sprite and scene exports passed.`)).catch(error => { console.error(`MCPB verification failed: ${error.message}`); process.exitCode = 1; });
+  }).then(result => console.log(`MCPB verified: Pixelbolt ${result.version}, ${result.tools} tools, ${result.files} files; help, sprite and scene exports passed.`)).catch(error => { console.error(`MCPB verification failed: ${error.message}`); process.exitCode = 1; });
 }

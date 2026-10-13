@@ -1,4 +1,4 @@
-# Contributing to PixelForge
+# Contributing to Pixelbolt
 
 Contributions from people and agents are welcome. Keep the project focused on editable pixel art recipes, deterministic exports and a useful inspect/revise loop.
 
@@ -8,10 +8,12 @@ Install Node.js 20 or newer, clone your fork and run:
 
 ```sh
 npm test
-node bin/pixelforge.js preview
+node bin/pixelbolt.js preview
 ```
 
 There are no dependencies to install and no build step. The preview studio opens at `http://127.0.0.1:4747`. Run CLI commands from the repository root.
+
+Optional quality-lab browser checks use `PIXELBOLT_BROWSER_CHANNEL` to select an installed browser channel. The portable builder uses `PIXELBOLT_STUDIO_PACKER` internally to prevent relaunching the pinned packer. Both variables accept their `PIXELFORGE_` equivalents as a fallback only when the new name is unset.
 
 Read [AGENTS.md](AGENTS.md) for the architecture and project constraints. Agents authoring artwork should also read the [pixel art skill](skills/pixel-art/SKILL.md) and [authoring reference](docs/agent-guide.md).
 

@@ -93,7 +93,7 @@ test('GIF uses a table per frame when the animation needs more than 256 colours,
   for (const [position, frame] of frames.entries()) assert.deepEqual(decoded.frames[position].pixels, Array.from({ length: 256 }, (_, i) => frame.data[i * 4 + 3] ? Buffer.from(frame.data.subarray(i * 4, i * 4 + 3)).toString('hex') : 'clear'));
   assert.deepEqual(decoded.frames.map(frame => frame.transparent), [null, 0]);
   const tooMany = rgba(...Array.from({ length: 257 }, (_, i) => [i & 255, i >> 8, 7, 255]));
-  assert.throws(() => encodeGIF([{ data: tooMany, duration: 100 }], 257, 1), error => error instanceof PixelError && /frame 1 of the animation uses 257 colours; a GIF frame holds 256 and PixelForge does not quantize/.test(error.message));
+  assert.throws(() => encodeGIF([{ data: tooMany, duration: 100 }], 257, 1), error => error instanceof PixelError && /frame 1 of the animation uses 257 colours; a GIF frame holds 256 and Pixelbolt does not quantize/.test(error.message));
   assert.throws(() => encodeGIF([{ data: rgba(...shades(256, 1), CLEAR), duration: 100 }], 257, 1), /256 colours beside transparency/);
   assert.throws(() => encodeGIF([{ data: rgba(RED), duration: 100 }], 1, 1, { scale: 17 }), /gif\.scale/);
   assert.throws(() => encodeGIF([], 1, 1), /at least one frame/);
@@ -217,9 +217,9 @@ test('an animation exports as a GIF with a default scale, notes about what GIF c
   for (const [animation, options, where] of [['nope', {}, 'gif.animation'], ['idle', { background: 's' }, 'gif.background'], ['idle', { background: '#zzz' }, 'gif.background'], ['idle', { scale: 0 }, 'gif.scale'], ['idle', { dither: true }, 'gif.dither']]) assert.throws(() => animationGIF(project, animation, options), error => error instanceof PixelError && error.path === where, where);
 });
 test('CLI gif writes only the requested file and refuses to replace it', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-gif-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-gif-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
-  const out = path.join(dir, 'spirit.gif'), run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'gif', 'examples/forest-spirit.json', ...args], { cwd: root, encoding: 'utf8' });
+  const out = path.join(dir, 'spirit.gif'), run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'gif', 'examples/forest-spirit.json', ...args], { cwd: root, encoding: 'utf8' });
   const written = run('--out', out, '--animation', 'bob', '--scale', '4', '--background', '#17191d');
   assert.equal(written.status, 0, written.stderr);
   const report = JSON.parse(written.stdout);
@@ -233,12 +233,12 @@ test('CLI gif writes only the requested file and refuses to replace it', async t
   assert.match(JSON.parse(run('--out', path.join(dir, 'x.gif'), '--grid').stderr).error, /--grid is not supported by gif/);
 });
 test('MCP pixel_render writes GIFs on request and leaves nothing behind when one is refused', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-gif-mcp-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-gif-mcp-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const project = JSON.parse(await readFile(path.join(root, 'examples', 'forest-spirit.json'), 'utf8'));
   const call = (directory, args) => {
     const messages = [{ jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'pixel_render', arguments: args } }];
-    const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'mcp', '--out', directory], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+    const result = spawnSync(process.execPath, ['bin/pixelbolt.js', 'mcp', '--out', directory], { cwd: root, input: messages.map(message => JSON.stringify(message)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
     assert.equal(result.status, 0, result.stderr);
     return JSON.parse(result.stdout.trim().split('\n')[1]).result;
   };
@@ -297,7 +297,7 @@ test('numbered frames are read in number order, with gaps and other files report
   assert.throws(() => numberedFrames(['a_1.png'], { prefix: 'z' }), /no frames are named z<number>\.png/);
 });
 test('CLI gif-frames turns a folder of PNG frames into an exact GIF and writes only --out', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-gif-frames-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-gif-frames-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const frames = path.join(dir, 'frames'), out = path.join(dir, 'loop.gif');
   await mkdir(frames);
@@ -306,7 +306,7 @@ test('CLI gif-frames turns a folder of PNG frames into an exact GIF and writes o
   for (const [i, number] of [1, 2, 3, 5].entries()) await writeFile(path.join(frames, `glow_${String(number).padStart(4, '0')}.png`), encodePNG(rgba(...pixels[i]), 2, 2));
   await writeFile(path.join(frames, 'sequence.json'), '{}');
   await writeFile(path.join(frames, 'cover.png'), encodePNG(rgba(RED), 1, 1));
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'gif-frames', ...args], { cwd: root, encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'gif-frames', ...args], { cwd: root, encoding: 'utf8' });
   const written = run(frames, '--fps', '12.5', '--out', out, '--loops', '2');
   assert.equal(written.status, 0, written.stderr);
   const report = JSON.parse(written.stdout);
@@ -333,6 +333,6 @@ test('CLI gif-frames turns a folder of PNG frames into an exact GIF and writes o
   await writeFile(path.join(frames, 'other_0001.png'), encodePNG(rgba(...Array.from({ length: 300 }, () => RED)), 300, 1));
   refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif')], /2 numbered sequences: "glow_" \(5\), "other_" \(1\)/);
   await writeFile(path.join(frames, 'other_0002.png'), encodePNG(rgba(...Array.from({ length: 300 }, (_, i) => [i & 255, i >> 8, 1, 255])), 300, 1));
-  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--prefix', 'other_'], /other_0002\.png uses 300 colours; a GIF frame holds 256 and PixelForge does not quantize/);
+  refused([frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--prefix', 'other_'], /other_0002\.png uses 300 colours; a GIF frame holds 256 and Pixelbolt does not quantize/);
   assert.equal(run(frames, '--fps', '25', '--out', path.join(dir, 'x.gif'), '--prefix', 'glow_').status, 0);
 });

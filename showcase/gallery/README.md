@@ -1,9 +1,9 @@
 # Gallery
 
-Rooms and animated props drawn by an AI agent (Claude) with PixelForge, from an art library made for games and videos. No image-generation model was used.
+Rooms and animated props drawn by an AI agent (Claude) with Pixelbolt, from an art library made for games and videos. No image-generation model was used.
 
-- **Sprites.** Python scripts the agent wrote generate each recipe and `pixelforge-fx` particle source. PixelForge validates, compiles and renders them to transparent sprite sheets with atlases.
-- **Rooms.** Each room is a `pixelforge-scene` of 240×135 pixels that places a lit shell, its props, and light and particle effects. `pixelforge sequence` writes it as numbered frames and `pixelforge gif-frames` packs them.
+- **Sprites.** Python scripts the agent wrote generate each recipe and `pixelforge-fx` particle source. Pixelbolt validates, compiles and renders them to transparent sprite sheets with atlases.
+- **Rooms.** Each room is a `pixelforge-scene` of 240×135 pixels that places a lit shell, its props, and light and particle effects. `pixelbolt sequence` writes it as numbered frames and `pixelbolt gif-frames` packs them.
 - **Shelves.** Each 64×64 loop is placed on a dark backdrop, a few frames out of step with its neighbours, then packed with `gif-frames`.
 
 The generator scripts belong to that library and are not in this repository. Every GIF here loops 48 frames of 70 ms (the potions 32), shown at 3× with exact colours.

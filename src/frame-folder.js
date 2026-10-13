@@ -1,4 +1,4 @@
-// A folder of numbered PNG frames, as video tools and `pixelforge sequence` write them, turned into a GIF. The
+// A folder of numbered PNG frames, as video tools and `pixelbolt sequence` write them, turned into a GIF. The
 // folder is read in number order, one frame at a time; nothing in it is changed. Numbering, gaps and stray files are
 // reported rather than guessed around.
 import { readdirSync, readFileSync } from 'node:fs';

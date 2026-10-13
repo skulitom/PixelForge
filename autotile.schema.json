@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "PixelForge autotile template",
+  "title": "Pixelbolt autotile template",
   "description": "A template two tiles wide and three tall: row 0 holds an unused preview tile and an inner-corner tile; rows 1–2 hold a 2×2-tile island whose quadrants give outer corners, edges and fill. Compiles to a recipe whose frames copy four quarters each.",
   "type": "object",
   "properties": {

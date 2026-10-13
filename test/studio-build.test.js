@@ -5,10 +5,22 @@ import { readFile, writeFile, mkdir, mkdtemp, rm, stat } from 'node:fs/promises'
 import os from 'node:os';
 import path from 'node:path';
 import { createZip } from '../src/export.js';
+import { browserChannel, studioPacker } from '../scripts/environment.mjs';
 import { root, TARGETS, hostTarget, readZip, writeZip, readTarGz, writeTarGz, forSystem, packageFiles, sourceState, assembleStudio, packStudio, manifest, sha256 } from '../scripts/build-studio.mjs';
 
 const source = { commit: 'c0ffee'.padEnd(40, '0'), date: new Date(Date.UTC(2026, 9, 2, 12, 30, 44)), dirty: [] };
 const standIn = { version: process.versions.node, exe: Buffer.from('MZ stand-in for node.exe'), license: Buffer.from('Node.js license\n'), origin: 'a test stand-in' };
+
+test('new environment names take precedence and old names remain fallbacks when unset', () => {
+  for (const [read, suffix] of [[browserChannel, 'BROWSER_CHANNEL'], [studioPacker, 'STUDIO_PACKER']]) {
+    const current = `PIXELBOLT_${suffix}`, legacy = `PIXELFORGE_${suffix}`;
+    assert.equal(read({}), undefined);
+    assert.equal(read({ [legacy]: 'old' }), 'old');
+    assert.equal(read({ [current]: 'new' }), 'new');
+    assert.equal(read({ [legacy]: 'old', [current]: 'new' }), 'new');
+    assert.equal(read({ [legacy]: 'old', [current]: '' }), '');
+  }
+});
 
 test('the build ZIP is deterministic, compressed where it helps and read back exactly', () => {
   const files = new Map([['top/text.txt', Buffer.from('pixel '.repeat(400))], ['top/noise.bin', Buffer.from(Array.from({ length: 64 }, (_, i) => i * 37 % 256))], ['top/empty', Buffer.alloc(0)]]);
@@ -36,7 +48,7 @@ test('the macOS and Linux archive keeps permissions, carries no host details and
   assert.ok(long.length > 100 && archive.length < 600);
   for (const name of ['/top/file', 'top\\file', 'tòp/file', `top/${'x'.repeat(120)}`]) assert.throws(() => writeTarGz(new Map([[name, Buffer.alloc(1)]])), /tar entry name/);
   // The system's own tar reads it the same way: names, bytes, the time and, where there are any, permission bits.
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-tar-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-tar-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   await writeFile(path.join(dir, 'archive.tar.gz'), archive);
   const extracted = spawnSync('tar', ['-xzf', 'archive.tar.gz'], { cwd: dir, encoding: 'utf8' });
@@ -54,25 +66,26 @@ test('START HERE is one text with blocks for each system', () => {
 });
 test('the macOS and Linux builds hold shell launchers marked executable, their own START HERE and the right runtime', async () => {
   const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  for (const [target, system, launchers] of [['linux-x64', 'linux', []], ['linux-arm64', 'linux', []],['darwin-arm64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']], ['darwin-x64', 'macos', ['PixelForge Studio.command', 'Connect your agent.command']]]) {
+  for (const [target, system, launchers] of [['linux-x64', 'linux', []], ['linux-arm64', 'linux', []],['darwin-arm64', 'macos', ['Pixelbolt Studio.command', 'Connect your agent.command']], ['darwin-x64', 'macos', ['Pixelbolt Studio.command', 'Connect your agent.command']]]) {
     const build = await assembleStudio({ runtime: standIn, source, target }), inside = file => build.files.get(`${build.name}/${file}`), names = [...build.files.keys()].map(name => name.slice(build.name.length + 1));
-    assert.deepEqual([build.name, build.format, TARGETS[target].os], [`PixelForgeStudio-${version}-${target}`, 'tar.gz', system]);
-    const scripts = ['pixelforge', 'pixelforge-studio', 'connect-your-agent', ...launchers];
+    assert.deepEqual([build.name, build.format, TARGETS[target].os], [`PixelboltStudio-${version}-${target}`, 'tar.gz', system]);
+    const scripts = ['pixelbolt', 'pixelforge', 'pixelbolt-studio', 'connect-your-agent', ...launchers];
     assert.deepEqual(names.filter(name => !name.includes('/')).sort(), ['BUILD-INFO.txt', 'START HERE.txt', 'THIRD-PARTY-NOTICES.txt', 'first-edit.json', ...scripts].sort());
     assert.deepEqual(names.filter(name => name.startsWith('app/')).map(name => name.slice(4)), await packageFiles());
     assert.ok(inside('runtime/node').equals(standIn.exe)); assert.equal(inside('runtime/node.exe'), undefined);
     // Exactly the programs are executable; everything is LF, and the scripts start with a shell line.
-    assert.deepEqual([...build.modes].map(([name, mode]) => [name.slice(build.name.length + 1), mode]).sort(), ['app/bin/pixelforge.js', 'runtime/node', ...scripts].sort().map(name => [name, 0o755]));
+    assert.deepEqual([...build.modes].map(([name, mode]) => [name.slice(build.name.length + 1), mode]).sort(), ['app/bin/pixelbolt.js', 'app/bin/pixelforge.js', 'runtime/node', ...scripts].sort().map(name => [name, 0o755]));
+    assert.deepEqual(inside('pixelforge'), inside('pixelbolt'));
     for (const script of scripts) assert.match(inside(script).toString(), /^#!\/bin\/sh\n/, script);
     for (const file of [...scripts, 'START HERE.txt', 'BUILD-INFO.txt', 'launcher/studio.mjs']) assert.ok(!inside(file).includes('\r'), `${file} must use LF`);
     const start = inside('START HERE.txt').toString(), info = inside('BUILD-INFO.txt').toString();
-    assert.doesNotMatch(start, /^#|\.cmd|\\pixelforge/m); assert.match(start, /^ {4}\.\/pixelforge render hero-v2\.pixel\.json --out output\/hero$/m);
-    assert.equal(start.includes('PixelForge Studio.command'), system === 'macos');
+    assert.doesNotMatch(start, /^#|\.cmd|\\pixelforge/m); assert.match(start, /^ {4}\.\/pixelbolt render hero-v2\.pixel\.json --out output\/hero$/m);
+    assert.equal(start.includes('Pixelbolt Studio.command'), system === 'macos');
     for (const line of [`Target: ${target}`, `Node.js program SHA-256: ${sha256(standIn.exe)}`, `run: node scripts/build-studio.mjs --target ${target}`]) assert.ok(info.includes(`${line}\n`), line);
     // Packed and read back, the archive carries the same files and the permission bits.
     const packed = readTarGz(packStudio(build, source.date));
     assert.deepEqual([...packed.keys()], [...build.files.keys()]);
-    assert.deepEqual([packed.get(`${build.name}/pixelforge`).mode, packed.get(`${build.name}/START HERE.txt`).mode], [0o755, 0o644]);
+    assert.deepEqual([packed.get(`${build.name}/pixelbolt`).mode, packed.get(`${build.name}/START HERE.txt`).mode], [0o755, 0o644]);
   }
   assert.deepEqual([hostTarget('win32', 'x64'), hostTarget('linux', 'x64'), hostTarget('linux', 'arm64'), hostTarget('darwin', 'arm64'), hostTarget('darwin', 'x64'), hostTarget('win32', 'arm64'), hostTarget('freebsd', 'x64')], ['win-x64', 'linux-x64', 'linux-arm64', 'darwin-arm64', 'darwin-x64', undefined, undefined]);
 });
@@ -98,24 +111,25 @@ test('every relative README link and image is shipped in the portable package', 
 
 test('the portable layout holds the package, runtime, launchers and build facts, and nothing from development', async () => {
   const build = await assembleStudio({ runtime: standIn, source }), { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(build.name, `PixelForgeStudio-${version}-win-x64`);
+  assert.equal(build.name, `PixelboltStudio-${version}-win-x64`);
   const names = [...build.files.keys()], inside = file => build.files.get(`${build.name}/${file}`);
   assert.ok(names.every(name => name.startsWith(`${build.name}/`))); assert.deepEqual(names, [...names].sort());
   assert.deepEqual(names.filter(name => name.startsWith(`${build.name}/app/`)).map(name => name.slice(build.name.length + 5)), await packageFiles());
   assert.deepEqual(names.filter(name => /\/(demo|showcase|test|scripts|packaging|output)\//.test(name)), []);
   assert.ok(inside('app/src/server.js').equals(await readFile(path.join(root, 'src', 'server.js'))));
   assert.ok(inside('runtime/node.exe').equals(standIn.exe)); assert.ok(inside('runtime/NODE-LICENSE.txt').equals(standIn.license));
-  for (const file of ['PixelForge Studio.cmd', 'pixelforge.cmd', 'Connect your agent.cmd', 'START HERE.txt', 'BUILD-INFO.txt']) assert.ok(!/[^\r]\n/.test(inside(file).toString()), `${file} needs CRLF`);
+  for (const file of ['Pixelbolt Studio.cmd', 'pixelbolt.cmd', 'pixelforge.cmd', 'Connect your agent.cmd', 'START HERE.txt', 'BUILD-INFO.txt']) assert.ok(!/[^\r]\n/.test(inside(file).toString()), `${file} needs CRLF`);
+  assert.deepEqual(inside('pixelforge.cmd'), inside('pixelbolt.cmd'));
   const info = inside('BUILD-INFO.txt').toString();
-  for (const line of [`PixelForge version: ${version}`, `Source commit: ${source.commit}`, 'Source commit date: 2026-10-02T12:30:44.000Z', 'Target: win-x64', `Node.js version: ${standIn.version}`, `Node.js program SHA-256: ${sha256(standIn.exe)}`]) assert.ok(info.includes(`${line}\r\n`), line);
+  for (const line of [`Pixelbolt version: ${version}`, `Source commit: ${source.commit}`, 'Source commit date: 2026-10-02T12:30:44.000Z', 'Target: win-x64', `Node.js version: ${standIn.version}`, `Node.js program SHA-256: ${sha256(standIn.exe)}`]) assert.ok(info.includes(`${line}\r\n`), line);
   assert.equal(manifest((await assembleStudio({ runtime: standIn, source })).files), manifest(build.files));
   // Uncommitted changes never produce a build that carries a release name.
   const dev = await assembleStudio({ runtime: standIn, source: { ...source, dirty: ['src/core.js'] } });
-  assert.equal(dev.name, `PixelForgeStudio-${version}-dev-win-x64`);
+  assert.equal(dev.name, `PixelboltStudio-${version}-dev-win-x64`);
   assert.match(dev.files.get(`${dev.name}/BUILD-INFO.txt`).toString(), /with uncommitted changes \(development build, not a release\)/);
 });
 test('a release build takes its files from the commit, whatever line endings the working copy holds', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), repo = await mkdtemp(path.join(tempRoot, 'pixelforge-source-'));
+  const tempRoot = path.resolve(os.tmpdir()), repo = await mkdtemp(path.join(tempRoot, 'pixelbolt-source-'));
   t.after(async () => { assert.ok(repo.startsWith(tempRoot + path.sep)); await rm(repo, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); });
   const git = (...args) => spawnSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false', ...args], { cwd: repo, encoding: 'utf8' });
   if (git('init', '-q').status !== 0) { t.skip('git is not available'); return; }
@@ -123,17 +137,18 @@ test('a release build takes its files from the commit, whatever line endings the
   await write('.gitattributes', '* text=auto eol=lf\n'); await write('package.json', JSON.stringify({ version: '9.9.9', files: ['notes.txt'] }) + '\n');
   // Saved with Windows line endings and then added: git stores LF and calls the CRLF working copy unmodified.
   await write('notes.txt', 'one\r\ntwo\r\n'); await write('packaging/windows/run.cmd', '@echo off\n'); await write('scripts/build-studio.mjs', '\n');
+  await write('scripts/environment.mjs', '\n');
   git('add', '-A'); assert.equal(git('commit', '-q', '-m', 'fixture').status, 0);
   assert.equal(await readFile(path.join(repo, 'notes.txt'), 'utf8'), 'one\r\ntwo\r\n');
   const clean = await sourceState(repo);
   assert.deepEqual(clean.dirty, []); assert.match(clean.commit, /^[0-9a-f]{40}$/);
   const build = await assembleStudio({ runtime: standIn, source: clean, base: repo });
-  assert.equal(build.name, 'PixelForgeStudio-9.9.9-win-x64');
+  assert.equal(build.name, 'PixelboltStudio-9.9.9-win-x64');
   assert.equal(build.files.get(`${build.name}/app/notes.txt`).toString(), 'one\ntwo\n');
   assert.equal(build.files.get(`${build.name}/run.cmd`).toString(), '@echo off\r\n');
   // A real edit or an untracked shipped file makes it a development build, which is read from the working copy.
   await write('notes.txt', 'one\r\nthree\r\n'); await write('packaging/windows/extra.txt', 'new\n');
   const edited = await sourceState(repo), dev = await assembleStudio({ runtime: standIn, source: edited, base: repo });
   assert.deepEqual(edited.dirty, ['notes.txt', 'packaging/windows/extra.txt']); assert.equal(edited.read, undefined);
-  assert.equal(dev.files.get('PixelForgeStudio-9.9.9-dev-win-x64/app/notes.txt').toString(), 'one\r\nthree\r\n');
+  assert.equal(dev.files.get('PixelboltStudio-9.9.9-dev-win-x64/app/notes.txt').toString(), 'one\r\nthree\r\n');
 });

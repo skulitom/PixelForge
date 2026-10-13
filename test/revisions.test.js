@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createRevisionStore } from '../src/revisions.js';
 
 async function directory(t) {
-  const root = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(root, 'pixelforge-revisions-'));
+  const root = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(root, 'pixelbolt-revisions-'));
   t.after(async () => { assert.ok(dir.startsWith(root + path.sep)); await rm(dir, { recursive: true, force: true }); });
   return dir;
 }

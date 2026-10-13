@@ -30,9 +30,9 @@ test('Tidewatch: compiled recipes and metadata match their authoritative pose, a
   }
   for (const name of ['shore', 'grass']) {
     const { recipe } = JSON.parse(JSON.stringify(compileAutotile(await resolved(`terrain/${name}.autotile.json`))));
-    assert.deepEqual(recipe, await resolved(`recipes/${name}.json`), `${name} recipe is stale; run pixelforge autotile`);
+    assert.deepEqual(recipe, await resolved(`recipes/${name}.json`), `${name} recipe is stale; run pixelbolt autotile`);
   }
-  assert.deepEqual(compileEffects(await resolved('effects/fx.fx.json')).recipe, await resolved('recipes/fx.json'), 'fx recipe is stale; run pixelforge compile');
+  assert.deepEqual(compileEffects(await resolved('effects/fx.fx.json')).recipe, await resolved('recipes/fx.json'), 'fx recipe is stale; run pixelbolt compile');
 });
 
 test('Tidewatch: particle effects keep the animations, anchor and hand-drawn frames the game uses', async () => {
@@ -64,7 +64,7 @@ test('Tidewatch: material passes stay aligned with their colour recipes', async 
   }
 });
 
-test('Tidewatch: PixelForge blob masks give every sand and grass cell a compiled tile', async () => {
+test('Tidewatch: Pixelbolt blob masks give every sand and grass cell a compiled tile', async () => {
   const shore = renderProject(await resolved('recipes/shore.json')), grass = renderProject(await resolved('recipes/grass.json'));
   assert.equal(BLOB_MASKS.length, 47);
   const frames = new Set(grass.frames.map(f => f.name));

@@ -1,4 +1,4 @@
-// One-time scaffold for creatures. Crab: pose source compiled by PixelForge. Jelly, gull and fisher: authored frames.
+// One-time scaffold for creatures. Crab: pose source compiled by Pixelbolt. Jelly, gull and fisher: authored frames.
 import { linkedPalette, writeJSON } from './common.mjs';
 const force = { force: process.argv.includes('--force') };
 // ---------------- crab (pose compiler) ----------------

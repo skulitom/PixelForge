@@ -1,7 +1,7 @@
 @echo off
 rem Prints MCP settings for this folder. It only prints; it changes no configuration file.
 setlocal
-title PixelForge: connect your agent
+title Pixelbolt: connect your agent
 if not exist "%~dp0runtime\node.exe" goto incomplete
 "%~dp0runtime\node.exe" "%~dp0launcher\connect.mjs" %*
 if errorlevel 1 (

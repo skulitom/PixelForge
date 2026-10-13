@@ -1,4 +1,4 @@
-// Builds the portable PixelForge Studio: the files `npm pack` ships, the pinned official Node.js runtime for the
+// Builds the portable Pixelbolt Studio: the files `npm pack` ships, the pinned official Node.js runtime for the
 // target system and the launcher scripts from packaging/, packed into one reproducible archive (a ZIP for Windows,
 // a .tar.gz that keeps execute permissions for macOS and Linux). Any host can build any target.
 //   node scripts/build-studio.mjs [--target win-x64|linux-x64|linux-arm64|darwin-arm64|darwin-x64|all] [--out dist]
@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { crc32 } from '../src/png.js';
+import { studioPacker } from './environment.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 // The newest 24.x LTS release. Archive hashes are from https://nodejs.org/dist/v24.21.0/SHASUMS256.txt; the binary
@@ -145,7 +146,7 @@ export async function packageFiles(base = root) {
 // differ, so two working copies of one commit can hold different bytes.
 export async function sourceState(base = root) {
   const git = (...args) => execFileSync('git', ['-c', 'core.quotepath=off', ...args], { cwd: base, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 16 * 1024 * 1024 });
-  const shipped = [...await packageFiles(base), ...await walk(base, 'packaging')], inputs = [...shipped, 'scripts/build-studio.mjs'];
+  const shipped = [...await packageFiles(base), ...await walk(base, 'packaging')], inputs = [...shipped, 'scripts/build-studio.mjs', 'scripts/environment.mjs'];
   let state;
   try {
     const commit = git('rev-parse', 'HEAD').trim(), date = new Date(Number(git('log', '-1', '--format=%ct').trim()) * 1000);
@@ -199,10 +200,11 @@ export function forSystem(text, os) {
 // stand-ins for both. Without `read` the working copy is used.
 export async function assembleStudio({ runtime, source, target = 'win-x64', base = root }) {
   const { os, format, binary } = TARGETS[target], windows = os === 'windows', read = source.read ?? (file => readFile(path.join(base, file))), release = Boolean(source.commit) && source.dirty.length === 0;
-  const { version } = JSON.parse((await read('package.json')).toString()), name = `PixelForgeStudio-${version}${release ? '' : '-dev'}-${target}`, files = new Map(), modes = new Map();
+  const { version } = JSON.parse((await read('package.json')).toString()), name = `PixelboltStudio-${version}${release ? '' : '-dev'}-${target}`, files = new Map(), modes = new Map();
   // Windows batch files need CRLF to parse reliably and Notepad users expect it in text files; shell scripts need LF.
   const lines = (bytes, ending) => Buffer.from(bytes.toString('utf8').replace(/\r?\n/g, ending));
   for (const file of await packageFiles(base)) files.set(`app/${file}`, await read(file));
+  modes.set('app/bin/pixelbolt.js', 0o755);
   modes.set('app/bin/pixelforge.js', 0o755);
   for (const folder of PACKAGING[os]) for (const file of await walk(base, `packaging/${folder}`)) {
     const inside = file.slice(`packaging/${folder}/`.length), text = inside === 'START HERE.txt' ? Buffer.from(forSystem((await read(file)).toString('utf8'), os)) : await read(file);
@@ -212,9 +214,9 @@ export async function assembleStudio({ runtime, source, target = 'win-x64', base
   const node = windows ? 'runtime/node.exe' : 'runtime/node';
   files.set(node, runtime.exe); modes.set(node, 0o755); files.set('runtime/NODE-LICENSE.txt', runtime.license);
   files.set('BUILD-INFO.txt', lines(Buffer.from([
-    `PixelForge Studio, portable build for ${{ 'win-x64': '64-bit Windows', 'linux-x64': '64-bit Linux (x64)', 'linux-arm64': '64-bit Linux (ARM64)','darwin-arm64': 'macOS on Apple silicon', 'darwin-x64': 'macOS on Intel' }[target]}`, '',
-    `PixelForge version: ${version}`,
-    'Source: https://github.com/skulitom/PixelForge',
+    `Pixelbolt Studio, portable build for ${{ 'win-x64': '64-bit Windows', 'linux-x64': '64-bit Linux (x64)', 'linux-arm64': '64-bit Linux (ARM64)','darwin-arm64': 'macOS on Apple silicon', 'darwin-x64': 'macOS on Intel' }[target]}`, '',
+    `Pixelbolt version: ${version}`,
+    'Source: https://github.com/skulitom/Pixelbolt',
     `Source commit: ${source.commit ?? 'unknown'}${release ? '' : ' with uncommitted changes (development build, not a release)'}`,
     `Source commit date: ${source.date.toISOString()}`,
     `Target: ${target}`,
@@ -247,10 +249,10 @@ async function main(argv) {
   if (source.dirty.length && !options['allow-dirty']) throw new Error(`These shipped files differ from the commit:\n  ${source.dirty.slice(0, 12).join('\n  ')}${source.dirty.length > 12 ? `\n  and ${source.dirty.length - 12} more` : ''}\nCommit them first, or pass --allow-dirty for a development build that is marked as one.`);
   // Deflate output can differ between zlib builds, so where a runtime is pinned for this machine the packing runs
   // under that runtime itself.
-  if (host && process.versions.node !== NODE_VERSION && !process.env.PIXELFORGE_STUDIO_PACKER) {
+  if (host && process.versions.node !== NODE_VERSION && !studioPacker()) {
     const packer = path.join(cache, `node-v${NODE_VERSION}-${host}${TARGETS[host].os === 'windows' ? '.exe' : ''}`);
     if (await readFile(packer).then(bytes => sha256(bytes) !== TARGETS[host].binarySha256, () => true)) { await mkdir(cache, { recursive: true }); await writeFile(packer, (await nodeRuntime(host, fetched)).exe); await chmod(packer, 0o755); }
-    const child = spawnSync(packer, [fileURLToPath(import.meta.url), ...argv], { stdio: 'inherit', env: { ...process.env, PIXELFORGE_STUDIO_PACKER: '1' } });
+    const child = spawnSync(packer, [fileURLToPath(import.meta.url), ...argv], { stdio: 'inherit', env: { ...process.env, PIXELBOLT_STUDIO_PACKER: '1' } });
     if (child.error) throw child.error;
     process.exitCode = child.status ?? 1; return;
   }
@@ -259,7 +261,7 @@ async function main(argv) {
     const runtime = await nodeRuntime(name, { ...fetched, nodeArchive: options['node-archive'] && path.resolve(options['node-archive']) });
     const build = await assembleStudio({ runtime, source, target: name }), archive = packStudio(build, source.date), filename = `${build.name}.${build.format}`;
     const target = path.join(out, filename), existing = await readFile(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
-    const summary = `${filename}\n  ${build.files.size} files, ${archive.length} bytes\n  SHA-256 ${sha256(archive)}\n  PixelForge ${build.version} at ${source.commit ?? 'an unknown commit'}${build.release ? '' : ' with uncommitted changes (development build)'}, Node.js ${runtime.version}`;
+    const summary = `${filename}\n  ${build.files.size} files, ${archive.length} bytes\n  SHA-256 ${sha256(archive)}\n  Pixelbolt ${build.version} at ${source.commit ?? 'an unknown commit'}${build.release ? '' : ' with uncommitted changes (development build)'}, Node.js ${runtime.version}`;
     if (existing?.equals(archive)) { console.log(`${options.check ? 'Reproduced' : 'Unchanged'}: ${summary}`); continue; }
     if (options.check) {
       if (!existing) throw new Error(`Nothing to check: ${target} does not exist.`);

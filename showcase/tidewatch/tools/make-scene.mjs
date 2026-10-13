@@ -1,5 +1,5 @@
 // Builds a pixelforge-scene manifest of one 240x160 screen of the island, straight from the game's map, so the
-// PixelForge scene viewer can review it (native size, grayscale, density, lighting). Assets are file references and
+// Pixelbolt scene viewer can review it (native size, grayscale, density, lighting). Assets are file references and
 // the terrain is three tilemap placements, so the manifest stays small and always shows the current recipes.
 // Usage: node tools/make-scene.mjs <name> <tileX> <tileY> [--night]
 import { writeJSON } from './common.mjs';

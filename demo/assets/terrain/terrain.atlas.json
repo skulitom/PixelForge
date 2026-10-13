@@ -452,7 +452,7 @@
     }
   },
   "meta": {
-    "app": "PixelForge",
+    "app": "Pixelbolt",
     "version": "1",
     "image": "terrain.png",
     "format": "RGBA8888",

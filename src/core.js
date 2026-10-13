@@ -655,7 +655,7 @@ export function buildAtlas(project, { trim } = {}) {
     entries[frame.name] = { frame: { x, y, w, h }, rotated: false, trimmed: false, spriteSourceSize: { x: 0, y: 0, w, h }, sourceSize: { w, h }, duration: frame.duration, ...extras(frame) };
   });
   const animations = Object.fromEntries(Object.entries(project.animations).map(([key, a]) => [key, { ...a, frames: a.frames.map(i => frames[i].name) }]));
-  const meta = { app: 'PixelForge', version: '1', image: `${project.name}.png`, format: 'RGBA8888', size: { w: atlasWidth, h: atlasHeight }, scale: String(s) };
+  const meta = { app: 'Pixelbolt', version: '1', image: `${project.name}.png`, format: 'RGBA8888', size: { w: atlasWidth, h: atlasHeight }, scale: String(s) };
   return { data, width: atlasWidth, height: atlasHeight, metadata: { frames: entries, animations, meta } };
 }
 

@@ -1,4 +1,4 @@
-// Loads PixelForge atlases (TexturePacker-style JSON + PNG) with PixelForge's own runtime and prepares aligned
+// Loads Pixelbolt atlases (TexturePacker-style JSON + PNG) with Pixelbolt's own runtime and prepares aligned
 // lighting passes. Assets without authored normal/emissive recipes get derived passes: a flat normal (#8080ff)
 // silhouette and a black emissive silhouette, so they still occlude lit or glowing sprites behind them.
 import { loadSpriteSheet } from './pixelforge/runtime.js';
@@ -28,6 +28,6 @@ export async function loadAll(names) {
   const atlases = await Promise.all(names.map(n => loadAtlas(n)));
   return Object.fromEntries(atlases.map(a => [a.name, a]));
 }
-// Frame timing (per-frame durations, loops, held last frames) is PixelForge's runtime frameAt.
+// Frame timing (per-frame durations, loops, held last frames) is Pixelbolt's runtime frameAt.
 export { frameAt } from './pixelforge/runtime.js';
 export const animationDone = (atlas, animation, time) => !atlas.animations[animation].loop && time >= atlas.animations[animation].duration;

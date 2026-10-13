@@ -1,4 +1,4 @@
-// Tile review: repeats frames through PixelForge's own scene renderer, writes an enlarged PNG and prints each
+// Tile review: repeats frames through Pixelbolt's own scene renderer, writes an enlarged PNG and prints each
 // frame's seam evidence (doubled edge lines and wrap steps, the same report as `inspect --view tile`).
 // Usage: node tools/mosaic.mjs <recipe.json> <out.png> [--frames a,b] [--grid 6x4] [--scale 3] [--map "ab/ba"]
 import { readFileSync, writeFileSync } from 'node:fs';

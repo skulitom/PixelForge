@@ -3,11 +3,13 @@
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import { browserChannel } from './environment.mjs';
 const { chromium } = await import(process.argv[2] ? pathToFileURL(process.argv[2]).href : 'playwright');
 const sceneURL = process.argv[3] ?? 'http://127.0.0.1:4781', studioURL = process.argv[4] ?? 'http://127.0.0.1:4782';
 const outputRoot = fileURLToPath(new URL('../output/quality-qa/', import.meta.url)); await mkdir(outputRoot, { recursive: true });
 const out = await mkdtemp(outputRoot + '/run-');
-const browser = await chromium.launch({ headless: true, ...(process.env.PIXELFORGE_BROWSER_CHANNEL && { channel: process.env.PIXELFORGE_BROWSER_CHANNEL }) });
+const channel = browserChannel();
+const browser = await chromium.launch({ headless: true, ...(channel && { channel }) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' });
 const errors = [], checks = [];
 page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type() === 'error' && !m.text().includes('favicon')) errors.push(m.text()); });

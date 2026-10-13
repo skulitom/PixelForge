@@ -174,7 +174,7 @@ function build(name, sourceWidth, sourceHeight, count, imageAt, options, describ
     width: place.width, height: place.height, alpha: background ? 'none: opaque background' : 'straight (unpremultiplied)',
     pattern, first: 1, digits, differentFrames: encoded.size,
     placement: { scale: place.scale, x: place.x, y: place.y, width: place.spriteWidth, height: place.spriteHeight, source: [sourceWidth, sourceHeight], ...(place.fit && { fit: place.fit, cropped: place.cropped, visible }) },
-    // Run these in the sequence folder. Nothing in PixelForge runs them; ffmpeg is a separate program.
+    // Run these in the sequence folder. Nothing in Pixelbolt runs them; ffmpeg is a separate program.
     commands: {
       prores4444: `ffmpeg ${input} -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -vf "scale=out_color_matrix=bt709:flags=neighbor" -colorspace bt709 -color_primaries bt709 -color_trc bt709 "${name}.mov"`,
       ...(background && even && { h264: `ffmpeg ${input} -c:v libx264 -preset slow -crf 14 -pix_fmt yuv420p -vf "scale=out_color_matrix=bt709:flags=neighbor" -colorspace bt709 -color_primaries bt709 -color_trc bt709 "${name}.mp4"` })
@@ -184,7 +184,7 @@ function build(name, sourceWidth, sourceHeight, count, imageAt, options, describ
 }
 // What cover cut away, for the notes.
 const cropNote = (what, { placement, width, height }) => `The ${what} is enlarged ${placement.scale} times to ${placement.width}×${placement.height} and cropped to the ${width}×${height} canvas: columns ${placement.visible[0]} to ${placement.visible[0] + placement.visible[2] - 1} and rows ${placement.visible[1]} to ${placement.visible[1] + placement.visible[3] - 1} of the ${what} stay in view.`;
-const readme = info => `${info.name}: PixelForge image sequence
+const readme = info => `${info.name}: Pixelbolt image sequence
 
 ${info.frames} PNG files, ${info.pattern.replace(/%0(\d)d/, (_, n) => '#'.repeat(Number(n)))}, numbered from ${String(info.first).padStart(info.digits, '0')}.
 ${info.width} x ${info.height} pixels, ${info.fps.label} frames per second, ${info.seconds} seconds.

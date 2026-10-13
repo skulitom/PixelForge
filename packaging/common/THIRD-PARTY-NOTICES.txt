@@ -1,9 +1,9 @@
-Third-party notices for PixelForge Studio (portable build)
+Third-party notices for Pixelbolt Studio (portable build)
 ===========================================================
 
-PixelForge itself has no third-party dependencies. Everything in the "app"
-and "launcher" folders, and the scripts beside this file, is PixelForge code
-and original PixelForge artwork under the MIT license (LICENSE in the "app"
+Pixelbolt itself has no third-party dependencies. Everything in the "app"
+and "launcher" folders, and the scripts beside this file, is Pixelbolt code
+and original Pixelbolt artwork under the MIT license (LICENSE in the "app"
 folder).
 
 This build includes one third-party program so that nothing has to be

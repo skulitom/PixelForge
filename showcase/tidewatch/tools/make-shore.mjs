@@ -1,5 +1,5 @@
 // One-time scaffold: hand-drawn coastline masks -> a shaded pixelforge-autotile template with four surf phases.
-// art/terrain/shore.autotile.json is the authoritative, editable source; `pixelforge autotile` compiles it into
+// art/terrain/shore.autotile.json is the authoritative, editable source; `pixelbolt autotile` compiles it into
 // art/recipes/shore.json (47 blob tiles x 4 palette-cycled phases).
 import { linkedPalette, writeJSON } from './common.mjs';
 

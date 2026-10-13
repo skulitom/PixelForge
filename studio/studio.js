@@ -180,12 +180,12 @@ $('gif').addEventListener('click', () => {
     toast(`GIF saved: ${gif.width} × ${gif.height} px.${gif.partialAlpha ? ` ${gif.partialAlpha} partly transparent pixels became fully transparent or opaque; the gif command can blend them onto a background.` : ''}`);
   } catch (error) { toast(error.message); }
 });
-// Frames for a video editor: the server builds them exactly as `pixelforge sequence` does. The dialog also shows that
+// Frames for a video editor: the server builds them exactly as `pixelbolt sequence` does. The dialog also shows that
 // call, and the MCP one, because agents are who usually make these.
 const framesSettings = () => ({ fps: $('frames-fps').value, animation: $('animation').value, ...($('frames-size').value ? { size: $('frames-size').value } : { scale: zoom }) });
 function showFramesCall() {
   const settings = framesSettings(), sizing = settings.size ? `--size ${settings.size}` : `--scale ${settings.scale}`;
-  $('frames-call').textContent = `pixelforge sequence ${project.name}.pixel.json --fps ${settings.fps} ${sizing} --animation ${settings.animation} --out frames\n\npixel_render { "revision": "…", "sequence": ${JSON.stringify(settings)} }`;
+  $('frames-call').textContent = `pixelbolt sequence ${project.name}.pixel.json --fps ${settings.fps} ${sizing} --animation ${settings.animation} --out frames\n\npixel_render { "revision": "…", "sequence": ${JSON.stringify(settings)} }`;
 }
 $('frames').addEventListener('click', () => { compile(); if (!valid) { toast('Fix the recipe to export frames.'); return; } showFramesCall(); $('frames-dialog').showModal(); });
 for (const id of ['frames-fps', 'frames-size']) $(id).addEventListener('change', showFramesCall);

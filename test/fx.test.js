@@ -134,21 +134,21 @@ test('scene trajectories ease each segment and still land on whole pixels', () =
 });
 
 test('the CLI compiles effect sources and keeps their shared palette link', async t => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-fx-'));
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-fx-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   await writeFile(path.join(dir, 'palette.json'), JSON.stringify({ w: '#fff', y: '#fd6', o: '#e83', g: '#6b4', l: '#9d6' }));
   const source = { ...effects({ frames: 3, emitters: [{ at: [4, 4], burst: 2, speed: 1, shapes: ['dot'] }] }), palette: { $ref: 'palette.json' } };
   await writeFile(path.join(dir, 'burst.fx.json'), JSON.stringify(source));
-  const run = spawnSync(process.execPath, [path.join(root, 'bin/pixelforge.js'), 'compile', path.join(dir, 'burst.fx.json'), '--out', path.join(dir, 'out/burst.json'), '--metadata', path.join(dir, 'out/burst.meta.json')], { encoding: 'utf8' });
+  const run = spawnSync(process.execPath, [path.join(root, 'bin/pixelbolt.js'), 'compile', path.join(dir, 'burst.fx.json'), '--out', path.join(dir, 'out/burst.json'), '--metadata', path.join(dir, 'out/burst.meta.json')], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
   const recipe = JSON.parse(await readFile(path.join(dir, 'out/burst.json'), 'utf8'));
   assert.deepEqual(recipe.palette, { $ref: '../palette.json' });
   assert.equal(JSON.parse(await readFile(path.join(dir, 'out/burst.meta.json'), 'utf8')).format, 'pixelforge-fx-metadata');
-  const validate = spawnSync(process.execPath, [path.join(root, 'bin/pixelforge.js'), 'validate', path.join(dir, 'out/burst.json')], { encoding: 'utf8' });
+  const validate = spawnSync(process.execPath, [path.join(root, 'bin/pixelbolt.js'), 'validate', path.join(dir, 'out/burst.json')], { encoding: 'utf8' });
   assert.equal(JSON.parse(validate.stdout).frames, 3);
   // compile dispatches on the source format, so it also builds autotile templates.
   await writeFile(path.join(dir, 'turf.autotile.json'), JSON.stringify({ format: 'pixelforge-autotile', version: 1, name: 'turf', tile: 2, mode: 'cardinal', palette: { g: '#0a0' }, template: Array(6).fill('gggg'), frame: 'turf-{mask}' }));
-  const tiles = spawnSync(process.execPath, [path.join(root, 'bin/pixelforge.js'), 'compile', path.join(dir, 'turf.autotile.json'), '--out', path.join(dir, 'out/turf.json')], { encoding: 'utf8' });
+  const tiles = spawnSync(process.execPath, [path.join(root, 'bin/pixelbolt.js'), 'compile', path.join(dir, 'turf.autotile.json'), '--out', path.join(dir, 'out/turf.json')], { encoding: 'utf8' });
   assert.equal(tiles.status, 0, tiles.stderr);
   assert.equal(JSON.parse(await readFile(path.join(dir, 'out/turf.json'), 'utf8')).frames.length, 16);
 });
