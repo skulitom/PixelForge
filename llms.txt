@@ -2,7 +2,7 @@
 
 > An MIT-licensed, zero-dependency pixel art and sprite animation toolkit for AI agents and game developers. Compile editable JSON recipes to PNG sprite sheets, APNG animations, texture atlases, CSS and a Canvas player through a CLI or local stdio MCP server.
 
-Requires Node.js 20 or newer. No build step, dependency installation, API key or hosted service is needed. Clone https://github.com/skulitom/Pixelbolt.git and run commands from the checkout. The package name is pixelbolt-agent; the CLI command is pixelbolt. Installation instructions use the GitHub checkout.
+Requires Node.js 20 or newer. No build step, dependency installation, API key or hosted service is needed. Clone https://github.com/skulitom/Pixelbolt.git and run commands from the checkout. The package name is pixelbolt; the CLI command is pixelbolt (pixelforge still works as an alias). Installation instructions use the GitHub checkout.
 
 ## Start here
 

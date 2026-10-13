@@ -1,4 +1,4 @@
-/* PixelForge: atlas coordinates are pixels at the exported scale. */
+/* Pixelbolt: atlas coordinates are pixels at the exported scale. */
 .pf-horizon {
   display: inline-block;
   width: 256px; height: 144px;
