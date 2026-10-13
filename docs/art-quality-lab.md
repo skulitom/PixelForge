@@ -1,13 +1,13 @@
 # The Listening Hollow: an original quality study
 
-This small scene exercises the improved PixelForge workflow. Its goal is to make corrections reviewable, preserve intentional pixels and judge assets together. The result is **not claimed to match Animal Well**. It has not passed independent artistic review or the roadmap's equal-budget comparison across several attempts.
+This small scene exercises the improved Pixelbolt workflow. Its goal is to make corrections reviewable, preserve intentional pixels and judge assets together. The result is **not claimed to match Animal Well**. It has not passed independent artistic review or the roadmap's equal-budget comparison across several attempts.
 
 ![Revised scene](images/quality/hollow.png)
 
 Open actual playback with:
 
 ```sh
-node bin/pixelforge.js preview examples/quality/hollow.scene.json
+node bin/pixelbolt.js preview examples/quality/hollow.scene.json
 ```
 
 Use the timeline to inspect anticipation, impact, separated crystal fragments and the persistent settled result. The scene restarts after four seconds. Toggle lighting, move the preview light and compare native size and grayscale. To review locomotion separately, open `examples/quality/skink.json` in the studio and choose **Run**; the scene's idle/cast demonstration alone does not validate stride mechanics. `examples/quality/stride.scene.json` adds an authored 32-pixel/second trajectory against repeating ground for that review.
@@ -29,7 +29,7 @@ The revision added branching leaf clusters, distinct foreground/distant foliage,
 The blockout was a straight stem with equal branches. The revision changes branch lengths, connects color clusters back to the stem and groups highlights near selected upper surfaces. A subsequent 3×3 tip correction is stored as a named canvas selection and fingerprinted overlay. Its source and inherited effects remain inspectable; the stem stays unchanged. To reproduce it:
 
 ```sh
-node bin/pixelforge.js patch examples/quality/fern-base.json --changes examples/quality/fern-correction.json --out output/fern-reviewed.json --image output/fern-difference.png
+node bin/pixelbolt.js patch examples/quality/fern-base.json --changes examples/quality/fern-correction.json --out output/fern-reviewed.json --image output/fern-difference.png
 ```
 
 The fern's two-pose sway remains modest. It teaches a structural correction; it is not a benchmark for sophisticated foliage motion. The broader sedge is a separate silhouette, not a larger fractional-scale copy.

@@ -13,7 +13,7 @@ import { createOverlay } from '../src/overlays.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const temp = async (t, label) => {
-  const base = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(base, `pixelforge-${label}-`));
+  const base = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(base, `pixelbolt-${label}-`));
   t.after(async () => { assert.ok(dir.startsWith(base + path.sep)); await rm(dir, { recursive: true, force: true }); });
   return dir;
 };
@@ -80,7 +80,7 @@ test('MCP imports PNGs, applies overlays, explains topics and resolves palettes 
   assert.equal(patched.info.rebased, true); assert.deepEqual(patched.info.frames.changed.map(f => f.frame), ['a']);
   assert.equal((await mcp.call('pixel_patch', { project: strip })).info.path, 'arguments');
   const topic = (await mcp.request('tools/call', { name: 'pixel_help', arguments: { topic: 'autotile' } })).result;
-  assert.equal(JSON.parse(topic.content[0].text).title, 'PixelForge autotile template');
+  assert.equal(JSON.parse(topic.content[0].text).title, 'Pixelbolt autotile template');
   await writeFile(path.join(dir, 'shared.json'), JSON.stringify({ palette: { k: '#123456', w: '#fff' } }));
   const linked = await mcp.call('pixel_validate', { project: { ...strip, palette: { $ref: 'shared.json', x: '#f0f' } } });
   assert.deepEqual(linked.info.resolved, ['shared.json']);
@@ -93,7 +93,7 @@ test('MCP imports PNGs, applies overlays, explains topics and resolves palettes 
 
 test('CLI resolves shared palettes, keeps the link when writing edits, builds autotiles and reports clipping', async t => {
   const dir = await temp(t, 'cli');
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', ...args], { cwd: root, encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', ...args], { cwd: root, encoding: 'utf8' });
   await mkdir(path.join(dir, 'art'), { recursive: true });
   await writeFile(path.join(dir, 'palette.json'), JSON.stringify({ k: '#000000', r: '#ff0000' }));
   const recipe = { version: 1, name: 'linked', width: 3, height: 1, palette: { $ref: '../palette.json', g: '#00ff00' }, frames: [{ name: 'a', ops: [{ op: 'grid', rows: ['krg'] }, { op: 'pixel', x: 5, color: 'k' }] }] };
@@ -125,7 +125,7 @@ test('MCP compiles particle effects, explains the fx topic and previews cleanup 
   assert.deepEqual([compiled.info.frames, compiled.info.animations, compiled.info.metadata.effects.pop.emitters[0].spawned], [4, ['pop'], 5]);
   assert.equal(compiled.result.content[1].mimeType, 'image/png');
   const topic = (await mcp.request('tools/call', { name: 'pixel_help', arguments: { topic: 'fx' } })).result;
-  assert.equal(JSON.parse(topic.content[0].text).title, 'PixelForge particle effects');
+  assert.equal(JSON.parse(topic.content[0].text).title, 'Pixelbolt particle effects');
   const stair = { version: 1, name: 'stair', width: 5, height: 4, palette: { k: '#000' }, frames: [{ name: 'a', ops: [{ op: 'grid', rows: ['k....', 'kk...', '.kk..', '..k..'] }] }] };
   const inspected = await mcp.call('pixel_inspect', { project: stair, diagnostics: true });
   assert.deepEqual(inspected.info.diagnostics.frames[0], { frame: 'a', visible: 6, colors: 1, corners: 2, strays: 0 });

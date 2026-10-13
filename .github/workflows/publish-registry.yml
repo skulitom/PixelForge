@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   plan:
-    if: github.repository == 'skulitom/PixelForge'
+    if: github.repository == 'skulitom/Pixelbolt'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -55,10 +55,10 @@ jobs:
               echo "tag=$tag"
               echo "version=$version"
             } >> "$GITHUB_OUTPUT"
-            printf '%s: io.github.skulitom/pixelforge %s. %s\n' "$action" "$version" "$reason" >> "$GITHUB_STEP_SUMMARY"
+            printf '%s: io.github.skulitom/pixelbolt %s. %s\n' "$action" "$version" "$reason" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           }
-          versions_url='https://registry.modelcontextprotocol.io/v0.1/servers/io.github.skulitom%2Fpixelforge/versions'
+          versions_url='https://registry.modelcontextprotocol.io/v0.1/servers/io.github.skulitom%2Fpixelbolt/versions'
           response=$(mktemp)
           trap 'rm -f "$response"' EXIT
           cursor=''
@@ -76,7 +76,7 @@ jobs:
               *) fail "Registry versions request failed (HTTP $status)." ;;
             esac
           done
-          if jq -e '.assets | any(.name == "pixelforge.mcpb")' <<< "$release" > /dev/null; then
+          if jq -e '.assets | any(.name == "pixelbolt.mcpb")' <<< "$release" > /dev/null; then
             action=mcpb
             reason='release bundle selected; its attestation will be verified before publication'
           elif [[ "$METADATA_ONLY" == true ]]; then
@@ -89,7 +89,7 @@ jobs:
 
   publish:
     needs: plan
-    if: github.repository == 'skulitom/PixelForge' && needs.plan.outputs.action != 'none'
+    if: github.repository == 'skulitom/Pixelbolt' && needs.plan.outputs.action != 'none'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -131,14 +131,14 @@ jobs:
           if (server.version !== process.env.VERSION || pkg.version !== process.env.VERSION) {
             throw new Error('server.json and package.json must both match the planned version.');
           }
-          if (server.name !== 'io.github.skulitom/pixelforge' || Object.hasOwn(server, 'packages')) {
-            throw new Error('Expected metadata-only server.json for io.github.skulitom/pixelforge.');
+          if (server.name !== 'io.github.skulitom/pixelbolt' || Object.hasOwn(server, 'packages')) {
+            throw new Error('Expected metadata-only server.json for io.github.skulitom/pixelbolt.');
           }
           NODE
           if [[ "$ENTRY_TYPE" == mcpb ]]; then
-            bundle=artifacts/registry/pixelforge.mcpb
-            gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p pixelforge.mcpb -D artifacts/registry
-            gh attestation verify "$bundle" --repo skulitom/PixelForge --signer-workflow skulitom/PixelForge/.github/workflows/release.yml
+            bundle=artifacts/registry/pixelbolt.mcpb
+            gh release download "$RELEASE_TAG" -R "$GITHUB_REPOSITORY" -p pixelbolt.mcpb -D artifacts/registry
+            gh attestation verify "$bundle" --repo skulitom/Pixelbolt --signer-workflow skulitom/Pixelbolt/.github/workflows/release.yml
             node scripts/build-mcpb.mjs --registry-entry --tag "$RELEASE_TAG" --bundle "$bundle" --out artifacts/registry/server.registry.json
           else
             cp server.json artifacts/registry/server.registry.json
@@ -158,13 +158,13 @@ jobs:
           tar -xzf publisher.tar.gz mcp-publisher
           chmod +x mcp-publisher
           ./mcp-publisher validate server.registry.json
-          version_url="https://registry.modelcontextprotocol.io/v0.1/servers/io.github.skulitom%2Fpixelforge/versions/$VERSION"
+          version_url="https://registry.modelcontextprotocol.io/v0.1/servers/io.github.skulitom%2Fpixelbolt/versions/$VERSION"
           get_version() {
             status=$(curl -sS --max-time 30 --retry 3 --retry-all-errors -o published.json -w '%{http_code}' "$version_url")
             [[ "$status" == 200 || "$status" == 404 ]] || fail "Registry version request failed (HTTP $status)."
           }
           summary() {
-            printf '%s: io.github.skulitom/pixelforge %s (%s). Registry URL: %s\n' "$1" "$VERSION" "$ENTRY_TYPE" "$version_url" >> "$GITHUB_STEP_SUMMARY"
+            printf '%s: io.github.skulitom/pixelbolt %s (%s). Registry URL: %s\n' "$1" "$VERSION" "$ENTRY_TYPE" "$version_url" >> "$GITHUB_STEP_SUMMARY"
           }
           get_version
           if [[ "$status" == 200 ]]; then summary 'Already published; skipped'; exit 0; fi
@@ -177,7 +177,7 @@ jobs:
           fi
           get_version
           [[ "$status" == 200 ]] || fail 'Published version could not be read back.'
-          jq -e --arg version "$VERSION" '.server.name == "io.github.skulitom/pixelforge" and .server.version == $version' published.json > /dev/null || fail 'Published identity does not match the entry.'
+          jq -e --arg version "$VERSION" '.server.name == "io.github.skulitom/pixelbolt" and .server.version == $version' published.json > /dev/null || fail 'Published identity does not match the entry.'
           if [[ "$ENTRY_TYPE" == mcpb ]]; then
             expected=$(jq -er '.packages[0].fileSha256' server.registry.json)
             actual=$(jq -er '.server.packages[0].fileSha256' published.json)

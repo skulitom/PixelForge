@@ -1,57 +1,57 @@
-PixelForge Studio
+Pixelbolt Studio
 =================
 
 The pixel-art tool your coding agent can drive. Sprites and animations are
-editable JSON recipes; PixelForge turns them into PNG sprite sheets, animated
+editable JSON recipes; Pixelbolt turns them into PNG sprite sheets, animated
 PNGs and atlas metadata, the same way every time. There are three ways in:
 a studio in your browser, a command line, and an MCP server for agents.
 
 This folder is self-contained. It brings its own copy of Node.js, so there is
 nothing to install, no account and no image model. Keep the folder's contents
-together. To remove PixelForge Studio, stop it and delete the folder.
+together. To remove Pixelbolt Studio, stop it and delete the folder.
 
 
 1. Open the studio
 ------------------
 
 #if windows
-Double-click "PixelForge Studio.cmd".
+Double-click "Pixelbolt Studio.cmd".
 
 A console window opens, prints the studio's address and opens it in your
 default browser. Close the console window to stop the studio.
 
 Windows may ask before it runs a file that came from the internet.
-"PixelForge Studio.cmd" is a short text script; you can read it in Notepad.
+"Pixelbolt Studio.cmd" is a short text script; you can read it in Notepad.
 
-To open a recipe of your own, drag its .json file onto "PixelForge Studio.cmd".
+To open a recipe of your own, drag its .json file onto "Pixelbolt Studio.cmd".
 The studio starts with that recipe loaded.
 #endif
 #if macos
-Double-click "PixelForge Studio.command".
+Double-click "Pixelbolt Studio.command".
 
 A Terminal window opens, prints the studio's address and opens it in your
 default browser. Press Ctrl+C in that window, or close it, to stop the studio.
 
 macOS may ask you to confirm, or refuse, when you open a script that came from
-the internet. "PixelForge Studio.command" is a short text script; you can read
+the internet. "Pixelbolt Studio.command" is a short text script; you can read
 it in TextEdit. You can also start the studio from Terminal: type cd and a
 space, drag this folder into the Terminal window, press Return, then run
 
-    ./pixelforge-studio
+    ./pixelbolt-studio
 
 To open a recipe of your own, name it after the command, for example
-"./pixelforge-studio hero.pixel.json".
+"./pixelbolt-studio hero.pixel.json".
 #endif
 #if linux
 Open a terminal in this folder and run
 
-    ./pixelforge-studio
+    ./pixelbolt-studio
 
 It prints the studio's address and opens it in your default browser. Press
 Ctrl+C in that terminal, or close it, to stop the studio.
 
 To open a recipe of your own, name it after the command, for example
-"./pixelforge-studio hero.pixel.json".
+"./pixelbolt-studio hero.pixel.json".
 #endif
 
 The address is normally http://127.0.0.1:4747/; if that port is busy, for
@@ -79,12 +79,12 @@ The studio inspects and edits recipes. It is not a paint program.
 Open a terminal in this folder: in File Explorer, click the address bar, type
 cmd and press Enter. The commands below work in Command Prompt and PowerShell.
 
-    .\pixelforge init hero.pixel.json
-    .\pixelforge validate hero.pixel.json
-    .\pixelforge inspect hero.pixel.json --out hero-frames.png
-    .\pixelforge patch hero.pixel.json --changes first-edit.json --out hero-v2.pixel.json
-    .\pixelforge render hero-v2.pixel.json --out output\hero
-    .\pixelforge gif hero-v2.pixel.json --out hero.gif
+    .\pixelbolt init hero.pixel.json
+    .\pixelbolt validate hero.pixel.json
+    .\pixelbolt inspect hero.pixel.json --out hero-frames.png
+    .\pixelbolt patch hero.pixel.json --changes first-edit.json --out hero-v2.pixel.json
+    .\pixelbolt render hero-v2.pixel.json --out output\hero
+    .\pixelbolt gif hero-v2.pixel.json --out hero.gif
 #endif
 #if macos
 Open Terminal in this folder: type cd and a space, drag this folder into the
@@ -95,12 +95,12 @@ Open a terminal in this folder. Then:
 #endif
 #if macos linux
 
-    ./pixelforge init hero.pixel.json
-    ./pixelforge validate hero.pixel.json
-    ./pixelforge inspect hero.pixel.json --out hero-frames.png
-    ./pixelforge patch hero.pixel.json --changes first-edit.json --out hero-v2.pixel.json
-    ./pixelforge render hero-v2.pixel.json --out output/hero
-    ./pixelforge gif hero-v2.pixel.json --out hero.gif
+    ./pixelbolt init hero.pixel.json
+    ./pixelbolt validate hero.pixel.json
+    ./pixelbolt inspect hero.pixel.json --out hero-frames.png
+    ./pixelbolt patch hero.pixel.json --changes first-edit.json --out hero-v2.pixel.json
+    ./pixelbolt render hero-v2.pixel.json --out output/hero
+    ./pixelbolt gif hero-v2.pixel.json --out hero.gif
 #endif
 
 init writes an editable copy of the forest spirit sample. validate checks it.
@@ -153,13 +153,13 @@ In the "app" folder:
     examples                     the samples
     README.md                    full documentation
 
-PixelForge is for small sprites, tiles and effects: up to 256 x 256 pixels and
+Pixelbolt is for small sprites, tiles and effects: up to 256 x 256 pixels and
 256 frames per recipe.
 
 The Emberfall and Tidewatch demos are in the GitHub repository, not this
-download. Source code and issues: https://github.com/skulitom/PixelForge
+download. Source code and issues: https://github.com/skulitom/Pixelbolt
 
-PixelForge is MIT licensed (LICENSE in the "app" folder). The Node.js runtime
+Pixelbolt is MIT licensed (LICENSE in the "app" folder). The Node.js runtime
 in the "runtime" folder has its own license, NODE-LICENSE.txt beside it; see
 THIRD-PARTY-NOTICES.txt. BUILD-INFO.txt names the exact source commit and
 runtime this build was made from.

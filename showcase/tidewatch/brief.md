@@ -1,6 +1,6 @@
 # Tidewatch — art brief
 
-An original top-down (3/4 view) action-adventure vignette. A young lighthouse keeper arrives on a small island at late afternoon to relight the lamp before night falls. Everything is authored with PixelForge; no imported art, fonts or image models.
+An original top-down (3/4 view) action-adventure vignette. A young lighthouse keeper arrives on a small island at late afternoon to relight the lamp before night falls. Everything is authored with Pixelbolt; no imported art, fonts or image models.
 
 ## Format
 

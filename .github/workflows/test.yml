@@ -67,7 +67,7 @@ jobs:
       - name: Verify the archive with Node.js and git off PATH (Windows)
         if: runner.os == 'Windows'
         run: |
-          $zip = (Get-Item dist/PixelForgeStudio-*-win-x64.zip).FullName
+          $zip = (Get-Item dist/PixelboltStudio-*-win-x64.zip).FullName
           Get-Content "$zip.sha256"
           Expand-Archive -LiteralPath $zip -DestinationPath "$env:RUNNER_TEMP/studio"
           $node = (Get-Item "$env:RUNNER_TEMP/studio/*/runtime/node.exe").FullName
@@ -81,7 +81,7 @@ jobs:
       - name: Verify the archive on its own runtime (macOS and Linux)
         if: runner.os != 'Windows'
         run: |
-          archive=$(ls "$PWD"/dist/PixelForgeStudio-*-${{ matrix.target }}.tar.gz)
+          archive=$(ls "$PWD"/dist/PixelboltStudio-*-${{ matrix.target }}.tar.gz)
           cat "$archive.sha256"
           mkdir "$RUNNER_TEMP/studio"
           tar -xzf "$archive" -C "$RUNNER_TEMP/studio"
@@ -126,5 +126,5 @@ jobs:
           node-version: 24
           package-manager-cache: false
       - run: node scripts/build-mcpb.mjs --check
-      - run: node scripts/verify-mcpb.mjs dist/mcpb/pixelforge.mcpb
+      - run: node scripts/verify-mcpb.mjs dist/mcpb/pixelbolt.mcpb
       - run: npx --yes @anthropic-ai/mcpb@2.1.2 validate dist/mcpb/manifest.json

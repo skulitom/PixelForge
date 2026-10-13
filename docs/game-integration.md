@@ -1,4 +1,4 @@
-# Using PixelForge assets in games
+# Using Pixelbolt assets in games
 
 The bundle deliberately keeps the interchange format simple: RGBA PNGs plus JSON frame rectangles. By default every frame retains the full canvas and common origin; opt into trimmed packing with `sheet.trim` (below). Frames are never rotated. Use nearest-neighbor filtering and whole-pixel placement for crisp rendering.
 
@@ -15,7 +15,7 @@ create() {
 }
 ```
 
-Set `pixelArt: true` in the game configuration. The atlas's extra `animations` object is PixelForge metadata; import it explicitly when building your engine's animation definitions. Each entry contains an expanded list of frame names, the total duration, and a loop flag. Per-frame durations live in `frames[name].duration` in milliseconds. Do not assume a constant frame rate when a recipe uses unequal durations.
+Set `pixelArt: true` in the game configuration. The atlas's extra `animations` object is Pixelbolt metadata; import it explicitly when building your engine's animation definitions. Each entry contains an expanded list of frame names, the total duration, and a loop flag. Per-frame durations live in `frames[name].duration` in milliseconds. Do not assume a constant frame rate when a recipe uses unequal durations.
 
 ## Godot, Unity and other grid importers
 
@@ -25,7 +25,7 @@ Alternatively, import the PNGs in `frames/`, which removes any need for atlas sl
 
 ## Normal and emissive passes
 
-`pixelforge scene <scene.json> --out <dir>` exports each lit asset's `color.png`, `normal.png` and `emissive.png` on one shared atlas grid, with `alignment.json` naming the files. A normal recipe on its own renders with `pixelforge render` like any recipe; a generated pass (`pixelforge-normals`) has exactly the colour recipe's frame rectangles, trimmed or not, so one atlas JSON slices both.
+`pixelbolt scene <scene.json> --out <dir>` exports each lit asset's `color.png`, `normal.png` and `emissive.png` on one shared atlas grid, with `alignment.json` naming the files. A normal recipe on its own renders with `pixelbolt render` like any recipe; a generated pass (`pixelforge-normals`) has exactly the colour recipe's frame rectangles, trimmed or not, so one atlas JSON slices both.
 
 Normal RGB encodes XYZ from −1 to +1 as `(v + 1) × 127.5`, with +X right, +Y down and +Z toward the viewer. That is the "Y−" or DirectX convention, which Unreal also uses. Godot and Unity expect +Y up, so flip the green channel when importing, or lights above a sprite shade it as if they were below:
 

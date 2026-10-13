@@ -1,5 +1,5 @@
 #!/bin/sh
-# Starts PixelForge Studio with the Node.js runtime in this folder. Press Ctrl+C or close the window to stop it.
+# Starts Pixelbolt Studio with the Node.js runtime in this folder. Press Ctrl+C or close the window to stop it.
 self=$0
 while [ -L "$self" ]; do
   target=$(readlink "$self")
@@ -7,7 +7,7 @@ while [ -L "$self" ]; do
 done
 here=$(CDPATH= cd -- "$(dirname "$self")" && pwd -P) || exit 1
 if [ ! -x "$here/runtime/node" ]; then
-  echo "PixelForge Studio cannot find runtime/node next to this script." >&2
+  echo "Pixelbolt Studio cannot find runtime/node next to this script." >&2
   echo "Extract the whole archive first and keep its contents together." >&2
   exit 1
 fi

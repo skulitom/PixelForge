@@ -1,10 +1,10 @@
 # Emberfall
 
-An original, playable fantasy action-platformer and PixelForge stress-test project. Everything stays local for now. All game code and original artwork are covered by the repository's MIT license.
+An original, playable fantasy action-platformer and Pixelbolt stress-test project. Everything stays local for now. All game code and original artwork are covered by the repository's MIT license.
 
 ## Launch
 
-From the PixelForge repository:
+From the Pixelbolt repository:
 
 ```sh
 npm run play
@@ -36,11 +36,11 @@ Ember burns grass and vines, and reignites frozen braziers. Frost freezes enemie
 
 Nine JSON recipes produce **220 frames and 44 named animations**. The collection includes layered knight poses, crawling and flying enemies, a stone Warden, ground variants, braziers, crystals, vines, portals, spell impacts, trees, ruins, ferns, mushrooms, hanging lanterns and banners.
 
-- `recipes/`: editable PixelForge source.
+- `recipes/`: editable Pixelbolt source.
 - `assets/`: PNG atlases, atlas metadata, animated PNG previews, contact sheets and downloadable complete ZIP bundles.
 - `world.js`: deterministic simulation; no browser APIs.
 - `game.js`: atlas playback, rendering, input, audio and UI.
-- `../scripts/build-emberfall.mjs`: original art authoring script. It produces recipes and passes them through PixelForge's real renderer and exporter.
+- `../scripts/build-emberfall.mjs`: original art authoring script. It produces recipes and passes them through Pixelbolt's real renderer and exporter.
 
 ```sh
 npm run art:emberfall
@@ -58,7 +58,7 @@ npm run stress:emberfall
 python scripts/verify-emberfall.py
 ```
 
-The independent image check requires Pillow; PixelForge and the game do not. The stress script writes evidence to `output/emberfall/stress/`, including immutable MCP test revisions. It intentionally reproduces reported bugs and lists them in its result JSON; it does not fix or conceal them.
+The independent image check requires Pillow; Pixelbolt and the game do not. The stress script writes evidence to `output/emberfall/stress/`, including immutable MCP test revisions. It intentionally reproduces reported bugs and lists them in its result JSON; it does not fix or conceal them.
 
 Browser QA requires an independently installed Playwright. Pass its `index.mjs` path explicitly, or omit it if normal module resolution can find Playwright:
 
@@ -73,4 +73,4 @@ For agent control, `window.render_game_to_text()` returns observable gameplay st
 
 Read [the full stress-test report](../docs/bugreports/emberfall-stress-test.md) for evidence, reproduction instructions, limitations and proposed fixes.
 
-Read [the PixelForge art-quality roadmap](../docs/reports/pixelforge-art-quality-roadmap.md) for what this demo reveals about authoring limitations and proposed toolkit improvements for more organic artwork and animation.
+Read [the Pixelbolt art-quality roadmap](../docs/reports/pixelforge-art-quality-roadmap.md) for what this demo reveals about authoring limitations and proposed toolkit improvements for more organic artwork and animation.

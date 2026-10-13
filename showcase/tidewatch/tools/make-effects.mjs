@@ -1,6 +1,6 @@
 // One-time scaffold for art/effects/fx.fx.json, the pixelforge-fx source of the effects recipe. After this, the fx
 // source is authoritative: edit it and recompile with
-//   node bin/pixelforge.js compile showcase/tidewatch/art/effects/fx.fx.json --out showcase/tidewatch/art/recipes/fx.json --force
+//   node bin/pixelbolt.js compile showcase/tidewatch/art/effects/fx.fx.json --out showcase/tidewatch/art/recipes/fx.json --force
 // Leaves, shards, splash, poof and dust are seeded particle emitters; hit and sparkle keep their hand-drawn frames,
 // played by a single particle. Poof puffs bake the original circle formula (lit top-left, cooling to grey) into symbols.
 import { linkedPalette, writeJSON } from './common.mjs';

@@ -1,4 +1,4 @@
-/** Reproducible, bounded PixelForge workload. Findings are reported, not hidden. */
+/** Reproducible, bounded Pixelbolt workload. Findings are reported, not hidden. */
 import {readFile,writeFile,mkdir,mkdtemp,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
@@ -17,7 +17,7 @@ for(const name of (await readdir(path.join(root,'demo','recipes'))).filter(n=>n.
  const atlas=JSON.parse(await readFile(path.join(root,'demo','assets',recipe.name,`${recipe.name}.atlas.json`),'utf8'));assert.equal(JSON.stringify(atlas),JSON.stringify(a.atlas.metadata));
  assert.equal(hash(a.files.get(`${recipe.name}.png`)),hash(await readFile(path.join(root,'demo','assets',recipe.name,`${recipe.name}.png`))));
  const view=inspectProject(a.project);assert.equal(view.cells.length,recipe.frames.length);
- const cli=spawnSync(process.execPath,['bin/pixelforge.js','validate',`demo/recipes/${name}`],{cwd:root,encoding:'utf8'});assert.equal(cli.status,0,cli.stderr);
+ const cli=spawnSync(process.execPath,['bin/pixelbolt.js','validate',`demo/recipes/${name}`],{cwd:root,encoding:'utf8'});assert.equal(cli.status,0,cli.stderr);
  report.assets.push({name:recipe.name,frames:a.project.frames.length,animations:Object.keys(a.project.animations).length,operations:recipe.frames.reduce((n,f)=>n+(f.ops?.length||0)+(f.layers||[]).reduce((n,l)=>n+(l.ops?.length||0),0),0),exportMs:+ms.toFixed(2),files:a.files.size,bundleBytes:[...a.files.values()].reduce((n,b)=>n+b.length,0),warnings:a.project.warnings});
 }
 report.checks.push('All nine recipes validate via CLI; every bundle byte deterministic across two exports; checked-in atlases match recipes.');
@@ -43,7 +43,7 @@ const largeEdit=patchRecipe(max,[{set:'background',value:'#fff'},{set:'palette',
 // Recolor all 256 opaque frames; comparison must report all changes even if the image is sampled.
 largeEdit.recipe.frames.forEach(f=>f.ops[0].color='#abc');const cmp=compareProjects(maxBundle.project,renderProject(largeEdit.recipe));assert.equal(cmp.frames.changed.length,256);assert.ok(cmp.image.omitted>0);report.checks.push(`256-frame comparison reports all frames and explicitly omits ${cmp.image.omitted} preview rows.`);
 const mcpDir=await mkdtemp(path.join(out,'mcp-'));
-function mcp(calls){const input=[{jsonrpc:'2.0',id:0,method:'initialize',params:{protocolVersion:'2025-11-25'}},...calls.map(([name,args],i)=>({jsonrpc:'2.0',id:i+1,method:'tools/call',params:{name,arguments:args}}))].map(v=>JSON.stringify(v)).join('\n')+'\n';const r=spawnSync(process.execPath,['bin/pixelforge.js','mcp','--out',mcpDir],{cwd:root,input,encoding:'utf8',maxBuffer:32*1024*1024});assert.equal(r.status,0,r.stderr);return r.stdout.trim().split('\n').slice(1).map(s=>JSON.parse(s).result);}
+function mcp(calls){const input=[{jsonrpc:'2.0',id:0,method:'initialize',params:{protocolVersion:'2025-11-25'}},...calls.map(([name,args],i)=>({jsonrpc:'2.0',id:i+1,method:'tools/call',params:{name,arguments:args}}))].map(v=>JSON.stringify(v)).join('\n')+'\n';const r=spawnSync(process.execPath,['bin/pixelbolt.js','mcp','--out',mcpDir],{cwd:root,input,encoding:'utf8',maxBuffer:32*1024*1024});assert.equal(r.status,0,r.stderr);return r.stdout.trim().split('\n').slice(1).map(s=>JSON.parse(s).result);}
 const [validated,painted]=mcp([['pixel_validate',{project:knight}],['pixel_patch',{project:knight,changes:edits}]]);assert.ok(!validated.isError&&!painted.isError);const revision=JSON.parse(painted.content[0].text).revision;
 const [inspected,rendered]=mcp([['pixel_inspect',{revision,animation:'idle',grid:true,region:{x:19,y:10,w:16,h:14}}],['pixel_render',{revision}]]);assert.ok(!inspected.isError&&!rendered.isError);assert.equal(JSON.parse(rendered.content[0].text).preview.cells.length,33);report.checks.push('Real MCP validate → paint → restart → grid inspect → render retains revision and returns all 33 frames.');
 

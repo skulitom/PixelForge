@@ -1,5 +1,5 @@
-// Composes a tile map through PixelForge's scene renderer: water everywhere, then autotiled sand and grass, each a
-// single tilemap placement whose blob masks PixelForge computes from the map itself.
+// Composes a tile map through Pixelbolt's scene renderer: water everywhere, then autotiled sand and grass, each a
+// single tilemap placement whose blob masks Pixelbolt computes from the map itself.
 // Usage: node tools/preview-map.mjs <map.txt> <out.png> [--phase 0] [--scale 3] [--scene out.scene.json]
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';

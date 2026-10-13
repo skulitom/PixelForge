@@ -51,7 +51,7 @@ const densityFields = {
 };
 const schema = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
-  title: 'PixelForge project',
+  title: 'Pixelbolt project',
   ...object({
     $schema: { type: 'string' }, version: { const: 1 }, name: id,
     width: int(1, 256), height: int(1, 256),
@@ -108,7 +108,7 @@ await writeFile(new URL('../schema.json', import.meta.url), JSON.stringify(schem
 
 // Sidecar formats evolve independently; compiled sprite recipes remain version 1.
 const poses = {
-  $schema: schema.$schema, title: 'PixelForge authored poses',
+  $schema: schema.$schema, title: 'Pixelbolt authored poses',
   ...object({ format: { const: 'pixelforge-poses' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), palette: schema.properties.palette,
     parts: { type: 'object', maxProperties: 256, propertyNames: id, additionalProperties: object({ rows: ref('rows'), anchor: point, points: { type: 'object', propertyNames: id, additionalProperties: point } }, ['rows']) },
     poses: { ...array({ ...object({ name: id, duration: int(1, 60000), origin: point,
@@ -126,7 +126,7 @@ const themePalette = description => ({ oneOf: [{ type: 'string', description: 'P
 const cueTime = (maximum, description) => ({ oneOf: [int(0, maximum), { type: 'string', pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}([+-][0-9]{1,5})?$' }], description });
 const assetRef = { oneOf: [ref('recipe'), { type: 'string', description: 'Recipe file, resolved by the CLI relative to the scene or inside the MCP root.' }, object({ revision: { type: 'string', pattern: '^[a-f0-9]{12}$' } }, ['revision'])] };
 const scene = {
-  $schema: schema.$schema, title: 'PixelForge scene review',
+  $schema: schema.$schema, title: 'Pixelbolt scene review',
   ...object({ format: { const: 'pixelforge-scene' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), background: color, duration: int(1, 60000),
     palette: themePalette('A theme for every asset: colours for palette keys the recipes share (keys a recipe lacks are ignored), or a palette file resolved by the CLI and MCP.'),
     cues: { type: 'object', maxProperties: 64, propertyNames: id, additionalProperties: int(0, 60000), description: 'Named times in milliseconds; sequence and trajectory times may say "name", "name+90" or "name-20".' },
@@ -149,7 +149,7 @@ const scene = {
   }, ['format', 'version', 'name', 'width', 'height', 'assets', 'instances']), $defs: { ...schema.$defs, recipe: recipeSchema }
 };
 const autotile = {
-  $schema: schema.$schema, title: 'PixelForge autotile template',
+  $schema: schema.$schema, title: 'Pixelbolt autotile template',
   description: 'A template two tiles wide and three tall: row 0 holds an unused preview tile and an inner-corner tile; rows 1–2 hold a 2×2-tile island whose quadrants give outer corners, edges and fill. Compiles to a recipe whose frames copy four quarters each.',
   ...object({ format: { const: 'pixelforge-autotile' }, version: { const: 1 }, name: id, tile: int(2, 128, 'Even tile size in pixels.'), mode: { enum: ['blob', 'cardinal'] }, palette: schema.properties.palette,
     template: { ...ref('rows'), description: 'tile × 3 rows of tile × 2 characters.' },
@@ -179,7 +179,7 @@ const emitter = object({
   pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dissolve pattern, as for the dither operation: bayer2, bayer4 (default), bayer8, noise (ordered by the effect\'s seed) or a matrix of ranks, e.g. [[0, 1, 2], [1, 2, 0], [2, 0, 1]] for diagonal stripes.' }
 }, ['at', 'shapes']);
 const fx = {
-  $schema: schema.$schema, title: 'PixelForge particle effects',
+  $schema: schema.$schema, title: 'Pixelbolt particle effects',
   description: 'Seeded particle emitters compiled into an ordinary recipe: one frame sequence and animation per effect (frames <effect>-0, <effect>-1…), drawn with stamp, grid and line operations on these symbols. Deterministic for a given seed.',
   ...object({ format: { const: 'pixelforge-fx' }, version: { const: 1 }, name: id, width: int(1, 256), height: int(1, 256), palette: schema.properties.palette,
     symbols: { type: 'object', minProperties: 1, propertyNames: id, additionalProperties: ref('rows') }, anchor: schema.properties.anchor,
@@ -189,7 +189,7 @@ const fx = {
   }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: schema.$defs
 };
 const normals = {
-  $schema: schema.$schema, title: 'PixelForge normal pass',
+  $schema: schema.$schema, title: 'Pixelbolt normal pass',
   description: 'Derives a lighting normal pass from a colour recipe and compiles it to an ordinary recipe aligned with it (same size, frame names and durations, animations and atlas layout), ready for a scene asset\'s normal and editable like any recipe. Each separate shape is rounded from its silhouette, lighter colours can be raised by detail, and every pixel takes the nearest of 17 directions: palette key 5 faces the viewer, the keypad digits 1–4 and 6–9 lean 30° the way they sit around 5, and q w e a d z x c lean 60° the same way.',
   ...object({ format: { const: 'pixelforge-normals' }, version: { const: 1 }, name: { ...id, description: 'Name of the normal recipe; default <recipe name>-normal.' },
     recipe: { ...assetRef, description: 'The colour recipe: inline, a file resolved by the CLI relative to this source (or inside the MCP root), or {"revision": id} through MCP.' },

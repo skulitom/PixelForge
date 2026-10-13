@@ -120,7 +120,7 @@ const caption = { version: 1, name: 'caption', width: 240, height: 32, palette: 
   sheet: { columns: 2, padding: 1 } };
 
 // A normal pass derived from the spirit, and a small night scene that lights it. Move the light in the scene viewer
-// (pixelforge preview examples/forest-spirit-lit.scene.json) to see the form turn toward it.
+// (pixelbolt preview examples/forest-spirit-lit.scene.json) to see the form turn toward it.
 const spiritNormals = { format: 'pixelforge-normals', version: 1, recipe: 'forest-spirit.json' };
 const litSpirit = { format: 'pixelforge-scene', version: 1, name: 'forest-spirit-lit', width: 72, height: 40, duration: 1200, background: '#141a2a',
   assets: { spirit: { recipe: 'forest-spirit.json', normal: 'forest-spirit-normal.json' } },

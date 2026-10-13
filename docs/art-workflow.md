@@ -1,6 +1,6 @@
-# Deliberate pixel art with PixelForge
+# Deliberate pixel art with Pixelbolt
 
-PixelForge supplies exact pixels and inexpensive revisions. The author still has to design the silhouette, choose meaningful color shapes and judge the motion. The [quality lab](art-quality-lab.md) is an original worked example, with both an unsuccessful room blockout and its revised result. It is a self-reviewed study, not independent evidence of Animal Well parity.
+Pixelbolt supplies exact pixels and inexpensive revisions. The author still has to design the silhouette, choose meaningful color shapes and judge the motion. The [quality lab](art-quality-lab.md) is an original worked example, with both an unsuccessful room blockout and its revised result. It is a self-reviewed study, not independent evidence of Animal Well parity.
 
 ## Write a brief outside the recipe
 
@@ -64,8 +64,8 @@ Named selections live in an overlay sidecar with `space: "canvas"`. They do not 
 ## Rebuild-safe overlays
 
 ```sh
-node bin/pixelforge.js overlay base.json --changes edits.json --selections regions.json --out corrections.json
-node bin/pixelforge.js patch rebuilt-base.json --changes corrections.json --out approved.json --image difference.png
+node bin/pixelbolt.js overlay base.json --changes edits.json --selections regions.json --out corrections.json
+node bin/pixelbolt.js patch rebuilt-base.json --changes corrections.json --out approved.json --image difference.png
 ```
 
 `regions.json` maps names to `{space:"canvas",x,y,w,h,mask?}`. A grid/move/recolor change can reference one with `selection:"fern-tip"`; its value supplies action-specific fields. `createOverlay` and `applyOverlay` offer the same JavaScript API.
@@ -100,11 +100,11 @@ A pose written as `{ "name": "swing-1", "tween": { "from": "raise", "to": "strik
 Compiled recipes carry each pose origin as the frame anchor (one recipe-level `anchor` when every pose shares it), and each marker's position as a named frame point, so the atlas alone tells a game where the feet, hand or blade tip are. Marker names are unique within a pose.
 
 ```sh
-node bin/pixelforge.js compile actor.poses.json --out actor.json --metadata actor.meta.json
-node bin/pixelforge.js preview actor.json
+node bin/pixelbolt.js compile actor.poses.json --out actor.json --metadata actor.meta.json
+node bin/pixelbolt.js preview actor.json
 ```
 
-The metadata exports each pose origin, resolved part anchors/points, markers, and expanded animation timing. Coordinates are **unscaled source pixels**, positive y down. For a game using `sheet.scale`, scale attachment coordinates explicitly; atlas rectangles already use exported pixels. Cue times are original milliseconds; divide by a positive playback rate in the consumer. Markers occur on entry into a pose, including repeated entries, reverse/pingpong positions and the first entry of a new loop. Nonlooping final holds do not repeatedly fire markers. PixelForge exports cues; the game owns event dispatch, collision and damage. Keep the `.poses.json` authoritative and reapply approved overlays after compilation.
+The metadata exports each pose origin, resolved part anchors/points, markers, and expanded animation timing. Coordinates are **unscaled source pixels**, positive y down. For a game using `sheet.scale`, scale attachment coordinates explicitly; atlas rectangles already use exported pixels. Cue times are original milliseconds; divide by a positive playback rate in the consumer. Markers occur on entry into a pose, including repeated entries, reverse/pingpong positions and the first entry of a new loop. Nonlooping final holds do not repeatedly fire markers. Pixelbolt exports cues; the game owns event dispatch, collision and damage. Keep the `.poses.json` authoritative and reapply approved overlays after compilation.
 
 ## Scene and tile review
 
@@ -119,8 +119,8 @@ Placements can relate to each other:
 - **Shade placements.** `shade: -1` draws no colours: wherever the placement's frame is opaque, the pixels already drawn beneath move one step down the ramps of the asset's recipe. One shadow frame then darkens stone, floor, moss or brick correctly, and an attached shadow follows an actor across them.
 
 ```sh
-node bin/pixelforge.js preview examples/quality/hollow.scene.json
-node bin/pixelforge.js scene examples/quality/hollow.scene.json --out output/room-review
+node bin/pixelbolt.js preview examples/quality/hollow.scene.json
+node bin/pixelbolt.js scene examples/quality/hollow.scene.json --out output/room-review
 ```
 
 The scene viewer offers playback, scrubbing, native size, grayscale, a pixel-density overlay, lighting controls and scene-settings download. Drag on the scene to move the chosen light (pressing on another light's marker picks that one); a dashed ring shows how far it reaches, and sliders set its position, height and radius, its colour and the scene's ambient light, all redrawn as you go. Changes are in memory until downloaded; the download writes back each light's position and every field you changed. The export includes `scene.json`, lit/unlit stills, a browser viewer, aligned color/material atlases, and `alignment.json`. Serve its folder over HTTP for module loading, or use `preview` with the original manifest. Large rooms should be composed in a game: this review format is bounded to 256×256, 64 assets, 256 placement declarations, 4,096 expanded draws, 4,194,304 combined source-pass pixels, and 4,194,304 drawn pixels per view. Clipping warnings name the placements that overhang. It does not run a world state machine.
@@ -175,7 +175,7 @@ A `pixelforge-autotile` source ([autotile.schema.json](../autotile.schema.json))
 Draw it like a tiny island in the sea: the island's four corner quadrants are outer corners, the quadrants between them are edges, and its center is fill, all consistent at quadrant boundaries. `mode: "blob"` (default) builds the 47-tile set from eight neighbours (N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128; a diagonal counts only when both adjacent sides match). `mode: "cardinal"` builds 16 tiles from four neighbours (N=1, E=2, S=4, W=8) without inner corners. `frame` names each tile with `{mask}`. Optional `variants` (up to 16, each with a `name`, `duration` and frame `palette`) multiply the set for palette-cycled animation (surf, glowing lava), with `{variant}` in the frame name and an optional per-mask `animation`. A variant may also redraw the set from its own `template` of the same size, compiled as the symbol `template-<name>`: cracked or mossy stone that keeps the base set's edges. A tilemap legend then mixes the sets with `"frames": ["wall-{mask}-plain", "wall-{mask}-cracked"], "weights": [2, 1]`.
 
 ```sh
-node bin/pixelforge.js autotile shore.autotile.json --out shore.json
+node bin/pixelbolt.js autotile shore.autotile.json --out shore.json
 ```
 
 Every compiled frame is one `autotile` operation naming its neighbour mask, drawn from the `template` symbol, so a frame reads as `{"op": "autotile", "symbol": "template", "mask": 23}` and editing the template in the compiled recipe updates the whole set. Use the same masks in a scene `tilemap` legend (`"autotile": "blob"`) or in a game.
@@ -194,8 +194,8 @@ A `pixelforge-fx` source ([fx.schema.json](../fx.schema.json)) describes seeded 
 ```
 
 ```sh
-node bin/pixelforge.js compile examples/effects.fx.json --out output/effects.json --metadata output/effects.meta.json
-node bin/pixelforge.js preview examples/effects.fx.json   # the studio shows the compiled recipe
+node bin/pixelbolt.js compile examples/effects.fx.json --out output/effects.json --metadata output/effects.meta.json
+node bin/pixelbolt.js preview examples/effects.fx.json   # the studio shows the compiled recipe
 ```
 
 Each effect becomes frames `<effect>-0`, `<effect>-1`… and an animation named after the effect. An emitter spawns a `burst` at frame `start` or a `rate` of particles per frame until `end`, inside an `area` box centred on `at`. Per-particle values are picked from `[min, max]` ranges: `angle` (degrees clockwise, 0 right, 90 down, 270 up), `speed` (pixels per frame) and `life` (frames). Each frame velocity gains `gravity` and an optional `attract` pull, loses `drag`, and moves the particle; a `floor` stops it, with optional `bounce`. `sway` adds a drawn wobble (x follows a sine, y a cosine). `shapes` is one symbol sequence, or several with one picked per particle; `play` spreads it over the life (`life`, default), steps one per frame from a random start (`loop`, for flutter) or steps and holds (`once`, for hand-drawn flashes). `remaps` gives colour variants, `trail` draws a one-pixel streak from an earlier position, and `dissolve` thins the last share of each life through an ordered-dither `pattern` (a Bayer name, `noise` ordered by the effect's `seed`, or a custom rank matrix, as for the `dither` operation; `[[0, 1, 2], [1, 2, 0], [2, 0, 1]]` dissolves along diagonals).
@@ -207,10 +207,10 @@ The compiler makes behaviour cheap to try; it does not supply it. Give each mate
 ## Lossless raster return path
 
 ```sh
-node bin/pixelforge.js import corrected.png --name refined --atlas optional.atlas.json --out refined.json --metadata import.provenance.json
+node bin/pixelbolt.js import corrected.png --name refined --atlas optional.atlas.json --out refined.json --metadata import.provenance.json
 ```
 
-Supported PNGs are non-interlaced 8-bit RGB/RGBA with standard filters and checked chunk CRCs, at most 32 MiB compressed, 4096 per side and 16,777,216 pixels. APNG, indexed/grayscale PNG, `tRNS`, interlace and unsupported critical chunks fail clearly. No quantization, resizing, alpha modification or color-profile conversion is performed. Channel values, including RGB under alpha zero, are preserved. A single image must fit the sprite limits. Optional PixelForge/TexturePacker-style metadata requires `meta.scale:1`, equal-size untrimmed/unrotated rectangles, and supported frame counts/source-area limits; durations and expanded named sequences/loop flags survive. Inputs with at most 256 visible colors (the palette limit) return as compact palette grids, using ASCII keys first and then single-code-unit Latin letters; richer inputs use exact final `pixels`. Hidden RGB under alpha zero is preserved with explicit corrections. Neither representation claims to reconstruct the original drawing operations. Keep pose anchors/cues in their separately saved metadata; this import does not reconstruct them. Native Aseprite interchange is still future work.
+Supported PNGs are non-interlaced 8-bit RGB/RGBA with standard filters and checked chunk CRCs, at most 32 MiB compressed, 4096 per side and 16,777,216 pixels. APNG, indexed/grayscale PNG, `tRNS`, interlace and unsupported critical chunks fail clearly. No quantization, resizing, alpha modification or color-profile conversion is performed. Channel values, including RGB under alpha zero, are preserved. A single image must fit the sprite limits. Optional Pixelbolt/TexturePacker-style metadata requires `meta.scale:1`, equal-size untrimmed/unrotated rectangles, and supported frame counts/source-area limits; durations and expanded named sequences/loop flags survive. Inputs with at most 256 visible colors (the palette limit) return as compact palette grids, using ASCII keys first and then single-code-unit Latin letters; richer inputs use exact final `pixels`. Hidden RGB under alpha zero is preserved with explicit corrections. Neither representation claims to reconstruct the original drawing operations. Keep pose anchors/cues in their separately saved metadata; this import does not reconstruct them. Native Aseprite interchange is still future work.
 
 ## Aligned material passes
 
@@ -220,9 +220,9 @@ Scene assets may provide normal and emissive recipes, drawn by hand or generated
 
 ### Generated normal passes
 
-A `pixelforge-normals` source ([normals.schema.json](../normals.schema.json)) derives a normal pass instead of drawing one: `{ "format": "pixelforge-normals", "version": 1, "recipe": "lamp.json" }` compiles with `pixelforge compile lamp.normals.json --out lamp-normal.json`, or MCP `pixel_compile`, where the recipe may also be `{"revision": id}`. Each separate shape in a frame is rounded from its silhouette like a cushion: its rim leans outward and its thickest point faces the viewer, so props in one frame each get their own dome. `bevel` (1–64) rounds only that many pixels in from the edge and leaves a flat top. `detail` (0–1, default 0) raises lighter colours by up to 2 pixels to emboss brick, bark or rock; a colour on a ramp counts its step along that ramp, so two materials at the same step stay level, and any other colour counts its brightness. Transparent pixels are edges and the canvas border is not, so tiles and shapes cut by the frame stay open; frames with `wrap` read their slopes across the border and tile without seams.
+A `pixelforge-normals` source ([normals.schema.json](../normals.schema.json)) derives a normal pass instead of drawing one: `{ "format": "pixelforge-normals", "version": 1, "recipe": "lamp.json" }` compiles with `pixelbolt compile lamp.normals.json --out lamp-normal.json`, or MCP `pixel_compile`, where the recipe may also be `{"revision": id}`. Each separate shape in a frame is rounded from its silhouette like a cushion: its rim leans outward and its thickest point faces the viewer, so props in one frame each get their own dome. `bevel` (1–64) rounds only that many pixels in from the edge and leaves a flat top. `detail` (0–1, default 0) raises lighter colours by up to 2 pixels to emboss brick, bark or rock; a colour on a ramp counts its step along that ramp, so two materials at the same step stay level, and any other colour counts its brightness. Transparent pixels are edges and the canvas border is not, so tiles and shapes cut by the frame stay open; frames with `wrap` read their slopes across the border and tile without seams.
 
-The result is an ordinary recipe with the colour recipe's size, frame names and durations, animations and `sheet`. It covers exactly the colour silhouette, so its atlas has the same rectangles as the colour atlas, trimmed or not. Its palette names 17 directions: `5` faces the viewer, the digits around it lean 30° the way they sit around 5 on a numeric keypad (`8` up, `6` right, `1` down-left), and `q w e`, `a d`, `z x c` lean 60° the same way on a keyboard. A generated pass therefore reads as letters around the rims and digits across the faces, and a fix is written the same way: `a` on a left rim, `9` on a face turned up and right. [examples/forest-spirit.normals.json](../examples/forest-spirit.normals.json) compiles to [examples/forest-spirit-normal.json](../examples/forest-spirit-normal.json); `pixelforge preview examples/forest-spirit-lit.scene.json` lights it, and you can move the light.
+The result is an ordinary recipe with the colour recipe's size, frame names and durations, animations and `sheet`. It covers exactly the colour silhouette, so its atlas has the same rectangles as the colour atlas, trimmed or not. Its palette names 17 directions: `5` faces the viewer, the digits around it lean 30° the way they sit around 5 on a numeric keypad (`8` up, `6` right, `1` down-left), and `q w e`, `a d`, `z x c` lean 60° the same way on a keyboard. A generated pass therefore reads as letters around the rims and digits across the faces, and a fix is written the same way: `a` on a left rim, `9` on a face turned up and right. [examples/forest-spirit.normals.json](../examples/forest-spirit.normals.json) compiles to [examples/forest-spirit-normal.json](../examples/forest-spirit-normal.json); `pixelbolt preview examples/forest-spirit-lit.scene.json` lights it, and you can move the light.
 
 Inflating a silhouette cannot see forms its outline does not show. A tower or a box seen from the front comes out as a cushion, with ridges where its rims meet, and overlapping parts (an arm across the body) share one surface. Treat the pass as a start: light it from both sides in a scene, correct it with `patch`, and keep approved corrections in an overlay; they reapply to the frames a later compile leaves unchanged. Hand-drawn passes stay right for strong geometric forms (Tidewatch's lighthouse is one).
 

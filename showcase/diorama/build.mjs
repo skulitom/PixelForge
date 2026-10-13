@@ -1,11 +1,11 @@
 // Diorama study: an original 3/4 top-down dungeon room, a floating "diorama" of 8 px tiles. It began as a test of what
-// that style asks of PixelForge (docs/reports/diorama-feasibility-2026-10-07.md) and now uses the features the test
+// that style asks of Pixelbolt (docs/reports/diorama-feasibility-2026-10-07.md) and now uses the features the test
 // called for: the room is one recipe whose `tilemap` operation draws walls, faces, cliffs, water and bricks by rules;
 // moss is smooth value noise over the real floor; shadows move colours along palette ramps; the scene sorts actors by
 // ground, attaches the smear and the hero's shadow, writes the strike's times once and re-themes by palette file.
 //
 // Usage: node showcase/diorama/build.mjs [--force | --check]
-// Writes ordinary PixelForge sources into art/. This script is authoritative; the written files are its output.
+// Writes ordinary Pixelbolt sources into art/. This script is authoritative; the written files are its output.
 // Existing files are kept unless --force is passed; --check compares without writing.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

@@ -1,10 +1,10 @@
-# PixelForge competitive review
+# Pixelbolt competitive review
 
 Reviewed 27 September 2026. Scope: agent-driven pixel art, animation, inspection and game export. Evidence is public first-party documentation and repository READMEs, not a hands-on art-quality or performance benchmark. Strengths below are documented capabilities; assessments and priorities are our judgments. Lack of documentation is not proof a feature is absent.
 
 ## What the market changes about our direction
 
-Agent drawing, text grids, local execution and deterministic rendering already exist elsewhere. They are necessary capabilities, not defensible claims of uniqueness. PixelForge's useful position is a small, reproducible **asset compiler**: readable recipes, few agent tools, inspectable output, and dependable web/game exports. We need to prove that the complete workflow takes less setup and less corrective work.
+Agent drawing, text grids, local execution and deterministic rendering already exist elsewhere. They are necessary capabilities, not defensible claims of uniqueness. Pixelbolt's useful position is a small, reproducible **asset compiler**: readable recipes, few agent tools, inspectable output, and dependable web/game exports. We need to prove that the complete workflow takes less setup and less corrective work.
 
 The strongest competition is both established editors with automation and newer tools built directly for agents. We included small specialist repositories because their workflows are closer to ours; GitHub popularity was a filter for visual references, not a reason to exclude relevant competitors.
 
@@ -23,9 +23,9 @@ The strongest competition is both established editors with automation and newer 
 
 ## Adopted from Pixel Composer
 
-Reviewed 28 September 2026 against its source at version 1.22. Both PixelForge showcases had hand-written the same helpers: Emberfall's generator has a seeded random-number generator, a polygon helper and trig-driven particle bursts; Tidewatch's `make-fx.mjs` has a particle loop, polar slash arcs and hand-coded dissolve patterns. Pixel Composer's node set covers those needs, so these ideas moved into PixelForge as text, deterministic and palette-exact:
+Reviewed 28 September 2026 against its source at version 1.22. Both Pixelbolt showcases had hand-written the same helpers: Emberfall's generator has a seeded random-number generator, a polygon helper and trig-driven particle bursts; Tidewatch's `make-fx.mjs` has a particle loop, polar slash arcs and hand-coded dissolve patterns. Pixel Composer's node set covers those needs, so these ideas moved into Pixelbolt as text, deterministic and palette-exact:
 
-| Pixel Composer | PixelForge | Adaptation |
+| Pixel Composer | Pixelbolt | Adaptation |
 | --- | --- | --- |
 | Dither (Bayer 2/4/8, custom matrix, palette mode) | `dither` op | Two exact colours instead of nearest-palette search; canvas-anchored patterns, density ramps, `over` masks, erase. |
 | Outline (inside/outside/middle, width, 3×3 directions) | `outline` options | Same placements and direction mask; the original 1px outside default is byte-identical. |
@@ -43,7 +43,7 @@ Validation: Tidewatch's effects recipe was rebuilt from a `pixelforge-fx` source
 
 Reviewed 12 October 2026 from Moonfell RPG's announcement video of version 3.2.8, which is not yet released, so no source was read. It loads a colour PNG, generates and edits a normal map and a "luminance" mask (how much light each pixel takes), and previews them under a point light with height, falloff, brightness, ambient and colour, with views of the lit image and of each pass.
 
-| Pixel Art Lighter | PixelForge | Adaptation |
+| Pixel Art Lighter | Pixelbolt | Adaptation |
 | --- | --- | --- |
 | Generate a normal map | `pixelforge-normals` compiler | Each shape is rounded from its silhouette, with optional ramp-aware relief, and quantized to 17 named directions, so the result is an editable recipe aligned frame for frame. Every lit asset in our showcases had been drawn by a one-off script, and Tidewatch's pickups shipped a flat placeholder normal. |
 | Modify the normal map | `patch` and overlays on the generated recipe | Direction keys are keypad digits and keyboard letters, so a fix is an ordinary grid edit that survives recompiling where frames are unchanged. |
@@ -51,7 +51,7 @@ Reviewed 12 October 2026 from Moonfell RPG's announcement video of version 3.2.8
 
 Not adopted: the luminance mask, a material-mask pass (ramp lighting already leaves colours on no ramp, such as outlines, unlit, and brightens only within the palette); brightness above the authored colour (multiply lighting deliberately stops there); background detection (PNG import is lossless and does not guess a background); and reloading when files change on disk.
 
-## Where PixelForge is already behind
+## Where Pixelbolt is already behind
 
 The toolkit now has deterministic JSON recipes, palettes, text grids, symbols, frame inheritance, layers, PNG/APNG/atlas/CSS exports, a Canvas player, a local studio and eight MCP tools. Inspection supports region readback, silhouette, grayscale, onion and tile views, and advisory diagnostics; targeted patches include exact canvas-coordinate painting, regional edits and cleanup proposals. Immutable MCP recipe revisions survive restarts, and render previews show all frames or a selected animation's playback order. Pose sources, autotile templates and particle effect sources compile to ordinary recipes, and lossless PNG import brings externally edited art back. Remaining gaps include palette quantization, ready-made motion templates, persistent browser editing history, GIF export and native Aseprite interchange. Inline MCP contact sheets are static; exported APNGs and the HTML preview provide actual playback. (Updated 28 September 2026.)
 
@@ -61,7 +61,7 @@ A JSON-valid sprite can still be unattractive or animate badly. Automated tests 
 
 The local Emberfall exercise now provides a more specific [art-quality roadmap](reports/pixelforge-art-quality-roadmap.md), with source evidence, proposed editing and motion tools, acceptance criteria and a visual evaluation plan. It extends this review's priorities; it does not establish competitive art-quality superiority.
 
-1. **Inspection and targeted corrections.** A bounded inspect operation returning a selected frame, contact sheet, cropped region or palette-character grid; a small patch operation with clear before/after feedback. Success: repair an eye in one frame without resending the complete recipe, and let the agent inspect all poses without a browser. *Status, 27 September 2026: built. Inspection (`pixel_inspect`, `pixelforge inspect`) gives contact sheets, cropped regions and palette-key grids. Patching (`pixel_patch`, `pixelforge patch`) applies atomic set/insert/remove edits and canvas-coordinate painting to a persistent revision, so an agent sends the recipe once, and reports every changed pixel with a before/after image. Render previews show every frame. Still open: comparing these workflows against competitors with the validation briefs below.*
+1. **Inspection and targeted corrections.** A bounded inspect operation returning a selected frame, contact sheet, cropped region or palette-character grid; a small patch operation with clear before/after feedback. Success: repair an eye in one frame without resending the complete recipe, and let the agent inspect all poses without a browser. *Status, 27 September 2026: built. Inspection (`pixel_inspect`, `pixelbolt inspect`) gives contact sheets, cropped regions and palette-key grids. Patching (`pixel_patch`, `pixelbolt patch`) applies atomic set/insert/remove edits and canvas-coordinate painting to a persistent revision, so an agent sends the recipe once, and reports every changed pixel with a before/after image. Render previews show every frame. Still open: comparing these workflows against competitors with the validation briefs below.*
 2. **Reliable project recovery.** Autosaved browser drafts, explicit dirty/saved state, and undoable structured changes. Success: an accidental reload cannot discard a working recipe. *MCP recipe revisions now persist across restarts, including edits that have not been exported. Browser draft recovery remains separate work.*
 3. **Helpful quality checks.** Empty frames, clipping, palette growth, isolated stray pixels, unexpected semi-transparency and tile-edge mismatch. Report findings as advisory with coordinates; legitimate artistic choices must not be rejected. *Status, 28 September 2026: built as advisory diagnostics (duplicate and empty frames, isolated pixels, colours outside the palette, loop jumps and per-frame cleanup counts), tile seam evidence in the tile view, and clipping locations in every validation. Unexpected semi-transparency is not reported yet.*
 4. **Reusable motion.** Named parts and integer keyframes for bob, blink, recoil and walk templates. Keep pose substitution explicit where rotating pixels would damage the art. Measure authoring tokens and consistency against manual frame recipes. *Status, 28 September 2026: pose sources provide named parts, attachments, mirrored poses, rotated parts and eased tweens; ready-made bob, blink and walk templates are not built, and the token comparison has not been run.*

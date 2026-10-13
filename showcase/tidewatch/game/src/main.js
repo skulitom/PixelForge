@@ -23,7 +23,7 @@ window.__tidewatch = { get world() { return world; }, get mode() { return mode; 
   // Deterministic stepping for tests and headless panes where requestAnimationFrame is throttled.
   advance(ms) { let now = performance.now(); for (let t = 0; t < ms; t += 1000 / 60) { now += 1000 / 60; accumulator += 1000 / 60; fps.frames = 0; tick(1000 / 60, now); } } };
 
-// Static terrain: PixelForge's blob masks are resolved once; each shore tile plays its own compiled surf cycle.
+// Static terrain: Pixelbolt's blob masks are resolved once; each shore tile plays its own compiled surf cycle.
 const masks = [];
 for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
   masks.push({ sand: isSand(x, y) ? neighbourMask('blob', (dx, dy) => isSand(x + dx, y + dy)) : -1, grass: isGrass(x, y) ? neighbourMask('blob', (dx, dy) => isGrass(x + dx, y + dy)) : -1, variant: 'abc'[(x * 7 + y * 13 + ((x * y) % 5)) % 3] });
@@ -121,7 +121,7 @@ function drawTitle(time) {
     let cx = x;
     for (const ch of word) { const name = fontMap[ch], f = atlases.font.lookup.get(name); g.drawImage(ui.tint(color), f.x, f.y, f.w, f.h, cx + dx, 34 + dy, f.w * scale, f.h * scale); cx += ui.widths.get(name) * scale; }
   }
-  const sub = 'A PixelForge showcase'; ui.text(sub, Math.floor((VIEW_W - ui.measure(sub)) / 2), 66, '#d2d9e8');
+  const sub = 'A Pixelbolt showcase'; ui.text(sub, Math.floor((VIEW_W - ui.measure(sub)) / 2), 66, '#d2d9e8');
   if (Math.floor(time / 500) % 2) { const t = 'Press Enter or tap to begin'; ui.text(t, Math.floor((VIEW_W - ui.measure(t)) / 2), 124, '#ffffff'); }
 }
 function drawEnding(time) {

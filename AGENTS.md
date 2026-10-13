@@ -1,6 +1,6 @@
-# PixelForge
+# Pixelbolt
 
-To **use** PixelForge for artwork, start with [the pixel art skill](skills/pixel-art/SKILL.md), [the authoring guide](docs/agent-guide.md) and [schema.json](schema.json). [llms.txt](llms.txt) indexes the public documentation; [README.md](README.md) includes CLI and MCP setup. The instructions below apply when **contributing to the toolkit**.
+To **use** Pixelbolt for artwork, start with [the pixel art skill](skills/pixel-art/SKILL.md), [the authoring guide](docs/agent-guide.md) and [schema.json](schema.json). [llms.txt](llms.txt) indexes the public documentation; [README.md](README.md) includes CLI and MCP setup. The instructions below apply when **contributing to the toolkit**.
 
 This is an agent-first pixel art toolkit. Keep the core and runtime free of dependencies. Use standard Node.js APIs for the CLI, PNG/APNG encoding, ZIP and the local server. No build step is required.
 

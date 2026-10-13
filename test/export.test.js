@@ -41,7 +41,7 @@ test('exports are deterministic, including ZIP bytes', async () => {
   const zip = createZip(a.files); assert.equal(zip.readUInt32LE(0), 0x04034b50); assert.equal(zip.readUInt32LE(zip.length - 22), 0x06054b50);
 });
 test('export refuses overwrite before changing any existing files', async t => {
-  const root = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(root, 'pixelforge-test-'));
+  const root = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(root, 'pixelbolt-test-'));
   t.after(async () => { assert.ok(dir.startsWith(root + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const bundle = await createBundle(tiny); await writeBundle(bundle, dir);
   await assert.rejects(writeBundle(bundle, dir), /Output already exists/);

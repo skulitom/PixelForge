@@ -12,7 +12,7 @@ let temp, base, build, pkg, metadata, template;
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const writeJSON = (file, value) => writeFile(file, json(value));
 before(async () => {
-  temp = await mkdtemp(path.join(os.tmpdir(), 'pixelforge-mcpb-test-'));
+  temp = await mkdtemp(path.join(os.tmpdir(), 'pixelbolt-mcpb-test-'));
   base = path.join(temp, 'source');
   build = await buildMcpb({ out: path.join(temp, 'first'), check: true });
   // A fixture lets release validation reject version disagreements without coupling ordinary tests to the
@@ -38,17 +38,47 @@ after(async () => {
 
 test('registry source is metadata-only with a short description', async () => {
   const server = JSON.parse(await readFile(path.join(root, 'server.json')));
-  assert.equal(server.name, 'io.github.skulitom/pixelforge');
+  assert.equal(pkg.name, 'pixelbolt');
+  assert.equal(pkg.version, '0.8.0');
+  assert.deepEqual(pkg.bin, { pixelbolt: './bin/pixelbolt.js', pixelforge: './bin/pixelforge.js' });
+  assert.equal(pkg.homepage, 'https://github.com/skulitom/Pixelbolt#readme');
+  assert.equal(pkg.repository.url, 'git+https://github.com/skulitom/Pixelbolt.git');
+  assert.equal(pkg.bugs.url, 'https://github.com/skulitom/Pixelbolt/issues');
+  assert.equal(server.name, 'io.github.skulitom/pixelbolt');
+  assert.equal(server.version, pkg.version);
+  assert.equal(server.title, 'Pixelbolt pixel art toolkit');
+  assert.equal(server.websiteUrl, pkg.homepage);
+  assert.deepEqual(server.repository, { url: 'https://github.com/skulitom/Pixelbolt', source: 'github', id: '1389891909' });
+  assert.equal(template.name, 'pixelbolt');
+  assert.equal(template.display_name, 'Pixelbolt');
+  assert.equal(template.server.entry_point, 'bin/pixelbolt.js');
+  assert.deepEqual(template.server.mcp_config.args, ['${__dirname}/bin/pixelbolt.js', 'mcp', '--root', '${user_config.workspace}', '--out', '${user_config.workspace}/Pixelbolt']);
   assert.equal(server.$schema, 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json');
   assert.equal(Object.hasOwn(server, 'packages'), false);
   assert.ok(server.description.length <= 100);
   assert.equal(Object.hasOwn(template, 'version'), false);
 });
 
+test('release workflow guards and assets use the renamed repository', async () => {
+  let guards = 0;
+  for (const file of ['release.yml', 'publish-registry.yml', 'test.yml']) {
+    const text = await readFile(path.join(root, '.github/workflows', file), 'utf8');
+    const matches = [...text.matchAll(/github\.repository\s*==\s*(['"])(.*?)\1/g)];
+    assert.equal(matches.length, [...text.matchAll(/github\.repository\s*==/g)].length, file);
+    for (const match of matches) { assert.equal(match[2], 'skulitom/Pixelbolt', file); guards++; }
+    assert.doesNotMatch(text, /pixelforge/i);
+    assert.ok(text.includes('pixelbolt.mcpb'), file);
+    if (file === 'release.yml') { assert.ok(text.includes('name: pixelbolt-mcpb')); assert.ok(text.includes('--title "Pixelbolt $RELEASE_TAG"')); }
+    if (file === 'publish-registry.yml') assert.ok(text.includes('io.github.skulitom%2Fpixelbolt'));
+    if (file === 'test.yml') assert.ok(text.includes('PixelboltStudio-*'));
+  }
+  assert.equal(guards, 3);
+});
+
 test('MCPB builds are byte-identical, including across CRLF and LF checkouts', async () => {
   const second = await buildMcpb({ base, out: path.join(temp, 'second') });
   assert.deepEqual(second.bytes, build.bytes);
-  assert.equal(await readFile(`${build.bundle}.sha256`, 'utf8'), `${sha256(build.bytes)}  pixelforge.mcpb\n`);
+  assert.equal(await readFile(`${build.bundle}.sha256`, 'utf8'), `${sha256(build.bytes)}  pixelbolt.mcpb\n`);
   assert.deepEqual(JSON.parse(await readFile(path.join(temp, 'first/manifest.json'))), build.manifest);
   const file = path.join(base, 'src/mcp.js'), original = await readFile(file, 'utf8');
   try {
@@ -56,6 +86,8 @@ test('MCPB builds are byte-identical, including across CRLF and LF checkouts', a
     assert.deepEqual((await assembleMcpb({ base })).bytes, build.bytes);
   } finally { await writeFile(file, original); }
   const files = readZip(build.bytes);
+  assert.ok(files.has('bin/pixelbolt.js'));
+  assert.ok(files.has('bin/pixelforge.js'));
   assert.ok(files.has('studio/scene-player.js'));
   for (const excluded of ['src/server.js', 'studio/index.html', 'server.json', 'scripts/build-mcpb.mjs', 'docs/PUBLISHING.md']) assert.equal(files.has(excluded), false, excluded);
 });
@@ -99,15 +131,15 @@ test('the builder refuses template versions, non-stable versions and different e
     }
   } finally { await writeJSON(path.join(base, 'package.json'), pkg); }
   const out = path.join(temp, 'occupied');
-  await mkdir(out); await writeFile(path.join(out, 'pixelforge.mcpb'), 'keep');
+  await mkdir(out); await writeFile(path.join(out, 'pixelbolt.mcpb'), 'keep');
   await assert.rejects(buildMcpb({ base, out }), /already exists with different contents/);
-  assert.equal(await readFile(path.join(out, 'pixelforge.mcpb'), 'utf8'), 'keep');
+  assert.equal(await readFile(path.join(out, 'pixelbolt.mcpb'), 'utf8'), 'keep');
 });
 
 test('registry entry identifies the exact release bundle and preserves source metadata', async () => {
   const out = path.join(temp, 'server.registry.json'), before = await readFile(path.join(base, 'server.json'));
   const entry = await registryEntry({ base, tag: `v${pkg.version}`, bundle: build.bundle, out });
-  assert.deepEqual(entry.packages, [{ registryType: 'mcpb', identifier: `https://github.com/skulitom/PixelForge/releases/download/v${pkg.version}/pixelforge.mcpb`, version: pkg.version, fileSha256: sha256(build.bytes), transport: { type: 'stdio' } }]);
+  assert.deepEqual(entry.packages, [{ registryType: 'mcpb', identifier: `https://github.com/skulitom/Pixelbolt/releases/download/v${pkg.version}/pixelbolt.mcpb`, version: pkg.version, fileSha256: sha256(build.bytes), transport: { type: 'stdio' } }]);
   assert.deepEqual(JSON.parse(await readFile(out)), entry);
   assert.deepEqual(await readFile(path.join(base, 'server.json')), before);
   await registryEntry({ base, tag: `v${pkg.version}`, bundle: build.bundle, out }); // Identical rerun is safe.

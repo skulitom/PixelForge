@@ -1,4 +1,4 @@
-/** Original Emberfall art, authored as PixelForge recipes. No image library or model. */
+/** Original Emberfall art, authored as Pixelbolt recipes. No image library or model. */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';

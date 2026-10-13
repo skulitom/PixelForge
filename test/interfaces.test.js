@@ -17,35 +17,71 @@ import { readZip } from '../scripts/build-studio.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const tiny = { version: 1, name: 'dot', width: 1, height: 1, frames: [{ name: 'idle', ops: [{ op: 'pixel', color: '#fff' }] }] };
 const strip = { version: 1, name: 'strip', width: 12, height: 2, palette: { k: '#000' }, frames: [{ name: 'a', ops: [{ op: 'pixel', x: 11, y: 1, color: 'k' }] }, { name: 'b' }] };
+function exchangeMCP(directory, messages, bin = 'pixelbolt') {
+  const result = spawnSync(process.execPath, [`bin/${bin}.js`, 'mcp', '--out', directory], { cwd: root, input: messages.map(m => JSON.stringify(m)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  return result.stdout.trim().split('\n').map(line => JSON.parse(line));
+}
 function runMCP(directory, calls) {
   const messages = [{ jsonrpc: '2.0', id: 0, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, ...calls.map(([name, args], i) => ({ jsonrpc: '2.0', id: i + 1, method: 'tools/call', params: { name, arguments: args } }))];
-  const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'mcp', '--out', directory], { cwd: root, input: messages.map(m => JSON.stringify(m)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout.trim().split('\n').slice(1).map(line => JSON.parse(line).result);
+  return exchangeMCP(directory, messages).slice(1).map(message => message.result);
 }
+
+test('the legacy CLI agrees on help, stdin validation, errors and every rendered byte', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-alias-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const run = (bin, args, input) => {
+    const result = spawnSync(process.execPath, [path.join(root, 'bin', `${bin}.js`), ...args], { cwd: dir, input, encoding: 'utf8' });
+    assert.equal(result.error, undefined); return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+  };
+  for (const [args, input, status] of [[[], undefined, 0], [['help'], undefined, 0], [['--help'], undefined, 0], [['validate', '-'], JSON.stringify(tiny), 0], [['validate', '-'], '{', 1], [['unknown'], undefined, 1]]) {
+    const current = run('pixelbolt', args, input);
+    assert.equal(current.status, status, current.stderr);
+    assert.deepEqual(run('pixelforge', args, input), current);
+  }
+  const args = ['render', '-', '--out', 'rendered'], input = JSON.stringify(tiny);
+  const first = run('pixelbolt', args, input); assert.equal(first.status, 0, first.stderr);
+  const files = (await readdir(path.join(dir, 'rendered'), { recursive: true, withFileTypes: true })).filter(entry => entry.isFile());
+  const bytes = new Map();
+  for (const entry of files) { const file = path.join(entry.parentPath ?? entry.path, entry.name); bytes.set(file, await readFile(file)); }
+  assert.ok(bytes.size > 5);
+  assert.deepEqual(run('pixelforge', [...args, '--force'], input), first);
+  for (const [file, expected] of bytes) assert.deepEqual(await readFile(file), expected, file);
+});
+
+test('both CLI names initialize Pixelbolt and expose the same eight MCP tools and schemas', async t => {
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-alias-mcp-'));
+  t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
+  const messages = [{ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25' } }, { jsonrpc: '2.0', id: 2, method: 'tools/list' }];
+  const current = exchangeMCP(dir, messages);
+  assert.deepEqual(exchangeMCP(dir, messages, 'pixelforge'), current);
+  assert.deepEqual(current[0].result.serverInfo, { name: 'pixelbolt', version: JSON.parse(await readFile(path.join(root, 'package.json'))).version });
+  assert.deepEqual(current[1].result.tools.map(tool => tool.name), ['pixel_help', 'pixel_validate', 'pixel_inspect', 'pixel_patch', 'pixel_render', 'pixel_compile', 'pixel_scene', 'pixel_import']);
+});
 test('CLI help describes its text output and commands for checkout and portable builds', () => {
-  const result = spawnSync(process.execPath, ['bin/pixelforge.js', 'help'], { cwd: root, encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['bin/pixelbolt.js', 'help'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
   assert.ok(result.stdout.includes('Command results except help and the preview server are JSON. Errors exit with code 1.\n'));
-  assert.ok(result.stdout.includes('Checkout: node bin/pixelforge.js <command>. Portable build folder: .\\pixelforge (Windows) or ./pixelforge (macOS/Linux).\n'));
+  assert.ok(result.stdout.includes('Checkout: node bin/pixelbolt.js <command>. Portable build folder: .\\pixelbolt (Windows) or ./pixelbolt (macOS/Linux).\n'));
   assert.doesNotMatch(result.stdout, /All command results except the preview server are JSON|No installation needed:/);
 });
 
 test('CLI consumes stdin, emits machine-readable diagnostics and handles unknown flags', () => {
-  const result = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-'], { cwd: root, input: JSON.stringify(tiny), encoding: 'utf8' });
+  const result = spawnSync(process.execPath, ['bin/pixelbolt.js','validate','-'], { cwd: root, input: JSON.stringify(tiny), encoding: 'utf8' });
   assert.equal(result.status, 0); assert.equal(JSON.parse(result.stdout).frames, 1);
-  const bad = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-'], { cwd: root, input: '{', encoding: 'utf8' });
+  const bad = spawnSync(process.execPath, ['bin/pixelbolt.js','validate','-'], { cwd: root, input: '{', encoding: 'utf8' });
   assert.equal(bad.status, 1); assert.equal(JSON.parse(bad.stderr).ok, false);
-  const flags = spawnSync(process.execPath, ['bin/pixelforge.js','validate','-','--typo'], { cwd: root, encoding: 'utf8' });
+  const flags = spawnSync(process.execPath, ['bin/pixelbolt.js','validate','-','--typo'], { cwd: root, encoding: 'utf8' });
   assert.equal(flags.status, 1); assert.match(JSON.parse(flags.stderr).error, /Unknown option/);
 });
 
 test('CLI init protects an existing recipe with an actionable JSON error and honours --force', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-init-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-init-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const file = path.join(dir, 'hero.json');
-  const run = (...args) => spawnSync(process.execPath, [path.join(root, 'bin', 'pixelforge.js'), 'init', 'hero.json', ...args], { cwd: dir, encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, [path.join(root, 'bin', 'pixelbolt.js'), 'init', 'hero.json', ...args], { cwd: dir, encoding: 'utf8' });
   const first = run();
   assert.equal(first.status, 0, first.stderr);
   const original = await readFile(file), edited = Buffer.from(JSON.stringify({ ...JSON.parse(original), name: 'my-hero' }) + '\n');
@@ -63,7 +99,7 @@ test('CLI init protects an existing recipe with an actionable JSON error and hon
 });
 
 test('MCP handshake, discovery, help, errors and render work over stdio', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-mcp-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-mcp-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const input = new PassThrough(), output = new PassThrough(); let text = '';
   output.on('data', chunk => { text += chunk; });
@@ -89,11 +125,11 @@ test('MCP handshake, discovery, help, errors and render work over stdio', async 
   const written = JSON.parse(render.content[0].text); assert.ok(written.directory.startsWith(dir + path.sep));
   assert.ok((await readFile(path.join(written.directory, written.files[0]))).length > 0);
   assert.equal(written.frames.count, 1); assert.ok(!written.files.some(file => file.startsWith('frames/')));
-  assert.equal(results[4].result.isError, true); assert.match(results[5].result.content[0].text, /PixelForge/);
+  assert.equal(results[4].result.isError, true); assert.match(results[5].result.content[0].text, /Pixelbolt/);
   assert.equal(results[6].error.code, -32601); assert.equal(results[7].error.code, -32700);
 });
 test('MCP pixel_inspect returns a contact sheet and ruled grids, saving only its revision', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), parent = await mkdtemp(path.join(tempRoot, 'pixelforge-inspect-')), dir = path.join(parent, 'renders');
+  const tempRoot = path.resolve(os.tmpdir()), parent = await mkdtemp(path.join(tempRoot, 'pixelbolt-inspect-')), dir = path.join(parent, 'renders');
   t.after(async () => { assert.ok(parent.startsWith(tempRoot + path.sep)); await rm(parent, { recursive: true, force: true }); });
   const input = new PassThrough(), output = new PassThrough(); let text = '';
   output.on('data', chunk => { text += chunk; });
@@ -116,7 +152,7 @@ test('MCP pixel_inspect returns a contact sheet and ruled grids, saving only its
   assert.deepEqual(await readdir(path.join(dir, '.revisions')), [`${info.revision}.json`]);
 });
 test('MCP revisions let pixel_patch edit, compare and export without resending the recipe', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-patch-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-patch-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const input = new PassThrough(), output = new PassThrough(), waiting = new Map();
   let buffer = '', next = 0;
@@ -151,7 +187,7 @@ test('MCP revisions let pixel_patch edit, compare and export without resending t
 });
 
 test('MCP revisions from validate, inspect and paint survive process restarts before export', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-restart-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-restart-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const changes = [{ paint: 'frames[a]', value: [{ x: 11, y: 1, color: 'transparent' }, { x: 10, y: 1, color: 'k' }] }];
   const initial = runMCP(dir, [['pixel_validate', { project: tiny }], ['pixel_inspect', { project: strip }], ['pixel_patch', { project: strip, changes }]]);
@@ -169,7 +205,7 @@ test('MCP revisions from validate, inspect and paint survive process restarts be
 });
 
 test('MCP render previews every frame or an animation in playback order, with exact timing and cells', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-preview-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-preview-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const project = { ...tiny, name: 'sequence', frames: ['#f00', '#0f0', '#00f'].map((color, i) => ({ name: `pose${i}`, duration: 70 + i * 30, ops: [{ op: 'pixel', color }] })), animations: { idle: { frames: ['pose0', 'pose1', 'pose2'], direction: 'pingpong', loop: false } } };
   const results = runMCP(dir, [['pixel_render', { project }], ['pixel_render', { project, animation: 'idle' }]]);
@@ -188,11 +224,11 @@ test('MCP render previews every frame or an animation in playback order, with ex
   await assert.rejects(access(invalidDir), { code: 'ENOENT' });
 });
 test('CLI patch previews by default and writes only the requested recipe and image', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-patch-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-patch-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const source = path.join(dir, 'strip.json'), out = path.join(dir, 'strip-v2.json'), image = path.join(dir, 'diff.png');
   await writeFile(source, JSON.stringify(strip));
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'patch', source, '--changes', '-', ...args], { cwd: root, input: JSON.stringify([{ set: 'frames[a].ops[0].x', value: 10 }]), encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'patch', source, '--changes', '-', ...args], { cwd: root, input: JSON.stringify([{ set: 'frames[a].ops[0].x', value: 10 }]), encoding: 'utf8' });
   const preview = run();
   assert.equal(preview.status, 0); assert.equal(JSON.parse(preview.stdout).frames.changed[0].pixels, 2);
   assert.deepEqual(await readdir(dir), ['strip.json']);
@@ -202,11 +238,11 @@ test('CLI patch previews by default and writes only the requested recipe and ima
   assert.equal((await readFile(image)).toString('latin1', 1, 4), 'PNG');
   assert.match(JSON.parse(run('--out', out).stderr).error, /already exists/);
   assert.match(JSON.parse(run('--out', path.join(dir, 'next.txt')).stderr).error, /\.json/);
-  const both = spawnSync(process.execPath, ['bin/pixelforge.js', 'patch', '-', '--changes', '-'], { cwd: root, input: '[]', encoding: 'utf8' });
+  const both = spawnSync(process.execPath, ['bin/pixelbolt.js', 'patch', '-', '--changes', '-'], { cwd: root, input: '[]', encoding: 'utf8' });
   assert.match(JSON.parse(both.stderr).error, /stdin/);
 });
 test('MCP exports a maximum-length animation with a bounded, explicit sampled preview', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-long-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-long-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
   const project = { ...tiny, width: 128, height: 128, animations: { hold: { frames: Array(1024).fill('idle') } } };
   const [result] = runMCP(dir, [['pixel_render', { project, animation: 'hold' }]]);
@@ -217,9 +253,9 @@ test('MCP exports a maximum-length animation with a bounded, explicit sampled pr
   assert.equal(atlas.animations.hold.frames.length, 1024); await access(info.playback);
 });
 test('CLI inspect prints cells and grids, and writes a PNG only when asked', async t => {
-  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelforge-inspect-'));
+  const tempRoot = path.resolve(os.tmpdir()), dir = await mkdtemp(path.join(tempRoot, 'pixelbolt-inspect-'));
   t.after(async () => { assert.ok(dir.startsWith(tempRoot + path.sep)); await rm(dir, { recursive: true, force: true }); });
-  const run = (...args) => spawnSync(process.execPath, ['bin/pixelforge.js', 'inspect', '-', ...args], { cwd: root, input: JSON.stringify(strip), encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, ['bin/pixelbolt.js', 'inspect', '-', ...args], { cwd: root, input: JSON.stringify(strip), encoding: 'utf8' });
   const read = run('--grid', '--region', '10,0,2,2', '--frames', 'a');
   assert.equal(read.status, 0);
   const result = JSON.parse(read.stdout);

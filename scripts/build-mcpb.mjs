@@ -32,7 +32,7 @@ export async function assembleMcpb({ base = root } = {}) {
   // The CLI imports index.js, including frame-folder.js. server.js serves the Studio and is not needed by MCP.
   // pixel_help reads two guides and one example. pixel_scene exports these three Studio player files as assets.
   const names = [
-    'package.json', 'bin/pixelforge.js', 'LICENSE', 'README.md', 'schema.json',
+    'package.json', 'bin/pixelbolt.js', 'bin/pixelforge.js', 'LICENSE', 'README.md', 'schema.json',
     'docs/agent-guide.md', 'docs/art-workflow.md', 'examples/forest-spirit.json',
     'studio/scene.html', 'studio/scene-player.js', 'studio/scene.css',
     ...(await readdir(base)).filter(file => file.endsWith('.schema.json')),
@@ -47,9 +47,9 @@ export async function assembleMcpb({ base = root } = {}) {
 export async function buildMcpb({ base = root, out = path.join(root, 'dist/mcpb'), check = false } = {}) {
   const build = await assembleMcpb({ base });
   if (check && !build.bytes.equals((await assembleMcpb({ base })).bytes)) throw new Error('MCPB determinism check failed: two builds differ.');
-  const bundle = path.resolve(out, 'pixelforge.mcpb');
+  const bundle = path.resolve(out, 'pixelbolt.mcpb');
   await writeUnchangedOrNew(bundle, build.bytes);
-  await writeUnchangedOrNew(`${bundle}.sha256`, Buffer.from(`${build.hash}  pixelforge.mcpb\n`));
+  await writeUnchangedOrNew(`${bundle}.sha256`, Buffer.from(`${build.hash}  pixelbolt.mcpb\n`));
   // Kept beside the bundle for the pinned MCPB CLI's `validate <manifest>` command.
   await writeUnchangedOrNew(path.resolve(out, 'manifest.json'), json(build.manifest));
   return { ...build, bundle };
@@ -68,7 +68,7 @@ export async function registryEntry({ base = root, tag, bundle, out = path.join(
   if (!manifestFile) throw new Error('Bundle has no manifest.json.');
   if (JSON.parse(manifestFile.read()).version !== version) throw new Error('Bundle manifest version must match the tag and package.json.');
   const entry = { ...server, packages: [{
-    registryType: 'mcpb', identifier: `https://github.com/skulitom/PixelForge/releases/download/${tag}/pixelforge.mcpb`,
+    registryType: 'mcpb', identifier: `https://github.com/skulitom/Pixelbolt/releases/download/${tag}/pixelbolt.mcpb`,
     version, fileSha256: sha256(bytes), transport: { type: 'stdio' }
   }] };
   await writeUnchangedOrNew(destination, json(entry));

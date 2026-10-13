@@ -1,4 +1,4 @@
-"""Independent developer check for trimmed atlases. Requires Pillow, never used by PixelForge itself.
+"""Independent developer check for trimmed atlases. Requires Pillow, never used by Pixelbolt itself.
 
 Exports a pose-compiled character with sheet.trim, padding and scale 2 through the CLI, then uses Pillow to
 confirm that every trimmed rectangle, pasted at its spriteSourceSize offset into a sourceSize canvas, equals the
@@ -23,7 +23,7 @@ process.stdout.write(JSON.stringify(recipe));
 recipe = subprocess.check_output(['node', '--input-type=module', '-e', compile_keeper], cwd=root)
 with tempfile.TemporaryDirectory() as temporary:
     out = Path(temporary) / 'bundle'
-    subprocess.run(['node', 'bin/pixelforge.js', 'render', '-', '--out', str(out)], input=recipe, cwd=root, check=True, capture_output=True)
+    subprocess.run(['node', 'bin/pixelbolt.js', 'render', '-', '--out', str(out)], input=recipe, cwd=root, check=True, capture_output=True)
     atlas = json.loads((out / 'keeper-trim.atlas.json').read_text())
     sheet = Image.open(out / atlas['meta']['image']).convert('RGBA')
     assert sheet.size == (atlas['meta']['size']['w'], atlas['meta']['size']['h'])

@@ -1,5 +1,5 @@
 // One-time scaffold: hand-drawn turf masks -> a shaded pixelforge-autotile template of grass over sand (transparent
-// outside). art/terrain/grass.autotile.json is the authoritative, editable source; `pixelforge autotile` compiles it
+// outside). art/terrain/grass.autotile.json is the authoritative, editable source; `pixelbolt autotile` compiles it
 // into art/recipes/grass.json (47 blob tiles).
 import { linkedPalette, writeJSON } from './common.mjs';
 

@@ -1,7 +1,7 @@
 // Deterministic game simulation: no DOM access. Positions are world pixels; y is the ground contact line.
 import { TILE, COLS, ROWS, OBJECTS, ENEMIES, START, walkable } from './map.js';
 
-// Sprite anchors (the pixel that stands on an object's ground point) live in the PixelForge atlases, authored in
+// Sprite anchors (the pixel that stands on an object's ground point) live in the Pixelbolt atlases, authored in
 // the recipes. Collision boxes are game rules, relative to that ground point.
 const SOLID = {
   lighthouse: [-20, -14, 40, 14], cottage: [-22, -24, 44, 24], palm: [-4, -4, 8, 4], oak: [-5, -4, 10, 4], bush: [-7, -6, 14, 6], rock: [-7, -6, 14, 6],

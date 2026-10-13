@@ -1,4 +1,4 @@
-/** Dependency-free Canvas helpers and player for PixelForge atlases. Coordinates use exported pixels. */
+/** Dependency-free Canvas helpers and player for Pixelbolt atlases. Coordinates use exported pixels. */
 // Resolves on the load event: HTMLImageElement.decode() can stay pending while a page is hidden or not painting.
 function loadImage(url) {
   return new Promise((resolve, reject) => {
