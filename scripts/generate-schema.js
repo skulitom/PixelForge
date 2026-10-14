@@ -119,7 +119,7 @@ const poses = {
         cleanup: { type: 'boolean', description: 'Remove doubled corners the rotation leaves (default true; false names the symbol with -raw).' } }, ['name', 'part']), 64),
       markers: array(object({ name: id, part: id, point: id }, ['name', 'part', 'point']), 64)
     }, ['name']), anyOf: [{ required: ['parts'] }, { required: ['mirror'] }, { required: ['tween'] }] }, 256), minItems: 1 }, animations: schema.properties.animations, sheet: schema.properties.sheet
-  }, ['format', 'version', 'name', 'width', 'height', 'parts', 'poses']), $defs: schema.$defs
+  }, ['format', 'version', 'name', 'width', 'height', 'parts', 'poses']), $defs: { rows: schema.$defs.rows }
 };
 const recipeSchema = { ...schema }; delete recipeSchema.$schema; delete recipeSchema.$defs; delete recipeSchema.title;
 const themePalette = description => ({ oneOf: [{ type: 'string', description: 'Palette file, resolved by the CLI relative to the scene or inside the MCP root.' }, { type: 'object', additionalProperties: { type: 'string', pattern: hex } }], description });
@@ -157,7 +157,7 @@ const autotile = {
     variants: { ...array(object({ name: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,16}$' }, duration: int(1, 60000), palette: { type: 'object', additionalProperties: color }, template: { ...ref('rows'), description: 'Redraw this variant from its own template of the same size (compiled as the symbol template-<name>): cracked or mossy stone with the base set\'s edges.' } }, ['name']), 16), minItems: 1 },
     animation: { type: 'string', pattern: '\\{mask\\}', description: 'Optional per-mask animation over the variants, in order.' },
     sheet: schema.properties.sheet
-  }, ['format', 'version', 'name', 'tile', 'template', 'frame']), $defs: schema.$defs
+  }, ['format', 'version', 'name', 'tile', 'template', 'frame']), $defs: { rows: schema.$defs.rows }
 };
 const range = (minimum, maximum, description) => ({ oneOf: [num(minimum, maximum), pairOf(num(minimum, maximum))], description: `${description} [min, max] picks per particle.` });
 const vector = (minimum, maximum, description) => ({ ...pairOf(num(minimum, maximum)), ...(description && { description }) });
@@ -186,7 +186,7 @@ const fx = {
     effects: { type: 'object', minProperties: 1, maxProperties: 64, propertyNames: id, additionalProperties: object({ frames: int(1, 256), duration: { oneOf: [int(1, 60000), array(int(1, 60000), 256)], description: 'Milliseconds per frame, or one per frame; default 100.' },
       loop: { type: 'boolean', description: 'Seamless loop: the simulation warms up so particles in flight at frame 0 are those alive at the end. Needs a finite life.' }, seed: int(0, 2147483647, 'Default 1.'), emitters: { ...array(emitter, 16), minItems: 1 } }, ['frames', 'emitters']) },
     sheet: schema.properties.sheet
-  }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: schema.$defs
+  }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: { rows: schema.$defs.rows }
 };
 const normals = {
   $schema: schema.$schema, title: 'Pixelbolt normal pass',

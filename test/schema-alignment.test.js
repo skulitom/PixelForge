@@ -31,3 +31,14 @@ test('scene fields in the schema match what prepareScene accepts', async () => {
   for (const key of Object.keys(cue.properties)) assert.equal(unknown(() => prepareScene(scene({ instances: [{ asset: 't', at: [0, 0], sequence: [{ time: 0, [key]: 0 }] }] })), `scene.instances[0].sequence[0].${key}`), false, `cue.${key}`);
   assert.equal(unknown(() => prepareScene(scene({ instances: [{ asset: 't', at: [0, 0], notAField: 0 }] })), 'scene.instances[0].notAField'), true);
 });
+
+test('every generated schema defines each definition it references, and carries none it does not', async () => {
+  for (const file of ['schema.json', 'poses.schema.json', 'scene.schema.json', 'autotile.schema.json', 'fx.schema.json', 'normals.schema.json']) {
+    const { $defs = {}, ...root } = await read(file), reached = new Set(), pending = [root];
+    while (pending.length) for (const [, name] of JSON.stringify(pending.pop()).matchAll(/"\$ref":"#\/\$defs\/([^"]+)"/g)) {
+      assert.ok(Object.hasOwn($defs, name), `${file} references #/$defs/${name}, which it does not define`);
+      if (!reached.has(name)) { reached.add(name); pending.push($defs[name]); }
+    }
+    assert.deepEqual(Object.keys($defs).filter(name => !reached.has(name)), [], `${file} carries definitions nothing references`);
+  }
+});
