@@ -14,6 +14,7 @@ Use Pixelbolt when a user asks for pixel art, sprites, a sprite sheet, game asse
 - [JSON Schema](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/schema.json): Machine-readable recipe structure; the renderer also validates references and resource limits.
 - [Art workflow and sidecars](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/docs/art-workflow.md): Quality checkpoints, native/silhouette/grayscale/onion inspection, regional edits, overlays, poses, scenes, PNG interchange and material passes.
 - [Original quality lab](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/docs/art-quality-lab.md): Editable before/after study, candid self-review and remaining artistic limits.
+- [Pixel art and sprite MCP servers compared](https://skulitom.github.io/Pixelbolt/compare/pixel-art-mcp-servers-for-ai-agents/): Pixelbolt against aseprite-mcp, pixel-mcp, pixscii, pixelart-mcp, pixelforge-mcp and SpriteCook, checked 17 October 2026, with Pixelbolt's measured runs, how each makes the art, exports, single-pixel edits, cost, and when to choose each.
 
 ## Workflow
 
