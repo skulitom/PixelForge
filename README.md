@@ -1,20 +1,38 @@
 # Pixelbolt
 
-Pixelbolt was called PixelForge until 0.8.0. The `pixelforge` command still works as an alias, and recipe files keep their `pixelforge-*` format tags, so existing files and agent setups keep working.
+**Pixel art and sprite animation that your AI agent can make, check and fix.** Pixelbolt turns an editable JSON recipe into sprites, tiles, icons, effects and short animations, and exports them as PNG sprite sheets, texture atlases, animated PNGs, GIFs and frames for a video editor. Agents drive it through a local MCP server or the command line; you can open, play and edit the same recipe in a local browser studio.
+
+English · [简体中文](https://github.com/skulitom/Pixelbolt/blob/main/README.zh-CN.md) · [日本語](https://github.com/skulitom/Pixelbolt/blob/main/README.ja.md)
 
 [![Tests](https://github.com/skulitom/Pixelbolt/actions/workflows/test.yml/badge.svg)](https://github.com/skulitom/Pixelbolt/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js: 20+](https://img.shields.io/badge/node.js-20%2B-43853d.svg)](package.json)
 
-**Text to pixels. A zero-dependency pixel art and sprite animation toolkit for AI agents and game developers.**
-
 ![A library drawn with Pixelbolt: books circle the chandelier, a lectern book turns its page and a grey tabby sleeps on a shelf](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/gallery/library.gif)
+
+- **Who it's for:** game developers, game-jam teams and web or video makers who want an agent such as Claude, Codex or Cursor to draw and revise their pixel art, and people building agents that need exact, repeatable images.
+- **Use it when** you want small 2D game assets that stay editable as text: the agent reads every pixel back, fixes one pixel or one frame without redrawing the rest, and the same recipe renders the same image every time.
+- **Don't use it for** painted, photographic or large images (a frame is at most 256 × 256 pixels, and a project at most 256 frames and 4,194,304 pixels in all), generating art with an image model, or editing GIFs and Aseprite files (it imports 8-bit RGB/RGBA PNG only).
+
+**Try it.** You need Node.js 20 or newer; there is nothing else to install, no API key and no network service:
+
+```sh
+git clone https://github.com/skulitom/Pixelbolt.git
+cd Pixelbolt
+node bin/pixelbolt.js preview --open
+```
+
+**Give it to your agent.** In Claude Desktop, download [`pixelbolt.mcpb`](https://github.com/skulitom/Pixelbolt/releases/latest/download/pixelbolt.mcpb) from the latest release and open it (or install it from file under Settings → Extensions), choose a workspace folder for recipes and artwork, then ask the agent to call `pixel_help`. For Claude Code, Codex, Cursor and other MCP clients, see [Connect an agent through MCP](#connect-an-agent-through-mcp). Pixelbolt is in the official MCP Registry as `io.github.skulitom/pixelbolt`.
+
+Pixelbolt was called PixelForge until 0.8.0. The `pixelforge` command still works as an alias, and recipe files keep their `pixelforge-*` format tags, so existing files and agent setups keep working.
+
+[Gallery](#gallery) · [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelbolt-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md) · [Sibling tools](#sibling-tools)
+
+## How it works
 
 Write a JSON recipe with palettes, text grids, reusable symbols and drawing operations. Get transparent PNGs, sprite sheets, animated PNGs, GIFs for sharing, numbered frames for video editors, and the metadata and player needed to use them. Inspect and edit the recipe in a local browser studio.
 
 Zero runtime dependencies. No build step, API key, image model, network service or native graphics library. Requires **Node.js 20 or newer**. Works from a checkout on Windows, macOS and Linux.
-
-[Gallery](#gallery) · [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelbolt-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md)
 
 ## Gallery
 
@@ -201,7 +219,7 @@ node bin/pixelbolt.js sequence room.scene.json --fps 24 --size 1080p --fit cover
 
 - **Timing.** Each video frame shows the pose that is active when the frame starts. `--fps` takes 24, 25, 30, 50, 60, the NTSC rates 23.976, 29.97 and 59.94 (kept exact as 24000/1001, 30000/1001 and 60000/1001, so long clips do not drift), or a fraction. `--loops n` or `--seconds s` sets the length; `--step 2` animates on twos. A looping animation keeps cycling; one that plays once holds its last pose.
 - **Size.** `--size` is `720p`, `1080p`, `1440p`, `4k`, `vertical` (1080×1920), `square` or `WIDTHxHEIGHT`. The sprite is enlarged by a whole number, never resampled: the largest that fits, or `--scale` up to 256. `--align` (`top-left` … `center` … `bottom-right`) and `--offset x,y` place it. `--fit cover` takes the smallest whole number that covers the canvas instead and crops what hangs over; `--align` then chooses the part that stays, and the result's `placement.visible` says which columns and rows of the source that is. Without `--size` the canvas is the sprite at `--scale`. `--background` blends onto an opaque colour instead of keeping alpha.
-- **Sources.** A recipe (`--animation` picks one), a pose, autotile or effects source, which is compiled on the way in, or a scene, which is rendered moment by moment as a shot; moments that look the same share one PNG. A scene of 192×108, 240×135 or 320×180 pixels fills 1080p exactly at scale 10, 8 or 6. Any other scene is centred with margins in its own background colour, so the shot is still opaque from edge to edge, or fills the canvas with `--fit cover`.
+- **Sources.** A recipe (`--animation` picks one), a pose, autotile or effects source, which is compiled on the way in, or a scene, which is rendered moment by moment as a shot; moments that look the same share one PNG. A scene of 192×108 or 240×135 pixels fills 1080p exactly at scale 10 or 8. Any other scene is centred with margins in its own background colour, so the shot is still opaque from edge to edge, or fills the canvas with `--fit cover`.
 - **What you get.** A new folder with `name_0001.png` onwards, `sequence.json` (frame rate as a fraction, frame count, size, placement, loop facts and the timing of every pose) and a `README.txt` that says how to import them. The result's `notes` say what the frame grid did: which poses changed length, which are shorter than a video frame and never shown, and whether the clip ends exactly where the loop does, with the number of loops that would.
 - **One video file.** Pixelbolt does not encode video. The folder's README and the JSON result give the exact `ffmpeg` command for a ProRes 4444 `.mov` with alpha, and for an H.264 `.mp4` when there is a background. With ffmpeg 7 the ProRes command keeps the alpha exactly and the colours within 2 of 255; `scripts/verify-exports.py` repeats that check when ffmpeg is installed.
 
@@ -355,6 +373,15 @@ Any machine can build any target; each archive comes with its `.sha256` and a pe
 ## Contributing
 
 Bug reports, recipe examples, documentation improvements and focused pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) before changing the toolkit. Report reproducible bugs through [GitHub Issues](https://github.com/skulitom/Pixelbolt/issues).
+
+## Sibling tools
+
+Pixelbolt is one of five free, MIT-licensed tools for agents by the same author. Each runs locally and works as an MCP server:
+
+- [Anode](https://github.com/skulitom/Anode): Windows desktop automation in a hidden background session, so an agent can click, type and take screenshots without taking over your screen.
+- [Cutbolt](https://github.com/skulitom/Cutbolt): a video editing engine with exact timelines, captions and rendering.
+- [Inkbolt](https://github.com/skulitom/Inkbolt): vector and raster image editing for diagrams and illustrations, with SVG import and SVG or PDF export.
+- [Nestbolt](https://github.com/skulitom/Nestbolt): 2D nesting of parts on sheets for laser, CNC, plasma and waterjet cutting, also [in your browser](https://skulitom.github.io/Nestbolt/).
 
 ## License
 
