@@ -1,0 +1,358 @@
+{
+ "commit": "9ec9a90ff73c502252058fbb0ee15c149ad22385",
+ "node": "v24.19.0",
+ "platform": "win32 x64 10.0.26200",
+ "cpu": "AMD Ryzen 9 7950X3D 16-Core Processor",
+ "startedAt": "2026-10-16T23:40:12.665Z",
+ "serverInfo": {
+  "name": "pixelbolt",
+  "version": "0.8.0"
+ },
+ "protocolVersion": "2025-06-18",
+ "tools": [
+  {
+   "name": "pixel_help",
+   "descriptionChars": 169,
+   "inputSchemaUtf8Bytes": 123,
+   "annotations": {
+    "readOnlyHint": true
+   }
+  },
+  {
+   "name": "pixel_validate",
+   "descriptionChars": 224,
+   "inputSchemaUtf8Bytes": 30081,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_inspect",
+   "descriptionChars": 480,
+   "inputSchemaUtf8Bytes": 32647,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_patch",
+   "descriptionChars": 930,
+   "inputSchemaUtf8Bytes": 31934,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_render",
+   "descriptionChars": 437,
+   "inputSchemaUtf8Bytes": 32358,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_compile",
+   "descriptionChars": 613,
+   "inputSchemaUtf8Bytes": 360,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_scene",
+   "descriptionChars": 557,
+   "inputSchemaUtf8Bytes": 1873,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+   }
+  },
+  {
+   "name": "pixel_import",
+   "descriptionChars": 225,
+   "inputSchemaUtf8Bytes": 255,
+   "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+   }
+  }
+ ],
+ "toolsListMs": 2.095,
+ "toolsListUtf8Bytes": 134532,
+ "validate": {
+  "ms": 6.9118,
+  "isError": false,
+  "revision": "873911c436cc",
+  "summary": {
+   "width": 24,
+   "height": 24,
+   "frames": 6,
+   "animations": {
+    "spin": {
+     "frames": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "loop": true,
+     "duration": 660
+    }
+   }
+  }
+ },
+ "inspect": {
+  "ms": 9.1731,
+  "isError": false,
+  "images": [
+   {
+    "mimeType": "image/png",
+    "base64Length": 2132
+   }
+  ],
+  "keys": [
+   "ok",
+   "revision",
+   "name",
+   "width",
+   "height",
+   "cells",
+   "region",
+   "sheet",
+   "warnings"
+  ]
+ },
+ "patch": {
+  "ms": 7.6133,
+  "isError": false,
+  "images": [
+   {
+    "mimeType": "image/png",
+    "base64Length": 708
+   }
+  ],
+  "response": {
+   "ok": true,
+   "revision": "eaa54abd9f73",
+   "base": "873911c436cc",
+   "edits": [
+    {
+     "paint": "frames[turn-0]",
+     "at": "frames[0]",
+     "pixels": 1
+    }
+   ],
+   "frames": {
+    "changed": [
+     {
+      "frame": "turn-0",
+      "pixels": 1,
+      "box": {
+       "x": 12,
+       "y": 12,
+       "w": 1,
+       "h": 1
+      },
+      "changes": [
+       {
+        "x": 12,
+        "y": 12,
+        "from": "3",
+        "to": "2"
+       }
+      ]
+     }
+    ],
+    "unchanged": [
+     "turn-1",
+     "turn-2",
+     "turn-3",
+     "turn-4",
+     "turn-5"
+    ]
+   },
+   "legend": {
+    "2": {
+     "color": "#ffe4a0",
+     "palette": "light"
+    },
+    "3": {
+     "color": "#c78a43",
+     "palette": "shade"
+    }
+   },
+   "image": {
+    "region": {
+     "x": 10,
+     "y": 10,
+     "w": 5,
+     "h": 5
+    },
+    "frames": [
+     {
+      "frame": "turn-0",
+      "status": "changed"
+     }
+    ],
+    "scale": 16
+   },
+   "warnings": []
+  }
+ },
+ "render": {
+  "ms": 37.0186,
+  "isError": false,
+  "images": [
+   {
+    "mimeType": "image/png",
+    "base64Length": 12340
+   }
+  ],
+  "response": {
+   "ok": true,
+   "revision": "eaa54abd9f73",
+   "directory": "<out>/coin-NEgP6p",
+   "files": [
+    "coin.png",
+    "coin.atlas.json",
+    "coin.pixel.json",
+    "coin.css",
+    "frames/turn-0.png",
+    "frames/turn-1.png",
+    "frames/turn-2.png",
+    "frames/turn-3.png",
+    "frames/turn-4.png",
+    "frames/turn-5.png",
+    "animations/spin.png",
+    "player.js",
+    "preview.html",
+    "README.txt"
+   ],
+   "frames": {
+    "directory": "frames",
+    "count": 6
+   },
+   "animations": {
+    "directory": "animations",
+    "count": 1
+   },
+   "playback": "<out>/coin-NEgP6p/preview.html",
+   "preview": {
+    "cells": [
+     {
+      "frame": "turn-0",
+      "duration": 110
+     },
+     {
+      "frame": "turn-1",
+      "duration": 110
+     },
+     {
+      "frame": "turn-2",
+      "duration": 110
+     },
+     {
+      "frame": "turn-3",
+      "duration": 110
+     },
+     {
+      "frame": "turn-4",
+      "duration": 110
+     },
+     {
+      "frame": "turn-5",
+      "duration": 110
+     }
+    ],
+    "region": {
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24
+    },
+    "sheet": {
+     "columns": 3,
+     "rows": 2,
+     "scale": 10,
+     "gap": 10,
+     "width": 760,
+     "height": 510
+    }
+   },
+   "warnings": []
+  }
+ },
+ "renderBase": {
+  "ms": 35.346,
+  "isError": false,
+  "directory": "<out>/coin-fdK9Si"
+ },
+ "frameDiff": [
+  {
+   "frame": "turn-0.png",
+   "size": "24x24",
+   "changedPixels": 1,
+   "changes": [
+    {
+     "x": 12,
+     "y": 12,
+     "from": "c78a43ff",
+     "to": "ffe4a0ff"
+    }
+   ]
+  },
+  {
+   "frame": "turn-1.png",
+   "size": "24x24",
+   "changedPixels": 0,
+   "changes": []
+  },
+  {
+   "frame": "turn-2.png",
+   "size": "24x24",
+   "changedPixels": 0,
+   "changes": []
+  },
+  {
+   "frame": "turn-3.png",
+   "size": "24x24",
+   "changedPixels": 0,
+   "changes": []
+  },
+  {
+   "frame": "turn-4.png",
+   "size": "24x24",
+   "changedPixels": 0,
+   "changes": []
+  },
+  {
+   "frame": "turn-5.png",
+   "size": "24x24",
+   "changedPixels": 0,
+   "changes": []
+  }
+ ],
+ "outFiles": 30,
+ "stderr": ""
+}

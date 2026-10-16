@@ -1,0 +1,233 @@
+{
+ "commit": "a2420d5a5afe43200906a36629ae0f8a0fd1d496",
+ "node": "v24.19.0",
+ "platform": "win32 x64 10.0.26200",
+ "cpu": "AMD Ryzen 9 7950X3D 16-Core Processor",
+ "renders": [
+  {
+   "recipe": "examples/caption.json",
+   "files": 17,
+   "identical": true,
+   "msA": 96,
+   "msB": 99
+  },
+  {
+   "recipe": "examples/coin.json",
+   "files": 14,
+   "identical": true,
+   "msA": 82,
+   "msB": 81
+  },
+  {
+   "recipe": "examples/effects.json",
+   "files": 69,
+   "identical": true,
+   "msA": 138,
+   "msB": 142
+  },
+  {
+   "recipe": "examples/ember.json",
+   "files": 12,
+   "identical": true,
+   "msA": 82,
+   "msB": 82
+  },
+  {
+   "recipe": "examples/forest-spirit-normal.json",
+   "files": 16,
+   "identical": true,
+   "msA": 85,
+   "msB": 82
+  },
+  {
+   "recipe": "examples/forest-spirit.json",
+   "files": 16,
+   "identical": true,
+   "msA": 84,
+   "msB": 85
+  },
+  {
+   "recipe": "examples/shrine.json",
+   "files": 10,
+   "identical": true,
+   "msA": 83,
+   "msB": 84
+  },
+  {
+   "recipe": "examples/swing.json",
+   "files": 13,
+   "identical": true,
+   "msA": 82,
+   "msB": 85
+  },
+  {
+   "recipe": "examples/quality/crystal.json",
+   "files": 12,
+   "identical": true,
+   "msA": 80,
+   "msB": 82
+  },
+  {
+   "recipe": "examples/quality/fern-base.json",
+   "files": 10,
+   "identical": true,
+   "msA": 79,
+   "msB": 78
+  },
+  {
+   "recipe": "examples/quality/fern-before.json",
+   "files": 9,
+   "identical": true,
+   "msA": 75,
+   "msB": 82
+  },
+  {
+   "recipe": "examples/quality/fern.json",
+   "files": 10,
+   "identical": true,
+   "msA": 86,
+   "msB": 77
+  },
+  {
+   "recipe": "examples/quality/lantern-emissive.json",
+   "files": 10,
+   "identical": true,
+   "msA": 79,
+   "msB": 79
+  },
+  {
+   "recipe": "examples/quality/lantern-normal.json",
+   "files": 10,
+   "identical": true,
+   "msA": 80,
+   "msB": 79
+  },
+  {
+   "recipe": "examples/quality/lantern.json",
+   "files": 10,
+   "identical": true,
+   "msA": 80,
+   "msB": 77
+  },
+  {
+   "recipe": "examples/quality/root-bank.json",
+   "files": 9,
+   "identical": true,
+   "msA": 78,
+   "msB": 76
+  },
+  {
+   "recipe": "examples/quality/sedge.json",
+   "files": 9,
+   "identical": true,
+   "msA": 77,
+   "msB": 77
+  },
+  {
+   "recipe": "examples/quality/shale.json",
+   "files": 9,
+   "identical": true,
+   "msA": 78,
+   "msB": 80
+  },
+  {
+   "recipe": "examples/quality/skink.json",
+   "files": 22,
+   "identical": true,
+   "msA": 99,
+   "msB": 96
+  }
+ ],
+ "fluids": [
+  {
+   "source": "examples/campfire.fluid.json",
+   "frames": 24,
+   "size": "32x48",
+   "identical": true,
+   "msA": 220,
+   "msB": 224,
+   "recipeSha256": "a936046b32f7a321b5265ba4d59f5403d0425b03431f11b6e14b297ba2864528"
+  },
+  {
+   "source": "examples/drip.fluid.json",
+   "frames": 24,
+   "size": "16x32",
+   "identical": true,
+   "msA": 127,
+   "msB": 129,
+   "recipeSha256": "6cebbb3d87c126665238127837af2f971f63be6a67459ebc96a9bda1f2e87080"
+  },
+  {
+   "source": "examples/explosion.fluid.json",
+   "frames": 32,
+   "size": "64x64",
+   "identical": true,
+   "msA": 246,
+   "msB": 254,
+   "recipeSha256": "785ceac3e6b6aea766fe4b494a2ff6493a5d00b94a0dcc957167339d5eae3744"
+  },
+  {
+   "source": "examples/magic-swirl.fluid.json",
+   "frames": 24,
+   "size": "48x48",
+   "identical": true,
+   "msA": 291,
+   "msB": 291,
+   "recipeSha256": "f8ecd8eaf1e2a7515ea328403e04cdba589f110413b36e9a2c148f47b9029d4b"
+  },
+  {
+   "source": "examples/potion.fluid.json",
+   "frames": 24,
+   "size": "32x40",
+   "identical": true,
+   "msA": 201,
+   "msB": 201,
+   "recipeSha256": "9bb998756003b50c543c64c1a81cacb8aafb978214415dee7da578b87aeec4c3"
+  },
+  {
+   "source": "examples/smoke-puff.fluid.json",
+   "frames": 19,
+   "size": "32x32",
+   "identical": true,
+   "msA": 121,
+   "msB": 117,
+   "recipeSha256": "c01c31591978e9c1cfa255bb202d4159be40d7edf544b7fa73e3d9402a5b29b0"
+  },
+  {
+   "source": "examples/splash.fluid.json",
+   "frames": 36,
+   "size": "48x40",
+   "identical": true,
+   "msA": 169,
+   "msB": 168,
+   "recipeSha256": "47c9536cc58bd635f48643a780de25ee99bddc6e3903bc8727a7cb38564c4af8"
+  },
+  {
+   "source": "examples/steam-vent.fluid.json",
+   "frames": 24,
+   "size": "32x48",
+   "identical": true,
+   "msA": 207,
+   "msB": 209,
+   "recipeSha256": "037b91c95335ee37f88112d68f9a960a8a3569a6e7a53b18000b3496f973c8c5"
+  },
+  {
+   "source": "examples/torch.fluid.json",
+   "frames": 16,
+   "size": "16x32",
+   "identical": true,
+   "msA": 118,
+   "msB": 115,
+   "recipeSha256": "31816003e00d1b200a0bd4328644b9577523e96008b85c78c91db33f1bb5f53f"
+  },
+  {
+   "source": "examples/waterfall.fluid.json",
+   "frames": 24,
+   "size": "48x64",
+   "identical": true,
+   "msA": 456,
+   "msB": 454,
+   "recipeSha256": "04893e80b15a00e96b0d4f45fad6c361e574554acabaa2034b168153e9034434"
+  }
+ ]
+}

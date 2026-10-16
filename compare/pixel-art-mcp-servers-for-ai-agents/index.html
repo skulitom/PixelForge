@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Pixel art and sprite MCP servers for AI agents: 7 compared (October 2026)</title>
+<meta name="description" content="By the Pixelbolt maintainers, checked 17 Oct 2026: Pixelbolt, aseprite-mcp, pixel-mcp, pixscii, pixelart-mcp, pixelforge-mcp and SpriteCook. Aseprite, AI models or local drawing; exports, pixel edits, cost.">
+<link rel="canonical" href="https://skulitom.github.io/Pixelbolt/compare/pixel-art-mcp-servers-for-ai-agents/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Pixel art and sprite MCP servers for AI agents: 7 compared",
+  "description": "By the Pixelbolt maintainers: seven pixel art and sprite MCP servers compared (Pixelbolt, aseprite-mcp, pixel-mcp, pixscii, pixelart-mcp, pixelforge-mcp and SpriteCook): how each makes the art, what it needs, exports, single-pixel edits, repeatable output and cost. Pixelbolt measured; the others read from their code and docs.",
+  "datePublished": "2026-10-17",
+  "dateModified": "2026-10-17",
+  "inLanguage": "en",
+  "url": "https://skulitom.github.io/Pixelbolt/compare/pixel-art-mcp-servers-for-ai-agents/",
+  "mainEntityOfPage": "https://skulitom.github.io/Pixelbolt/compare/pixel-art-mcp-servers-for-ai-agents/",
+  "author": {"@type": "Organization", "name": "Pixelbolt maintainers", "url": "https://github.com/skulitom/Pixelbolt"},
+  "publisher": {"@type": "Organization", "name": "Pixelbolt maintainers", "url": "https://github.com/skulitom/Pixelbolt"},
+  "about": [
+    {"@type": "SoftwareApplication", "name": "Pixelbolt", "url": "https://github.com/skulitom/Pixelbolt", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "aseprite-mcp", "url": "https://github.com/diivi/aseprite-mcp", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "pixel-mcp", "url": "https://github.com/willibrandon/pixel-mcp", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "pixscii", "url": "https://github.com/rxolve/pixscii", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "pixelart-mcp", "url": "https://github.com/light-vp/pixelart-mcp", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "pixelforge-mcp", "url": "https://github.com/freema/pixelforge-mcp", "applicationCategory": "MultimediaApplication"},
+    {"@type": "SoftwareApplication", "name": "SpriteCook", "url": "https://www.spritecook.ai/", "applicationCategory": "MultimediaApplication"}
+  ]
+}
+</script>
+<style>
+:root { --bg: #ffffff; --fg: #1d1d1f; --muted: #5b5b66; --link: #0b57d0; --rule: #d9d9e0; --head: #f3f3f6; --note: #fff8e1; }
+@media (prefers-color-scheme: dark) { :root { --bg: #16171a; --fg: #e8e8ec; --muted: #a2a2ad; --link: #8ab4f8; --rule: #33343a; --head: #202126; --note: #2a2618; } }
+body { background: var(--bg); color: var(--fg); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; }
+main { max-width: 64rem; margin: 0 auto; padding: 2rem 16px 4rem; }
+a { color: var(--link); }
+h1 { font-size: 1.65rem; line-height: 1.25; margin: 0 0 1rem; }
+h2 { font-size: 1.25rem; margin: 2.2rem 0 0.6rem; }
+h3 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; }
+.lead { font-size: 1.08rem; }
+.meta, .muted { color: var(--muted); font-size: 0.92rem; }
+.note { background: var(--note); border: 1px solid var(--rule); border-radius: 6px; padding: 0.6rem 0.9rem; }
+.wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1rem 0; }
+table { border-collapse: collapse; font-size: 0.86rem; min-width: 60rem; }
+th, td { border: 1px solid var(--rule); padding: 0.45rem 0.55rem; text-align: left; vertical-align: top; }
+thead th { background: var(--head); }
+tbody th { background: var(--head); font-weight: 600; }
+code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.88em; }
+pre { background: var(--head); border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem; overflow-x: auto; font-size: 0.85rem; }
+li { margin: 0.25rem 0; }
+footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Pixel art and sprite MCP servers for AI agents: 7 compared</h1>
+
+<p class="lead"><strong>Seven pixel art and sprite MCP servers for AI agents, checked on 17 October 2026 by the makers
+of Pixelbolt: aseprite-mcp and pixel-mcp drive the paid Aseprite editor, SpriteCook and pixelforge-mcp generate images
+with hosted AI models, pixscii and pixelart-mcp draw on canvases on your machine, and Pixelbolt renders editable JSON
+recipes on your machine with no paid app, account, API key or image model. We read the other six from their code and docs
+without running them, and measured Pixelbolt on one Windows machine: all 19 of its plain example recipes rendered twice to byte-identical
+files, and a one-pixel fix over MCP changed exactly 1 pixel in 1 of 6 frames when we decoded the frames before and
+after.</strong> Method, sources and data are below.</p>
+
+<p class="note"><strong>We make Pixelbolt.</strong> Read this as a vendor's page: our own numbers come from runs you can
+repeat, and everything about the other tools links to where we read it. Pixelbolt was called PixelForge before version
+0.8.0; it still answers to the old <code>pixelforge</code> command, and its file formats keep <code>pixelforge-*</code>
+names. None of that is related to the npm package <code>pixelforge-mcp</code>
+(<a href="https://github.com/freema/pixelforge-mcp">freema/pixelforge-mcp</a>, compared below) or to the other GitHub
+repositories called pixelforge-mcp. If we got something wrong,
+<a href="https://github.com/skulitom/Pixelbolt/issues/new">open an issue</a> and we will correct it.</p>
+
+<p class="meta">Last checked: 17 October 2026 (UK time) · Pixelbolt <code>main</code> at <code>a2420d5</code> and
+release 0.8.0 · Next check by 16 November 2026, or sooner when one of these tools releases.</p>
+
+<h2>The short answer</h2>
+<ul>
+<li><strong>You want game sprites your agent can draw, check and revise as text, from Claude Code, Codex, Cursor or
+Claude Desktop, with the same files on every run:</strong> Pixelbolt. Sprite sheets, atlas JSON, APNG and GIF come from
+one recipe, and the agent can fix one pixel or one frame without redrawing the rest. You or the agent still design the
+art; it doesn't generate art from a prompt.</li>
+<li><strong>You already use Aseprite and want the agent to work in <code>.aseprite</code> files:</strong> aseprite-mcp
+(707 GitHub stars, 116 tools in its source) or pixel-mcp (a Go binary with 50 tools; no commits since October 2025).
+Both need Aseprite, which costs US$19.99 on Steam or can be compiled from its source for personal use.</li>
+<li><strong>You want finished art from a text prompt:</strong> SpriteCook (hosted, with credits and a free plan of 40
+credits every 30 days) or pixelforge-mcp (runs on your machine and generates through Google's Gemini API with your own
+key). Both use generative models, pixelforge-mcp has no seed option, and neither has tools to edit single
+pixels.</li>
+<li><strong>You want 16-colour sprites and one-call animated scenes from a bundled library and procedural characters,
+ready in one <code>npx</code>:</strong> pixscii.</li>
+<li><strong>You want a Python server that edits PNG files in place, with rig-based walk cycles:</strong> pixelart-mcp.
+It has no licence file, so ask its author before you use it in a product.</li>
+</ul>
+
+<h2>Side by side</h2>
+<p class="muted">Pixelbolt's column is measured or taken from its own docs. The other columns are from each project's
+README, docs and source at the commit named under <a href="#sources">Sources</a>, or from its own web pages, read on 17
+October 2026, not run by us. Tool counts for the others are counted in their source.</p>
+<div class="wrap">
+<table>
+<thead>
+<tr><th></th><th>Pixelbolt</th><th>aseprite-mcp</th><th>pixel-mcp</th><th>pixscii</th><th>pixelart-mcp</th><th>pixelforge-mcp</th><th>SpriteCook</th></tr>
+</thead>
+<tbody>
+<tr><th>How the art is made</th>
+<td>Rendered on your CPU from a JSON recipe: palettes, text grids, reusable symbols and drawing operations</td>
+<td>Drives Aseprite in batch mode, one Lua script per call</td>
+<td>Drives Aseprite in batch mode, one Lua script per call</td>
+<td>Drawing on in-memory 16-colour canvases, plus a bundled sprite library and procedural characters</td>
+<td>Drawing on PNG files on disk with Pillow</td>
+<td>Generated by Google Gemini image models, then cropped and split locally</td>
+<td>Generated by third-party AI models (its terms name OpenAI, Google Gemini and xAI) through SpriteCook's hosted service</td></tr>
+<tr><th>What you need</th>
+<td>Node.js 20+; a clone, or the MCPB bundle for Claude Desktop</td>
+<td>Aseprite, Python 3.13+ and uv</td>
+<td>Aseprite 1.3+, and Go to build it or a prebuilt release</td>
+<td>Node.js 18.17+ (<code>npx -y pixscii</code>)</td>
+<td>Python 3.11+, uv and a clone (not on PyPI)</td>
+<td>Node.js 20+ and a Gemini API key</td>
+<td>A SpriteCook account, and an API key or OAuth sign-in</td></tr>
+<tr><th>Cost</th>
+<td>Free</td>
+<td>Free, plus Aseprite (US$19.99 on Steam)</td>
+<td>Free, plus Aseprite</td>
+<td>Free</td>
+<td>Free to download; no licence file</td>
+<td>Free, plus your Gemini API usage (price not checked)</td>
+<td>Free plan: 40 credits every 30 days, and free generations appear in its public gallery. Paid: from US$8 a month
+(excl. VAT) for 800 credits. A standard 1K image costs 8 credits (costs vary by model and settings)</td></tr>
+<tr><th>MCP tools</th>
+<td>8 (counted from <code>tools/list</code>)</td>
+<td>116 (README says 104)</td>
+<td>50 (README tables list 48)</td>
+<td>19</td>
+<td>39</td>
+<td>8 (README documents 6)</td>
+<td>29 (its server card)</td></tr>
+<tr><th>Animation</th>
+<td>Frames with durations, named animations, tweened poses, particle effects</td>
+<td>Frames, cels, tags, per-frame durations, tweening with easing</td>
+<td>Frames, durations, tags with a playback direction</td>
+<td>Six preset motions, and one-call scenes with up to 8 moving characters over a background (a colour, a sprite or a tilemap); up to 32 frames</td>
+<td>Rig-based motions (walk, run, idle and others), looping GIFs with per-frame durations</td>
+<td>A number of generated frames, split into PNGs; no timing</td>
+<td>Turns an image into a short looping cycle</td></tr>
+<tr><th>Exports</th>
+<td>PNG sprite sheet, atlas JSON, single PNGs, APNG, GIF, CSS, a Canvas player, numbered frames for a video editor</td>
+<td>PNG, GIF, JPG; sprite sheets with JSON data; <code>.aseprite</code></td>
+<td>PNG, GIF, JPG, BMP; sprite sheets with JSON metadata; <code>.aseprite</code></td>
+<td>PNG only, returned to the agent; its MCP tools write no files</td>
+<td>PNG, GIF, sprite sheet grids</td>
+<td>PNG files</td>
+<td>PNG and ZIP downloads; Unity, Godot, Phaser and sprite sheet exports on paid plans</td></tr>
+<tr><th>What the agent sees</th>
+<td>A PNG contact sheet of every frame, and palette-key text grids on request</td>
+<td>Upscaled PNGs written to disk for the client to open; pixel rectangles as JSON</td>
+<td>No image; pixels as a paginated colour list</td>
+<td>PNG images; pixels as a hex grid</td>
+<td>Canvas images; pixels as a labelled character grid</td>
+<td>A JSON list of the files written; no image</td>
+<td>Not checked (closed server)</td></tr>
+<tr><th>Fix one pixel of an existing asset</th>
+<td>Yes, <code>pixel_patch</code>. In our run, the decoded frames showed 1 changed pixel in 1 of 6 frames, as its reply said</td>
+<td>Yes, in an <code>.aseprite</code> file</td>
+<td>Yes, in a sprite file</td>
+<td>Only on canvases it holds in memory; no tool loads a PNG from disk as it is</td>
+<td>Yes, in a PNG on disk</td>
+<td>No pixel tools</td>
+<td>No pixel tools in its server card</td></tr>
+<tr><th>Same input, same output</th>
+<td>Measured: 19 of 19 example recipes rendered twice to identical files, on one machine</td>
+<td>No claim found</td>
+<td>No claim found</td>
+<td>Claimed in its README; not run by us</td>
+<td>Claimed in its README and code; not run by us</td>
+<td>Not expected: a generative model with no seed option (not run by us)</td>
+<td>No claim found</td></tr>
+<tr><th>Size limits</th>
+<td>A frame up to 256×256; a project up to 256 frames and 4,194,304 pixels</td>
+<td>None in its code (Aseprite's own limits apply)</td>
+<td>Up to 65,535 pixels a side</td>
+<td>256×256, 16 colours, 32 frames</td>
+<td>Up to 1,024 pixels a side, 256 frames</td>
+<td>Sprites, frames, tiles and items downscaled to a standard size from 16 to 128 pixels (48 by default, tiles 32; 0
+keeps full size); backgrounds and thumbnails stay at the model's size</td>
+<td>Not checked</td></tr>
+<tr><th>Network and files</th>
+<td>The MCP server makes no network calls; it reads asset files only under its root folder (<code>--root</code>, the
+working directory by default) and writes only under <code>--out</code>. The studio listens on your own machine only</td>
+<td>No outbound calls found; <code>run_lua_script</code> runs any Lua on your machine, and its preview web server listens on all network interfaces</td>
+<td>No network code found</td>
+<td>Its <code>convert</code> tool downloads any public web address the agent gives it</td>
+<td>No network code found; reads and writes any path your account can reach</td>
+<td>Sends prompts and reference images to Google's Gemini API</td>
+<td>Runs on SpriteCook's servers and its model providers'</td></tr>
+<tr><th>Licence · stars · latest release</th>
+<td>MIT · 7 · 0.8.0, 13 Oct 2026</td>
+<td>MIT · 707 · no releases; last commit 29 Jul 2026</td>
+<td>MIT · 152 · 0.5.0, 18 Oct 2025</td>
+<td>MIT · 3 · npm 0.3.1, 12 Apr 2026</td>
+<td>No licence file · 5 · no releases; last commit 10 Oct 2026</td>
+<td>MIT · 5 · npm 0.2.0, 21 Mar 2026</td>
+<td>Closed hosted server · not applicable (its setup tool's repository has 5) · setup tool 0.2.17</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="measured">What we measured on Pixelbolt</h2>
+<p>On 17 October 2026, on one machine: Windows 11 Pro (build 26200), Node.js 24.19.0, an AMD Ryzen 9 7950X3D, no GPU
+work. We ran <code>main</code> at <code>a2420d5</code>, and repeated the MCP round trip on the 0.8.0 release
+(<code>9ec9a90</code>). The JSON data files record the commit, Node, OS build and CPU.</p>
+<ul>
+<li><strong>Tests:</strong> <code>node --test</code> passed 237 of 237 tests in 11.3 s
+(<a href="data/pixelbolt-node-test-main-a2420d5.txt">output</a>).</li>
+<li><strong>MCP tools:</strong> the server answered <code>tools/list</code> with 8 tools on both <code>main</code> and
+0.8.0: <code>pixel_help</code>, <code>pixel_validate</code>, <code>pixel_inspect</code>, <code>pixel_patch</code>,
+<code>pixel_render</code>, <code>pixel_compile</code>, <code>pixel_scene</code> and <code>pixel_import</code>.</li>
+<li><strong>A round trip over MCP</strong> on the 24×24, 6-frame coin example: validate took 7 ms, inspect 9 ms (it
+returned a PNG contact sheet), patch 8 ms and render 37 ms, the same on <code>main</code> and 0.8.0. The patch painted
+one pixel, and its reply listed exactly that pixel (frame <code>turn-0</code>, x 12, y 12, from the
+<code>shade</code> colour to <code>light</code>) with the other five frames unchanged. To check the reply, the script
+rendered the revisions before and after the patch and decoded every frame PNG with its own PNG reader: frame
+<code>turn-0</code> differed in exactly that pixel (<code>#c78a43</code> to <code>#ffe4a0</code>), and the other five
+frames in none. The render wrote 14 files: the sprite sheet, atlas JSON, the recipe, CSS, six frame PNGs, an animated
+PNG, a Canvas player, a preview page and a README
+(<a href="data/pixelbolt-mcp-probe-main-a2420d5.json">main</a>, <a href="data/pixelbolt-mcp-probe-v0.8.0.json">0.8.0</a>).</li>
+<li><strong>Same recipe, same bytes:</strong> every plain recipe in <code>examples/</code> (8) and
+<code>examples/quality/</code> (11), meaning recipes with frames rather than the particle, pose, fluid, scene and
+overlay sources that compile into them, was rendered twice through the command line into fresh folders, and every output
+file matched its twin by SHA-256 (9 to 69 files per recipe; 75 to 142 ms per render, with Node's start-up and the file
+writes). The 10 fluid-effect presets, new on <code>main</code> and not yet released, also compiled twice to identical
+recipes, in 115 to 456 ms each (<a href="data/pixelbolt-determinism-main-a2420d5.json">results</a>). We checked one
+machine only; Pixelbolt's own CI runs its tests on other systems, which we didn't repeat.</li>
+<li><strong>Footprint:</strong> no runtime dependencies. The Claude Desktop bundle (<code>pixelbolt.mcpb</code>, release
+0.8.0) is 225 KB.</li>
+</ul>
+<p class="muted">To repeat it, with Node.js 20 or newer:</p>
+<pre>git clone https://github.com/skulitom/Pixelbolt
+cd Pixelbolt
+git checkout a2420d5
+node --test
+node bin/pixelbolt.js render examples/coin.json --out out-a
+node bin/pixelbolt.js render examples/coin.json --out out-b</pre>
+<p class="muted">Then compare the two folders. Our scripts do the same for every plain recipe and fluid preset, and drive
+the MCP round trip:
+<a href="data/pixelbolt-determinism.mjs">pixelbolt-determinism.mjs</a> and
+<a href="data/pixelbolt-probe.mjs">pixelbolt-probe.mjs</a>, each run as <code>node &lt;script&gt; &lt;clone&gt;
+&lt;fresh folder&gt; &lt;result.json&gt;</code>.</p>
+
+<h2>Each tool, and when to choose it over Pixelbolt</h2>
+
+<h3 id="aseprite-mcp">aseprite-mcp</h3>
+<p><a href="https://github.com/diivi/aseprite-mcp">diivi/aseprite-mcp</a> is a Python server that runs Aseprite in batch
+mode with a Lua script for each call. Its source registers 116 tools (its README says 104) across drawing, layers,
+frames and tags, tweening, palettes, tilemaps, slices, text and effects, and it reads and writes native
+<code>.aseprite</code> files. The agent checks its work the way its README describes: draw, export an upscaled PNG for
+the client to open, look and iterate; it can also read a rectangle of pixels as JSON. It has no releases, and its
+latest commit is from 29 July 2026. Two tools need care: <code>run_lua_script</code> runs any Lua code on your machine
+(its README says so), and <code>start_preview_server</code> starts Python's web server without binding it to your own
+machine only.</p>
+<p><strong>Choose it</strong> when you own Aseprite and want the agent to work in the same <code>.aseprite</code> files
+you open by hand, or when you want Aseprite's own tools, from layers and tilemaps to text. <strong>Choose
+Pixelbolt</strong> when you don't want a paid editor in the loop, want byte-for-byte repeatability you can check (we
+measured ours), or want the image returned inside the MCP reply rather than as a file to open.</p>
+
+<h3 id="pixel-mcp">pixel-mcp</h3>
+<p><a href="https://github.com/willibrandon/pixel-mcp">willibrandon/pixel-mcp</a> is a Go server, also built on Aseprite
+in batch mode, with 50 tools in its source (its README tables list 48): canvas, layers, frames and tags, drawing,
+selection, palettes, and its own dithering patterns, palette quantization, auto-shading and antialiasing, plus
+export to PNG, GIF, JPG, BMP and sprite sheets with JSON metadata. It reads pixels back as a colour list and returns no
+image to the agent. Its latest release, 0.5.0, came out on 18 October 2025, and it has had no commits since.</p>
+<p><strong>Choose it</strong> for a single Go binary in front of Aseprite, with its own dithering, quantization,
+auto-shading and antialiasing tools. <strong>Choose Pixelbolt</strong> for active development, no paid editor, and a
+picture the agent can look at after each step.</p>
+
+<h3 id="pixscii">pixscii</h3>
+<p><a href="https://github.com/rxolve/pixscii">rxolve/pixscii</a> (npm <code>pixscii</code>) keeps canvases of up to
+256×256 in memory as 16-colour hex grids, with PICO-8, greyscale and Game Boy palettes, a library of bundled sprites and
+procedural characters. Its 19 tools draw, mirror, compose tilemaps and sprite sheets, animate with six preset motions,
+and build an animated scene with up to 8 moving characters over a background (a colour, a sprite or a tilemap) in one
+call. Results come back as
+PNG images in the agent's reply, and its MCP tools write no files. Its README calls it offline and deterministic. Its
+<code>convert</code> tool downloads any public web address the agent gives it. The npm package (0.3.1, 12 April 2026)
+is four commits behind the repository (three changes and a merge), which still says 0.3.1.</p>
+<p><strong>Choose it</strong> for a one-command start (<code>npx -y pixscii</code>), 16-colour sprites, one-call
+animated scenes, or when a bundled sprite library is enough. <strong>Choose Pixelbolt</strong> for your own palettes
+beyond 16 colours, animations longer than 32 frames (up to 256), files on disk (sheets, atlases, APNG, GIF) and recipes
+you can edit later.</p>
+
+<h3 id="pixelart-mcp">pixelart-mcp</h3>
+<p><a href="https://github.com/light-vp/pixelart-mcp">light-vp/pixelart-mcp</a> is a Python server that edits ordinary
+PNG files on disk with Pillow. It has 39 tools, among them rig-based motions (walk, run, idle and others), onion and
+filmstrip views, an image of the canvas for the agent and a labelled character grid of its pixels, and export to GIF
+and sprite sheet grids. Its code says the same inputs give the same pixels. It has no licence file and isn't on PyPI,
+and it reads and writes any path your account can reach.</p>
+<p><strong>Choose it</strong> for a Python stack, editing existing PNGs in place, or rig-based walk cycles, once its
+author has granted a licence that suits you. <strong>Choose Pixelbolt</strong> for an MIT licence, atlases and APNG,
+and a recipe you can edit later rather than only pixels.</p>
+
+<h3 id="pixelforge-mcp">pixelforge-mcp (freema)</h3>
+<p><a href="https://github.com/freema/pixelforge-mcp">freema/pixelforge-mcp</a> (npm <code>pixelforge-mcp</code>, 0.2.0)
+asks Google Gemini image models for sprites, animation frames, backgrounds, thumbnails, tilesets and item kits. It then
+crops and splits the results locally and downscales sprites, frames, tiles and items to 16 to 128 pixels (or keeps them
+full size); backgrounds and thumbnails are saved as generated. It needs a Gemini API key, which its code sends to
+Google with each request, and reference images you give it are uploaded to Google. It has no single-pixel tools and
+returns a list of files rather than an image. It is a different project from Pixelbolt, which was called PixelForge
+before 0.8.0.</p>
+<p><strong>Choose it</strong> when you want art from a prompt, in your own Gemini account, and can accept a different
+result each time. <strong>Choose Pixelbolt</strong> when the art must be exact, repeatable and editable, or must not
+leave your machine.</p>
+
+<h3 id="spritecook">SpriteCook</h3>
+<p><a href="https://www.spritecook.ai/">SpriteCook</a> is a hosted service whose MCP server runs on its own servers, reached
+with an API key or an OAuth sign-in; its public repository holds only a setup tool. Its terms say it uses third-party
+model providers, naming OpenAI, Google Gemini and xAI. Its server card lists 29 tools for game art, characters and
+their animations, tilesets (with a Godot export tool), UI kits, projects and credits. Pricing, read on 17 October 2026: a
+free plan with 40 credits every 30 days and no card, whose generations appear in a public gallery; then from US$8 a
+month (excl. VAT) for 800 credits, with a standard 1K image at 8 credits. Its pricing page lists engine exports
+(Unity, Godot, Phaser) and private assets as paid-plan features.</p>
+<p><strong>Choose it</strong> when you want finished, consistent art from prompts, characters with animation sets and UI
+kits, and are happy to pay per image. <strong>Choose Pixelbolt</strong> when you want no account or credits, art that
+stays on your machine, and the same files on every run.</p>
+
+<h2>Pixelbolt's limits</h2>
+<ul>
+<li>It doesn't generate art from a prompt. The agent (or you) designs every sprite in the recipe, so the result is
+only as good as the drawing; the inspection images and quality diagnostics help the agent judge it.</li>
+<li>Small art only: a frame is at most 256×256 pixels, and a project at most 256 frames and 4,194,304 pixels in all.</li>
+<li>It imports only 8-bit RGB or RGBA PNGs, not GIFs or <code>.aseprite</code> files, and it doesn't write
+<code>.aseprite</code>.</li>
+<li>Its <code>tools/list</code> result is large: 135,519 bytes of JSON on <code>main</code> and 134,532 on 0.8.0, mostly
+because four tools carry the full recipe JSON Schema.</li>
+<li>It isn't on npm: install it with <code>git clone</code>, or open the MCPB bundle in Claude Desktop. It is in the
+official MCP Registry as <code>io.github.skulitom/pixelbolt</code>.</li>
+<li>It is young, with 7 GitHub stars. The fluid effects (fire, smoke, steam, water) are on <code>main</code> but not yet
+in a release.</li>
+</ul>
+
+<h2>Also in the same searches</h2>
+<ul>
+<li><a href="https://github.com/adrianoamaral/pixel-mcp">adrianoamaral/pixel-mcp</a> (npm <code>pxcli-mcp</code> 0.1.0,
+TypeScript, 7 stars): a different project from willibrandon's pixel-mcp, with 10 tools (canvases, pixels, lines,
+rectangles, clear, undo and redo, and PNG export) on in-memory canvases of up to 256×256; it has no licence file. From its README, not run by us.</li>
+<li><a href="https://www.sprite-ai.art/mcp">Sprite AI</a>: a hosted MCP server with 13 tools priced in tokens (1 for a
+sprite, 14 to 20 for an animation) and an API key; 15 free generations, then from US$8 a month. From its docs, not run
+by us.</li>
+<li><a href="https://www.pixellab.ai/mcp">PixelLab</a>: a hosted MCP server for its pixel art generation API
+(characters with 4 or 8 directions, animations, tilesets, map objects), with an API token; its MCP repository holds a
+README only.</li>
+<li><a href="https://github.com/uncagedspirit/pixel-art-mcp">uncagedspirit/pixel-art-mcp</a>: 2 tools; its "no API key"
+image backend is Pollinations, an online AI image service.</li>
+<li><a href="https://github.com/syuaibsyuaib/ssyubix-pixelart-mcp">ssyubix-pixelart-mcp</a>: a Python server (Apache-2.0,
+on PyPI) with 24 tools for drawing and building 2D tilesets for Unity.</li>
+<li>pixelsmith, listed on Glama as <code>liamlz11/pixelsmith</code>: its GitHub repository returned 404 on 17 October
+2026, its README (as Glama cached it) says it isn't on npm yet, and <code>pixelsmith-mcp</code> doesn't exist there, so
+we couldn't read its code. Glama's npm link for it points at an unrelated package with the same name.</li>
+<li>Several other servers are also called aseprite-mcp. On this page the name means diivi/aseprite-mcp, the most
+starred Aseprite MCP server we found.</li>
+</ul>
+
+<h2 id="method">Method</h2>
+<ul>
+<li><strong>The searches this page answers</strong>, run on 17 October 2026: "pixel art sprite generator tool for AI
+agents MCP", "pixel art MCP server" and "best MCP server for pixel art and sprite animation Claude Code". Glama's
+directory pages filled most results, with Enterprise DNA, Sprite AI's own MCP page and a few mirrors. None of the
+results was a head-to-head comparison, and Pixelbolt appeared in none.</li>
+<li><strong>Which tools:</strong> we started from the servers in the results of the first search when we ran it on
+16 October: pixel-mcp, pixscii, pixelsmith, pixelforge-mcp and SpriteCook, a hosted generator whose own blog post
+ranked that day (our note of that run names no URL, and SpriteCook didn't rank on 17 October). We dropped pixelsmith,
+whose source is gone, and added aseprite-mcp, the most starred Aseprite server we found, and pixelart-mcp, a local
+server named in two of the three 17 October summaries. adrianoamaral/pixel-mcp and ssyubix-pixelart-mcp, which also
+draw locally, are summarised under "Also in the same searches" rather than in the table.</li>
+<li><strong>Pixelbolt</strong> was tested as described above, from a fresh clone.</li>
+<li><strong>The other tools were not installed or run.</strong> We run another tool only when it is open source from
+its official source, works offline with no account or key, and can't reach the network or your desktop. None of these
+met all three. The Aseprite servers depend on Aseprite, which is source-available under its own licence rather than
+open source, and we didn't buy or build it for this check; aseprite-mcp can also run any Lua code. pixelforge-mcp and
+SpriteCook need a key or an account and the network, pixscii can download from the web, pixelart-mcp has no licence,
+and pixelsmith's source is gone. We read each README, the files named below and the hosted services' own pages.
+Stars, releases and npm versions come from GitHub and npm on 17 October 2026.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<p class="muted">All read on 17 October 2026, at the commit shown.</p>
+<ul>
+<li>aseprite-mcp at <code>90d1696</code>:
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/README.md">README</a>,
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/pyproject.toml">pyproject.toml</a>,
+<a href="https://github.com/diivi/aseprite-mcp/tree/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/tools">tools/</a>
+(116 <code>@mcp.tool()</code> registrations),
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/core/commands.py">core/commands.py</a>
+(batch Lua),
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/tools/export.py">tools/export.py</a>,
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/tools/pixel_read.py">tools/pixel_read.py</a>,
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/tools/script.py">tools/script.py</a>,
+<a href="https://github.com/diivi/aseprite-mcp/blob/90d1696a7e41edff89bbd0823ae6a5f86c114bcc/aseprite_mcp/tools/preview.py">tools/preview.py</a>.</li>
+<li>pixel-mcp at <code>96e59ec</code>:
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/README.md">README</a>,
+<a href="https://github.com/willibrandon/pixel-mcp/tree/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/tools">pkg/tools/</a>
+(50 <code>mcp.AddTool</code> calls),
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/aseprite/client.go">pkg/aseprite/client.go</a>,
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/tools/export.go">pkg/tools/export.go</a>,
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/tools/inspection.go">pkg/tools/inspection.go</a>,
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/tools/dithering.go">pkg/tools/dithering.go</a>,
+<a href="https://github.com/willibrandon/pixel-mcp/blob/96e59ec7dfa828c241ad991287364d5b9f3fc79a/pkg/tools/canvas.go">pkg/tools/canvas.go</a>;
+<a href="https://github.com/willibrandon/pixel-mcp/releases/tag/v0.5.0">release 0.5.0</a>.</li>
+<li>pixscii at <code>9d06f46</code>:
+<a href="https://github.com/rxolve/pixscii/blob/9d06f468b2232a2880882805c1e86820a2f46b88/README.md">README</a>,
+<a href="https://github.com/rxolve/pixscii/blob/9d06f468b2232a2880882805c1e86820a2f46b88/package.json">package.json</a>,
+<a href="https://github.com/rxolve/pixscii/tree/9d06f468b2232a2880882805c1e86820a2f46b88/src/tools">src/tools/</a>
+(19 tools),
+<a href="https://github.com/rxolve/pixscii/blob/9d06f468b2232a2880882805c1e86820a2f46b88/src/resolve.ts">src/resolve.ts</a>
+(downloads for <code>convert</code>),
+<a href="https://github.com/rxolve/pixscii/blob/9d06f468b2232a2880882805c1e86820a2f46b88/src/constants.ts">src/constants.ts</a>
+(limits); <a href="https://www.npmjs.com/package/pixscii">npm pixscii</a>;
+<a href="https://github.com/rxolve/pixscii/compare/42312c5e3b691e62a44744d0683fff9b7663480d...9d06f468b2232a2880882805c1e86820a2f46b88">the commits after npm 0.3.1</a>.</li>
+<li>pixelart-mcp at <code>391c5d5</code>:
+<a href="https://github.com/light-vp/pixelart-mcp/blob/391c5d58465067d072180ca5c4416b278a3a304f/README.md">README</a>,
+<a href="https://github.com/light-vp/pixelart-mcp/blob/391c5d58465067d072180ca5c4416b278a3a304f/pyproject.toml">pyproject.toml</a>,
+<a href="https://github.com/light-vp/pixelart-mcp/blob/391c5d58465067d072180ca5c4416b278a3a304f/pixelart_mcp/server.py">pixelart_mcp/server.py</a>
+(39 tools, limits, file paths),
+<a href="https://github.com/light-vp/pixelart-mcp/blob/391c5d58465067d072180ca5c4416b278a3a304f/pixelart_mcp/craft.py">pixelart_mcp/craft.py</a>;
+<a href="https://github.com/light-vp/pixelart-mcp/tree/391c5d58465067d072180ca5c4416b278a3a304f">file list</a> (no
+licence file).</li>
+<li>pixelforge-mcp at <code>5ca08f9</code>:
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/README.md">README</a>,
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/package.json">package.json</a>,
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/src/index.ts">src/index.ts</a>
+(8 tools),
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/src/engine/gemini.ts">src/engine/gemini.ts</a>,
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/src/engine/models.ts">src/engine/models.ts</a>,
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/src/tools/forge-sprite.ts">src/tools/forge-sprite.ts</a>,
+<a href="https://github.com/freema/pixelforge-mcp/blob/5ca08f9e91786a11e7ba4fea5e66664beb09c842/src/tools/forge-background.ts">src/tools/forge-background.ts</a>;
+<a href="https://www.npmjs.com/package/pixelforge-mcp">npm pixelforge-mcp</a>.</li>
+<li>SpriteCook: <a href="https://www.spritecook.ai/pricing">pricing</a>,
+<a href="https://www.spritecook.ai/terms">terms</a> (sections 1 and 7 to 9),
+<a href="https://www.spritecook.ai/llms.txt">llms.txt</a>,
+<a href="https://api.spritecook.ai/.well-known/mcp/server-card.json">MCP server card</a>, and
+<a href="https://github.com/SpriteCook/spritecook-mcp/tree/51183367f2281d3fbbdb6cef730823352f6dae59">SpriteCook/spritecook-mcp</a>
+at <code>5118336</code>.</li>
+<li>Aseprite: <a href="https://store.steampowered.com/app/431730/">Steam store page</a> (price) and
+<a href="https://github.com/aseprite/aseprite#license">its source licence</a>.</li>
+<li>Also: <a href="https://github.com/adrianoamaral/pixel-mcp/blob/08839bae7b906099bbfe84987ce58edab30aedc1/README.md">adrianoamaral/pixel-mcp</a>
+at <code>08839ba</code>; <a href="https://www.sprite-ai.art/mcp">Sprite AI MCP docs</a> and
+<a href="https://www.sprite-ai.art/pricing">pricing</a>; <a href="https://www.pixellab.ai/mcp">PixelLab MCP</a>;
+<a href="https://github.com/uncagedspirit/pixel-art-mcp/tree/83485dc690e92997a06f3bd4cfab6206d6040d60">uncagedspirit/pixel-art-mcp</a>
+at <code>83485dc</code>;
+<a href="https://github.com/syuaibsyuaib/ssyubix-pixelart-mcp/tree/c92482f9a780d9f6cf6305d8c78d23104bdcc19c">ssyubix-pixelart-mcp</a>
+at <code>c92482f</code>; <a href="https://glama.ai/mcp/servers/liamlz11/pixelsmith">Glama's pixelsmith listing</a>.</li>
+<li>Pixelbolt at <code>a2420d5</code>:
+<a href="https://github.com/skulitom/Pixelbolt/blob/a2420d5a5afe43200906a36629ae0f8a0fd1d496/README.md">README</a>,
+<a href="https://github.com/skulitom/Pixelbolt/blob/a2420d5a5afe43200906a36629ae0f8a0fd1d496/llms.txt">llms.txt</a>,
+<a href="https://github.com/skulitom/Pixelbolt/blob/a2420d5a5afe43200906a36629ae0f8a0fd1d496/src/mcp.js">src/mcp.js</a>,
+<a href="https://github.com/skulitom/Pixelbolt/blob/a2420d5a5afe43200906a36629ae0f8a0fd1d496/CHANGELOG.md">CHANGELOG</a>,
+and this page's data: <a href="data/pixelbolt-node-test-main-a2420d5.txt">tests</a>,
+<a href="data/pixelbolt-mcp-probe-main-a2420d5.json">MCP round trip</a>,
+<a href="data/pixelbolt-determinism-main-a2420d5.json">determinism and timing</a>.</li>
+</ul>
+
+<footer class="muted">
+<p>Last checked 17 October 2026. A plain static page: no JavaScript, trackers or cookies.
+<a href="https://skulitom.github.io/Pixelbolt/">Pixelbolt</a> ·
+<a href="https://github.com/skulitom/Pixelbolt">GitHub</a> ·
+<a href="https://github.com/skulitom/Pixelbolt/issues/new">Report a mistake</a></p>
+</footer>
+</main>
+</body>
+</html>

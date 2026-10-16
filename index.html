@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixelbolt: pixel art and sprite animation for AI agents</title>
+<meta name="description" content="Pixelbolt is a free, MIT-licensed pixel art toolkit with a local MCP server and CLI: agents write JSON recipes and get sprite sheets, atlases, APNGs and GIFs, the same bytes every time.">
+<link rel="canonical" href="https://skulitom.github.io/Pixelbolt/">
+<style>
+:root { --bg: #ffffff; --fg: #1d1d1f; --muted: #5b5b66; --link: #0b57d0; --rule: #d9d9e0; }
+@media (prefers-color-scheme: dark) { :root { --bg: #16171a; --fg: #e8e8ec; --muted: #a2a2ad; --link: #8ab4f8; --rule: #33343a; } }
+body { background: var(--bg); color: var(--fg); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; }
+main { max-width: 46rem; margin: 0 auto; padding: 2rem 16px 4rem; }
+a { color: var(--link); }
+h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 1rem; }
+h2 { font-size: 1.2rem; margin: 2rem 0 0.5rem; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+footer { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>Pixelbolt: pixel art and sprite animation for AI agents</h1>
+<p>Pixelbolt is a pixel art toolkit with a local MCP server, a command line and a browser studio. An agent such as
+Claude, Codex or Cursor writes an editable JSON recipe; Pixelbolt renders it to transparent PNG sprite sheets, texture
+atlases, animated PNGs, GIFs and numbered frames for a video editor, and the same recipe gives the same files every
+time. The agent can read every pixel back and fix one pixel or one frame without redrawing the rest. It is free and
+MIT-licensed, needs only Node.js 20 or newer, and uses no image model, API key or network service.</p>
+<p><a href="https://github.com/skulitom/Pixelbolt">Source, install and docs on GitHub</a> ·
+<a href="https://github.com/skulitom/Pixelbolt/releases/latest">Latest release</a></p>
+
+<h2>Comparisons</h2>
+<ul>
+<li><a href="compare/pixel-art-mcp-servers-for-ai-agents/">Pixel art MCP servers for AI agents</a> (checked 17
+October 2026)</li>
+</ul>
+
+<footer class="muted">Plain static pages: no scripts, trackers or cookies. Made by the Pixelbolt maintainers.</footer>
+</main>
+</body>
+</html>
