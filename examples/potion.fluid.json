@@ -127,7 +127,7 @@
           ],
           "rate": 1,
           "density": 0,
-          "noise": 0.5
+          "noise": 0.2
         },
         {
           "name": "bubbles",

@@ -17,10 +17,11 @@
       "duration": 60,
       "loop": true,
       "seed": 9,
+      "substeps": 1,
       "buoyancy": 0,
       "vorticity": 0.2,
-      "dissipation": 0.075,
-      "cooling": 0.22,
+      "dissipation": 0.08,
+      "cooling": 0.35,
       "drag": 0.05,
       "emitters": [
         {
@@ -29,33 +30,83 @@
             24,
             24
           ],
-          "radius": 20,
+          "radius": 21,
           "rate": 1,
-          "vortex": 1.3,
-          "expand": -1
+          "vortex": 0.7,
+          "expand": -1.15,
+          "pulse": {
+            "amplitude": 0.25,
+            "period": 24
+          }
         },
         {
-          "name": "east",
+          "name": "comet-1",
           "at": [
             24,
             24
           ],
-          "radius": 2,
+          "radius": 3,
           "rate": 1,
-          "density": 1.3,
-          "temperature": 1,
+          "temperature": 1.05,
+          "orbit": {
+            "radius": 15,
+            "period": 24
+          }
+        },
+        {
+          "name": "glint-1",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1.5,
+          "rate": 1,
+          "temperature": 1.45,
+          "orbit": {
+            "radius": 15,
+            "period": 24
+          }
+        },
+        {
+          "name": "halo-1",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 2.4,
+          "rate": 1,
+          "density": 0.22,
+          "orbit": {
+            "radius": 15,
+            "period": 24
+          }
+        },
+        {
+          "name": "tail-1",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1.35,
+          "rate": 1,
+          "density": 1.7,
+          "pulse": {
+            "amplitude": 0.5,
+            "period": 6
+          },
           "orbit": {
             "radius": 15,
             "period": 24
           },
           "sparks": {
-            "count": 0.5,
+            "count": 0.7,
             "life": [
-              6,
-              12
+              12,
+              20
             ],
             "colors": [
               "W",
+              "c",
               "c",
               "m"
             ],
@@ -64,36 +115,85 @@
               360
             ],
             "speed": [
-              0.4,
-              0.9
+              0.1,
+              0.3
             ],
-            "follow": 0.3,
+            "follow": 1,
             "drag": 0.08
           }
         },
         {
-          "name": "west",
+          "name": "comet-2",
           "at": [
             24,
             24
           ],
-          "radius": 2,
+          "radius": 3,
           "rate": 1,
-          "density": 1,
-          "temperature": 1,
+          "temperature": 1.05,
           "orbit": {
-            "radius": 11,
+            "radius": 15,
             "period": 24,
-            "phase": 165
+            "phase": 180
+          }
+        },
+        {
+          "name": "glint-2",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1.5,
+          "rate": 1,
+          "temperature": 1.45,
+          "orbit": {
+            "radius": 15,
+            "period": 24,
+            "phase": 180
+          }
+        },
+        {
+          "name": "halo-2",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 2.4,
+          "rate": 1,
+          "density": 0.22,
+          "orbit": {
+            "radius": 15,
+            "period": 24,
+            "phase": 180
+          }
+        },
+        {
+          "name": "tail-2",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1.35,
+          "rate": 1,
+          "density": 1.7,
+          "pulse": {
+            "amplitude": 0.5,
+            "period": 6
+          },
+          "orbit": {
+            "radius": 15,
+            "period": 24,
+            "phase": 180
           },
           "sparks": {
-            "count": 0.5,
+            "count": 0.7,
             "life": [
-              6,
-              12
+              12,
+              20
             ],
             "colors": [
               "W",
+              "c",
               "c",
               "m"
             ],
@@ -102,12 +202,22 @@
               360
             ],
             "speed": [
-              0.4,
-              0.9
+              0.1,
+              0.3
             ],
-            "follow": 0.3,
+            "follow": 1,
             "drag": 0.08
           }
+        },
+        {
+          "name": "drain",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 5,
+          "rate": 1,
+          "density": -0.25
         },
         {
           "name": "core",
@@ -115,10 +225,41 @@
             24,
             24
           ],
-          "radius": 2.5,
+          "radius": 1.5,
+          "rate": 1,
+          "density": 0.3,
+          "temperature": 1.1
+        },
+        {
+          "name": "eye-1",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1,
           "rate": 1,
           "density": 0.6,
-          "temperature": 0.7
+          "temperature": 1.3,
+          "orbit": {
+            "radius": 2,
+            "period": 8
+          }
+        },
+        {
+          "name": "eye-2",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 1,
+          "rate": 1,
+          "density": 0.6,
+          "temperature": 1.3,
+          "orbit": {
+            "radius": 2,
+            "period": 8,
+            "phase": 180
+          }
         }
       ],
       "look": [
@@ -130,9 +271,9 @@
             "m"
           ],
           "thresholds": [
-            0.14,
-            0.35,
-            0.7
+            0.12,
+            0.3,
+            0.65
           ],
           "dither": 0.5,
           "pattern": "value"
@@ -145,9 +286,9 @@
           ],
           "thresholds": [
             0.5,
-            0.85
+            0.9
           ],
-          "dither": 0.4
+          "dither": 0.25
         }
       ]
     }

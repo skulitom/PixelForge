@@ -18,15 +18,15 @@ const read = async file => JSON.parse(await readFile(path.join(root, file), 'utf
 // The same source must give the same recipe on every machine and engine: these hashes are checked on every CI system.
 const GOLDEN = {
   campfire: '1a789c44e352be9623801b345b444127ef948fccdefd8dd480aea752ff64d4c4',
-  explosion: '5dbc1d1e9e8a5287943e17b6dbac6de460aedc1690c5e66f12ce1093059fa288',
-  'smoke-puff': 'dd01faa2aeb77fb0eb3d46ba6f3cbed9cc95b9c74dc16c2a99c5c398b1a9d0a1',
-  'steam-vent': '2b3b75bcb3e652af113d563ad174faeddd9fc468822cf7c6609603255d829c2b',
-  'magic-swirl': '21d9871f4c54613b2a42a970f22d95a2400b587a01f0fc1d9faa6d9c0de98c3d',
+  explosion: 'f44b9b6cd64dd2734118dff2519a77ed163df46494abcf79402aa16c7f625b24',
+  'smoke-puff': 'ff84249a92a18f11a778c4bc391d3c2adaac7d9e2d2389de8f9e5400a7218f65',
+  'steam-vent': 'a7e29384998ed631453e235a9593c4a5e64115def10a2e4c3efe60e65cab5ea6',
+  'magic-swirl': 'a2639e2d51a62c25df286eda8af7275d05f65e24c134ed8e9c0a3378b2120971',
   torch: '1653a23c933b250d5cc6aa8c0a5e1878e7438b11169ef85c52d733e019263828',
-  splash: 'e8bbcaa13d396d8a1c5aa0a64fa7040a2a234cfe9457b7ab2f7596b7aae8c7ac',
-  waterfall: '44585ef0b535b76054d37b419168e21de9ffbe23915ec780e8a4d7c7e65c1b35',
-  drip: '4772596fa668a1b70cd82c442749c39607de664d94eb4e77e2ee5dc875870889',
-  potion: '498e27daf07beb2d09797728415ef51a8f2f1ca4578a38785d5e6f4260e19177'
+  splash: 'df64bfbd55c0ae97f33b77b8de6b06fd453e7066c7529514e11a9f1ec1a51f13',
+  waterfall: '05f08a8ac507cd6653225b323076687df915de54dfad5193f17adefde5191752',
+  drip: '7c04b2978a49e62940bd4a19aedbffe592ba1d8a727b69678b7ccc6fe001c38b',
+  potion: 'e07d99bb26b540baacdff090b3e04545d4b516a89cc85c691637f3cc2a22e734'
 };
 const examples = new Map();
 const example = async name => {
@@ -120,6 +120,25 @@ test('sparks draw as blocks of their size, with a streak back along their path',
   assert.deepEqual(pixels(thrown({}).recipe)[1], [[11, 8, 'w']]);
   assert.equal(pixels(thrown({ size: 2 }).recipe)[1].length, 4);
   assert.deepEqual(pixels(thrown({ trail: true }).recipe)[1], [[8, 8, 'y'], [9, 8, 'y'], [10, 8, 'y'], [11, 8, 'w']]);
+});
+
+test('in a liquid, spray ends where it falls back into the water and a bubble bursts in a ring, then two droplets', () => {
+  // A still pool fills rows 10–15. One spark is thrown up from just above the surface; one bubble rises from inside it.
+  const pool = sparks => compileFluid({ ...gas(null), effects: { pool: { kind: 'liquid', frames: 16, walls: ['left', 'right', 'bottom'], fill: [{ x: 0, y: 10, w: 16, h: 6 }],
+    emitters: [{ at: sparks.at, radius: 0.5, burst: 1, density: 0, sparks: { count: 1, life: 40, colors: ['w'], drag: 0, follow: 0, angle: 270, ...sparks.extra } }], look: [{ field: 'density', colors: ['s'], thresholds: [0.5], dither: 0 }] } } });
+  const whites = recipe => recipe.frames.map(frame => frame.ops[0].rows.flatMap((row, j) => [...row].flatMap((char, i) => (char === 'w' ? [[frame.ops[0].x + i, frame.ops[0].y + j]] : []))));
+  // Spray rises, falls back and ends at the surface instead of being drawn on inside the water for the rest of its life.
+  const spray = whites(pool({ at: [8, 9.5], extra: { speed: 1.5, gravity: [0, 0.3] } }).recipe);
+  assert.ok(spray.slice(0, 4).every(list => list.length === 1 && list[0][1] < 10));
+  assert.ok(spray.every(list => list.every(([, y]) => y < 10)), JSON.stringify(spray));
+  assert.deepEqual(spray.slice(-4), [[], [], [], []]);
+  // The bubble is drawn while it rises; where it leaves the water it is a ring for one frame, then two droplets, then gone.
+  const bubble = whites(pool({ at: [8, 13], extra: { speed: 0.6, gravity: [0, -0.05], pop: true } }).recipe), burst = bubble.findIndex(list => list.length === 4);
+  assert.ok(burst > 0 && bubble.slice(0, burst).every(list => list.length === 1), JSON.stringify(bubble));
+  const [x, y] = bubble[burst].reduce(([a, b], [i, j]) => [a + i / 4, b + j / 4], [0, 0]);
+  assert.deepEqual(bubble[burst].map(([i, j]) => [i - x, j - y]).sort(), [[-1, 0], [0, -1], [0, 1], [1, 0]]);
+  assert.deepEqual(bubble[burst + 1].map(([i, j]) => [i - x, j - y]).sort(), [[-1, -1], [1, -1]]);
+  assert.ok(bubble.slice(burst + 2).every(list => !list.length));
 });
 
 test('loops repeat their forcing, blend their seam and wrap sparks round', () => {

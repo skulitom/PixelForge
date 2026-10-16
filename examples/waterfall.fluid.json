@@ -101,7 +101,7 @@
         "left"
       ],
       "flip": 0.6,
-      "drag": 0.03,
+      "drag": 0.06,
       "obstacles": [
         {
           "symbol": "cliff",
@@ -137,7 +137,11 @@
           "velocity": [
             0.5,
             0.2
-          ]
+          ],
+          "pulse": {
+            "amplitude": 0.5,
+            "period": 6
+          }
         },
         {
           "name": "spray",
@@ -151,8 +155,8 @@
           "sparks": {
             "count": 0.8,
             "life": [
-              4,
-              8
+              6,
+              12
             ],
             "colors": [
               "w",
@@ -171,6 +175,46 @@
               0.2
             ],
             "follow": 0
+          }
+        },
+        {
+          "name": "seep",
+          "at": [
+            27,
+            48.5
+          ],
+          "area": [
+            18,
+            3
+          ],
+          "rate": 1,
+          "density": -0.1
+        },
+        {
+          "name": "glints",
+          "at": [
+            16,
+            10
+          ],
+          "radius": 1.5,
+          "rate": 1,
+          "density": 0,
+          "sparks": {
+            "count": 1,
+            "life": [
+              16,
+              22
+            ],
+            "colors": [
+              "w",
+              "w",
+              "w",
+              "c"
+            ],
+            "trail": true,
+            "follow": 1,
+            "speed": 0,
+            "drag": 0
           }
         }
       ],
@@ -204,14 +248,14 @@
         {
           "field": "speed",
           "colors": [
-            "c",
-            "w"
+            "b",
+            "c"
           ],
           "thresholds": [
-            3,
-            4.2
+            1.6,
+            3
           ],
-          "dither": 0.5
+          "dither": 0
         }
       ],
       "cleanup": {

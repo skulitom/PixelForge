@@ -13,7 +13,7 @@
   "effects": {
     "splash": {
       "kind": "liquid",
-      "frames": 36,
+      "frames": 40,
       "duration": 60,
       "seed": 3,
       "walls": [
@@ -21,8 +21,8 @@
         "right",
         "bottom"
       ],
-      "flip": 0.5,
-      "drag": 0.07,
+      "flip": 0.2,
+      "drag": 0.12,
       "tension": 1.2,
       "fill": [
         {
@@ -36,51 +36,192 @@
             24,
             7
           ],
-          "radius": 2.5,
+          "radius": 3,
           "velocity": [
             0,
-            0.5
+            1
           ]
         }
       ],
       "emitters": [
         {
-          "name": "spray",
+          "name": "crown-left",
           "at": [
-            24,
-            28
+            19.5,
+            26.5
           ],
-          "radius": 2,
+          "area": [
+            2,
+            1
+          ],
           "burst": 1,
           "start": 10,
           "density": 0,
           "sparks": {
-            "count": 8,
+            "count": 3,
             "life": [
-              6,
-              12
+              12,
+              20
             ],
             "colors": [
               "w",
               "w",
               "c"
             ],
-            "size": 2,
             "angle": [
-              225,
-              315
+              228,
+              256
             ],
             "speed": [
-              1.6,
-              3
+              2.8,
+              4
             ],
             "gravity": [
               0,
-              0.22
+              0.55
             ],
             "drag": 0.02,
-            "follow": 0
+            "follow": 0,
+            "trail": true
           }
+        },
+        {
+          "name": "crown-right",
+          "at": [
+            28.5,
+            26.5
+          ],
+          "area": [
+            2,
+            1
+          ],
+          "burst": 1,
+          "start": 10,
+          "density": 0,
+          "sparks": {
+            "count": 3,
+            "life": [
+              12,
+              20
+            ],
+            "colors": [
+              "w",
+              "w",
+              "c"
+            ],
+            "angle": [
+              284,
+              312
+            ],
+            "speed": [
+              2.8,
+              4
+            ],
+            "gravity": [
+              0,
+              0.55
+            ],
+            "drag": 0.02,
+            "follow": 0,
+            "trail": true
+          }
+        },
+        {
+          "name": "drop-left",
+          "at": [
+            19.5,
+            26.5
+          ],
+          "area": [
+            2,
+            1
+          ],
+          "burst": 1,
+          "start": 10,
+          "density": 0,
+          "sparks": {
+            "count": 1,
+            "life": [
+              12,
+              20
+            ],
+            "colors": [
+              "w",
+              "w",
+              "c"
+            ],
+            "angle": [
+              240,
+              256
+            ],
+            "speed": [
+              3.4,
+              4.2
+            ],
+            "gravity": [
+              0,
+              0.55
+            ],
+            "drag": 0.02,
+            "follow": 0,
+            "size": 2
+          }
+        },
+        {
+          "name": "drop-right",
+          "at": [
+            28.5,
+            26.5
+          ],
+          "area": [
+            2,
+            1
+          ],
+          "burst": 1,
+          "start": 10,
+          "density": 0,
+          "sparks": {
+            "count": 1,
+            "life": [
+              12,
+              20
+            ],
+            "colors": [
+              "w",
+              "w",
+              "c"
+            ],
+            "angle": [
+              284,
+              300
+            ],
+            "speed": [
+              3.4,
+              4.2
+            ],
+            "gravity": [
+              0,
+              0.55
+            ],
+            "drag": 0.02,
+            "follow": 0,
+            "size": 2
+          }
+        },
+        {
+          "name": "settle",
+          "at": [
+            24,
+            38
+          ],
+          "area": [
+            48,
+            2
+          ],
+          "rate": 1,
+          "start": 12,
+          "end": 29,
+          "density": -0.016
         }
       ],
       "look": [
@@ -105,8 +246,8 @@
           "thresholds": [
             1,
             2,
-            4,
-            7
+            5,
+            9
           ],
           "dither": 0
         }

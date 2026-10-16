@@ -594,11 +594,11 @@
                       "type": "number",
                       "minimum": 0,
                       "maximum": 2,
-                      "description": "How much the flow carries the spark: 1 (default) moves with the fluid, 0 ignores it (thrown debris)."
+                      "description": "How much the flow carries the spark: 1 (default) moves with the fluid, 0 ignores it (thrown debris). In a liquid, a spark with follow 0 that leaves the water ends where it falls back in (spray)."
                     },
                     "pop": {
                       "type": "boolean",
-                      "description": "Liquid only: the spark disappears when it leaves the liquid (bubbles popping at the surface)."
+                      "description": "Liquid only: the spark pops where it leaves the liquid, drawn as a ring around it for one frame and two droplets the next (bubbles bursting at the surface)."
                     }
                   },
                   "required": [

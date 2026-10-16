@@ -76,7 +76,7 @@ function readSparks(value, path, context, burst) {
   const { palette, liquid } = context;
   fields(value, ['count', 'life', 'colors', 'size', 'trail', 'angle', 'speed', 'gravity', 'drag', 'follow', 'pop'], path);
   if (!Array.isArray(value.colors) || !value.colors.length || value.colors.length > LIMITS.colors) fail(`${path}.colors`, `expected 1–${LIMITS.colors} palette keys, spread over each spark's life`);
-  if (value.pop !== undefined && !liquid) fail(`${path}.pop`, 'pop removes bubbles that reach the surface; it applies to liquids');
+  if (value.pop !== undefined && !liquid) fail(`${path}.pop`, 'pop bursts bubbles that reach the surface; it applies to liquids');
   return {
     count: number(value.count, `${path}.count`, 0.01, burst ? 256 : 16), life: range(value.life ?? [8, 16], `${path}.life`, 1, 256, true),
     colors: value.colors.map((key, i) => paletteKey(key, `${path}.colors[${i}]`, palette)),
@@ -665,7 +665,10 @@ function spawnSparks(list, e, index, cycle, here, seed, total) {
   }
   return true;
 }
-function moveSparks(list, g, density, total) {
+// In a liquid, spray (sparks that ignore the flow) that has left the water ends where it falls back in, and a bubble
+// that leaves it pops: it is drawn as a ring for one frame and as two droplets the next.
+const sparkColor = p => p.s.colors[Math.min(p.s.colors.length - 1, Math.floor(p.age * p.s.colors.length / p.life))].charCodeAt(0);
+function moveSparks(list, g, density, total, liquid, pops) {
   const { W, H, u, v, solid } = g;
   for (let k = list.length - 1; k >= 0; k--) {
     const p = list[k], s = p.s;
@@ -673,8 +676,11 @@ function moveSparks(list, g, density, total) {
     const fx = s.follow ? sampleU(g, u, p.x, p.y) * s.follow : 0, fy = s.follow ? sampleV(g, v, p.x, p.y) * s.follow : 0;
     p.vx = (p.vx + s.gravity[0]) * (1 - s.drag); p.vy = (p.vy + s.gravity[1]) * (1 - s.drag);
     p.px = p.x; p.py = p.y; p.x += fx + p.vx; p.y += fy + p.vy;
-    const i = Math.floor(p.x), j = Math.floor(p.y), inside = i >= 0 && j >= 0 && i < W && j < H;
-    if (p.age >= p.life || !Number.isFinite(p.x + p.y) || (inside && solid[j * W + i]) || (s.pop && (!inside || density[j * W + i] < LEVEL)) || p.x < -16 || p.y < -16 || p.x > W + 16 || p.y > H + 16) { list.splice(k, 1); total.alive--; }
+    const i = Math.floor(p.x), j = Math.floor(p.y), inside = i >= 0 && j >= 0 && i < W && j < H, wet = liquid && inside && density[j * W + i] >= LEVEL;
+    const popped = s.pop && !wet && Number.isFinite(p.x + p.y);
+    if (popped) pops.push({ x: p.x, y: p.y, size: s.size, code: sparkColor(p), age: 0 });
+    if (p.age >= p.life || !Number.isFinite(p.x + p.y) || (inside && solid[j * W + i]) || popped || (wet && p.out) || p.x < -16 || p.y < -16 || p.x > W + 16 || p.y > H + 16) { list.splice(k, 1); total.alive--; }
+    else if (liquid && !wet && !s.follow) p.out = true;
   }
 }
 
@@ -740,7 +746,7 @@ function simulate(effect, context) {
   // and blends its own closing frames toward them: the last frame then flows into frame 0 as that cycle's did.
   const begin = effect.warmup * frames, total = simulatedFrames(effect), blend = effect.blend;
   const base = [new Float64Array(N), new Float64Array(N), new Float64Array(N)], tail = loop ? Array.from({ length: blend }, () => base.map(() => new Float64Array(N))) : [];
-  const chars = Array.from({ length: frames }, () => null), sparks = [], drawn = Array.from({ length: frames }, () => []), totals = { alive: 0, spawned: 0, maxAlive: 0 };
+  const chars = Array.from({ length: frames }, () => null), sparks = [], pops = [], drawn = Array.from({ length: frames }, () => []), totals = { alive: 0, spawned: 0, maxAlive: 0 };
   const peak = { density: 0, temperature: 0, speed: 0 };
   let maxParticles = liquid ? state.n : 0;
   for (let t = 0; t < total; t++) {
@@ -753,17 +759,26 @@ function simulate(effect, context) {
     liquid ? liquidFields(state, base) : gasFields(state, base);
     if (loop && out >= -blend && out < 0) { tail[out + blend].forEach((field, f) => field.set(base[f])); continue; }
     // Sparks move with this frame's flow, then new ones join where their emitters are.
-    moveSparks(sparks, g, base[0], totals);
+    moveSparks(sparks, g, base[0], totals, liquid, pops);
     if (recording) emitters.forEach((e, index) => { if (here[index] && e.sparks && !spawnSparks(sparks, e, index, cycle, here[index], seed, totals)) fail(path, `more than ${LIMITS.sparks} sparks are alive at once; lower the sparks' count or life`); });
     totals.maxAlive = Math.max(totals.maxAlive, totals.alive);
     // A spark is a size × size block in the colour for its age; a trail streaks back to where it was a frame ago in
     // the next colour of its list.
+    const list = drawn[(loop ? out : t) % frames], put = (x, y, code) => { if (x >= 0 && y >= 0 && x < width && y < height && !effect.front[y * width + x]) list.push(y * width + x, code); };
     if (loop || t < frames) for (const p of sparks) {
-      const list = drawn[(loop ? out : t) % frames], s = p.s, step = Math.min(s.colors.length - 1, Math.floor(p.age * s.colors.length / p.life));
-      const put = (x, y, code) => { if (x >= 0 && y >= 0 && x < width && y < height && !effect.front[y * width + x]) list.push(y * width + x, code); };
+      const s = p.s, step = Math.min(s.colors.length - 1, Math.floor(p.age * s.colors.length / p.life));
       if (s.trail && p.px !== undefined) { const tail = s.colors[Math.min(s.colors.length - 1, step + 1)].charCodeAt(0); traceLine(Math.floor(p.px), Math.floor(p.py), Math.floor(p.x), Math.floor(p.y), (x, y) => put(x, y, tail)); }
       const head = s.colors[step].charCodeAt(0), x0 = Math.floor(p.x - (s.size - 1) / 2), y0 = Math.floor(p.y - (s.size - 1) / 2);
       for (let j = 0; j < s.size; j++) for (let i = 0; i < s.size; i++) put(x0 + i, y0 + j, head);
+    }
+    // A popped bubble: the ring around its block, then a droplet off each upper corner.
+    for (let k = pops.length - 1; k >= 0; k--) {
+      const b = pops[k], x0 = Math.floor(b.x - (b.size - 1) / 2), y0 = Math.floor(b.y - (b.size - 1) / 2);
+      if (loop || t < frames) {
+        if (b.age === 0) for (let i = 0; i < b.size; i++) { put(x0 + i, y0 - 1, b.code); put(x0 + i, y0 + b.size, b.code); put(x0 - 1, y0 + i, b.code); put(x0 + b.size, y0 + i, b.code); }
+        else { put(x0 - 1, y0 - 1, b.code); put(x0 + b.size, y0 - 1, b.code); }
+      }
+      if (++b.age > 1) pops.splice(k, 1);
     }
     if (!recording) continue;
     const frame = loop ? out : t;

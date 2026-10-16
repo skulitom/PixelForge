@@ -86,7 +86,7 @@
             8,
             8
           ],
-          "radius": 1.7,
+          "radius": 1.5,
           "rate": 1,
           "start": 4,
           "end": 8,
@@ -101,33 +101,35 @@
             8,
             25
           ],
-          "radius": 2,
+          "area": [
+            2,
+            1
+          ],
           "burst": 1,
           "start": 20,
           "density": 0,
           "sparks": {
             "count": 3,
             "life": [
-              4,
-              8
+              8,
+              14
             ],
             "colors": [
               "w",
               "w",
               "c"
             ],
-            "size": 1,
             "angle": [
               225,
               315
             ],
             "speed": [
-              0.8,
-              1.4
+              1.2,
+              1.8
             ],
             "gravity": [
               0,
-              0.22
+              0.5
             ],
             "drag": 0.02,
             "follow": 0
@@ -137,14 +139,14 @@
           "name": "soak",
           "at": [
             8,
-            27
+            26
           ],
           "area": [
             14,
-            4
+            2
           ],
           "rate": 1,
-          "density": -0.01
+          "density": -0.1
         }
       ],
       "look": [
@@ -167,16 +169,6 @@
           "thresholds": [
             1,
             2
-          ],
-          "dither": 0
-        },
-        {
-          "field": "speed",
-          "colors": [
-            "c"
-          ],
-          "thresholds": [
-            1
           ],
           "dither": 0
         }

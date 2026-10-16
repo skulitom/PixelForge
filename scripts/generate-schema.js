@@ -215,8 +215,8 @@ const fluidEmitter = object({
     trail: { type: 'boolean', description: 'Streak back to where the spark was a frame earlier, in the next colour of its list: flying debris, rising embers.' },
     angle: range(-3600, 3600, 'Launch direction in degrees, clockwise: 0 right, 90 down, 270 up. Default [0, 360].'), speed: range(0, 16, 'Launch speed in pixels per frame; default 0.'),
     gravity: vector(-2, 2, 'The spark\'s own acceleration [x, y]; negative y rises (bubbles, embers).'), drag: num(0, 1, 'Share of the spark\'s own speed lost each frame; default 0.05.'),
-    follow: num(0, 2, 'How much the flow carries the spark: 1 (default) moves with the fluid, 0 ignores it (thrown debris).'),
-    pop: { type: 'boolean', description: 'Liquid only: the spark disappears when it leaves the liquid (bubbles popping at the surface).' }
+    follow: num(0, 2, 'How much the flow carries the spark: 1 (default) moves with the fluid, 0 ignores it (thrown debris). In a liquid, a spark with follow 0 that leaves the water ends where it falls back in (spray).'),
+    pop: { type: 'boolean', description: 'Liquid only: the spark pops where it leaves the liquid, drawn as a ring around it for one frame and two droplets the next (bubbles bursting at the surface).' }
   }, ['count', 'colors']), description: 'One-pixel particles carried by the flow and drawn over it: embers, sparkles, debris, bubbles. In a loop they wrap round, so they loop exactly.' }
 }, ['at']);
 const fluidLook = object({
