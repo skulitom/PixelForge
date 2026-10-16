@@ -2,7 +2,7 @@
 
 [English](https://github.com/skulitom/Pixelbolt/blob/main/README.md) · [简体中文](https://github.com/skulitom/Pixelbolt/blob/main/README.zh-CN.md) · 日本語
 
-> これは英語版 README の日本語による要約です。機能の詳細、制限、最新の変更については[英語版 README](https://github.com/skulitom/Pixelbolt/blob/main/README.md) が正です。
+> これは英語版 README の日本語による要約です。機能の詳細、制限、最新の変更は[英語版 README](https://github.com/skulitom/Pixelbolt/blob/main/README.md) を参照してください。内容が異なる場合は英語版 README を優先してください。
 
 **AI エージェントが作り、確かめ、直せるピクセルアートとスプライトアニメーション。** Pixelbolt は編集可能な JSON レシピから、スプライト、タイル、アイコン、エフェクト、短いアニメーションを作り、PNG スプライトシート、テクスチャアトラス、アニメーション PNG（APNG）、GIF、動画編集ソフト向けの連番 PNG として書き出します。エージェントはローカルの MCP サーバーまたはコマンドラインから使います。同じレシピは、ローカルのブラウザスタジオで確認・編集することもできます。
 
@@ -10,7 +10,7 @@
 
 - **対象：** Claude、Codex、Cursor などのエージェントにピクセルアートを描かせたり直させたりしたいゲーム開発者、ゲームジャムのチーム、Web や動画の制作者、そして正確で再現性のある画像出力を必要とするエージェント開発者。
 - **向いている用途：** テキストのまま編集可能な小さな 2D ゲーム素材が欲しいとき。エージェントはすべてのピクセルを読み戻し、残りを描き直さずに 1 ピクセルや 1 フレームだけを直せます。同じレシピからは毎回まったく同じ画像が描かれます。
-- **向いていない用途：** 絵画風・写真風の画像や大きな画像（1 プロジェクトは最大 256 × 256 ピクセル、256 フレーム）、画像生成モデルによるアート生成、GIF や Aseprite ファイルの編集（取り込めるのはロスレス PNG のみ）。
+- **向いていない用途：** 絵画風・写真風の画像や大きな画像（1 フレームは最大 256 × 256 ピクセル、1 プロジェクトは最大 256 フレームで合計 4,194,304 ピクセルまで）、画像生成モデルによるアート生成、GIF や Aseprite ファイルの編集（取り込めるのは 8 ビット RGB/RGBA PNG のみ）。
 
 ## 試してみる
 
@@ -57,17 +57,25 @@ node bin/pixelbolt.js render hero.pixel.json --out output/hero
 }
 ```
 
+TOML で設定するクライアント（Codex など）：
+
+```toml
+[mcp_servers.pixelbolt]
+command = "node"
+args = ["/absolute/path/to/Pixelbolt/bin/pixelbolt.js", "mcp", "--out", "/absolute/path/to/Pixelbolt/output"]
+```
+
 Pixelbolt は公式 MCP Registry に `io.github.skulitom/pixelbolt` として登録されています。
 
 8 つの MCP ツール：
 
-- **`pixel_help`**：オーサリングガイド、完全な JSON Schema、編集可能な完全なサンプル。まずここから始めます。
-- **`pixel_validate`**：レシピを検証し、サイズ、フレームの長さ、アニメーション、キャンバスからはみ出した位置を報告します。変更不可のレシピのリビジョンを保存し、素材は書き出しません。
+- **`pixel_help`**：オーサリングガイド、JSON Schema 全体、そのまま編集できるサンプル。まずここから始めます。
+- **`pixel_validate`**：レシピを検証し、サイズ、フレームの表示時間、アニメーション、キャンバスからはみ出した位置を報告します。変更不可のレシピのリビジョンを保存し、素材は書き出しません。
 - **`pixel_inspect`**：素材を書き出さずに、全フレームをコンタクトシートで確認します。パレットキーのテキストグリッド、シルエット、グレースケール、オニオンスキン表示、診断情報も選べます。
 - **`pixel_patch`**：1 ピクセル、1 色、1 フレームなど、狙った部分だけを編集してレシピを直し、変わったピクセルと前後比較の画像を返します。
 - **`pixel_render`**：スプライトシート、アトラス JSON、フレームごとの PNG、APNG アニメーション、CSS、Canvas プレーヤーを書き出します。GIF や動画編集用の連番 PNG も同時に書き出せます。呼び出しごとに新しいフォルダーに書き込みます。
 - **`pixel_compile`**：ポーズ（poses）ソース、オートタイル（autotile）テンプレート、パーティクルエフェクトのソース、法線マップのソースを通常のレシピにコンパイルします。
-- **`pixel_scene`**：シーンマニフェスト（タイルマップ、キャラクターの配置、ライティングなど）を描画し、シーンや連番 PNG として書き出せます。
+- **`pixel_scene`**：シーンマニフェスト（タイルマップ、素材の配置、ライティングなど）を描画し、シーンや連番 PNG として書き出せます。
 - **`pixel_import`**：原寸の 8 ビット RGB/RGBA PNG を、ピクセルを変えずに編集可能なレシピとして取り込みます。
 
 レシピを扱うツールは成功するたびに `revision` ID を返します。以降の呼び出しではレシピ全体の代わりにこの ID を渡せるので、レシピを何度も送る必要はありません。
@@ -94,16 +102,16 @@ Pixelbolt は公式 MCP Registry に `io.github.skulitom/pixelbolt` として登
 }
 ```
 
-テキストグリッドの各文字がパレットの色を選びます。`.` と空白はピクセルを変えません。フレームの継承により、小さな変更を短く書けます。描画は決定的で、整数のピクセル座標だけを使います。
+テキストグリッドの各文字がパレットの色を選びます。`.` と空白はピクセルを変えません。フレームの継承により、小さな変更を短く書けます。描画は決定論的で、整数のピクセル座標だけを使います。
 
 ## 書き出されるファイル
 
 | ファイル | 用途 |
 | --- | --- |
 | `name.png` | RGBA PNG スプライトシート |
-| `name.atlas.json` | TexturePacker 形式の JSON アトラス：矩形、アンカー、フレームの長さ、名前付きアニメーション |
+| `name.atlas.json` | TexturePacker 形式の JSON アトラス：矩形、アンカー、フレームの表示時間、名前付きアニメーション |
 | `frames/*.png` | 各フレームの透過 PNG |
-| `animations/*.png` | アニメーションごとの APNG（透過とフレームの長さを保持） |
+| `animations/*.png` | アニメーションごとの APNG（透過とフレームの表示時間を保持） |
 | `name.css` | CSS アニメーションのクラス |
 | `player.js` | 依存のない小さな Canvas プレーヤー |
 | `name.pixel.json` | 編集可能なソースレシピ |
@@ -123,7 +131,7 @@ Pixelbolt は公式 MCP Registry に `io.github.skulitom/pixelbolt` として登
 
 - [Anode](https://github.com/skulitom/Anode)：隠れたバックグラウンドセッションで Windows デスクトップを自動操作します。エージェントがクリック、入力、スクリーンショットをしても、あなたの画面は奪われません。
 - [Cutbolt](https://github.com/skulitom/Cutbolt)：正確なタイムライン、字幕、レンダリングを備えた動画編集エンジン。
-- [Inkbolt](https://github.com/skulitom/Inkbolt)：ベクター画像とラスター画像の編集：SVG、PDF、図、イラスト。
+- [Inkbolt](https://github.com/skulitom/Inkbolt)：図やイラスト向けのベクター画像・ラスター画像の編集。SVG を取り込み、SVG または PDF で書き出せます。
 - [Nestbolt](https://github.com/skulitom/Nestbolt)：レーザー、CNC、プラズマ、ウォータージェット切断向けに、板材へ部品を配置する 2D ネスティング。[ブラウザでも使えます](https://skulitom.github.io/Nestbolt/)。
 
 ## ライセンス

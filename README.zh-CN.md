@@ -10,7 +10,7 @@
 
 - **适合谁：** 希望让 Claude、Codex、Cursor 等智能体绘制和修改像素画的游戏开发者、游戏开发马拉松（game jam）团队、网页或视频创作者，以及需要精确、可重复图像输出的智能体开发者。
 - **什么时候用：** 你需要以文本形式保持可编辑的小型 2D 游戏素材时。智能体可以读回每一个像素，只修改一个像素或一帧而不必重画其余部分，同一份配方每次都渲染出完全相同的图像。
-- **什么时候不用：** 绘画风格、照片类或大尺寸图像（一个项目最多 256 × 256 像素、256 帧）；用图像生成模型生成美术；编辑 GIF 或 Aseprite 文件（只支持导入无损 PNG）。
+- **什么时候不用：** 绘画风格、照片类或大尺寸图像（每帧最多 256 × 256 像素；一个项目最多 256 帧，总计不超过 4,194,304 像素）；用图像生成模型生成美术；编辑 GIF 或 Aseprite 文件（只支持导入 8 位 RGB/RGBA PNG）。
 
 ## 试用
 
@@ -37,7 +37,7 @@ node bin/pixelbolt.js render hero.pixel.json --out output/hero
 
 ## 交给智能体使用
 
-**Claude Desktop：** 从最新版本下载 [`pixelbolt.mcpb`](https://github.com/skulitom/Pixelbolt/releases/latest/download/pixelbolt.mcpb) 并打开它（或在 设置 → 扩展 中从文件安装）。选择一个存放配方和生成素材的工作区，然后让智能体调用 `pixel_help`。
+**Claude Desktop：** 从最新发布（Release）下载 [`pixelbolt.mcpb`](https://github.com/skulitom/Pixelbolt/releases/latest/download/pixelbolt.mcpb) 并打开它（或在“设置 → 扩展”（Settings → Extensions）中从文件安装）。选择一个存放配方和生成素材的工作区，然后让智能体调用 `pixel_help`。
 
 **Claude Code、Codex、Cursor 等 MCP 客户端：** 先克隆仓库，再把服务器加入智能体的 MCP 配置。把 `/absolute/path/to/Pixelbolt` 换成你的检出目录的绝对路径；在 Windows 上请使用正斜杠，例如 `C:/DEV/Pixelbolt`：
 
@@ -57,17 +57,25 @@ node bin/pixelbolt.js render hero.pixel.json --out output/hero
 }
 ```
 
+使用 TOML 配置的客户端（如 Codex）：
+
+```toml
+[mcp_servers.pixelbolt]
+command = "node"
+args = ["/absolute/path/to/Pixelbolt/bin/pixelbolt.js", "mcp", "--out", "/absolute/path/to/Pixelbolt/output"]
+```
+
 Pixelbolt 已收录在官方 MCP Registry 中，名称为 `io.github.skulitom/pixelbolt`。
 
 八个 MCP 工具：
 
-- **`pixel_help`**：作者指南、完整 JSON Schema 和一个可编辑的完整示例。从这里开始。
+- **`pixel_help`**：创作指南、完整 JSON Schema 和一个可编辑的完整示例。从这里开始。
 - **`pixel_validate`**：检查配方，报告尺寸、帧时长、动画和超出画布的位置；保存一个不可变的配方版本（revision），不导出素材。
-- **`pixel_inspect`**：不导出素材，直接以联系表（contact sheet）查看每一帧；可选调色板键文本网格、剪影、灰度、洋葱皮视图和诊断信息。
+- **`pixel_inspect`**：不导出素材，直接以帧总览图（contact sheet）查看每一帧；可选调色板键文本网格、剪影、灰度、洋葱皮视图和诊断信息。
 - **`pixel_patch`**：用有针对性的编辑修改配方，例如改一个像素、一种颜色或某一帧，并返回改动了哪些像素和前后对比图。
-- **`pixel_render`**：导出精灵表、图集 JSON、单帧 PNG、APNG 动画、CSS 和 Canvas 播放器；可选同时导出 GIF 或供视频剪辑使用的逐帧 PNG。每次调用写入一个新的文件夹。
+- **`pixel_render`**：导出精灵表、图集 JSON、单帧 PNG、APNG 动画、CSS 和 Canvas 播放器；可选同时导出 GIF 和/或供视频剪辑使用的逐帧 PNG。每次调用写入一个新的文件夹。
 - **`pixel_compile`**：把姿势（poses）源文件、自动图块（autotile）模板、粒子特效源文件或法线贴图源文件编译成普通配方。
-- **`pixel_scene`**：渲染场景清单（图块地图、角色放置、光照等），可导出场景或逐帧 PNG。
+- **`pixel_scene`**：渲染场景清单（图块地图、素材摆放、光照等），可导出场景或逐帧 PNG。
 - **`pixel_import`**：把原始分辨率的 8 位 RGB/RGBA PNG 无损导入为可编辑配方。
 
 每次成功的配方工具调用都会返回一个 `revision` 编号，之后的调用可以用它代替完整配方，不必重复发送。
@@ -112,7 +120,7 @@ Pixelbolt 已收录在官方 MCP Registry 中，名称为 `io.github.skulitom/pi
 ## 更多文档（英文）
 
 - [英文 README](https://github.com/skulitom/Pixelbolt/blob/main/README.md)：完整的命令、导出、JavaScript API 和便携版说明
-- [作者指南](https://github.com/skulitom/Pixelbolt/blob/main/docs/agent-guide.md)：配方字段、绘图操作和限制
+- [创作指南](https://github.com/skulitom/Pixelbolt/blob/main/docs/agent-guide.md)：配方字段、绘图操作和限制
 - [像素画技能](https://github.com/skulitom/Pixelbolt/blob/main/skills/pixel-art/SKILL.md)：可复用的创作与检查流程
 - [示例](https://github.com/skulitom/Pixelbolt/tree/main/examples)和[作品展示](https://github.com/skulitom/Pixelbolt/blob/main/showcase/gallery/README.md)
 - [llms.txt](https://github.com/skulitom/Pixelbolt/blob/main/llms.txt)：面向智能体的文档索引
@@ -123,7 +131,7 @@ Pixelbolt 已收录在官方 MCP Registry 中，名称为 `io.github.skulitom/pi
 
 - [Anode](https://github.com/skulitom/Anode)：在隐藏的后台会话中进行 Windows 桌面自动化，智能体可以点击、输入和截图，而不会占用你的屏幕。
 - [Cutbolt](https://github.com/skulitom/Cutbolt)：视频剪辑引擎，提供精确的时间线、字幕和渲染。
-- [Inkbolt](https://github.com/skulitom/Inkbolt)：矢量和位图编辑：SVG、PDF、图表和插画。
+- [Inkbolt](https://github.com/skulitom/Inkbolt)：用于图表和插画的矢量与位图编辑，可导入 SVG，并导出 SVG 或 PDF。
 - [Nestbolt](https://github.com/skulitom/Nestbolt)：为激光、CNC、等离子和水刀切割在板材上排布零件的 2D 排样工具，也可以[在浏览器中使用](https://skulitom.github.io/Nestbolt/)。
 
 ## 许可证

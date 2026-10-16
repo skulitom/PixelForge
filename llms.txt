@@ -4,7 +4,7 @@
 
 Requires Node.js 20 or newer. No build step, dependency installation, API key or hosted service is needed. Clone https://github.com/skulitom/Pixelbolt.git and run commands from the checkout. The package name is pixelbolt; the CLI command is pixelbolt (pixelforge still works as an alias). Installation instructions use the GitHub checkout. Claude Desktop users can instead open pixelbolt.mcpb from the latest release (https://github.com/skulitom/Pixelbolt/releases/latest/download/pixelbolt.mcpb). The MCP Registry name is io.github.skulitom/pixelbolt.
 
-Use Pixelbolt when a user asks for pixel art, sprites, a sprite sheet, game assets, tiles or a tileset, icons, particle effects, a pixel font caption or a short looping animation or GIF, and wants files they or an agent can revise later. Do not use it for painted, photographic or large images (a project is at most 256 x 256 pixels and 256 frames), for image-model generation, or to edit GIF or Aseprite files (it imports lossless PNG only).
+Use Pixelbolt when a user asks for pixel art, sprites, a sprite sheet, game assets, tiles or a tileset, icons, particle effects, a pixel font caption or a short looping animation or GIF, and wants files they or an agent can revise later. Do not use it for painted, photographic or large images (a frame is at most 256 x 256 pixels, and a project at most 256 frames and 4,194,304 pixels in all), for image-model generation, or to edit GIF or Aseprite files (it imports 8-bit RGB/RGBA PNG only).
 
 ## Start here
 
@@ -52,5 +52,5 @@ Quality review: inspect supports --view color|silhouette|grayscale|onion|tile (3
 
 - [Anode](https://github.com/skulitom/Anode): Windows desktop automation for agents in a hidden background session.
 - [Cutbolt](https://github.com/skulitom/Cutbolt): Local video editing engine with exact timelines, captions and rendering.
-- [Inkbolt](https://github.com/skulitom/Inkbolt): Local vector and raster image editing: SVG, PDF, diagrams.
+- [Inkbolt](https://github.com/skulitom/Inkbolt): Local vector and raster image editing for diagrams and illustrations; SVG in, SVG and PDF out.
 - [Nestbolt](https://github.com/skulitom/Nestbolt): 2D nesting of parts on sheets for laser, CNC, plasma and waterjet cutting.

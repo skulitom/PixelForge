@@ -30,7 +30,7 @@
     { "name": "pixel_patch", "description": "Fix one pixel, a colour or a frame with targeted edits, corrections or overlays, and compare the result." },
     { "name": "pixel_render", "description": "Export sprite sheets, atlases, animations, GIFs, video frames and a Canvas player into a new unique folder." },
     { "name": "pixel_compile", "description": "Build character animations from poses, terrain tilesets, particle effects or lighting normal passes as editable recipes." },
-    { "name": "pixel_scene", "description": "Compose and render a scene, room or level from sprites and tilemaps, with optional scene or frame exports." },
+    { "name": "pixel_scene", "description": "Compose and render a scene or room from sprites and tilemaps, with optional scene or frame exports." },
     { "name": "pixel_import", "description": "Turn existing pixel art (an 8-bit RGB/RGBA PNG) into an editable recipe without changing its pixels." }
   ],
   "compatibility": {
