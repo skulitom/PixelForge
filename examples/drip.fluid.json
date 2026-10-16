@@ -1,0 +1,189 @@
+{
+  "format": "pixelforge-fluid",
+  "version": 1,
+  "name": "drip",
+  "width": 16,
+  "height": 32,
+  "palette": {
+    "B": "#1d3f7a",
+    "b": "#2f6fc0",
+    "c": "#5fb4e8",
+    "w": "#dff6ff",
+    "r": "#5b5568",
+    "R": "#433e50",
+    "k": "#2b2735"
+  },
+  "symbols": {
+    "rock": [
+      "RrrrrRrrrrRrrrrR",
+      "rrrRrrrrRrrrrRrr",
+      "...rrrRrrrrRr...",
+      "....RrrrrRrr....",
+      ".....rrRrrr.....",
+      "......rrrr......",
+      ".......rR......."
+    ],
+    "ground": [
+      "R..............R",
+      "R..............R",
+      "RRRRRRRRRRRRRRRR"
+    ]
+  },
+  "effects": {
+    "drip": {
+      "kind": "liquid",
+      "frames": 24,
+      "duration": 70,
+      "loop": true,
+      "seed": 2,
+      "warmup": 3,
+      "walls": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "flip": 0,
+      "drag": 0.08,
+      "tension": 1.6,
+      "obstacles": [
+        {
+          "symbol": "rock",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "symbol": "ground",
+          "x": 0,
+          "y": 29
+        }
+      ],
+      "fill": [
+        {
+          "x": 1,
+          "y": 25,
+          "w": 14,
+          "h": 4
+        }
+      ],
+      "emitters": [
+        {
+          "name": "bead",
+          "at": [
+            8,
+            7.5
+          ],
+          "radius": 1.4,
+          "rate": 1,
+          "end": 8,
+          "velocity": [
+            0,
+            0
+          ]
+        },
+        {
+          "name": "swell",
+          "at": [
+            8,
+            8
+          ],
+          "radius": 1.7,
+          "rate": 1,
+          "start": 4,
+          "end": 8,
+          "velocity": [
+            0,
+            0
+          ]
+        },
+        {
+          "name": "spray",
+          "at": [
+            8,
+            25
+          ],
+          "radius": 2,
+          "burst": 1,
+          "start": 20,
+          "density": 0,
+          "sparks": {
+            "count": 3,
+            "life": [
+              4,
+              8
+            ],
+            "colors": [
+              "w",
+              "w",
+              "c"
+            ],
+            "size": 1,
+            "angle": [
+              225,
+              315
+            ],
+            "speed": [
+              0.8,
+              1.4
+            ],
+            "gravity": [
+              0,
+              0.22
+            ],
+            "drag": 0.02,
+            "follow": 0
+          }
+        },
+        {
+          "name": "soak",
+          "at": [
+            8,
+            27
+          ],
+          "area": [
+            14,
+            4
+          ],
+          "rate": 1,
+          "density": -0.01
+        }
+      ],
+      "look": [
+        {
+          "field": "density",
+          "colors": [
+            "b"
+          ],
+          "thresholds": [
+            0.5
+          ],
+          "dither": 0
+        },
+        {
+          "field": "depth",
+          "colors": [
+            "w",
+            "c"
+          ],
+          "thresholds": [
+            1,
+            2
+          ],
+          "dither": 0
+        },
+        {
+          "field": "speed",
+          "colors": [
+            "c"
+          ],
+          "thresholds": [
+            1
+          ],
+          "dither": 0
+        }
+      ],
+      "cleanup": {
+        "strays": true
+      }
+    }
+  }
+}

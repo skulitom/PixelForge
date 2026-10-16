@@ -1,0 +1,140 @@
+{
+  "format": "pixelforge-fluid",
+  "version": 1,
+  "name": "explosion",
+  "width": 64,
+  "height": 64,
+  "palette": {
+    "W": "#fffbe6",
+    "y": "#ffd34d",
+    "o": "#ff8a2b",
+    "r": "#d6402b",
+    "R": "#8f2a2e",
+    "s": "#b3a5ad",
+    "S": "#867882",
+    "k": "#5a4e5b"
+  },
+  "effects": {
+    "explosion": {
+      "frames": 32,
+      "duration": 60,
+      "seed": 7,
+      "buoyancy": 0.14,
+      "vorticity": 0.35,
+      "dissipation": 0.13,
+      "cooling": 0.16,
+      "drag": 0.08,
+      "emitters": [
+        {
+          "name": "flash",
+          "at": [
+            32,
+            36
+          ],
+          "radius": 10,
+          "burst": 1,
+          "temperature": 2.6
+        },
+        {
+          "name": "blast",
+          "at": [
+            32,
+            36
+          ],
+          "radius": 5,
+          "rate": 1,
+          "end": 4,
+          "density": 2.4,
+          "temperature": 3,
+          "expand": 4.4,
+          "noise": 1.4,
+          "flicker": 0.5
+        },
+        {
+          "name": "debris",
+          "at": [
+            32,
+            36
+          ],
+          "radius": 4,
+          "burst": 1,
+          "sparks": {
+            "count": 16,
+            "life": [
+              10,
+              16
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              185,
+              355
+            ],
+            "speed": [
+              3,
+              5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        }
+      ],
+      "look": [
+        {
+          "field": "density",
+          "colors": [
+            "k",
+            "S"
+          ],
+          "thresholds": [
+            0.12,
+            0.45
+          ],
+          "dither": 0.6,
+          "pattern": "value"
+        },
+        {
+          "field": "light",
+          "colors": [
+            "s"
+          ],
+          "thresholds": [
+            0.3
+          ],
+          "dither": 0.4
+        },
+        {
+          "field": "temperature",
+          "colors": [
+            "R",
+            "r",
+            "o",
+            "y",
+            "W"
+          ],
+          "thresholds": [
+            0.3,
+            0.5,
+            0.85,
+            1.4,
+            2.2
+          ],
+          "dither": 0.5
+        }
+      ],
+      "cleanup": {
+        "strays": true
+      }
+    }
+  }
+}

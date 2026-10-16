@@ -1,0 +1,119 @@
+{
+  "format": "pixelforge-fluid",
+  "version": 1,
+  "name": "splash",
+  "width": 48,
+  "height": 40,
+  "palette": {
+    "B": "#1d3f7a",
+    "b": "#2f6fc0",
+    "c": "#5fb4e8",
+    "w": "#dff6ff"
+  },
+  "effects": {
+    "splash": {
+      "kind": "liquid",
+      "frames": 36,
+      "duration": 60,
+      "seed": 3,
+      "walls": [
+        "left",
+        "right",
+        "bottom"
+      ],
+      "flip": 0.5,
+      "drag": 0.07,
+      "tension": 1.2,
+      "fill": [
+        {
+          "x": 0,
+          "y": 28,
+          "w": 48,
+          "h": 12
+        },
+        {
+          "at": [
+            24,
+            7
+          ],
+          "radius": 2.5,
+          "velocity": [
+            0,
+            0.5
+          ]
+        }
+      ],
+      "emitters": [
+        {
+          "name": "spray",
+          "at": [
+            24,
+            28
+          ],
+          "radius": 2,
+          "burst": 1,
+          "start": 10,
+          "density": 0,
+          "sparks": {
+            "count": 8,
+            "life": [
+              6,
+              12
+            ],
+            "colors": [
+              "w",
+              "w",
+              "c"
+            ],
+            "size": 2,
+            "angle": [
+              225,
+              315
+            ],
+            "speed": [
+              1.6,
+              3
+            ],
+            "gravity": [
+              0,
+              0.22
+            ],
+            "drag": 0.02,
+            "follow": 0
+          }
+        }
+      ],
+      "look": [
+        {
+          "field": "density",
+          "colors": [
+            "b"
+          ],
+          "thresholds": [
+            0.5
+          ],
+          "dither": 0
+        },
+        {
+          "field": "depth",
+          "colors": [
+            "w",
+            "c",
+            "b",
+            "B"
+          ],
+          "thresholds": [
+            1,
+            2,
+            4,
+            7
+          ],
+          "dither": 0
+        }
+      ],
+      "cleanup": {
+        "strays": true
+      }
+    }
+  }
+}

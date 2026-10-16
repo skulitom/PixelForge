@@ -1,0 +1,155 @@
+{
+  "format": "pixelforge-fluid",
+  "version": 1,
+  "name": "magic-swirl",
+  "width": 48,
+  "height": 48,
+  "palette": {
+    "v": "#3d2a6b",
+    "p": "#7a44c9",
+    "m": "#c06cf0",
+    "c": "#6fe3f2",
+    "W": "#f4f0ff"
+  },
+  "effects": {
+    "magic-swirl": {
+      "frames": 24,
+      "duration": 60,
+      "loop": true,
+      "seed": 9,
+      "buoyancy": 0,
+      "vorticity": 0.2,
+      "dissipation": 0.075,
+      "cooling": 0.22,
+      "drag": 0.05,
+      "emitters": [
+        {
+          "name": "swirl",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 20,
+          "rate": 1,
+          "vortex": 1.3,
+          "expand": -1
+        },
+        {
+          "name": "east",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 2,
+          "rate": 1,
+          "density": 1.3,
+          "temperature": 1,
+          "orbit": {
+            "radius": 15,
+            "period": 24
+          },
+          "sparks": {
+            "count": 0.5,
+            "life": [
+              6,
+              12
+            ],
+            "colors": [
+              "W",
+              "c",
+              "m"
+            ],
+            "angle": [
+              0,
+              360
+            ],
+            "speed": [
+              0.4,
+              0.9
+            ],
+            "follow": 0.3,
+            "drag": 0.08
+          }
+        },
+        {
+          "name": "west",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 2,
+          "rate": 1,
+          "density": 1,
+          "temperature": 1,
+          "orbit": {
+            "radius": 11,
+            "period": 24,
+            "phase": 165
+          },
+          "sparks": {
+            "count": 0.5,
+            "life": [
+              6,
+              12
+            ],
+            "colors": [
+              "W",
+              "c",
+              "m"
+            ],
+            "angle": [
+              0,
+              360
+            ],
+            "speed": [
+              0.4,
+              0.9
+            ],
+            "follow": 0.3,
+            "drag": 0.08
+          }
+        },
+        {
+          "name": "core",
+          "at": [
+            24,
+            24
+          ],
+          "radius": 2.5,
+          "rate": 1,
+          "density": 0.6,
+          "temperature": 0.7
+        }
+      ],
+      "look": [
+        {
+          "field": "density",
+          "colors": [
+            "v",
+            "p",
+            "m"
+          ],
+          "thresholds": [
+            0.14,
+            0.35,
+            0.7
+          ],
+          "dither": 0.5,
+          "pattern": "value"
+        },
+        {
+          "field": "temperature",
+          "colors": [
+            "c",
+            "W"
+          ],
+          "thresholds": [
+            0.5,
+            0.85
+          ],
+          "dither": 0.4
+        }
+      ]
+    }
+  }
+}

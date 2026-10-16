@@ -22,9 +22,15 @@ const routes = new Map([
   ['/scene-player.js', ['../studio/scene-player.js', 'text/javascript; charset=utf-8']],
   ['/scene.css', ['../studio/scene.css', 'text/css; charset=utf-8']],
   ['/scene.html', ['../studio/scene.html', 'text/html; charset=utf-8']],
+  ['/fluid.html', ['../studio/fluid.html', 'text/html; charset=utf-8']],
+  ['/fluid.css', ['../studio/fluid.css', 'text/css; charset=utf-8']],
+  ['/fluid-lab.js', ['../studio/fluid-lab.js', 'text/javascript; charset=utf-8']],
+  ['/fluid.js', ['./fluid.js', 'text/javascript; charset=utf-8']],
   ['/examples/quality/skink.json', ['../examples/quality/skink.json', 'application/json']],
   ['/schema.json', ['../schema.json', 'application/json']],
-  ...['forest-spirit', 'ember', 'coin', 'shrine', 'caption', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']])
+  ...['forest-spirit', 'ember', 'coin', 'shrine', 'caption', 'swing', 'effects'].map(name => [`/examples/${name}.json`, [`../examples/${name}.json`, 'application/json']]),
+  // The fluid lab compiles these sources in the browser.
+  ...['campfire', 'explosion', 'smoke-puff', 'steam-vent', 'magic-swirl', 'torch', 'splash', 'waterfall', 'drip', 'potion'].map(name => [`/examples/${name}.fluid.json`, [`../examples/${name}.fluid.json`, 'application/json']])
 ]);
 // Every path the studio answers with GET, for checks that walk the whole allowlist.
 export const STUDIO_PATHS = [...routes.keys(), '/scene.json', '/project.json'];

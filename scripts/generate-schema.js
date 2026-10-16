@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { DITHER_PATTERNS, EASINGS } from '../src/craft.js';
+import { FLUID_KINDS, FLUID_FIELDS, FLUID_WALLS } from '../src/fluid.js';
 const int = (minimum, maximum, description) => ({ type: 'integer', minimum, maximum, ...(description ? { description } : {}) });
 const num = (minimum, maximum, description) => ({ type: 'number', minimum, maximum, ...(description ? { description } : {}) });
 const bool = { type: 'boolean' }, color = { type: 'string', description: 'Palette name, transparent, or #RGB/#RGBA/#RRGGBB/#RRGGBBAA.' };
@@ -188,6 +189,74 @@ const fx = {
     sheet: schema.properties.sheet
   }, ['format', 'version', 'name', 'width', 'height', 'symbols', 'effects']), $defs: { rows: schema.$defs.rows }
 };
+const key = { type: 'string', minLength: 1, maxLength: 1, description: 'A one-character palette key (grid rows name colours by character).' };
+const keys = description => ({ ...array(key, 16), minItems: 1, description });
+const cycle = (extra, lowest, description, required = []) => ({ ...object({ ...extra, period: int(lowest, 256, `Frames per cycle; default the effect's frame count. A looping effect's period must divide its frame count.${lowest < 0 ? ' Negative turns anticlockwise; not 0.' : ''}`), phase: num(-3600, 3600, 'Degrees into the cycle at frame 0.') }, required), description });
+const fluidEmitter = object({
+  name: id, at: vector(-256, 512, 'Centre [x, y] in canvas pixels (one grid cell per pixel).'),
+  radius: num(0.5, 64, 'A disc of this radius; default 2.'), area: { ...pairOf(num(1, 128)), description: 'A box [w, h] centred on at, instead of a disc.' },
+  burst: num(0.01, 64, 'Add the amounts once, at start (each cycle when looping), times this strength.'),
+  rate: num(0.01, 64, 'Every frame from start until end, raise the covered cells toward the amounts times this strength, so a steady source holds its level.'),
+  start: int(0, 255, 'Frame of the burst or first emission; default 0.'), end: int(1, 256, 'Frame where a rate emitter stops; default the last. A short window (end: 3) gives a burst that keeps growing for a few frames.'),
+  density: num(-16, 16, 'Gas: smoke added or held (default 0); negative drains. Liquid: share of each covered cell filled with water, 0–1 (default 1); negative drains that share of the particles there each frame.'),
+  temperature: num(-16, 16, 'Gas only: heat added or held; heat rises by buoyancy and maps to fire ramps. Default 0.'),
+  velocity: vector(-16, 16, 'Flow [x, y] in pixels per frame: a rate emitter steers its cells toward it (a jet; [0, 0] holds them still, as a drop gathering at a tip), a burst adds it once.'),
+  expand: num(-16, 16, 'Push outward by this many pixels per frame while active (negative pulls inward): gas expands through the pressure solve, liquid particles are pushed.'),
+  vortex: num(-16, 16, 'Swirl speed around at, in pixels per frame; positive turns clockwise on screen.'),
+  noise: num(0, 8, 'Random push in pixels per frame, coherent over about three pixels and new every frame (seeded): turbulence.'),
+  flicker: num(0, 1, 'Random variation of strength from cell to cell and frame to frame (seeded value noise), so a flame base breaks into tongues.'),
+  pulse: cycle({ amplitude: num(0, 1, 'Share by which strength rises and falls; default 0.5. 1 switches the emitter off at the trough.') }, 1, 'Strength follows a sine wave: puffs, heaves, heartbeats.'),
+  orbit: cycle({ radius: num(0, 128, 'Pixels from at.') }, -256, 'The emitter circles at; a negative period turns anticlockwise.', ['radius']),
+  sparks: { ...object({
+    count: num(0.01, 256, 'Sparks per frame for a rate emitter (at most 16; fractions spawn on some frames), or in all for a burst; follows pulse and flicker.'),
+    life: { oneOf: [int(1, 256), pairOf(int(1, 256))], description: 'Frames each spark lives; [min, max] picks per spark. Default [8, 16].' },
+    colors: keys('Palette keys spread over each spark\'s life, from birth to death.'),
+    size: int(1, 3, 'Pixels across each spark; default 1. 2 reads at 1× (bubbles, embers, spray).'),
+    trail: { type: 'boolean', description: 'Streak back to where the spark was a frame earlier, in the next colour of its list: flying debris, rising embers.' },
+    angle: range(-3600, 3600, 'Launch direction in degrees, clockwise: 0 right, 90 down, 270 up. Default [0, 360].'), speed: range(0, 16, 'Launch speed in pixels per frame; default 0.'),
+    gravity: vector(-2, 2, 'The spark\'s own acceleration [x, y]; negative y rises (bubbles, embers).'), drag: num(0, 1, 'Share of the spark\'s own speed lost each frame; default 0.05.'),
+    follow: num(0, 2, 'How much the flow carries the spark: 1 (default) moves with the fluid, 0 ignores it (thrown debris).'),
+    pop: { type: 'boolean', description: 'Liquid only: the spark disappears when it leaves the liquid (bubbles popping at the surface).' }
+  }, ['count', 'colors']), description: 'One-pixel particles carried by the flow and drawn over it: embers, sparkles, debris, bubbles. In a loop they wrap round, so they loop exactly.' }
+}, ['at']);
+const fluidLook = object({
+  field: { enum: FLUID_FIELDS, description: 'density (smoke or water; water is 1 inside), temperature (gas heat), speed (pixels per frame; foam, fast flow), depth (pixels down from the liquid surface, 1 on the top row), light or shadow (0–1: how sharply density falls toward or away from the light; these only recolour pixels earlier layers drew).' },
+  colors: keys('Palette keys from the lowest level to the highest.'),
+  thresholds: { ...array(num(0.001, 256), 16), minItems: 1, description: 'One rising value per colour: each colour is fully on from its threshold up.' },
+  dither: num(0, 1, 'Feather each colour in below its threshold through the pattern, over this share of the gap to the previous threshold (to 0 for the first). 0 draws hard bands; default 0.5.'),
+  pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dither pattern, as for the dither operation: bayer4 (default), bayer2, bayer8, noise or value (seeded by the effect) or a matrix of ranks. Anchored to the canvas, so it never crawls.' }
+}, ['field', 'colors', 'thresholds']);
+const fluidShape = object({ x: int(0, 127), y: int(0, 127), w: int(1, 128), h: int(1, 128), at: vector(-256, 512), radius: num(0.5, 128), velocity: vector(-16, 16, 'Starting velocity [x, y] in pixels per frame.') });
+const fluid = {
+  $schema: schema.$schema, title: 'Pixelbolt fluid effects',
+  description: 'A deterministic fluid simulation compiled into an ordinary recipe: one frame sequence and animation per effect (frames <effect>-0, <effect>-1…), each frame a palette grid operation, with obstacles stamped from symbols. Gases (smoke, fire, steam, explosions, magic) run stable fluids with buoyancy, vorticity confinement, dissipation and cooling; liquids (splashes, waterfalls, drips, potions) run FLIP particles on the same grid. Look layers map fields onto palette ramps through ordered dither, so no colour outside the palette can appear. Looping effects warm up for whole cycles and blend their closing frames toward the frames before frame 0, so the last frame flows into the first. The same source gives the same recipe on every machine.',
+  ...object({ format: { const: 'pixelforge-fluid' }, version: { const: 1 }, name: id, width: int(4, 128, 'Canvas width in pixels; the grid has one cell per pixel.'), height: int(4, 128), palette: schema.properties.palette,
+    symbols: { type: 'object', propertyNames: id, additionalProperties: ref('rows'), description: 'Named rows for obstacles: braziers, logs, pipes, flasks, rocks.' }, anchor: schema.properties.anchor,
+    effects: { type: 'object', minProperties: 1, maxProperties: 16, propertyNames: id, additionalProperties: object({
+      kind: { enum: FLUID_KINDS, description: 'gas (default): smoke, fire, steam, explosions, magic. liquid: water and potions as FLIP particles.' },
+      frames: int(1, 256), duration: { oneOf: [int(1, 60000), array(int(1, 60000), 256)], description: 'Milliseconds per frame, or one per frame; default 80.' },
+      loop: { type: 'boolean', description: 'Seamless loop: emitter timing, pulses, orbits and noise repeat every cycle; the simulation warms up and its closing frames blend toward the frames before frame 0.' },
+      seed: int(0, 2147483647, 'Default 1.'), warmup: int(1, 8, 'Loops: whole cycles simulated before the recorded one; default 2. Raise it when a flow takes long to settle (a filling pool).'),
+      blend: int(1, 128, 'Loops: closing frames blended toward the previous cycle\'s; default a third of the frames, at most 8.'),
+      substeps: int(1, 4, 'Simulation steps per frame; default 2. Raise for fast liquids.'), iterations: int(1, 200, 'Pressure solve sweeps per step; default 30 (gas) or 40 (liquid).'),
+      buoyancy: num(-2, 2, 'Gas: upward acceleration per unit of temperature; default 0.15.'), weight: num(-2, 2, 'Gas: downward acceleration per unit of density (negative floats smoke); default 0.'),
+      vorticity: num(0, 2, 'Gas: vorticity confinement, which keeps small swirls so smoke curls; default 0.25.'),
+      dissipation: num(0, 1, 'Gas: share of density lost per frame; default 0.03.'), cooling: num(0, 1, 'Gas: share of temperature lost per frame; default 0.08.'),
+      drag: num(0, 1, 'Share of velocity lost per frame; default 0.02 (gas) or 0 (liquid).'), wind: vector(-2, 2, 'Gas: acceleration [x, y] everywhere.'),
+      gravity: vector(-2, 2, 'Liquid: acceleration [x, y]; default [0, 0.3].'), flip: num(0, 1, 'Liquid: FLIP share of each particle\'s velocity (lively, noisier) against the grid\'s (calm); default 0.9.'),
+      tension: num(0, 4, 'Liquid: cohesion that keeps drops and streams together; default 0.5.'),
+      fill: { ...array(fluidShape, 16), description: 'Liquid: water at frame 0 in discs (at, radius), boxes (x, y, w, h) or their overlap (both).' },
+      walls: { ...array({ enum: FLUID_WALLS }, 4), uniqueItems: true, description: 'Closed canvas edges. Open edges (the default) let gas and water out.' },
+      obstacles: { ...array(object({ symbol: id, x: int(0, 127), y: int(0, 127), draw: { enum: ['over', 'under', 'none'], description: 'over (default): stamped in front of the fluid, its outline and sparks; under: behind its outline and sparks (the fluid itself never enters an obstacle); none: an invisible wall.' } }, ['symbol']), 32), description: 'Solid shapes from symbols: their visible pixels block the flow. They must fit the canvas.' },
+      emitters: { ...array(fluidEmitter, 16), description: '1–16 sources; a liquid with a fill may have none.' },
+      look: { ...array(fluidLook, 8), minItems: 1, description: 'Layers drawn in order, later over earlier, each mapping one field to palette colours.' },
+      light: vector(-1, 1, 'Direction toward the light for the light and shadow fields; default [-1, -1], the upper left.'),
+      outline: { ...key, description: 'Palette key for a one-pixel outline around the fluid.' },
+      cleanup: { ...object({ strays: bool, corners: bool }), description: 'De-Stray (specks and pinholes take their surroundings\' colour) and De-Corner cleanup of the fluid before outline and sparks.' }
+    }, ['frames', 'emitters', 'look']) },
+    sheet: schema.properties.sheet
+  }, ['format', 'version', 'name', 'width', 'height', 'effects']), $defs: { rows: schema.$defs.rows }
+};
 const normals = {
   $schema: schema.$schema, title: 'Pixelbolt normal pass',
   description: 'Derives a lighting normal pass from a colour recipe and compiles it to an ordinary recipe aligned with it (same size, frame names and durations, animations and atlas layout), ready for a scene asset\'s normal and editable like any recipe. Each separate shape is rounded from its silhouette, lighter colours can be raised by detail, and every pixel takes the nearest of 17 directions: palette key 5 faces the viewer, the keypad digits 1–4 and 6–9 lean 30° the way they sit around 5, and q w e a d z x c lean 60° the same way.',
@@ -197,4 +266,4 @@ const normals = {
     detail: num(0, 1, 'How far lighter colours stand out of the surface, up to 2 pixels: 0 (default) keeps only the silhouette\'s shape; 0.5–1 embosses textured surfaces such as brick, bark or rock. A colour on a ramp counts its step along the ramp, any other its brightness.')
   }, ['format', 'version', 'recipe']), $defs: { ...schema.$defs, recipe: recipeSchema }
 };
-for (const [file, value] of [['poses.schema.json', poses], ['scene.schema.json', scene], ['autotile.schema.json', autotile], ['fx.schema.json', fx], ['normals.schema.json', normals]]) await writeFile(new URL(`../${file}`, import.meta.url), JSON.stringify(value, null, 2) + '\n');
+for (const [file, value] of [['poses.schema.json', poses], ['scene.schema.json', scene], ['autotile.schema.json', autotile], ['fx.schema.json', fx], ['fluid.schema.json', fluid], ['normals.schema.json', normals]]) await writeFile(new URL(`../${file}`, import.meta.url), JSON.stringify(value, null, 2) + '\n');

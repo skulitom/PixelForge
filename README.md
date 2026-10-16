@@ -10,6 +10,10 @@ English · [简体中文](https://github.com/skulitom/Pixelbolt/blob/main/README
 
 ![A library drawn with Pixelbolt: books circle the chandelier, a lectern book turns its page and a grey tabby sleeps on a shelf](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/gallery/library.gif)
 
+![A campfire simulated by Pixelbolt's fluid compiler: flames lick up from the logs, embers drift up and smoke curls away](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/campfire.gif) ![An explosion simulated by Pixelbolt: a white flash grows into an orange fireball that rises, cools and curls into smoke](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/explosion.gif)
+
+Fire, smoke, steam, explosions, magic and water come from a real fluid simulation that runs on your own CPU in well under a second and bakes every frame into palette pixels you can edit, with seamless loops ([fluid effects](#fluid-effects)).
+
 - **Who it's for:** game developers, game-jam teams and web or video makers who want an agent such as Claude, Codex or Cursor to draw and revise their pixel art, and people building agents that need exact, repeatable images.
 - **Use it when** you want small 2D game assets that stay editable as text: the agent reads every pixel back, fixes one pixel or one frame without redrawing the rest, and the same recipe renders the same image every time.
 - **Don't use it for** painted, photographic or large images (a frame is at most 256 × 256 pixels, and a project at most 256 frames and 4,194,304 pixels in all), generating art with an image model, or editing GIFs and Aseprite files (it imports 8-bit RGB/RGBA PNG only).
@@ -26,7 +30,7 @@ node bin/pixelbolt.js preview --open
 
 Pixelbolt was called PixelForge until 0.8.0. The `pixelforge` command still works as an alias, and recipe files keep their `pixelforge-*` format tags, so existing files and agent setups keep working.
 
-[Gallery](#gallery) · [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelbolt-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md) · [Sibling tools](#sibling-tools)
+[Gallery](#gallery) · [Fluid effects](#fluid-effects) · [Quick start](#start) · [Agent setup](#for-agents) · [MCP server](#connect-an-agent-through-mcp) · [Portable builds](#pixelbolt-studio-portable-builds) · [Recipe reference](docs/agent-guide.md) · [Contributing](CONTRIBUTING.md) · [Sibling tools](#sibling-tools)
 
 ## How it works
 
@@ -49,6 +53,23 @@ An AI agent drew these with Pixelbolt. Its scripts write the recipes, particle s
 ![Three clockwork familiars: a brass owl, a koi in its bowl and a crystal moth over a lantern](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/gallery/familiars.gif)
 
 [Two more rooms and how these were made](https://github.com/skulitom/Pixelbolt/blob/main/showcase/gallery/README.md)
+
+## Fluid effects
+
+A `pixelforge-fluid` source runs a small, deterministic fluid simulation and compiles it into an ordinary recipe of palette grids: gases with buoyancy, swirling vorticity, cooling and dissipation, and liquids as FLIP particles on the same grid. Look layers map density, temperature, speed and depth onto your palette ramps through ordered dither, so no colour outside the palette can appear, and looping effects close their seam. Each preset below compiles in well under a second on a laptop CPU, with no GPU and no model calls. Shown at 4×.
+
+![A campfire: flames lick up from crossed logs, embers drift up and smoke curls away](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/campfire.gif) ![A torch: a small flame flickers on a wooden handle with a metal cup](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/torch.gif) ![Steam puffs rhythmically from a pipe, rises, curls and thins](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/steam-vent.gif) ![A magic swirl: two glowing sources orbit and leave purple mana that spirals](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/magic-swirl.gif)
+
+![An explosion: a white flash grows into an orange fireball that rises, cools and curls into smoke while sparks fly](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/explosion.gif) ![A cartoon smoke puff, outlined and lit from the upper left, billows out in lobes and thins away](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/smoke-puff.gif)
+
+![A waterfall: water flows over a mossy ledge, falls with foam and churns into a basin that overflows](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/waterfall.gif) ![A drop falls from a stalactite and splashes into a small pool](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/drip.gif) ![A green potion bubbles in a round flask: the surface heaves and bubbles rise and pop](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/potion.gif) ![A drop falls into a pool, throws up a crown and spray, and the waves settle](https://raw.githubusercontent.com/skulitom/Pixelbolt/main/showcase/fluid/splash.gif)
+
+```sh
+node bin/pixelbolt.js compile examples/campfire.fluid.json --out output/campfire.json
+node bin/pixelbolt.js gif output/campfire.json --scale 4 --out output/campfire.gif
+```
+
+The ten presets are in [examples/](examples/) (`*.fluid.json`); agents compile them with MCP `pixel_compile` and read the format with `pixel_help` topic `fluid`. In the studio, **Fluid lab** (`/fluid.html`) runs the same compiler in your browser: pick a preset, move a few sliders and download the GIF, sprite sheet, recipe or edited source. The [fluid effects guide](docs/art-workflow.md#fluid-effects) covers emitters, sparks, obstacles, looks and loops.
 
 ## Start
 
@@ -131,7 +152,7 @@ Use Pixelbolt to create or revise pixel sprites, tiles, icons, effects and short
 | [Pixel art skill](skills/pixel-art/SKILL.md) | Reusable authoring and visual inspection workflow |
 | [Authoring guide](docs/agent-guide.md) | Recipe fields, drawing operations and limits |
 | [JSON Schema](schema.json) | Machine-readable recipe structure |
-| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing and a particle effects source |
+| [Examples](examples/) | Complete forest spirit, campfire, coin and shrine recipes, a caption with pixel text, a rotated sword swing, a particle effects source and ten fluid presets |
 | [AGENTS.md](AGENTS.md) | Instructions for agents contributing to the toolkit |
 
 Start with the authoring guide or MCP's `pixel_help`. Write a recipe, validate it, inspect every frame with `pixel_inspect` or `pixelbolt inspect`, revise with targeted patches, then render to a fresh output directory. Validation checks the format; image inspection checks the art.
@@ -175,7 +196,7 @@ Each text-grid character selects a palette color; `.` and space leave pixels unt
 
 APNG files use the `.png` extension intentionally. Recipes can share a palette file (`"palette": { "$ref": "palette.json" }`), recolor keys per frame for palette cycling or per layer for a flash that leaves the rest of the frame alone, copy rectangles from template symbols or earlier frames (with exact colour swaps), outline layers (outside, inside or both, with direction masks for rim lights and drop shadows), dither between colours with canvas-anchored Bayer, custom, seeded non-periodic noise or clumping value-noise patterns, shade along palette ramps (`ramps` and the `shade` operation) without leaving the palette, draw whole character maps with the `tilemap` operation (variants, weights and neighbour rules), and grow detail such as moss or cracks with seeded rewrite rules. They compile 47-tile blob or 16-tile cardinal autotile sets, optionally with shape variants, with `pixelbolt autotile`; see the [authoring guide](docs/agent-guide.md) and [art workflow](docs/art-workflow.md#autotile-templates).
 
-Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelbolt compile`, and a `pixelforge-normals` source derives a lighting normal pass from any recipe: an editable recipe aligned frame for frame, for scene lighting and engine normal maps ([the spirit's](examples/forest-spirit.normals.json), lit in [a small night scene](examples/forest-spirit-lit.scene.json); [details](docs/art-workflow.md#generated-normal-passes)). See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
+Several of these ideas come from [Pixel Composer](https://github.com/Ttanasart-pt/Pixel-Composer)'s node set, adapted to text recipes. Patches can propose De-Corner/De-Stray cleanup, and inspection diagnostics count per frame what it would change. Pose sources rotate parts by any angle into editable symbols, using RotSprite-style resampling that adds no colours, and tween eased in-betweens. Scene trajectories ease. A `pixelforge-fx` source compiles seeded particle emitters into an ordinary recipe with `pixelbolt compile`, a `pixelforge-fluid` source does the same with a fluid simulation, and a `pixelforge-normals` source derives a lighting normal pass from any recipe: an editable recipe aligned frame for frame, for scene lighting and engine normal maps ([the spirit's](examples/forest-spirit.normals.json), lit in [a small night scene](examples/forest-spirit-lit.scene.json); [details](docs/art-workflow.md#generated-normal-passes)). See [the shrine](examples/shrine.json), [the swing](examples/swing.poses.json) and [the effects](examples/effects.fx.json). Lossless non-interlaced 8-bit RGB/RGBA PNG import is supported, optionally with unscaled atlas timing metadata; see [interchange limits](docs/art-workflow.md#lossless-raster-return-path). GIF import, native Aseprite files and automatic quantization remain outside the current scope. Sources stay editable JSON.
 
 ### GIF for sharing
 
@@ -257,12 +278,12 @@ args = ["/absolute/path/to/Pixelbolt/bin/pixelbolt.js", "mcp", "--out", "/absolu
 
 The eight tools are:
 
-- **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes, autotile, fx or normals schemas.
+- **`pixel_help`**: authoring guide, full schema and a complete sample; `topic` returns the poses, scenes, autotile, fx, fluid or normals schemas.
 - **`pixel_validate`**: validate `{ "project": ... }` and save its recipe revision without exporting assets. Reports every clipped location; `"fps": 30` adds `frameGrid`, the durations off that video frame grid and what a sequence would do to each animation.
 - **`pixel_inspect`**: contact sheets, exact regional grids, silhouette/grayscale/onion views, 3×3 tile repeats with seam evidence, native size, named layer isolation, saved-reference comparisons and advisory diagnostics. `frames` takes `*`/`?` patterns, `step`/`offset` keep every nth cell, and optional bounded samples expose omissions. Saves its recipe revision.
 - **`pixel_patch`**: apply targeted `set`, `insert`, `remove` and `paint` edits. For example, `{ "paint": "frames[blink]", "value": [{ "x": 9, "y": 7, "color": "k" }] }` corrects a pixel in final canvas coordinates after all layers; `transparent` erases it. Returns every frame whose pixels changed (exact pixels for small edits) and a before/after PNG. The source stays unchanged and successful edits get a new revision.
 - **`pixel_render`**: render `{ "project": ... }`, return a PNG contact sheet of every frame with cell names/timing plus the output folder, its key files and frame/animation counts (`listFiles: true` lists everything). Add `"animation": "idle"` to preview a sequence in playback order. The exported APNGs and HTML preview play the animation. Add `"gif": {}` (or `{ "scale": 8, "background": "#17191d" }`) to also write every animation as a GIF in `gifs/`, with notes on any alpha or timing change, and `"sequence": { "fps": 30, "size": "1080p" }` to write one animation as numbered PNG frames for a video editor in `sequence/`. Every call writes a fresh folder inside the configured output directory.
-- **`pixel_compile`**: compile a `pixelforge-poses` source (including rotated parts and tweened in-betweens), a `pixelforge-autotile` template, a `pixelforge-fx` particle source or a `pixelforge-normals` source (a normal pass derived from a recipe or revision) into a recipe revision, with a contact sheet and optional metadata.
+- **`pixel_compile`**: compile a `pixelforge-poses` source (including rotated parts and tweened in-betweens), a `pixelforge-autotile` template, a `pixelforge-fx` particle source, a `pixelforge-fluid` source (simulated smoke, fire, explosions, magic and water) or a `pixelforge-normals` source (a normal pass derived from a recipe or revision) into a recipe revision, with a contact sheet and optional metadata.
 - **`pixel_scene`**: render a `pixelforge-scene` manifest (tilemaps with autotile legends and neighbour rules, named cues, sequences, trajectories, attachments, ground sorting, shade placements, ramp or multiplied lighting, palette themes) at any time, export it, or write it as a shot of numbered PNG frames with `sequence`; assets may be revisions.
 - **`pixel_import`**: import a native-resolution PNG, given as base64 or a file inside the server root, as a lossless recipe revision.
 
@@ -320,7 +341,7 @@ For a game engine, use the atlas rectangles or individual PNGs. For regular-grid
 ## JavaScript API
 
 ```js
-import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, animationGIF, folderGIF, frameGrid } from './src/index.js';
+import { renderProject, inspectProject, patchRecipe, compareProjects, createBundle, writeBundle, compileEffects, compileFluid, animationGIF, folderGIF, frameGrid } from './src/index.js';
 
 const project = renderProject(recipe); // RGBA buffers, durations, warnings
 const view = inspectProject(project, { grid: true }); // contact sheet RGBA, palette-key grids
@@ -329,12 +350,13 @@ const report = compareProjects(project, renderProject(next)); // changed pixels,
 const bundle = await createBundle(recipe);
 await writeBundle(bundle, './output/my-sprite');
 const { recipe: effects } = compileEffects(fxSource); // seeded particles baked into an ordinary recipe
+const { recipe: fire, metadata } = compileFluid(fluidSource); // a fluid simulation baked into palette grids
 const gif = animationGIF(project, 'idle', { scale: 8 }); // { data, width, height, notes, ... }
 const loop = folderGIF('shots/prism', { fps: 25 }); // GIF from numbered PNG frames; framesGIF takes RGBA frames
 const grid = frameGrid(project, 30); // durations off a 30 fps video frame grid
 ```
 
-`src/core.js`, `src/craft.js`, `src/font.js`, `src/patch.js`, `src/fx.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
+`src/core.js`, `src/craft.js`, `src/font.js`, `src/patch.js`, `src/fx.js`, `src/fluid.js` and `src/gif.js` are browser-compatible and have no Node imports. The Node-only exporter uses the standard library for compression and file output. The studio shares the same renderer as the CLI and MCP server.
 
 ## Develop and verify
 
@@ -343,7 +365,7 @@ npm test
 npm run demo
 ```
 
-Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither (including value noise), palette ramps and shading, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, tilemaps and rule tiles, scene cues, attachments and sorting, schema alignment, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs (including ones made from PNG folders) and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
+Tests cover pixels, alpha blending, inheritance, transformations, flood fill, text and the font, dither (including value noise), palette ramps and shading, outlines, rewrite rules, cleanup, rotation, tweens, particle effects, fluid simulation (golden recipes per preset, palette-only output, loop seams), tilemaps and rule tiles, scene cues, attachments and sorting, schema alignment, packing, timing, PNG/APNG structure, GIF structure and decoding, video frame timing and placement, inspection sheets and grids, patching and comparison, revisions, overwrite protection, CLI stdin/errors, MCP calls, the Canvas runtime, the local server and the portable Windows build. `node scripts/qa-studio.mjs` walks the studio in a real browser (an installed Edge or Chrome, headless, with a throwaway profile; Node.js 22+): every sample, live editing, a broken recipe, the preview controls, Save, Open, Export and GIF downloads landing on disk, draft recovery, keyboard access, narrow and wide windows, and that no request leaves the computer. Optional independent checks use Pillow and Python's ZIP reader: `python scripts/verify-exports.py` after `npm run demo`; it also decodes GIFs (including ones made from PNG folders) and an image sequence and compares every pixel, delay and loop flag, and runs the sequence's ffmpeg command when ffmpeg is installed.
 
 The studio binds to `127.0.0.1`, serves an explicit asset allowlist, rejects foreign Host/Origin headers, and never writes through its HTTP API. Unsaved edits are kept as one draft in the browser's own storage for the studio's address and offered back on the next visit; nothing about them is sent to the server, and **Save JSON** remains the way to keep a recipe. Browser storage is per address, so a draft made on one port is not seen on another. Projects are limited to 256×256 pixels, 256 frames, 4,194,304 source pixels, 16,777,216 atlas pixels and bounded drawing/export work. This is designed for small sprites, effects and tiles.
 

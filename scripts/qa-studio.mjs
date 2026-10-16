@@ -8,6 +8,7 @@
 // Exit code 3 means no browser was found, so nothing was checked.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -385,6 +386,52 @@ try {
     const saved = JSON.parse(await readFile(await download(() => click('#save')), 'utf8')), light = saved.lighting.lights[0], original = source.lighting.lights[0];
     assert.deepEqual([light.at, light.height, light.radius, light.color], [to, 6, original.radius, original.color]);
     return `light moved to ${to.join(', ')}`;
+  });
+
+  console.log('Fluid lab');
+  // The lab compiles fluid sources in the page with src/fluid.js; its status line names the time the simulation took.
+  const simulated = () => until(`document.getElementById('status').textContent.includes('simulated in')`, 'the fluid lab to finish simulating');
+  const labPixels = `(() => { const c = document.getElementById('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let h = 0; for (let i = 0; i < d.length; i++) h = (Math.imul(h, 31) + d[i]) >>> 0; return h; })()`;
+  await check('the fluid lab lists its presets, simulates the first in the browser and plays it', async () => {
+    await studio.size(1440, 900); await studio.goto(`${origin}/fluid.html`); await simulated();
+    assert.deepEqual([await evaluate('document.title'), await evaluate(`document.querySelectorAll('#presets .example').length`), await evaluate(`document.getElementById('error').hidden`)], ['Pixelbolt · Fluid lab', 10, true]);
+    const first = await evaluate(labPixels);
+    await until(`${labPixels} !== ${first}`, 'the preview to play');
+    assert.match(await text('cli'), /^pixelbolt compile campfire\.fluid\.json --out campfire\.json\n/);
+    await studio.shot('fluid-lab');
+    return await text('status');
+  });
+  await check('every fluid preset simulates in the browser without an error, to the same recipe as Node', async () => {
+    const names = await evaluate(`[...document.querySelectorAll('#presets .example')].map(button => button.dataset.file)`), seen = [];
+    const { compileFluid } = await import(pathToFileURL(path.join(path.resolve(options.app), 'src', 'fluid.js')));
+    const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+    for (const name of names) {
+      await click(`#presets .example[data-file="${name}"]`);
+      await until(`document.getElementById('name').textContent !== '' && location.hash === '#${name}' && document.getElementById('status').textContent.includes('simulated in')`, `${name} to simulate`);
+      assert.equal(await evaluate(`document.getElementById('error').hidden`), true, name);
+      const browser = await evaluate(`(async () => { const { compileFluid } = await import('/fluid.js'), source = await (await fetch('/examples/${name}.fluid.json')).json(); const bytes = new TextEncoder().encode(JSON.stringify(compileFluid(source).recipe)); return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(b => b.toString(16).padStart(2, '0')).join(''); })()`);
+      assert.equal(browser, digest(compileFluid(JSON.parse(await readFile(path.join(path.resolve(options.app), 'examples', `${name}.fluid.json`), 'utf8'))).recipe), `${name} compiles differently in the browser`);
+      seen.push(`${name} ${(await text('status')).match(/simulated in (\d+) ms/)[1]} ms`);
+    }
+    return seen.join(', ');
+  });
+  await check('a slider reruns the simulation, and the GIF, sheet and edited source download', async () => {
+    await click('#presets .example[data-file="torch"]');
+    await until(`location.hash === '#torch' && document.getElementById('slider-buoyancy') !== null && document.getElementById('status').textContent.includes('simulated in')`, 'the torch to simulate');
+    if (await evaluate(`document.getElementById('play').getAttribute('aria-label')`) === 'Pause animation') await click('#play');
+    const before = await evaluate(labPixels);
+    await evaluate(`(() => { const input = document.getElementById('slider-buoyancy'); input.value = '0.9'; input.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+    await until(`document.getElementById('status').textContent.includes('simulated in') && ${labPixels} !== ${before}`, 'the edited simulation to draw');
+    const source = JSON.parse(await readFile(await download(() => click('#fluid-source')), 'utf8'));
+    assert.equal(source.effects.torch.buoyancy, 0.9);
+    const gif = await readFile(await download(() => click('#gif')));
+    assert.equal(gif.toString('latin1', 0, 6), 'GIF89a');
+    const decoded = await evaluate(`(async () => { const decoder = new ImageDecoder({ data: Uint8Array.from(atob(${JSON.stringify(gif.toString('base64'))}), c => c.charCodeAt(0)), type: 'image/gif' }); await decoder.tracks.ready; await decoder.completed; return decoder.tracks.selectedTrack.frameCount; })()`);
+    assert.equal(decoded, 16);
+    const sheet = await readFile(await download(() => click('#sheet')));
+    assert.equal(sheet.toString('latin1', 1, 4), 'PNG');
+    await click('#reset'); await simulated();
+    return `buoyancy 0.9 in the saved source; GIF with ${decoded} frames`;
   });
 
   console.log('Afterwards');

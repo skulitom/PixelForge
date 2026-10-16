@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { renderProject, animationGIF, createSequence, frameGrid, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, compileNormals, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
+import { renderProject, animationGIF, createSequence, frameGrid, createSceneSequence, prepareScene, createBundle, writeBundle, inspectProject, compareProjects, patchRecipe, encodePNG, compilePoses, compileAutotile, compileEffects, compileFluid, compileNormals, formatJSON, createSceneBundle, createOverlay, applyOverlay, importPNG, resolveReferences, restorePaletteReference } from '../src/index.js';
 
 const HELP = `Pixelbolt — text to pixels, without dependencies
 
@@ -22,8 +22,9 @@ const HELP = `Pixelbolt — text to pixels, without dependencies
                     [--loops n | --seconds s] [--step n]
                                            Numbered PNG frames for a video editor, at a constant frame rate
   pixelbolt compile <source.json> --out recipe.json [--metadata meta.json]
-                                           Build a recipe from authored poses, an autotile template, particle effects
-                                           or a normals source (a lighting normal pass derived from a colour recipe)
+                                           Build a recipe from authored poses, an autotile template, particle effects,
+                                           a fluid source (simulated smoke, fire, explosions, magic and water) or a
+                                           normals source (a lighting normal pass derived from a colour recipe)
   pixelbolt autotile <template.json> --out recipe.json [--metadata masks.json]
                                            Build a 47-tile blob or 16-tile cardinal set
   pixelbolt scene <scene.json> --out dir   Export a bounded scene review and aligned material passes
@@ -88,7 +89,7 @@ async function readResolved(file) {
 }
 // Compiled output keeps a shared-palette link, rewritten relative to where the output is written.
 function linkPalette(recipe, input, outFile) {
-  const link = input.resolution.palettes.find(entry => ['poses', 'autotile', 'fx', 'project'].includes(entry.where));
+  const link = input.resolution.palettes.find(entry => ['poses', 'autotile', 'fx', 'fluid', 'project'].includes(entry.where));
   if (!link) return recipe;
   const shared = path.resolve(input.baseDir, link.reference), reference = path.relative(path.dirname(path.resolve(outFile)), shared).split(path.sep).join('/');
   return restorePaletteReference({ palette: { $ref: reference } }, recipe, { palettes: [{ ...link, where: 'project' }] });
@@ -115,7 +116,7 @@ async function writeOutputs(targets, force) {
   return Object.fromEntries(entries.map(([label, target]) => [label, target]));
 }
 // Sidecar sources compile by their format; `autotile` remains a dedicated command for templates.
-const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': compileAutotile, 'pixelforge-fx': compileEffects, 'pixelforge-normals': compileNormals };
+const COMPILERS = { 'pixelforge-poses': compilePoses, 'pixelforge-autotile': compileAutotile, 'pixelforge-fx': compileEffects, 'pixelforge-fluid': compileFluid, 'pixelforge-normals': compileNormals };
 const summary = project => ({ name: project.name, width: project.width, height: project.height, frames: project.frames.length, animations: Object.keys(project.animations), warnings: project.warnings, ...(project.clipping && { clipping: project.clipping }) });
 const referenced = input => input.resolution.files.length ? { resolved: input.resolution.files } : {};
 try {
@@ -145,7 +146,7 @@ try {
       const port = options.port === undefined ? STUDIO_PORT : Number(options.port);
       if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be an integer from 0 to 65535');
       let project = positional[0] ? (await readResolved(positional[0])).document : undefined;
-      // Pose, autotile, effect and normals sources open as the recipe they compile to.
+      // Pose, autotile, effect, fluid and normals sources open as the recipe they compile to.
       if (project && Object.hasOwn(COMPILERS, project.format ?? '')) project = COMPILERS[project.format](project).recipe;
       // A port you name is used or refused; the usual one gives way to any free port when something else has it.
       const server = await startStudio({ port, project, fallback: options.port === undefined });
@@ -208,7 +209,7 @@ try {
       if (!options.out) throw new Error('sequence requires --out <new folder>');
       if (options.fps === undefined) throw new Error('sequence requires --fps, for example 24, 25, 29.97, 30 or 60');
       const input = await readResolved(positional[0]);
-      // Pose, autotile and effect sources become the recipe they compile to; a scene is rendered moment by moment.
+      // Pose, autotile, effect and fluid sources become the recipe they compile to; a scene is rendered moment by moment.
       const document = Object.hasOwn(COMPILERS, input.document?.format ?? '') ? COMPILERS[input.document.format](input.document).recipe : input.document;
       const numeric = key => options[key] === undefined ? {} : { [key]: Number(options[key]) }, text = key => options[key] === undefined ? {} : { [key]: options[key] };
       const settings = { ...text('fps'), ...text('animation'), ...text('size'), ...numeric('scale'), ...text('fit'), ...text('align'), ...(options.offset !== undefined && { offset: options.offset.split(',').map(Number) }), ...text('background'), ...numeric('loops'), ...numeric('seconds'), ...numeric('step') };
