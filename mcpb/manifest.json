@@ -24,14 +24,14 @@
     }
   },
   "tools": [
-    { "name": "pixel_help", "description": "Read the authoring guide, schemas and a complete editable example." },
-    { "name": "pixel_validate", "description": "Validate a recipe, report dimensions and timing, and save an immutable revision." },
-    { "name": "pixel_inspect", "description": "Inspect frames as contact sheets and palette-key grids, with optional diagnostics." },
-    { "name": "pixel_patch", "description": "Apply targeted recipe edits, canvas corrections or overlays and compare the result." },
-    { "name": "pixel_render", "description": "Export sprites, atlases, animations and a Canvas player into a new unique folder." },
-    { "name": "pixel_compile", "description": "Compile poses, autotile templates, seeded particle effects or derived lighting normal passes into editable recipes." },
-    { "name": "pixel_scene", "description": "Render and inspect scene placements and tilemaps, with optional scene or frame exports." },
-    { "name": "pixel_import", "description": "Import an 8-bit RGB/RGBA PNG as an editable recipe without changing its pixels." }
+    { "name": "pixel_help", "description": "Start here before drawing pixel art: the authoring guide, schemas and a complete editable example." },
+    { "name": "pixel_validate", "description": "Check a pixel art recipe for mistakes, report dimensions and timing, and save an immutable revision." },
+    { "name": "pixel_inspect", "description": "Look at a sprite or animation frame by frame: contact sheets, palette-key grids and optional diagnostics." },
+    { "name": "pixel_patch", "description": "Fix one pixel, a colour or a frame with targeted edits, corrections or overlays, and compare the result." },
+    { "name": "pixel_render", "description": "Export sprite sheets, atlases, animations, GIFs, video frames and a Canvas player into a new unique folder." },
+    { "name": "pixel_compile", "description": "Build character animations from poses, terrain tilesets, particle effects or lighting normal passes as editable recipes." },
+    { "name": "pixel_scene", "description": "Compose and render a scene, room or level from sprites and tilemaps, with optional scene or frame exports." },
+    { "name": "pixel_import", "description": "Turn existing pixel art (an 8-bit RGB/RGBA PNG) into an editable recipe without changing its pixels." }
   ],
   "compatibility": {
     "platforms": ["win32", "darwin", "linux"],
