@@ -73,7 +73,10 @@ function readCycle(value, path, frames, loop, orbit) {
   if (period === 0) fail(`${path}.period`, 'expected a whole number of frames per turn; negative turns anticlockwise');
   if (loop && frames % period !== 0) fail(`${path}.period`, `a looping effect repeats every ${frames} frames, so the period must divide ${frames}`);
   const phase = number(value.phase ?? 0, `${path}.phase`, -3600, 3600);
-  return orbit ? { period, phase, radius: number(value.radius, `${path}.radius`, 0, 128) } : { period, phase, amplitude: number(value.amplitude ?? 0.5, `${path}.amplitude`, 0, 1) };
+  if (!orbit) return { period, phase, amplitude: number(value.amplitude ?? 0.5, `${path}.amplitude`, 0, 1) };
+  // A radius [x, y] makes the orbit an ellipse, so what the emitter leaves behind stretches and squeezes as it turns.
+  const radius = Array.isArray(value.radius) ? pair(value.radius, `${path}.radius`, 0, 128) : [number(value.radius, `${path}.radius`, 0, 128), value.radius];
+  return { period, phase, radius };
 }
 
 function readSparks(value, path, context, burst) {
@@ -111,7 +114,7 @@ function readWhitewater(layer, path, context, gravity) {
 
 function readEmitter(emitter, path, context) {
   const { frames, loop, liquid } = context;
-  fields(emitter, ['name', 'at', 'radius', 'area', 'burst', 'rate', 'start', 'end', 'density', 'temperature', 'velocity', 'expand', 'vortex', 'noise', 'flicker', 'pulse', 'orbit', 'sparks'], path);
+  fields(emitter, ['name', 'at', 'radius', 'area', 'burst', 'rate', 'start', 'end', 'density', 'temperature', 'falloff', 'velocity', 'expand', 'vortex', 'noise', 'flicker', 'pulse', 'orbit', 'sparks'], path);
   if (emitter.name !== undefined) identifier(emitter.name, `${path}.name`);
   if ((emitter.burst === undefined) === (emitter.rate === undefined)) fail(path, 'use exactly one of burst (added once, at start) or rate (added every frame from start until end)');
   const start = integer(emitter.start ?? 0, `${path}.start`, 0, frames - 1);
@@ -126,7 +129,7 @@ function readEmitter(emitter, path, context) {
     radius: emitter.area === undefined ? number(emitter.radius ?? 2, `${path}.radius`, 0.5, 64) : null,
     area: emitter.area === undefined ? null : pair(emitter.area, `${path}.area`, 1, 128),
     density: number(emitter.density ?? (liquid ? 1 : 0), `${path}.density`, liquid ? -1 : -16, liquid ? 1 : 16),
-    temperature: number(emitter.temperature ?? 0, `${path}.temperature`, -16, 16),
+    temperature: number(emitter.temperature ?? 0, `${path}.temperature`, -16, 16), falloff: number(emitter.falloff ?? 0, `${path}.falloff`, 0, 1),
     velocity: emitter.velocity === undefined ? [0, 0] : pair(emitter.velocity, `${path}.velocity`, -16, 16), steer: emitter.velocity !== undefined || Boolean(emitter.vortex),
     expand: number(emitter.expand ?? 0, `${path}.expand`, -16, 16), vortex: number(emitter.vortex ?? 0, `${path}.vortex`, -16, 16),
     noise: number(emitter.noise ?? 0, `${path}.noise`, 0, 8), flicker: number(emitter.flicker ?? 0, `${path}.flicker`, 0, 1),
@@ -384,9 +387,10 @@ function valueNoise(seed, emitter, frame, salt, x, y) {
 }
 // Where an emitter is this frame, and how strongly it emits: rate or burst, times its pulse. Flicker varies the
 // strength from cell to cell and frame to frame (seeded value noise), so a flame's base breaks into tongues.
-function emitterState(e, index, cycle, seed) {
+// `along` places an orbiting emitter between frames (it defaults to the frame itself); pulse and flicker keep the frame's.
+function emitterState(e, index, cycle, seed, along = cycle) {
   let [x, y] = e.at;
-  if (e.orbit) { const angle = 360 * cycle / e.orbit.period + e.orbit.phase; x += e.orbit.radius * cosDeg(angle); y += e.orbit.radius * sinDeg(angle); }
+  if (e.orbit) { const angle = 360 * along / e.orbit.period + e.orbit.phase; x += e.orbit.radius[0] * cosDeg(angle); y += e.orbit.radius[1] * sinDeg(angle); }
   let strength = e.strength;
   if (e.pulse) strength *= 1 + e.pulse.amplitude * sinDeg(360 * cycle / e.pulse.period + e.pulse.phase);
   const flicker = (px, py) => (e.flicker ? strength * (1 + e.flicker * (2 * valueNoise(seed, index, cycle, SALT.flicker, px, py) - 1)) : strength);
@@ -400,6 +404,13 @@ function coverage(e, dx, dy) {
   return wx <= 0 || wy <= 0 ? 0 : (wx >= 1 ? 1 : wx) * (wy >= 1 ? 1 : wy);
 }
 const reach = e => (e.radius !== null ? e.radius : Math.max(e.area[0], e.area[1]) / 2) + 1;
+// With `falloff`, an emitter's amounts fall off from its centre toward its rim: 1 at the centre, 1 - falloff at the
+// edge of the disc (or the ellipse inside the box), so a puff is densest in the middle instead of a flat plateau.
+function profile(e, dx, dy) {
+  if (!e.falloff) return 1;
+  const share = e.radius !== null ? (dx * dx + dy * dy) / (e.radius * e.radius) : (4 * dx * dx) / (e.area[0] * e.area[0]) + (4 * dy * dy) / (e.area[1] * e.area[1]);
+  return share >= 1 ? 1 - e.falloff : 1 - e.falloff * share;
+}
 // The flow an emitter pushes toward at a point: its velocity plus clockwise swirl, and for liquids outward expansion.
 // A gas cannot be pushed outward everywhere (the pressure solve would undo it), so it expands through `spread`.
 function push(e, dx, dy, axis, expand) {
@@ -410,8 +421,8 @@ function push(e, dx, dy, axis, expand) {
 }
 // Divergence per covered cell that sends `expand` pixels per frame out through the emitter's rim.
 const spread = e => e.expand * (e.radius !== null ? 2 / e.radius : 2 * (e.area[0] + e.area[1]) / (e.area[0] * e.area[1]));
-function emitGas(g, state, e, index, cycle, seed) {
-  const { W, H, u, v, solid } = g, { d, T, source } = state, here = emitterState(e, index, cycle, seed), { x, y, flicker } = here, r = reach(e);
+function emitGas(g, state, e, index, cycle, seed, along = cycle, share = 1) {
+  const { W, H, u, v, solid } = g, { d, T, source } = state, here = emitterState(e, index, cycle, seed, along), { x, y, flicker } = here, r = reach(e);
   const x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r)), y1 = Math.min(H - 1, Math.ceil(y + r));
   if (x0 > x1 || y0 > y1) return here;
   // A burst adds its amounts once; a rate emitter raises its cells toward them every frame (a negative amount drains),
@@ -425,10 +436,10 @@ function emitGas(g, state, e, index, cycle, seed) {
   for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
     const c = j * W + i, w = coverage(e, i + 0.5 - x, j + 0.5 - y);
     if (!w || solid[c]) continue;
-    const strength = flicker(i + 0.5, j + 0.5);
-    if (e.density) feed(d, c, e.density, w, strength);
-    if (e.temperature) feed(T, c, e.temperature, w, strength);
-    if (e.expand) source[c] += spread(e) * w * strength;
+    const strength = flicker(i + 0.5, j + 0.5), amounts = strength * profile(e, i + 0.5 - x, j + 0.5 - y);
+    if (e.density) feed(d, c, e.density, w, amounts);
+    if (e.temperature) feed(T, c, e.temperature, w, amounts);
+    if (e.expand) source[c] += spread(e) * w * strength * share;
   }
   const moving = e.steer;
   const drive = (a, k, px, py, axis) => {
@@ -524,8 +535,8 @@ function fillLiquid(state, effect) {
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (!solid[j * W + i] && fill.inside(i + 0.5, j + 0.5)) seedCell(state, i, j, PER_CELL, 0, fill.velocity, [effect.seed, 1000 + f, i, j]);
   });
 }
-function emitLiquid(state, e, index, cycle, seed) {
-  const { g } = state, { W, H, solid } = g, here = emitterState(e, index, cycle, seed), { x, y, flicker } = here, r = reach(e);
+function emitLiquid(state, e, index, cycle, seed, along = cycle) {
+  const { g } = state, { W, H, solid } = g, here = emitterState(e, index, cycle, seed, along), { x, y, flicker } = here, r = reach(e);
   const x0 = Math.max(0, Math.floor(x - r)), x1 = Math.min(W - 1, Math.ceil(x + r)), y0 = Math.max(0, Math.floor(y - r)), y1 = Math.min(H - 1, Math.ceil(y + r));
   const velocityAt = (px, py) => [push(e, px - x, py - y, 0, e.expand), push(e, px - x, py - y, 1, e.expand)];
   // Particles already inside follow the emitter's push (a jet), or drain away through it.
@@ -533,7 +544,7 @@ function emitLiquid(state, e, index, cycle, seed) {
     const px = state.x[k], py = state.y[k], w = coverage(e, px - x, py - y);
     if (!w) continue;
     const strength = flicker(px, py);
-    if (e.density < 0 && random(seed, index, cycle, SALT.drain, state.id[k]) < -e.density * Math.min(1, w * strength)) { removeParticle(state, k); continue; }
+    if (e.density < 0 && random(seed, index, cycle, SALT.drain, state.id[k]) < -e.density * Math.min(1, w * strength * profile(e, px - x, py - y))) { removeParticle(state, k); continue; }
     const [tx, ty] = velocityAt(px, py), f = Math.min(1, w * strength);
     if (e.steer || e.expand) {
       if (e.burst) { state.vx[k] += tx * w * strength; state.vy[k] += ty * w * strength; } else { state.vx[k] += (tx - state.vx[k]) * f; state.vy[k] += (ty - state.vy[k]) * f; }
@@ -545,7 +556,7 @@ function emitLiquid(state, e, index, cycle, seed) {
     for (let j = y0; j <= y1; j++) for (let i = x0; i <= x1; i++) {
       const c = j * W + i, w = coverage(e, i + 0.5 - x, j + 0.5 - y);
       if (!w || solid[c]) continue;
-      const want = Math.floor(PER_CELL * e.density * Math.min(1, w * flicker(i + 0.5, j + 0.5)) + 0.5);
+      const want = Math.floor(PER_CELL * e.density * Math.min(1, w * flicker(i + 0.5, j + 0.5) * profile(e, i + 0.5 - x, j + 0.5 - y)) + 0.5);
       if (want > state.cells[c] && !seedCell(state, i, j, want, state.cells[c], velocityAt(i + 0.5, j + 0.5), [seed, index, cycle, SALT.spawn, i, j])) return here;
     }
   }
@@ -826,7 +837,16 @@ function simulate(effect, context) {
   for (let t = 0; t < total; t++) {
     const cycle = loop ? t % frames : t, out = t - begin, recording = !loop || (out >= 0 && out < frames);
     if (!liquid) state.source.fill(0);
-    const here = emitters.map((e, index) => (active(e, cycle) ? (liquid ? emitLiquid(state, e, index, cycle, seed) : emitGas(g, state, e, index, cycle, seed)) : null));
+    const here = emitters.map((e, index) => {
+      if (!active(e, cycle)) return null;
+      const emit = (along, share) => (liquid ? emitLiquid(state, e, index, cycle, seed, along) : emitGas(g, state, e, index, cycle, seed, along, share));
+      // An orbiting rate emitter is laid along the path it covered since the last frame, about a pixel apart, so a fast
+      // orbit leaves a smooth trail instead of a string of beads; its expansion is shared out along the way.
+      if (!e.orbit || e.burst || !t || !active(e, loop ? (cycle + frames - 1) % frames : cycle - 1)) return emit(cycle, 1);
+      const steps = Math.max(1, Math.ceil(2 * Math.PI * Math.max(e.orbit.radius[0], e.orbit.radius[1]) / Math.abs(e.orbit.period)));
+      for (let k = 1; k < steps; k++) emit(cycle - 1 + k / steps, 1 / steps);
+      return emit(cycle, 1 / steps);
+    });
     // Whitewater measures how much each particle's velocity changes over the frame's steps, not what emitters set.
     if (liquid && effect.whitewater.length) { state.pvx.set(state.vx.subarray(0, state.n)); state.pvy.set(state.vy.subarray(0, state.n)); }
     for (let s = 0; s < substeps; s++) liquid ? stepLiquid(state, effect, dt) : stepGas(state, effect, dt);

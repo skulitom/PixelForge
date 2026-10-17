@@ -19,9 +19,9 @@ const read = async file => JSON.parse(await readFile(path.join(root, file), 'utf
 const GOLDEN = {
   campfire: '1a789c44e352be9623801b345b444127ef948fccdefd8dd480aea752ff64d4c4',
   explosion: 'cc5409a9598f810114ba3f51618802e08c280e46f9a0dd0758e331e74c7b941f',
-  'smoke-puff': 'ff84249a92a18f11a778c4bc391d3c2adaac7d9e2d2389de8f9e5400a7218f65',
+  'smoke-puff': '4cec863e280296a4ab98ba271c60bb94c8b084049d780e8806d65eaf257013c7',
   'steam-vent': '00ff7b5fc9cb9a5afa1ec354d4da1d6995d57ca4bdf262503f397a0ade9c3757',
-  'magic-swirl': '2be991d3b94b474346ba7101d2283bdc2659394a65cb3e44dee0c9ca61766221',
+  'magic-swirl': '24cc577124e229aabecc9596a7e7de7b98011c9482a4d940e8cf4129b1f09221',
   torch: '1653a23c933b250d5cc6aa8c0a5e1878e7438b11169ef85c52d733e019263828',
   splash: '1b2a22fe73a5f818858199a0b5098c326395ba26ed5c5a9996dc178bb997f5f4',
   waterfall: '2dd5ed11bff959daa551caca7deb04ff2ae276f8c61bd2e1eaabe95b665be5a8',
@@ -183,6 +183,38 @@ test('whitewater throws spray where water lands and sheds drops off a fast strea
   const bad = (effect, where, message) => assert.throws(() => compileFluid({ ...gas(null), effects: { pool: effect } }), error => error.path === where && message.test(error.message));
   bad({ frames: 2, emitters: [{ at: [8, 8], rate: 1, density: 1 }], whitewater: [], look: body }, 'fluid.effects.pool.whitewater', /applies to liquids/);
   bad({ kind: 'liquid', frames: 2, emitters: [], fill: [{ x: 0, y: 8, w: 16, h: 8 }], whitewater: [{ impact: 1, speed: 2, colors: ['w'] }], look: body }, 'fluid.effects.pool.whitewater[0]', /exactly one of impact/);
+});
+
+test('emitters can fall off toward their rim, orbit on an ellipse and lay a smooth trail', () => {
+  const field = (effect, look) => compileFluid({ ...gas(null), width: 24, height: 24, effects: { plume: { buoyancy: 0, ...effect, look } } }).recipe;
+  const count = (recipe, char) => recipe.frames.map(frame => (frame.ops ?? []).filter(op => op.op === 'grid').reduce((n, op) => n + op.rows.join('').split(char).length - 1, 0));
+  // A puff with falloff is dense only in the middle: fewer w (dense) pixels and more s (thin) ones than a flat disc.
+  const ramp = [{ field: 'density', colors: ['s', 'w'], thresholds: [0.2, 0.8], dither: 0 }];
+  const [flat, soft] = [0, 1].map(falloff => field({ frames: 1, dissipation: 0, emitters: [{ at: [12, 12], radius: 5, burst: 1, density: 1, falloff }] }, ramp));
+  assert.ok(count(soft, 'w')[0] < count(flat, 'w')[0] / 2 && count(soft, 's')[0] > count(flat, 's')[0], `${count(flat, 'w')} ${count(soft, 'w')}`);
+  // An orbit with radius [8, 3] covers a wide, low ellipse.
+  const thin = [{ field: 'density', colors: ['s'], thresholds: [0.3], dither: 0 }];
+  let [x0, x1, y0, y1] = [99, -1, 99, -1];
+  for (const frame of field({ frames: 8, dissipation: 0.9, emitters: [{ at: [12, 12], radius: 0.6, rate: 1, density: 2, orbit: { radius: [8, 3], period: 8 } }] }, thin).frames) {
+    for (const op of (frame.ops ?? []).filter(o => o.op === 'grid')) op.rows.forEach((row, j) => [...row].forEach((char, i) => { if (char !== '.') { x0 = Math.min(x0, op.x + i); x1 = Math.max(x1, op.x + i); y0 = Math.min(y0, op.y + j); y1 = Math.max(y1, op.y + j); } }));
+  }
+  assert.ok(x1 - x0 + 1 >= 2 * (y1 - y0 + 1), `${x1 - x0 + 1} × ${y1 - y0 + 1}`);
+  // A small emitter racing round a wide orbit is laid along its path, so its trail is one piece rather than a string of beads.
+  const pieces = frame => {
+    const grid = (frame.ops ?? []).find(op => op.op === 'grid'), seen = new Set(), H = grid.rows.length, W = grid.rows[0].length;
+    let n = 0;
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      if (grid.rows[j][i] === '.' || seen.has(j * W + i)) continue;
+      n++; seen.add(j * W + i);
+      for (const stack = [[i, j]]; stack.length;) {
+        const [x, y] = stack.pop();
+        for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const X = x + a, Y = y + b; if (X >= 0 && Y >= 0 && X < W && Y < H && grid.rows[Y][X] !== '.' && !seen.has(Y * W + X)) { seen.add(Y * W + X); stack.push([X, Y]); } }
+      }
+    }
+    return n;
+  };
+  const trail = field({ frames: 6, dissipation: 0.25, substeps: 1, emitters: [{ at: [12, 12], radius: 0.6, rate: 1, density: 2, orbit: { radius: 8, period: 6 } }] }, thin);
+  assert.deepEqual(trail.frames.slice(1, 4).map(pieces), [1, 1, 1]);
 });
 
 test('loops repeat their forcing, blend their seam and wrap sparks round', () => {

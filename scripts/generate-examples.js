@@ -141,16 +141,14 @@ const campfire = fluidSource('campfire', 32, 48, { u: '#4d4558', S: '#6e6678', r
   look: [{ field: 'density', colors: ['u', 'S'], thresholds: [0.16, 0.4], dither: 0.5, pattern: 'value' }, fireRamp(['r', 'o', 'y', 'W'], [0.3, 0.42, 0.62, 1], 0.5)]
 }, {
   ground: ['k'.repeat(32), 'k'.repeat(32)], logs: ['....kk..............kk....', '...kBBkk..........kkBBk...', '..kBbbBBkk......kkBBbbBk..', '..kbbbbbBBkk..kkBBbbbbbk..', '...kkbbbbbBBkkBBbbbbbkk...', '.....kkkbbbbBBbbbbkkk.....', '.......kkkkbbbbkkkk.......', '...........kkkk...........'] });
-// A cloud of five lobes, three along a flat base and two bumps on top, popping out centre first. Each lobe is three
-// concentric rings held for three frames: a thin outer ring that expands, a denser middle and a dense core. Density
-// peaks at each lobe's centre, so the lobes billow out round and, as dissipation thins them, part into round balls that
-// shrink away. No drift and little vorticity keep the balls round; the hard silhouette leaves no dither shards.
-const lobe = ([x, y], radius, start, density) => [[1, 0.3], [0.7, 0.6], [0.4, 1]].map(([r, d], ring) => ({
-  at: [x, y], radius: Math.round(radius * r * 4) / 4, rate: 1, ...(start && { start }), end: start + 3, density: Math.round(density * d * 100) / 100,
-  ...(!ring && { expand: 0.9, noise: 0.3, flicker: 0.2 }) }));
+// A cloud of five lobes, three along a flat base and two bumps on top, popping out centre first. Each lobe is one
+// emitter held for three frames whose density falls off from its centre to its rim, so the lobes billow out round and,
+// as dissipation thins them, part into round balls that shrink away. No drift and little vorticity keep the balls
+// round; the hard silhouette leaves no dither shards.
+const lobe = (at, radius, start, density) => ({ at, radius, rate: 1, ...(start && { start }), end: start + 3, density, falloff: 0.95, expand: 0.9, noise: 0.3, flicker: 0.2 });
 const smokePuff = fluidSource('smoke-puff', 32, 32, { k: '#121019', d: '#5d5872', m: '#9a95ad', l: '#cfcadb', w: '#f8f6fc' }, {
   frames: 19, duration: 60, seed: 5, buoyancy: 0, vorticity: 0.1, dissipation: 0.14, drag: 0.25,
-  emitters: [...lobe([16.5, 17.5], 4, 0, 1.35), ...lobe([10.5, 19.5], 3, 1, 1.3), ...lobe([22.5, 19.5], 3.25, 1, 1.45), ...lobe([12.5, 13.5], 3, 2, 1.45), ...lobe([19.5, 12.5], 3.5, 2, 1.6)],
+  emitters: [lobe([16.5, 17.5], 4, 0, 1.35), lobe([10.5, 19.5], 3, 1, 1.3), lobe([22.5, 19.5], 3.25, 1, 1.45), lobe([12.5, 13.5], 3, 2, 1.45), lobe([19.5, 12.5], 3.5, 2, 1.6)],
   look: [{ field: 'density', colors: ['m'], thresholds: [0.18], dither: 0 }, { field: 'density', colors: ['l'], thresholds: [0.55], dither: 0 },
     { field: 'shadow', colors: ['d'], thresholds: [0.5], dither: 0 }, { field: 'light', colors: ['w'], thresholds: [0.5], dither: 0 }],
   outline: 'k', cleanup: { strays: true }
@@ -193,23 +191,23 @@ const steamVent = fluidSource('steam-vent', 32, 48, { q: '#7d8ca3', Q: '#b4c2d6'
   look: [{ field: 'density', colors: ['q'], thresholds: [0.11], dither: 0.65, pattern: 'noise' }, { field: 'density', colors: ['q'], thresholds: [0.25], dither: 0.45 },
     { field: 'density', colors: ['Q', 'w'], thresholds: [0.42, 1], dither: 0.6 }]
 }, { pipe: ['kkkkkkkkkk', 'kPhhhhhhPk', 'kpPPPPPPpk', '.kpPPPPpk.', '.kpPPPPpk.', '.kpPPPPpk.'] });
-// Two comets circle the rim: a hot head (cyan, with a white glint) over a thin, pulsing trail of dye. The swirl turns
-// slower than the comets and pulls inward, so each trail lags and winds into the centre, thinning and darkening as it
-// goes. The comets circle points 1.5 pixels either side of the centre and the pull breathes once a loop, so the spiral
-// tightens and opens instead of turning rigidly. A drain at the centre swallows the tails; the round eye rolls twice
-// as fast as the comets. Sparkles ride the flow inward.
-const comet = (phase, i, at) => {
-  const orbit = { radius: 15, period: 24, ...(phase && { phase }) };
-  return [{ name: `comet-${i}`, at, radius: 3, rate: 1, temperature: 1.05, orbit },
+// Two comets circle the rim: a hot head (cyan, with a white glint) over a thin, pulsing trail of dye, laid along their
+// path so it stays unbroken. The swirl turns slower than the comets and pulls inward, so each trail lags and winds into
+// the centre, thinning and darkening as it goes. The comets ride an ellipse and the pull breathes once a loop, so the
+// spiral stretches into a long S and closes into a ring instead of turning rigidly. A drain at the centre swallows the
+// tails; the round eye rolls twice as fast as the comets. Sparkles ride the flow inward.
+const comet = (phase, i) => {
+  const at = [24, 24], orbit = { radius: [16, 13], period: 24, ...(phase && { phase }) };
+  return [{ name: `comet-${i}`, at, radius: 2.2, rate: 1, temperature: 1.05, orbit },
     { name: `glint-${i}`, at, radius: 1.5, rate: 1, temperature: 1.45, orbit },
-    { name: `halo-${i}`, at, radius: 2.4, rate: 1, density: 0.22, orbit },
-    { name: `tail-${i}`, at, radius: 1.35, rate: 1, density: 1.7, pulse: { amplitude: 0.5, period: 6 }, orbit,
+    { name: `halo-${i}`, at, radius: 2.4, rate: 1, density: 0.15, orbit },
+    { name: `tail-${i}`, at, radius: 1.2, rate: 1, density: 1.1, pulse: { amplitude: 0.5, period: 6 }, orbit,
       sparks: { count: 0.7, life: [12, 20], colors: ['W', 'c', 'c', 'm'], angle: [0, 360], speed: [0.1, 0.3], follow: 1, drag: 0.08 } }];
 };
 const magicSwirl = fluidSource('magic-swirl', 48, 48, { v: '#3d2a6b', p: '#7a44c9', m: '#c06cf0', c: '#6fe3f2', W: '#f4f0ff' }, {
   frames: 24, duration: 60, loop: true, seed: 9, substeps: 1, buoyancy: 0, vorticity: 0.2, dissipation: 0.08, cooling: 0.35, drag: 0.05,
   emitters: [{ name: 'swirl', at: [24, 24], radius: 21, rate: 1, vortex: 0.7, expand: -1.15, pulse: { amplitude: 0.4, period: 24 } },
-    ...comet(0, 1, [25.5, 24]), ...comet(180, 2, [22.5, 24]),
+    ...comet(0, 1), ...comet(180, 2),
     { name: 'drain', at: [24, 24], radius: 5, rate: 1, density: -0.25 }, { name: 'core', at: [24, 24], radius: 2, rate: 1, density: 0.3, temperature: 1.1 },
     { name: 'eye', at: [24, 24], radius: 1, rate: 1, density: 0.5, temperature: 1.3, orbit: { radius: 1.5, period: 12 } }],
   look: [{ field: 'density', colors: ['v', 'p', 'm'], thresholds: [0.12, 0.3, 0.65], dither: 0.5, pattern: 'value' }, fireRamp(['c', 'W'], [0.5, 0.9], 0.25)]

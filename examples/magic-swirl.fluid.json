@@ -42,60 +42,72 @@
         {
           "name": "comet-1",
           "at": [
-            25.5,
+            24,
             24
           ],
-          "radius": 3,
+          "radius": 2.2,
           "rate": 1,
           "temperature": 1.05,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24
           }
         },
         {
           "name": "glint-1",
           "at": [
-            25.5,
+            24,
             24
           ],
           "radius": 1.5,
           "rate": 1,
           "temperature": 1.45,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24
           }
         },
         {
           "name": "halo-1",
           "at": [
-            25.5,
+            24,
             24
           ],
           "radius": 2.4,
           "rate": 1,
-          "density": 0.22,
+          "density": 0.15,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24
           }
         },
         {
           "name": "tail-1",
           "at": [
-            25.5,
+            24,
             24
           ],
-          "radius": 1.35,
+          "radius": 1.2,
           "rate": 1,
-          "density": 1.7,
+          "density": 1.1,
           "pulse": {
             "amplitude": 0.5,
             "period": 6
           },
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24
           },
           "sparks": {
@@ -125,14 +137,17 @@
         {
           "name": "comet-2",
           "at": [
-            22.5,
+            24,
             24
           ],
-          "radius": 3,
+          "radius": 2.2,
           "rate": 1,
           "temperature": 1.05,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24,
             "phase": 180
           }
@@ -140,14 +155,17 @@
         {
           "name": "glint-2",
           "at": [
-            22.5,
+            24,
             24
           ],
           "radius": 1.5,
           "rate": 1,
           "temperature": 1.45,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24,
             "phase": 180
           }
@@ -155,14 +173,17 @@
         {
           "name": "halo-2",
           "at": [
-            22.5,
+            24,
             24
           ],
           "radius": 2.4,
           "rate": 1,
-          "density": 0.22,
+          "density": 0.15,
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24,
             "phase": 180
           }
@@ -170,18 +191,21 @@
         {
           "name": "tail-2",
           "at": [
-            22.5,
+            24,
             24
           ],
-          "radius": 1.35,
+          "radius": 1.2,
           "rate": 1,
-          "density": 1.7,
+          "density": 1.1,
           "pulse": {
             "amplitude": 0.5,
             "period": 6
           },
           "orbit": {
-            "radius": 15,
+            "radius": [
+              16,
+              13
+            ],
             "period": 24,
             "phase": 180
           },

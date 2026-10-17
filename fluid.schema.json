@@ -393,6 +393,12 @@
                   "maximum": 16,
                   "description": "Gas only: heat added or held; heat rises by buoyancy and maps to fire ramps. Default 0."
                 },
+                "falloff": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "The amounts fall off from the centre toward the rim: 1 at the centre, 1 - falloff at the edge of the disc (or the ellipse inside the box), so a puff is densest in the middle. Default 0, a flat disc or box."
+                },
                 "velocity": {
                   "type": "array",
                   "items": {
@@ -458,10 +464,24 @@
                   "type": "object",
                   "properties": {
                     "radius": {
-                      "type": "number",
-                      "minimum": 0,
-                      "maximum": 128,
-                      "description": "Pixels from at."
+                      "oneOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 128
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 128
+                          },
+                          "maxItems": 2,
+                          "minItems": 2
+                        }
+                      ],
+                      "description": "Pixels from at, or [x, y] for an ellipse."
                     },
                     "period": {
                       "type": "integer",
@@ -480,7 +500,7 @@
                     "radius"
                   ],
                   "additionalProperties": false,
-                  "description": "The emitter circles at; a negative period turns anticlockwise."
+                  "description": "The emitter circles at (or follows an ellipse round it); a negative period turns anticlockwise. A rate emitter is laid along the path it covered since the last frame, so a fast orbit leaves a smooth trail."
                 },
                 "sparks": {
                   "type": "object",
