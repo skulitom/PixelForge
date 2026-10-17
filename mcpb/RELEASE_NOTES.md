@@ -1,10 +1,15 @@
-# 0.8.0
+# 0.9.0
 
-Renamed from PixelForge to Pixelbolt. The `pixelforge` command, the `pixelforge-*` recipe formats and the MCP tool names are unchanged.
+Fluid effects. A new source format, `pixelforge-fluid`, runs a small fluid simulation and bakes every frame into palette pixels: smoke, fire, steam, explosions, magic swirls, splashes, waterfalls, drips and a bubbling potion. The result is an ordinary editable recipe, so it inspects, patches and exports like any other, and it never uses a colour outside the palette. Loops are seamless, and the same source gives the same pixels on every machine and in the browser.
 
-The bundle is now `pixelbolt.mcpb` (checksum `pixelbolt.mcpb.sha256`), and portable Studio builds are named `PixelboltStudio-<version>-<target>`. The `pixelforge` alias stays for at least two releases.
+- Ten presets in `examples/*.fluid.json`; each compiles in well under a second.
+- `pixelbolt compile`, `preview` and `sequence` accept fluid sources; MCP `pixel_compile` compiles them, and `pixel_help` with `topic: "fluid"` returns the schema.
+- The studio's Fluid lab (`/fluid.html`) tunes a preset in the browser and downloads the GIF, sprite sheet, recipe or source.
+- The guide is the "Fluid effects" section of `docs/art-workflow.md`; the full list of changes is in `CHANGELOG.md`.
 
-Pixelbolt turns editable JSON recipes into pixel art and sprite animation. `pixelbolt.mcpb` contains the local Node.js MCP server, its eight tools, schemas and authoring help. The server makes no network requests.
+The bundle keeps its 0.8.0 name, `pixelbolt.mcpb` (checksum `pixelbolt.mcpb.sha256`). The `pixelforge` command still works as an alias.
+
+`pixelbolt.mcpb` contains the local Node.js MCP server, its eight tools, schemas and authoring help. The server makes no network requests.
 
 Download `pixelbolt.mcpb` and open it in Claude Desktop, or use Settings -> Extensions -> install from file. Choose a workspace for recipes and generated artwork, then ask the agent to call `pixel_help`. The bundle uses the client's Node.js runtime (20 or newer); it does not include Node.js.
 
