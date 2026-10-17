@@ -226,6 +226,18 @@ const fluidLook = object({
   dither: num(0, 1, 'Feather each colour in below its threshold through the pattern, over this share of the gap to the previous threshold (to 0 for the first). 0 draws hard bands; default 0.5.'),
   pattern: { oneOf: [{ enum: DITHER_PATTERNS }, { ...array({ ...array(int(0, 255), 16), minItems: 1 }, 16), minItems: 1 }], description: 'Dither pattern, as for the dither operation: bayer4 (default), bayer2, bayer8, noise or value (seeded by the effect) or a matrix of ranks. Anchored to the canvas, so it never crawls.' }
 }, ['field', 'colors', 'thresholds']);
+const fluidWhitewater = { ...object({
+  impact: num(0.05, 32, 'Throw where a particle\'s velocity changes by at least this many pixels per frame within one frame: a drop landing, water striking water. Use impact or speed.'),
+  speed: num(0.05, 32, 'Throw where a particle moves at least this many pixels per frame: a fast stream shedding drops. Use impact or speed.'),
+  chance: num(0.001, 1, 'Share of qualifying surface particles that throw a droplet each frame (a seeded draw per particle); default 0.1.'),
+  throw: num(0, 4, 'Droplet speed as a share of the impact or speed; default 1.'), spread: num(0, 180, 'Degrees of random turn either way; default 20.'),
+  life: { oneOf: [int(1, 256), pairOf(int(1, 256))], description: 'Frames each droplet lives; [min, max] picks per droplet. Default [6, 12].' },
+  colors: keys('Palette keys spread over each droplet\'s life, from birth to death.'), size: int(1, 3, 'Pixels across each droplet; default 1.'),
+  trail: { type: 'boolean', description: 'Streak back to where the droplet was a frame earlier, in the next colour of its list.' },
+  gravity: vector(-2, 2, 'The droplet\'s own acceleration [x, y]; default the effect\'s gravity.'), drag: num(0, 1, 'Share of the droplet\'s speed lost each frame; default 0.02.'),
+  follow: num(0, 2, 'How much the flow carries the droplet: 0 (default) is spray, drawn once it has left the water and ending where it falls back in; above 0 is foam carried on the flow, ending once it is carried under.')
+}, ['colors']), oneOf: [{ required: ['impact'] }, { required: ['speed'] }],
+  description: 'Spray and foam thrown off the liquid by its own motion, from particles at the surface, tipped away from the water.' };
 const fluidShape = object({ x: int(0, 127), y: int(0, 127), w: int(1, 128), h: int(1, 128), at: vector(-256, 512), radius: num(0.5, 128), velocity: vector(-16, 16, 'Starting velocity [x, y] in pixels per frame.') });
 const fluid = {
   $schema: schema.$schema, title: 'Pixelbolt fluid effects',
@@ -250,6 +262,7 @@ const fluid = {
       obstacles: { ...array(object({ symbol: id, x: int(0, 127), y: int(0, 127), draw: { enum: ['over', 'under', 'none'], description: 'over (default): stamped in front of the fluid, its outline and sparks; under: behind its outline and sparks (the fluid itself never enters an obstacle); none: an invisible wall.' } }, ['symbol']), 32), description: 'Solid shapes from symbols: their visible pixels block the flow. They must fit the canvas.' },
       emitters: { ...array(fluidEmitter, 16), description: '1–16 sources; a liquid with a fill may have none.' },
       look: { ...array(fluidLook, 8), minItems: 1, description: 'Layers drawn in order, later over earlier, each mapping one field to palette colours.' },
+      whitewater: { ...array(fluidWhitewater, 4), description: 'Liquid: up to four layers of spray or foam thrown off the water where it lands or runs fast, drawn over it like sparks.' },
       light: vector(-1, 1, 'Direction toward the light for the light and shadow fields; default [-1, -1], the upper left.'),
       outline: { ...key, description: 'Palette key for a one-pixel outline around the fluid.' },
       cleanup: { ...object({ strays: bool, corners: bool }), description: 'De-Stray (specks and pinholes take their surroundings\' colour) and De-Corner cleanup of the fluid before outline and sparks.' }

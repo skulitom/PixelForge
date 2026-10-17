@@ -226,23 +226,25 @@ const water = { B: '#1d3f7a', b: '#2f6fc0', c: '#5fb4e8', w: '#dff6ff' }, stone 
 const waterLook = (deep, band = 4) => [{ field: 'density', colors: ['b'], thresholds: [0.5], dither: 0 }, { field: 'depth', colors: ['w', 'c', 'b', 'B'], thresholds: [1, 2, band, deep], dither: 0 }];
 // Spray thrown up where water lands; in a liquid it ends where it falls back into the water.
 const spray = (name, at, start, count, angle, extra = {}) => ({ name, at, area: [2, 1], burst: 1, start, density: 0, sparks: { count, life: [12, 20], colors: ['w', 'w', 'c'], angle, speed: [2.8, 4], gravity: [0, 0.55], drag: 0.02, follow: 0, ...extra } });
-// A round drop falls and speeds up, and lands with a crown of spray streaks and drops either side of it; the crater it
-// opens springs back as a hump in the middle. A low flip share and drag calm the waves, and a slow drain at the bottom
-// takes back the drop's water, so the pool settles flat at its old level instead of a fraction of a pixel higher.
+// A round drop falls and speeds up; where it lands, whitewater throws a crown of spray streaks and drops off the crater's
+// rims, and the crater springs back as a hump in the middle. A low flip share and drag calm the waves, and a slow drain
+// at the bottom takes back the drop's water, so the pool settles flat at its old level instead of a fraction of a pixel
+// higher.
 const splash = fluidSource('splash', 48, 40, water, {
   kind: 'liquid', frames: 40, duration: 60, seed: 3, walls: ['left', 'right', 'bottom'], gravity: [0, 0.6], flip: 0.2, drag: 0.08, tension: 1.2,
   fill: [{ x: 0, y: 28, w: 48, h: 12 }, { at: [24, 5], radius: 3, velocity: [0, 0.5] }],
-  emitters: [spray('crown-left', [19.5, 26.5], 9, 3, [228, 256], { trail: true }), spray('crown-right', [28.5, 26.5], 9, 3, [284, 312], { trail: true }),
-    spray('drop-left', [19.5, 26.5], 9, 1, [240, 256], { size: 2, speed: [3.4, 4.2] }), spray('drop-right', [28.5, 26.5], 9, 1, [284, 300], { size: 2, speed: [3.4, 4.2] }),
-    { name: 'settle', at: [24, 38], area: [48, 2], rate: 1, start: 12, end: 29, density: -0.015 },
+  emitters: [{ name: 'settle', at: [24, 38], area: [48, 2], rate: 1, start: 12, end: 29, density: -0.017 },
     { name: 'rebound', at: [24, 31], area: [4, 3], rate: 1, start: 15, end: 17, density: 0, velocity: [0, -2] }],
+  whitewater: [{ impact: 1.5, chance: 0.45, throw: 1.8, spread: 30, life: [12, 20], colors: ['w', 'w', 'c'], trail: true },
+    { impact: 2.5, chance: 0.3, throw: 1.6, spread: 20, life: [12, 20], colors: ['w', 'w', 'c'], size: 2 }],
   look: waterLook(9, 5), cleanup: { strays: true }
 });
 // A shallow stream runs along the cliff top, pours over the mossy lip and falls down the cliff face into a basin. The
 // source pulses, so fuller and thinner stretches run down the fall, and glints carried by the flow streak down it; the
-// fall is drawn by its speed, darker where it leaves the lip with lighter flecks as it speeds up. Spray rises where it
-// lands. A seep along the basin's surface takes much of the inflow, so the level stays just above the right lip and a
-// steady stream spills over it through the open edge.
+// fall is drawn by its speed, darker where it leaves the lip with lighter flecks as it speeds up. Whitewater froths its
+// edges with foam that rides the surface down and drifts where the water churns, and throws the odd droplet off it;
+// spray rises where it lands. A seep along the basin's surface takes much of the inflow, so the level stays just above the right
+// lip and a steady stream spills over it through the open edge.
 const waterfall = fluidSource('waterfall', 48, 64, { ...water, ...stone, L: '#7b7590', m: '#5f9a4a' }, {
   kind: 'liquid', frames: 24, duration: 60, loop: true, seed: 5, warmup: 4, substeps: 3, walls: ['left'], flip: 0.6, drag: 0.06,
   obstacles: [{ symbol: 'cliff', x: 0, y: 12 }, { symbol: 'basin', x: 0, y: 49 }], fill: [{ x: 18, y: 49, w: 22, h: 12 }],
@@ -250,6 +252,7 @@ const waterfall = fluidSource('waterfall', 48, 64, { ...water, ...stone, L: '#7b
     { name: 'spray', at: [22, 48], radius: 2, rate: 1, density: 0, sparks: { count: 0.8, life: [6, 12], colors: ['w', 'c'], angle: [220, 320], speed: [0.8, 2], gravity: [0, 0.2], follow: 0 } },
     { name: 'seep', at: [27, 48.5], area: [18, 3], rate: 1, density: -0.05 },
     { name: 'glints', at: [16, 10], radius: 1.5, rate: 1, density: 0, sparks: { count: 1, life: [18, 26], colors: ['w', 'w', 'w', 'c'], trail: true, follow: 1, speed: 0, drag: 0 } }],
+  whitewater: [{ speed: 3, chance: 0.05, throw: 1.2, spread: 15, life: [8, 14], colors: ['w', 'c'] }, { speed: 1.4, chance: 0.04, life: [3, 6], colors: ['w', 'c'], follow: 1 }],
   look: [...waterLook(8), { field: 'speed', colors: ['b', 'c'], thresholds: [1.6, 3.4], dither: 0 }], cleanup: { strays: true }
 }, {
   // Rock in strata: a dark seam every five rows, a lit edge along the face.

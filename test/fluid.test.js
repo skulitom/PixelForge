@@ -23,8 +23,8 @@ const GOLDEN = {
   'steam-vent': '00ff7b5fc9cb9a5afa1ec354d4da1d6995d57ca4bdf262503f397a0ade9c3757',
   'magic-swirl': '2be991d3b94b474346ba7101d2283bdc2659394a65cb3e44dee0c9ca61766221',
   torch: '1653a23c933b250d5cc6aa8c0a5e1878e7438b11169ef85c52d733e019263828',
-  splash: 'd3dd9b5c803e03aab0a23a5a0b69fa28782f873f97f4dd1356bb3d8732e2b730',
-  waterfall: '26622a804b4a189e17dce2334e518af94e954f6c3e4d30b955badb3a104036c3',
+  splash: '1b2a22fe73a5f818858199a0b5098c326395ba26ed5c5a9996dc178bb997f5f4',
+  waterfall: '2dd5ed11bff959daa551caca7deb04ff2ae276f8c61bd2e1eaabe95b665be5a8',
   drip: '1147551d26b4945e65773fe243ebf0858779c20acf8200068866f247d63e5480',
   potion: '11636b6972e45c5c7e65fb9b473cc20981133ed724650b17c491efac78d92d74'
 };
@@ -151,6 +151,40 @@ test('depth bands stay level under water standing on the surface', () => {
   assert.deepEqual([row(11), row(12), row(13), row(15)], ['s'.repeat(16), 's'.repeat(16), 'r'.repeat(16), 'r'.repeat(16)]);
 });
 
+test('whitewater throws spray where water lands and sheds drops off a fast stream', () => {
+  // The water is drawn in s, so every w pixel is a whitewater droplet.
+  const body = [{ field: 'density', colors: ['s'], thresholds: [0.5], dither: 0 }];
+  const whites = recipe => recipe.frames.map(frame => (frame.ops ?? []).filter(op => op.op === 'grid').reduce((n, op) => n + op.rows.join('').split('w').length - 1, 0));
+  // A drop falls onto a still pool: no spray while it falls, then droplets thrown up where it lands.
+  const drop = whitewater => compileFluid({ ...gas(null), effects: { pool: { kind: 'liquid', frames: 12, walls: ['left', 'right', 'bottom'], fill: [{ x: 0, y: 11, w: 16, h: 5 }, { at: [8, 3], radius: 2, velocity: [0, 1] }],
+    emitters: [], whitewater, look: body } } });
+  const landing = whites(drop([{ impact: 1, chance: 1, colors: ['w'] }]).recipe);
+  assert.deepEqual(landing.slice(0, 2), [0, 0]);
+  assert.ok(Math.max(...landing) >= 3, JSON.stringify(landing));
+  assert.ok(whites(drop([{ impact: 32, chance: 1, colors: ['w'] }]).recipe).every(n => n === 0));
+  // A fast sheet of water crossing an open box sheds drops; a threshold above its speed sheds none.
+  const stream = speed => compileFluid({ ...gas(null), effects: { pool: { kind: 'liquid', frames: 6, gravity: [0, 0], fill: [{ x: 0, y: 6, w: 8, h: 3, velocity: [2.5, 0] }],
+    emitters: [], whitewater: [{ speed, chance: 0.5, colors: ['w'] }], look: body } } });
+  assert.ok(whites(stream(2).recipe).some(n => n > 0));
+  assert.ok(whites(stream(8).recipe).every(n => n === 0));
+  // Foam rides the surface: a jet pushes surface water down into a pool, and foam carried under ends there, so no foam
+  // pixel ever has water on all four sides.
+  const { recipe: dive } = compileFluid({ ...gas(null), effects: { pool: { kind: 'liquid', frames: 10, walls: ['left', 'right', 'bottom'], fill: [{ x: 0, y: 6, w: 16, h: 10 }],
+    emitters: [{ at: [8, 7], area: [4, 2], rate: 1, density: 0, velocity: [0, 2.5] }], whitewater: [{ speed: 1.5, chance: 1, colors: ['w'], follow: 1 }], look: body } } });
+  let foam = 0;
+  for (const frame of dive.frames) for (const op of (frame.ops ?? []).filter(o => o.op === 'grid')) op.rows.forEach((row, j) => [...row].forEach((char, i) => {
+    if (char !== 'w') return;
+    foam++;
+    const at = (x, y) => op.rows[y]?.[x] ?? '.';
+    assert.ok([at(i - 1, j), at(i + 1, j), at(i, j - 1), at(i, j + 1)].some(n => n !== 's'), `foam under water at ${op.x + i},${op.y + j}`);
+  }));
+  assert.ok(foam > 0);
+  // Whitewater is a liquid setting, and a layer picks exactly one trigger.
+  const bad = (effect, where, message) => assert.throws(() => compileFluid({ ...gas(null), effects: { pool: effect } }), error => error.path === where && message.test(error.message));
+  bad({ frames: 2, emitters: [{ at: [8, 8], rate: 1, density: 1 }], whitewater: [], look: body }, 'fluid.effects.pool.whitewater', /applies to liquids/);
+  bad({ kind: 'liquid', frames: 2, emitters: [], fill: [{ x: 0, y: 8, w: 16, h: 8 }], whitewater: [{ impact: 1, speed: 2, colors: ['w'] }], look: body }, 'fluid.effects.pool.whitewater[0]', /exactly one of impact/);
+});
+
 test('loops repeat their forcing, blend their seam and wrap sparks round', () => {
   const effect = { frames: 12, loop: true, seed: 4, emitters: [{ at: [8, 13], area: [6, 2], rate: 1, density: 0.6, temperature: 1, velocity: [0, -1], noise: 0.5, flicker: 0.4, pulse: { amplitude: 0.5, period: 6 },
     sparks: { count: 0.5, life: [6, 10], colors: ['y', 'r'], angle: [260, 280], speed: 0.3 } }], look: [...smoke, { field: 'temperature', colors: ['r', 'y'], thresholds: [0.3, 0.7] }] };
@@ -250,7 +284,8 @@ test('the fluid schema lists exactly the fields the compiler reads', async () =>
     [effect.properties.look.items.properties, (s, key) => { s.effects.plume.look = [{ field: 'density', colors: ['s'], thresholds: [0.5], [key]: 0 }]; }, 'fluid.effects.plume.look[0]'],
     [effect.properties.fill.items.properties, (s, key) => { Object.assign(s.effects.plume, { kind: 'liquid', fill: [{ x: 0, y: 0, w: 2, h: 2, [key]: 0 }] }); }, 'fluid.effects.plume.fill[0]'],
     [effect.properties.obstacles.items.properties, (s, key) => { s.effects.plume.obstacles = [{ symbol: 'lid', [key]: 0 }]; }, 'fluid.effects.plume.obstacles[0]'],
-    [effect.properties.cleanup.properties, (s, key) => { s.effects.plume.cleanup = { [key]: 0 }; }, 'fluid.effects.plume.cleanup']
+    [effect.properties.cleanup.properties, (s, key) => { s.effects.plume.cleanup = { [key]: 0 }; }, 'fluid.effects.plume.cleanup'],
+    [effect.properties.whitewater.items.properties, (s, key) => { Object.assign(s.effects.plume, { kind: 'liquid', whitewater: [{ impact: 1, colors: ['s'], [key]: 0 }] }); }, 'fluid.effects.plume.whitewater[0]']
   ];
   for (const [properties, put, where] of levels) {
     for (const key of Object.keys(properties)) { const source = base(); put(source, key); assert.equal(unknown(source, `${where}.${key}`), false, `${where}.${key} is in the schema but the compiler rejects it`); }

@@ -218,6 +218,35 @@
           }
         }
       ],
+      "whitewater": [
+        {
+          "speed": 3,
+          "chance": 0.05,
+          "throw": 1.2,
+          "spread": 15,
+          "life": [
+            8,
+            14
+          ],
+          "colors": [
+            "w",
+            "c"
+          ]
+        },
+        {
+          "speed": 1.4,
+          "chance": 0.04,
+          "life": [
+            3,
+            6
+          ],
+          "colors": [
+            "w",
+            "c"
+          ],
+          "follow": 1
+        }
+      ],
       "look": [
         {
           "field": "density",

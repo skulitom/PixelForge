@@ -703,6 +703,128 @@
             "minItems": 1,
             "description": "Layers drawn in order, later over earlier, each mapping one field to palette colours."
           },
+          "whitewater": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "impact": {
+                  "type": "number",
+                  "minimum": 0.05,
+                  "maximum": 32,
+                  "description": "Throw where a particle's velocity changes by at least this many pixels per frame within one frame: a drop landing, water striking water. Use impact or speed."
+                },
+                "speed": {
+                  "type": "number",
+                  "minimum": 0.05,
+                  "maximum": 32,
+                  "description": "Throw where a particle moves at least this many pixels per frame: a fast stream shedding drops. Use impact or speed."
+                },
+                "chance": {
+                  "type": "number",
+                  "minimum": 0.001,
+                  "maximum": 1,
+                  "description": "Share of qualifying surface particles that throw a droplet each frame (a seeded draw per particle); default 0.1."
+                },
+                "throw": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 4,
+                  "description": "Droplet speed as a share of the impact or speed; default 1."
+                },
+                "spread": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 180,
+                  "description": "Degrees of random turn either way; default 20."
+                },
+                "life": {
+                  "oneOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 256
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 256
+                      },
+                      "maxItems": 2,
+                      "minItems": 2
+                    }
+                  ],
+                  "description": "Frames each droplet lives; [min, max] picks per droplet. Default [6, 12]."
+                },
+                "colors": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1,
+                    "description": "A one-character palette key (grid rows name colours by character)."
+                  },
+                  "maxItems": 16,
+                  "minItems": 1,
+                  "description": "Palette keys spread over each droplet's life, from birth to death."
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3,
+                  "description": "Pixels across each droplet; default 1."
+                },
+                "trail": {
+                  "type": "boolean",
+                  "description": "Streak back to where the droplet was a frame earlier, in the next colour of its list."
+                },
+                "gravity": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "minimum": -2,
+                    "maximum": 2
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "description": "The droplet's own acceleration [x, y]; default the effect's gravity."
+                },
+                "drag": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Share of the droplet's speed lost each frame; default 0.02."
+                },
+                "follow": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 2,
+                  "description": "How much the flow carries the droplet: 0 (default) is spray, drawn once it has left the water and ending where it falls back in; above 0 is foam carried on the flow, ending once it is carried under."
+                }
+              },
+              "required": [
+                "colors"
+              ],
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "impact"
+                  ]
+                },
+                {
+                  "required": [
+                    "speed"
+                  ]
+                }
+              ],
+              "description": "Spray and foam thrown off the liquid by its own motion, from particles at the surface, tipped away from the water."
+            },
+            "maxItems": 4,
+            "description": "Liquid: up to four layers of spray or foam thrown off the water where it lands or runs fast, drawn over it like sparks."
+          },
           "light": {
             "type": "array",
             "items": {

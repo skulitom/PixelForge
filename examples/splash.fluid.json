@@ -49,170 +49,6 @@
       ],
       "emitters": [
         {
-          "name": "crown-left",
-          "at": [
-            19.5,
-            26.5
-          ],
-          "area": [
-            2,
-            1
-          ],
-          "burst": 1,
-          "start": 9,
-          "density": 0,
-          "sparks": {
-            "count": 3,
-            "life": [
-              12,
-              20
-            ],
-            "colors": [
-              "w",
-              "w",
-              "c"
-            ],
-            "angle": [
-              228,
-              256
-            ],
-            "speed": [
-              2.8,
-              4
-            ],
-            "gravity": [
-              0,
-              0.55
-            ],
-            "drag": 0.02,
-            "follow": 0,
-            "trail": true
-          }
-        },
-        {
-          "name": "crown-right",
-          "at": [
-            28.5,
-            26.5
-          ],
-          "area": [
-            2,
-            1
-          ],
-          "burst": 1,
-          "start": 9,
-          "density": 0,
-          "sparks": {
-            "count": 3,
-            "life": [
-              12,
-              20
-            ],
-            "colors": [
-              "w",
-              "w",
-              "c"
-            ],
-            "angle": [
-              284,
-              312
-            ],
-            "speed": [
-              2.8,
-              4
-            ],
-            "gravity": [
-              0,
-              0.55
-            ],
-            "drag": 0.02,
-            "follow": 0,
-            "trail": true
-          }
-        },
-        {
-          "name": "drop-left",
-          "at": [
-            19.5,
-            26.5
-          ],
-          "area": [
-            2,
-            1
-          ],
-          "burst": 1,
-          "start": 9,
-          "density": 0,
-          "sparks": {
-            "count": 1,
-            "life": [
-              12,
-              20
-            ],
-            "colors": [
-              "w",
-              "w",
-              "c"
-            ],
-            "angle": [
-              240,
-              256
-            ],
-            "speed": [
-              3.4,
-              4.2
-            ],
-            "gravity": [
-              0,
-              0.55
-            ],
-            "drag": 0.02,
-            "follow": 0,
-            "size": 2
-          }
-        },
-        {
-          "name": "drop-right",
-          "at": [
-            28.5,
-            26.5
-          ],
-          "area": [
-            2,
-            1
-          ],
-          "burst": 1,
-          "start": 9,
-          "density": 0,
-          "sparks": {
-            "count": 1,
-            "life": [
-              12,
-              20
-            ],
-            "colors": [
-              "w",
-              "w",
-              "c"
-            ],
-            "angle": [
-              284,
-              300
-            ],
-            "speed": [
-              3.4,
-              4.2
-            ],
-            "gravity": [
-              0,
-              0.55
-            ],
-            "drag": 0.02,
-            "follow": 0,
-            "size": 2
-          }
-        },
-        {
           "name": "settle",
           "at": [
             24,
@@ -225,7 +61,7 @@
           "rate": 1,
           "start": 12,
           "end": 29,
-          "density": -0.015
+          "density": -0.017
         },
         {
           "name": "rebound",
@@ -245,6 +81,40 @@
             0,
             -2
           ]
+        }
+      ],
+      "whitewater": [
+        {
+          "impact": 1.5,
+          "chance": 0.45,
+          "throw": 1.8,
+          "spread": 30,
+          "life": [
+            12,
+            20
+          ],
+          "colors": [
+            "w",
+            "w",
+            "c"
+          ],
+          "trail": true
+        },
+        {
+          "impact": 2.5,
+          "chance": 0.3,
+          "throw": 1.6,
+          "spread": 20,
+          "life": [
+            12,
+            20
+          ],
+          "colors": [
+            "w",
+            "w",
+            "c"
+          ],
+          "size": 2
         }
       ],
       "look": [

@@ -13,7 +13,7 @@ import { patternProblem, ditherThreshold, cleanupIds, traceLine, random, sinDeg,
 export const FLUID_KINDS = ['gas', 'liquid'];
 export const FLUID_FIELDS = ['density', 'temperature', 'speed', 'depth', 'light', 'shadow'];
 export const FLUID_WALLS = ['left', 'right', 'top', 'bottom'];
-const LIMITS = { effects: 16, emitters: 16, obstacles: 32, fills: 16, looks: 8, colors: 16, particles: 32768, sparks: 4096, work: 400000000 };
+const LIMITS = { effects: 16, emitters: 16, obstacles: 32, fills: 16, looks: 8, whitewater: 4, colors: 16, particles: 32768, sparks: 4096, work: 400000000 };
 // No flow moves faster than this many pixels per frame; it keeps extreme settings finite without touching normal ones.
 const MAX_SPEED = 32;
 // Liquid particles per full cell, and the density at which a cell counts as liquid for depth and bubbles.
@@ -22,6 +22,8 @@ const PER_CELL = 4, LEVEL = 0.5;
 const DEPTH_REACH = 3;
 // Salts keep each random draw independent, so changing one setting does not reshuffle the others.
 const SALT = { flicker: 1, noiseX: 2, noiseY: 3, spawn: 4, jitterX: 5, jitterY: 6, drain: 7, sparks: 8, sparkX: 9, sparkY: 10, angle: 11, speed: 12, life: 13 };
+// Whitewater layers draw from their own streams, keyed apart from the emitters (which are numbered from 0).
+const WHITEWATER = 1000;
 
 const fail = (path, message) => { throw new PixelError(path, message); };
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -89,6 +91,24 @@ function readSparks(value, path, context, burst) {
   };
 }
 
+// Whitewater: spray and foam thrown off a liquid by its own motion. A particle at the surface throws a droplet where its
+// velocity changes sharply within a frame (`impact`: a drop landing, a fall hitting a pool) or where it moves fast
+// (`speed`: a stream shedding drops). Droplets are sparks; with follow 0 they are spray, otherwise foam on the flow.
+function readWhitewater(layer, path, context, gravity) {
+  const { palette } = context;
+  fields(layer, ['impact', 'speed', 'chance', 'throw', 'spread', 'life', 'colors', 'size', 'trail', 'gravity', 'drag', 'follow'], path);
+  if ((layer.impact === undefined) === (layer.speed === undefined)) fail(path, 'use exactly one of impact (water whose speed changes sharply, such as where a drop lands) or speed (fast water, such as a stream shedding drops)');
+  if (!Array.isArray(layer.colors) || !layer.colors.length || layer.colors.length > LIMITS.colors) fail(`${path}.colors`, `expected 1–${LIMITS.colors} palette keys, spread over each droplet's life`);
+  return {
+    impact: layer.impact === undefined ? null : number(layer.impact, `${path}.impact`, 0.05, 32), speed: layer.speed === undefined ? null : number(layer.speed, `${path}.speed`, 0.05, 32),
+    chance: number(layer.chance ?? 0.1, `${path}.chance`, 0.001, 1), throw: number(layer.throw ?? 1, `${path}.throw`, 0, 4), spread: number(layer.spread ?? 20, `${path}.spread`, 0, 180),
+    life: range(layer.life ?? [6, 12], `${path}.life`, 1, 256, true), colors: layer.colors.map((key, i) => paletteKey(key, `${path}.colors[${i}]`, palette)),
+    size: integer(layer.size ?? 1, `${path}.size`, 1, 3), trail: layer.trail === undefined ? false : boolean(layer.trail, `${path}.trail`),
+    gravity: layer.gravity === undefined ? gravity : pair(layer.gravity, `${path}.gravity`, -2, 2), drag: number(layer.drag ?? 0.02, `${path}.drag`, 0, 1),
+    follow: number(layer.follow ?? 0, `${path}.follow`, 0, 2), pop: false
+  };
+}
+
 function readEmitter(emitter, path, context) {
   const { frames, loop, liquid } = context;
   fields(emitter, ['name', 'at', 'radius', 'area', 'burst', 'rate', 'start', 'end', 'density', 'temperature', 'velocity', 'expand', 'vortex', 'noise', 'flicker', 'pulse', 'orbit', 'sparks'], path);
@@ -153,13 +173,14 @@ function readShape(value, path, width, height) {
 
 function readEffect(effect, path, source) {
   const { width, height, palette, symbols } = source;
-  fields(effect, ['kind', 'frames', 'duration', 'loop', 'seed', 'warmup', 'blend', 'substeps', 'iterations', 'buoyancy', 'weight', 'vorticity', 'dissipation', 'cooling', 'drag', 'wind', 'gravity', 'flip', 'tension', 'fill', 'walls', 'obstacles', 'emitters', 'look', 'light', 'outline', 'cleanup'], path);
+  fields(effect, ['kind', 'frames', 'duration', 'loop', 'seed', 'warmup', 'blend', 'substeps', 'iterations', 'buoyancy', 'weight', 'vorticity', 'dissipation', 'cooling', 'drag', 'wind', 'gravity', 'flip', 'tension', 'fill', 'walls', 'obstacles', 'emitters', 'look', 'whitewater', 'light', 'outline', 'cleanup'], path);
   const kind = effect.kind ?? 'gas';
   if (!FLUID_KINDS.includes(kind)) fail(`${path}.kind`, 'expected gas (smoke, fire, steam, magic) or liquid (water, potions)');
   const liquid = kind === 'liquid';
   for (const key of liquid ? ['buoyancy', 'weight', 'vorticity', 'dissipation', 'cooling', 'wind'] : ['gravity', 'flip', 'tension', 'fill']) {
     if (effect[key] !== undefined) fail(`${path}.${key}`, liquid ? `${key} applies to gases; liquids fall by gravity and keep their volume` : `${key} applies to liquids; gases rise by buoyancy`);
   }
+  if (!liquid && effect.whitewater !== undefined) fail(`${path}.whitewater`, 'whitewater is spray and foam thrown off a liquid; it applies to liquids');
   const frames = integer(effect.frames, `${path}.frames`, 1, 256), loop = effect.loop === undefined ? false : boolean(effect.loop, `${path}.loop`);
   const durations = Array.isArray(effect.duration)
     ? (effect.duration.length === frames ? effect.duration.map((d, i) => integer(d, `${path}.duration[${i}]`, 1, 60000)) : fail(`${path}.duration`, `expected one duration or ${frames}`))
@@ -199,6 +220,8 @@ function readEffect(effect, path, source) {
   const emitters = effect.emitters.map((emitter, i) => readEmitter(emitter, `${path}.emitters[${i}]`, context));
   if (!Array.isArray(effect.look) || !effect.look.length || effect.look.length > LIMITS.looks) fail(`${path}.look`, `expected 1–${LIMITS.looks} layers that map a field to palette colours`);
   const look = effect.look.map((layer, i) => readLook(layer, `${path}.look[${i}]`, context));
+  const gravity = effect.gravity === undefined ? [0, 0.3] : pair(effect.gravity, `${path}.gravity`, -2, 2);
+  const whitewater = listed(effect.whitewater, 'whitewater', LIMITS.whitewater).map((layer, i) => readWhitewater(layer, `${path}.whitewater[${i}]`, context, gravity));
   let cleanup = { strays: false, corners: false };
   if (effect.cleanup !== undefined) {
     fields(effect.cleanup, ['strays', 'corners'], `${path}.cleanup`);
@@ -207,14 +230,14 @@ function readEffect(effect, path, source) {
   const light = effect.light === undefined ? [-1, -1] : pair(effect.light, `${path}.light`, -1, 1), reachLight = Math.sqrt(light[0] * light[0] + light[1] * light[1]);
   if (!reachLight) fail(`${path}.light`, 'expected a direction toward the light, such as [-1, -1] for the upper left');
   return {
-    kind, liquid, frames, durations, light: [light[0] / reachLight, light[1] / reachLight], loop, seed, emitters, look, obstacles, solid, front, walls: Object.fromEntries(FLUID_WALLS.map(edge => [edge, walls.includes(edge)])), fills, cleanup,
+    kind, liquid, frames, durations, light: [light[0] / reachLight, light[1] / reachLight], loop, seed, emitters, look, whitewater, obstacles, solid, front, walls: Object.fromEntries(FLUID_WALLS.map(edge => [edge, walls.includes(edge)])), fills, cleanup,
     warmup: loop ? integer(effect.warmup ?? 2, `${path}.warmup`, 1, 8) : 0,
     blend: loop ? integer(effect.blend ?? Math.max(1, Math.min(8, Math.floor(frames / 3))), `${path}.blend`, 1, Math.floor(frames / 2)) : 0,
     substeps: integer(effect.substeps ?? 2, `${path}.substeps`, 1, 4), iterations: integer(effect.iterations ?? (liquid ? 40 : 30), `${path}.iterations`, 1, 200),
     buoyancy: number(effect.buoyancy ?? 0.15, `${path}.buoyancy`, -2, 2), weight: number(effect.weight ?? 0, `${path}.weight`, -2, 2),
     vorticity: number(effect.vorticity ?? 0.25, `${path}.vorticity`, 0, 2), dissipation: number(effect.dissipation ?? 0.03, `${path}.dissipation`, 0, 1),
     cooling: number(effect.cooling ?? 0.08, `${path}.cooling`, 0, 1), drag: number(effect.drag ?? (liquid ? 0 : 0.02), `${path}.drag`, 0, 1),
-    wind: effect.wind === undefined ? [0, 0] : pair(effect.wind, `${path}.wind`, -2, 2), gravity: effect.gravity === undefined ? [0, 0.3] : pair(effect.gravity, `${path}.gravity`, -2, 2),
+    wind: effect.wind === undefined ? [0, 0] : pair(effect.wind, `${path}.wind`, -2, 2), gravity,
     flip: number(effect.flip ?? 0.9, `${path}.flip`, 0, 1), tension: number(effect.tension ?? 0.5, `${path}.tension`, 0, 4),
     outline: effect.outline === undefined ? 0 : paletteKey(effect.outline, `${path}.outline`, palette).charCodeAt(0)
   };
@@ -458,23 +481,26 @@ function createLiquid(effect, width, height) {
   const g = createGrid(width, height, effect.solid, effect.walls), N = g.N, U = g.u.length, V = g.v.length;
   const state = {
     g, n: 0, next: 0, x: new Float64Array(1024), y: new Float64Array(1024), vx: new Float64Array(1024), vy: new Float64Array(1024), id: new Float64Array(1024),
+    pvx: new Float64Array(1024), pvy: new Float64Array(1024),
     uw: new Float64Array(U), vw: new Float64Array(V), uOld: new Float64Array(U), vOld: new Float64Array(V), uValid: new Uint8Array(U), vValid: new Uint8Array(V),
     fluid: new Uint8Array(N), cells: new Uint16Array(N), target: new Float64Array(N), splat: new Float64Array(N), blur: new Float64Array(N), speedSum: new Float64Array(N)
   };
   return state;
 }
+// A particle's position, velocity, id, and its velocity before this frame's steps (for whitewater impacts).
+const PARTICLE_KEYS = ['x', 'y', 'vx', 'vy', 'id', 'pvx', 'pvy'];
 function addParticle(state, x, y, vx, vy) {
   if (state.n === state.x.length) {
     if (state.n >= LIMITS.particles) { state.full = true; return false; }
-    for (const key of ['x', 'y', 'vx', 'vy', 'id']) { const grown = new Float64Array(Math.min(LIMITS.particles, state.n * 2)); grown.set(state[key]); state[key] = grown; }
+    for (const key of PARTICLE_KEYS) { const grown = new Float64Array(Math.min(LIMITS.particles, state.n * 2)); grown.set(state[key]); state[key] = grown; }
   }
   const k = state.n++;
-  state.x[k] = x; state.y[k] = y; state.vx[k] = vx; state.vy[k] = vy; state.id[k] = state.next++;
+  state.x[k] = x; state.y[k] = y; state.vx[k] = vx; state.vy[k] = vy; state.id[k] = state.next++; state.pvx[k] = vx; state.pvy[k] = vy;
   return true;
 }
 function removeParticle(state, k) {
   const last = --state.n;
-  for (const key of ['x', 'y', 'vx', 'vy', 'id']) state[key][k] = state[key][last];
+  for (const key of PARTICLE_KEYS) state[key][k] = state[key][last];
 }
 function countCells(state) {
   const { g, cells } = state, { W, H } = g;
@@ -680,10 +706,45 @@ function moveSparks(list, g, density, total, liquid, pops) {
     p.px = p.x; p.py = p.y; p.x += fx + p.vx; p.y += fy + p.vy;
     const i = Math.floor(p.x), j = Math.floor(p.y), inside = i >= 0 && j >= 0 && i < W && j < H, wet = liquid && inside && density[j * W + i] >= LEVEL;
     const popped = s.pop && !wet && Number.isFinite(p.x + p.y);
+    // Whitewater foam rides the surface: it ends once the flow has carried it under, with water on every side, or once
+    // it is lifted off into the air, with no water beside it.
+    const dry = (x, y) => x >= 0 && y >= 0 && x < W && y < H && !solid[y * W + x] && density[y * W + x] < LEVEL;
+    const soaked = (x, y) => x >= 0 && y >= 0 && x < W && y < H && !solid[y * W + x] && density[y * W + x] >= LEVEL;
+    const sunk = p.foam && (wet ? !dry(i - 1, j) && !dry(i + 1, j) && !dry(i, j - 1) && !dry(i, j + 1) : !soaked(i - 1, j) && !soaked(i + 1, j) && !soaked(i, j - 1) && !soaked(i, j + 1));
     if (popped) pops.push({ x: p.x, y: p.y, size: s.size, code: sparkColor(p), age: 0 });
-    if (p.age >= p.life || !Number.isFinite(p.x + p.y) || (inside && solid[j * W + i]) || popped || (wet && p.out) || p.x < -16 || p.y < -16 || p.x > W + 16 || p.y > H + 16) { list.splice(k, 1); total.alive--; }
-    else if (liquid && !wet && !s.follow) p.out = true;
+    if (p.age >= p.life || !Number.isFinite(p.x + p.y) || (inside && solid[j * W + i]) || popped || (wet && p.out) || sunk || p.x < -16 || p.y < -16 || p.x > W + 16 || p.y > H + 16) { list.splice(k, 1); total.alive--; }
+    else if (liquid && inside && !wet && !s.follow) p.out = true;
   }
+}
+
+// Whitewater: each particle at the surface (in the air, or in a cell with air beside it) whose velocity changed by at
+// least `impact` this frame throws spray along that change, or one moving at `speed` throws it along its own motion. The
+// direction is tipped away from the water (down the density gradient) and turned by up to `spread` degrees, so spray
+// leaves a landing outward and up and a stream sideways. Each qualifying particle throws with the layer's chance, a
+// seeded draw keyed by the particle, so the same source throws the same droplets. Spray is drawn once it is out.
+function throwWhitewater(state, effect, density, list, cycle, total) {
+  const { W, H, solid } = state.g, air = (i, j) => i >= 0 && j >= 0 && i < W && j < H && !solid[j * W + i] && density[j * W + i] < LEVEL;
+  const at = (i, j) => (i >= 0 && j >= 0 && i < W && j < H && !solid[j * W + i] ? density[j * W + i] : 0);
+  for (let k = 0; k < state.n; k++) {
+    const x = state.x[k], y = state.y[k], i = Math.floor(x), j = Math.floor(y);
+    if (!air(i, j) && !air(i - 1, j) && !air(i + 1, j) && !air(i, j - 1) && !air(i, j + 1)) continue;
+    const vx = state.vx[k], vy = state.vy[k], dx = vx - state.pvx[k], dy = vy - state.pvy[k];
+    const nx = at(i - 1, j) - at(i + 1, j), ny = at(i, j - 1) - at(i, j + 1), out = Math.sqrt(nx * nx + ny * ny);
+    for (let layer = 0; layer < effect.whitewater.length; layer++) {
+      const w = effect.whitewater[layer], [ax, ay] = w.impact !== null ? [dx, dy] : [vx, vy], amount = Math.sqrt(ax * ax + ay * ay);
+      if (amount < (w.impact ?? w.speed)) continue;
+      const r = salt => random(effect.seed, WHITEWATER + layer, cycle, state.id[k], salt);
+      if (r(SALT.spawn) >= w.chance) continue;
+      if (total.alive >= LIMITS.sparks) return false;
+      let ux = ax / amount + (out ? nx / out : 0), uy = ay / amount + (out ? ny / out : 0);
+      const tipped = Math.sqrt(ux * ux + uy * uy);
+      if (tipped > 1e-6) { ux /= tipped; uy /= tipped; } else { ux = ax / amount; uy = ay / amount; }
+      const turn = (2 * r(SALT.angle) - 1) * w.spread, c = cosDeg(turn), sn = sinDeg(turn), speed = amount * w.throw;
+      list.push({ s: w, x, y, vx: (ux * c - uy * sn) * speed, vy: (ux * sn + uy * c) * speed, age: 0, life: pickWhole(w.life, r(SALT.life)), hide: !w.follow, foam: w.follow > 0 });
+      total.alive++; total.spawned++;
+    }
+  }
+  return true;
 }
 
 // ---- Fields to pixels -------------------------------------------------------------------------------------------------
@@ -748,7 +809,7 @@ function renderFields(effect, base, width, height) {
 
 // ---- Simulation -------------------------------------------------------------------------------------------------------
 // A loop simulates its warm-up cycles, the recorded cycle, and as long again as its longest-lived spark.
-const simulatedFrames = effect => effect.loop ? (effect.warmup + 1) * effect.frames + Math.max(0, ...effect.emitters.map(e => (e.sparks ? e.sparks.life[1] : 0))) : effect.frames;
+const simulatedFrames = effect => effect.loop ? (effect.warmup + 1) * effect.frames + Math.max(0, ...effect.emitters.map(e => (e.sparks ? e.sparks.life[1] : 0)), ...effect.whitewater.map(w => w.life[1])) : effect.frames;
 // Runs one effect and returns its frames' operations plus figures for the metadata.
 function simulate(effect, context) {
   const { width, height, path } = context, { frames, loop, seed, emitters, liquid, substeps } = effect, N = width * height, dt = 1 / substeps;
@@ -766,6 +827,8 @@ function simulate(effect, context) {
     const cycle = loop ? t % frames : t, out = t - begin, recording = !loop || (out >= 0 && out < frames);
     if (!liquid) state.source.fill(0);
     const here = emitters.map((e, index) => (active(e, cycle) ? (liquid ? emitLiquid(state, e, index, cycle, seed) : emitGas(g, state, e, index, cycle, seed)) : null));
+    // Whitewater measures how much each particle's velocity changes over the frame's steps, not what emitters set.
+    if (liquid && effect.whitewater.length) { state.pvx.set(state.vx.subarray(0, state.n)); state.pvy.set(state.vy.subarray(0, state.n)); }
     for (let s = 0; s < substeps; s++) liquid ? stepLiquid(state, effect, dt) : stepGas(state, effect, dt);
     if (liquid) { maxParticles = Math.max(maxParticles, state.n); if (state.full) crowded(); }
     if (loop && out < -blend && !sparks.length) continue;
@@ -774,13 +837,17 @@ function simulate(effect, context) {
     // Sparks move with this frame's flow, then new ones join where their emitters are.
     moveSparks(sparks, g, base[0], totals, liquid, pops);
     if (recording) emitters.forEach((e, index) => { if (here[index] && e.sparks && !spawnSparks(sparks, e, index, cycle, here[index], seed, totals)) fail(path, `more than ${LIMITS.sparks} sparks are alive at once; lower the sparks' count or life`); });
+    if (recording && effect.whitewater.length && !throwWhitewater(state, effect, base[0], sparks, cycle, totals)) fail(path, `more than ${LIMITS.sparks} sparks and whitewater droplets are alive at once; lower the whitewater chance or life`);
     totals.maxAlive = Math.max(totals.maxAlive, totals.alive);
     // A spark is a size × size block in the colour for its age; a trail streaks back to where it was a frame ago in
     // the next colour of its list.
     const list = drawn[(loop ? out : t) % frames], put = (x, y, code) => { if (x >= 0 && y >= 0 && x < width && y < height && !effect.front[y * width + x]) list.push(y * width + x, code); };
     if (loop || t < frames) for (const p of sparks) {
-      const s = p.s, step = Math.min(s.colors.length - 1, Math.floor(p.age * s.colors.length / p.life));
-      if (s.trail && p.px !== undefined) { const tail = s.colors[Math.min(s.colors.length - 1, step + 1)].charCodeAt(0); traceLine(Math.floor(p.px), Math.floor(p.py), Math.floor(p.x), Math.floor(p.y), (x, y) => put(x, y, tail)); }
+      // Spray is drawn once it has left the water, and streaks back only from where it was already drawn.
+      if (p.hide && !p.out) continue;
+      const s = p.s, step = Math.min(s.colors.length - 1, Math.floor(p.age * s.colors.length / p.life)), seen = !p.hide || p.seen;
+      p.seen = true;
+      if (s.trail && p.px !== undefined && seen) { const tail = s.colors[Math.min(s.colors.length - 1, step + 1)].charCodeAt(0); traceLine(Math.floor(p.px), Math.floor(p.py), Math.floor(p.x), Math.floor(p.y), (x, y) => put(x, y, tail)); }
       const head = s.colors[step].charCodeAt(0), x0 = Math.floor(p.x - (s.size - 1) / 2), y0 = Math.floor(p.y - (s.size - 1) / 2);
       for (let j = 0; j < s.size; j++) for (let i = 0; i < s.size; i++) put(x0 + i, y0 + j, head);
     }
