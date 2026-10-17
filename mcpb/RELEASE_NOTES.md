@@ -7,7 +7,7 @@ Fluid effects. A new source format, `pixelforge-fluid`, runs a small fluid simul
 - The studio's Fluid lab (`/fluid.html`) tunes a preset in the browser and downloads the GIF, sprite sheet, recipe or source.
 - The guide is the "Fluid effects" section of `docs/art-workflow.md`; the full list of changes is in `CHANGELOG.md`.
 
-The release assets keep their 0.8.0 names: `pixelbolt.mcpb` (checksum `pixelbolt.mcpb.sha256`), and portable Studio builds named `PixelboltStudio-<version>-<target>`. The `pixelforge` command still works as an alias.
+The bundle keeps its 0.8.0 name, `pixelbolt.mcpb` (checksum `pixelbolt.mcpb.sha256`). The `pixelforge` command still works as an alias.
 
 `pixelbolt.mcpb` contains the local Node.js MCP server, its eight tools, schemas and authoring help. The server makes no network requests.
 
