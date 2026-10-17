@@ -39,7 +39,7 @@ after(async () => {
 test('registry source is metadata-only with a short description', async () => {
   const server = JSON.parse(await readFile(path.join(root, 'server.json')));
   assert.equal(pkg.name, 'pixelbolt');
-  assert.equal(pkg.version, '0.8.0');
+  assert.equal(pkg.version, '0.9.0');
   assert.deepEqual(pkg.bin, { pixelbolt: './bin/pixelbolt.js', pixelforge: './bin/pixelforge.js' });
   assert.equal(pkg.homepage, 'https://github.com/skulitom/Pixelbolt#readme');
   assert.equal(pkg.repository.url, 'git+https://github.com/skulitom/Pixelbolt.git');

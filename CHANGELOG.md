@@ -2,7 +2,7 @@
 
 Releases before 0.9.0 are described on [GitHub Releases](https://github.com/skulitom/Pixelbolt/releases).
 
-## 0.9.0 (unreleased)
+## 0.9.0 (2026-10-17)
 
 ### Fluid effects
 
