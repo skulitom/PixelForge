@@ -138,7 +138,10 @@ function busyScene() {
 // with the asset team's command: ffmpeg -framerate 100/7 -i busy_%04d.png -vf "split[a][b];[a]palettegen=max_colors=256:
 // stats_mode=full:reserve_transparent=1[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" -loop 0 busy.gif
 const BUSY_SHA256 = 'e778ec4f7cb3328366243f2114f836fef28caada53a0427b2ae6f9cddb8d811c', FFMPEG_BUSY_BYTES = 247195;
-const hexPixels = ({ data }) => Array.from({ length: data.length / 4 }, (_, i) => data[i * 4 + 3] < 128 ? 'clear' : Buffer.from(data.subarray(i * 4, i * 4 + 3)).toString('hex'));
+// A byte-to-hex table, not a Buffer per pixel: the busy scene has 3.5 million pixels. The decoder above keeps Node's own
+// hex, so the two sides of each comparison never share this code.
+const HEX = Array.from({ length: 256 }, (_, value) => value.toString(16).padStart(2, '0'));
+const hexPixels = ({ data }) => Array.from({ length: data.length / 4 }, (_, i) => data[i * 4 + 3] < 128 ? 'clear' : HEX[data[i * 4]] + HEX[data[i * 4 + 1]] + HEX[data[i * 4 + 2]]);
 const firstDifference = (a, b) => { for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) return `pixel ${i}: ${a[i]} instead of ${b[i]}`; return null; };
 
 test('a busy opaque animation keeps unchanged pixels under a transparent index and stays within 1.5x of ffmpeg, every frame exact', () => {
