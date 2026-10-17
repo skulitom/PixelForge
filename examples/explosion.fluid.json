@@ -20,8 +20,9 @@
       "duration": 60,
       "seed": 7,
       "buoyancy": 0.18,
-      "vorticity": 0.4,
-      "dissipation": 0.14,
+      "weight": -0.04,
+      "vorticity": 0.3,
+      "dissipation": 0.1375,
       "cooling": 0.16,
       "drag": 0.1,
       "emitters": [
@@ -61,7 +62,7 @@
           "rate": 1,
           "start": 1,
           "end": 4,
-          "density": 3.2,
+          "density": 2.4,
           "temperature": 2.4,
           "expand": 2.4,
           "noise": 1.6,
@@ -76,9 +77,9 @@
           "radius": 3,
           "rate": 1,
           "start": 2,
-          "end": 5,
+          "end": 4,
           "density": 1,
-          "temperature": 2.4,
+          "temperature": 2,
           "expand": 2.4,
           "noise": 1.6,
           "flicker": 0.5
@@ -93,7 +94,7 @@
           "rate": 1,
           "start": 1,
           "end": 3,
-          "density": 2.8,
+          "density": 1.4,
           "temperature": 2,
           "expand": 1.8,
           "noise": 1.6,
@@ -132,18 +133,19 @@
           "flicker": 0.5
         },
         {
-          "name": "debris",
+          "name": "debris-1",
           "at": [
-            32,
-            38
+            15,
+            33.5
           ],
-          "radius": 4,
+          "radius": 1.5,
           "burst": 1,
+          "start": 2,
           "sparks": {
-            "count": 16,
+            "count": 2.7,
             "life": [
-              10,
-              16
+              9,
+              15
             ],
             "colors": [
               "W",
@@ -154,12 +156,207 @@
             ],
             "trail": true,
             "angle": [
-              185,
-              355
+              168,
+              212
             ],
             "speed": [
               3,
-              5
+              5.5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        },
+        {
+          "name": "debris-2",
+          "at": [
+            20,
+            27
+          ],
+          "radius": 1.5,
+          "burst": 1,
+          "start": 2,
+          "sparks": {
+            "count": 2.7,
+            "life": [
+              9,
+              15
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              198,
+              242
+            ],
+            "speed": [
+              3,
+              5.5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        },
+        {
+          "name": "debris-3",
+          "at": [
+            26,
+            21
+          ],
+          "radius": 1.5,
+          "burst": 1,
+          "start": 2,
+          "sparks": {
+            "count": 2.7,
+            "life": [
+              9,
+              15
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              228,
+              272
+            ],
+            "speed": [
+              3,
+              5.5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        },
+        {
+          "name": "debris-4",
+          "at": [
+            36.5,
+            22.5
+          ],
+          "radius": 1.5,
+          "burst": 1,
+          "start": 2,
+          "sparks": {
+            "count": 2.7,
+            "life": [
+              9,
+              15
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              268,
+              312
+            ],
+            "speed": [
+              3,
+              5.5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        },
+        {
+          "name": "debris-5",
+          "at": [
+            43,
+            27
+          ],
+          "radius": 1.5,
+          "burst": 1,
+          "start": 2,
+          "sparks": {
+            "count": 2.7,
+            "life": [
+              9,
+              15
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              298,
+              342
+            ],
+            "speed": [
+              3,
+              5.5
+            ],
+            "gravity": [
+              0,
+              0.12
+            ],
+            "drag": 0.03,
+            "follow": 0
+          }
+        },
+        {
+          "name": "debris-6",
+          "at": [
+            47,
+            34
+          ],
+          "radius": 1.5,
+          "burst": 1,
+          "start": 2,
+          "sparks": {
+            "count": 2.7,
+            "life": [
+              9,
+              15
+            ],
+            "colors": [
+              "W",
+              "y",
+              "y",
+              "o",
+              "r"
+            ],
+            "trail": true,
+            "angle": [
+              328,
+              372
+            ],
+            "speed": [
+              3,
+              5.5
             ],
             "gravity": [
               0,
@@ -179,8 +376,8 @@
           "thresholds": [
             0.08
           ],
-          "dither": 0.4,
-          "pattern": "value"
+          "dither": 0.6,
+          "pattern": "bayer4"
         },
         {
           "field": "density",
@@ -212,7 +409,7 @@
             "s"
           ],
           "thresholds": [
-            0.3
+            0.6
           ],
           "dither": 0.4,
           "pattern": "value"

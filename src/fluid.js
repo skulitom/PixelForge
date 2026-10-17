@@ -18,6 +18,8 @@ const LIMITS = { effects: 16, emitters: 16, obstacles: 32, fills: 16, looks: 8, 
 const MAX_SPEED = 32;
 // Liquid particles per full cell, and the density at which a cell counts as liquid for depth and bubbles.
 const PER_CELL = 4, LEVEL = 0.5;
+// How far along a row the depth bands look for a shallower surface (see renderFields).
+const DEPTH_REACH = 3;
 // Salts keep each random draw independent, so changing one setting does not reshuffle the others.
 const SALT = { flicker: 1, noiseX: 2, noiseY: 3, spawn: 4, jitterX: 5, jitterY: 6, drain: 7, sparks: 8, sparkX: 9, sparkY: 10, angle: 11, speed: 12, life: 13 };
 
@@ -690,11 +692,22 @@ function moveSparks(list, g, density, total, liquid, pops) {
 // earlier ones; obstacles never hold fluid. Then optional cleanup and a one-pixel outline.
 function renderFields(effect, base, width, height) {
   // Colour codes are 16-bit: a palette key may be any single character, such as an accented letter.
-  const N = width * height, { solid, front } = effect, depth = new Float64Array(N), chars = new Uint16Array(N);
+  const N = width * height, { solid, front } = effect, runs = new Float64Array(N), depth = new Float64Array(N), chars = new Uint16Array(N);
   const [density] = base;
   for (let i = 0; i < width; i++) {
     let run = 0;
-    for (let j = 0; j < height; j++) { const c = j * width + i; run = !solid[c] && density[c] >= LEVEL ? run + 1 : 0; depth[c] = run; }
+    for (let j = 0; j < height; j++) { const c = j * width + i; run = !solid[c] && density[c] >= LEVEL ? run + 1 : 0; runs[c] = run; }
+  }
+  // Below its first two rows, depth follows the shallowest surface within DEPTH_REACH pixels along the row through the
+  // liquid, so the deeper bands stay level under a drop that lands or a crest that rises instead of sinking beneath it.
+  for (let j = 0; j < height; j++) for (let i = 0; i < width; i++) {
+    const c = j * width + i;
+    let d = runs[c];
+    if (d > 2) {
+      for (const step of [-1, 1]) for (let k = 1, x = i + step; k <= DEPTH_REACH && x >= 0 && x < width && runs[j * width + x]; k++, x += step) if (runs[j * width + x] < d) d = runs[j * width + x];
+      if (d < 3) d = 3;
+    }
+    depth[c] = d;
   }
   // Light and shadow are the share by which density falls two pixels toward the light and two pixels away from it:
   // 1 on a rim that faces the light (or faces away), 0 inside, whatever the density, so a thinning puff keeps its form.

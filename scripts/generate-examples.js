@@ -157,16 +157,20 @@ const smokePuff = fluidSource('smoke-puff', 32, 32, { k: '#121019', d: '#5d5872'
 });
 // A small flash, then six offset sub-blasts with staggered windows: the fireball is lumpy from its first frames and
 // churns at the rim where they push into each other. They carry different amounts of smoke, so the cooled cloud has
-// thick and thin parts; light and shadow layers model them and value-noise dither feathers the tones as it breaks up.
+// thick and thin parts that light and shadow layers model. A slight negative weight lifts the smoke with the fire, so
+// the underside trails a soft wake instead of strands, and ordered dither thins the last smoke away instead of
+// chipping it into dark chunks. Debris bursts from the rim once the core has formed, so no streak crosses it.
 const blast = (at, radius, start, end, density, temperature, expand, i) => ({ name: `blast-${i}`, at, radius, rate: 1, ...(start && { start }), end, density, temperature, expand, noise: 1.6, flicker: 0.5 });
+const debris = (at, angle, i) => ({ name: `debris-${i}`, at, radius: 1.5, burst: 1, start: 2,
+  sparks: { count: 2.7, life: [9, 15], colors: ['W', 'y', 'y', 'o', 'r'], trail: true, angle: [angle - 22, angle + 22], speed: [3, 5.5], gravity: [0, 0.12], drag: 0.03, follow: 0 } });
 const explosion = fluidSource('explosion', 64, 64, { W: '#fffbe6', y: '#ffd34d', o: '#ff8a2b', r: '#d6402b', R: '#8f2a2e', s: '#b3a5ad', S: '#867882', k: '#5a4e5b' }, {
-  frames: 32, duration: 60, seed: 7, buoyancy: 0.18, vorticity: 0.4, dissipation: 0.14, cooling: 0.16, drag: 0.1,
+  frames: 32, duration: 60, seed: 7, buoyancy: 0.18, weight: -0.04, vorticity: 0.3, dissipation: 0.1375, cooling: 0.16, drag: 0.1,
   emitters: [{ name: 'flash', at: [32, 37], radius: 5, burst: 1, temperature: 2.6, flicker: 0.4 },
-    blast([32, 38], 4, 0, 3, 2, 2.8, 3.2, 1), blast([24, 37], 3, 1, 4, 3.2, 2.4, 2.4, 2), blast([40, 33], 3, 2, 5, 1, 2.4, 2.4, 3),
-    blast([37, 44], 2.5, 1, 3, 2.8, 2, 1.8, 4), blast([30, 31], 3, 1, 3, 3.4, 2.2, 2, 5), blast([27, 43], 2, 3, 5, 0.8, 1.8, 1.6, 6),
-    { name: 'debris', at: [32, 38], radius: 4, burst: 1, sparks: { count: 16, life: [10, 16], colors: ['W', 'y', 'y', 'o', 'r'], trail: true, angle: [185, 355], speed: [3, 5], gravity: [0, 0.12], drag: 0.03, follow: 0 } }],
-  look: [{ field: 'density', colors: ['k'], thresholds: [0.08], dither: 0.4, pattern: 'value' }, { field: 'density', colors: ['S', 's'], thresholds: [0.2, 0.45], dither: 0.65, pattern: 'value' },
-    { field: 'shadow', colors: ['k'], thresholds: [0.3], dither: 0.4, pattern: 'value' }, { field: 'light', colors: ['s'], thresholds: [0.3], dither: 0.4, pattern: 'value' },
+    blast([32, 38], 4, 0, 3, 2, 2.8, 3.2, 1), blast([24, 37], 3, 1, 4, 2.4, 2.4, 2.4, 2), blast([40, 33], 3, 2, 4, 1, 2, 2.4, 3),
+    blast([37, 44], 2.5, 1, 3, 1.4, 2, 1.8, 4), blast([30, 31], 3, 1, 3, 3.4, 2.2, 2, 5), blast([27, 43], 2, 3, 5, 0.8, 1.8, 1.6, 6),
+    debris([15, 33.5], 190, 1), debris([20, 27], 220, 2), debris([26, 21], 250, 3), debris([36.5, 22.5], 290, 4), debris([43, 27], 320, 5), debris([47, 34], 350, 6)],
+  look: [{ field: 'density', colors: ['k'], thresholds: [0.08], dither: 0.6, pattern: 'bayer4' }, { field: 'density', colors: ['S', 's'], thresholds: [0.2, 0.45], dither: 0.65, pattern: 'value' },
+    { field: 'shadow', colors: ['k'], thresholds: [0.3], dither: 0.4, pattern: 'value' }, { field: 'light', colors: ['s'], thresholds: [0.6], dither: 0.4, pattern: 'value' },
     { field: 'temperature', colors: ['R', 'r', 'o', 'y', 'W'], thresholds: [0.28, 0.5, 1, 1.7, 2.4], dither: 0.5, pattern: 'value' }],
   cleanup: { strays: true }
 });
@@ -174,35 +178,40 @@ const steamVent = fluidSource('steam-vent', 32, 48, { q: '#7d8ca3', Q: '#b4c2d6'
   frames: 24, duration: 70, loop: true, seed: 2, walls: ['bottom'], buoyancy: 0.25, vorticity: 0.7, dissipation: 0.11, cooling: 0.1, drag: 0.04,
   obstacles: [{ symbol: 'pipe', x: 11, y: 42 }],
   // A slow updraft over the column that spreads as it climbs, so each puff widens and thins as it rises instead of
-  // being stretched into strings by its own heat. Three puffs a loop, each a soft disc: a faint halo, a light body and
-  // a one-frame hot core, so only a small core flashes white; between puffs a drain clears the nozzle.
-  emitters: [{ name: 'billow', at: [16, 20], radius: 17, rate: 0.2, velocity: [0, -2.8], expand: 4.5 },
+  // being stretched into strings by its own heat. Three puffs a loop, each a soft disc (a faint halo, a light body and
+  // a one-frame hot core, so only a small core flashes white) that leaves the pipe turning, so it rolls into a curled
+  // cap; between puffs a drain clears the nozzle. Two bands under the top edge thin the steam out before it gets there.
+  emitters: [{ name: 'billow', at: [16, 20], radius: 17, rate: 0.2, velocity: [0, -2.8], expand: 6 },
     ...[0, 8, 16].flatMap((start, i) => [
-      { name: `puff-${i + 1}`, at: [16, 39.5], radius: 3.5, rate: 1, start, end: start + 2, density: 0.25, temperature: 0.8, velocity: [[-0.6, 0.6, 0][i], -2], expand: 1, noise: 0.8, flicker: 0.3 },
+      { name: `puff-${i + 1}`, at: [16, 39.5], radius: 3.5, rate: 1, start, end: start + 2, density: 0.25, temperature: 0.8, velocity: [[-0.6, 0.6, 0][i], -2], expand: 1, noise: 0.8, flicker: 0.3, vortex: [0.8, -0.8, 0.6][i] },
       { name: `body-${i + 1}`, at: [16, 40], radius: 2, rate: 1, start, end: start + 2, density: 0.36, flicker: 0.3 },
       { name: `core-${i + 1}`, at: [16, 40], radius: 1, rate: 1, start, end: start + 1, density: 1.45 },
-      { name: `gap-${i + 1}`, at: [16, 39], area: [8, 4], rate: 1, start: start + 3, end: start + 8, density: -1, temperature: -1 }])],
-  // Generous Bayer dither on the faintest colour lets a thinning puff break into a sparse haze rather than a hard edge.
-  look: [{ field: 'density', colors: ['q'], thresholds: [0.14], dither: 0.8 }, { field: 'density', colors: ['Q', 'w'], thresholds: [0.42, 1], dither: 0.6 }]
+      { name: `gap-${i + 1}`, at: [16, 39], area: [8, 4], rate: 1, start: start + 3, end: start + 8, density: -1, temperature: -1 }]),
+    { name: 'thin', at: [16, 6], area: [32, 10], rate: 1, density: -0.15 }, { name: 'fade', at: [16, 2], area: [32, 6], rate: 1, density: -0.4 }],
+  // The faintest steam dissolves through white-noise dither into loose specks instead of an even checkerboard; denser
+  // steam uses ordered dither.
+  look: [{ field: 'density', colors: ['q'], thresholds: [0.11], dither: 0.65, pattern: 'noise' }, { field: 'density', colors: ['q'], thresholds: [0.25], dither: 0.45 },
+    { field: 'density', colors: ['Q', 'w'], thresholds: [0.42, 1], dither: 0.6 }]
 }, { pipe: ['kkkkkkkkkk', 'kPhhhhhhPk', 'kpPPPPPPpk', '.kpPPPPpk.', '.kpPPPPpk.', '.kpPPPPpk.'] });
 // Two comets circle the rim: a hot head (cyan, with a white glint) over a thin, pulsing trail of dye. The swirl turns
 // slower than the comets and pulls inward, so each trail lags and winds into the centre, thinning and darkening as it
-// goes; the pull breathes once a loop, a drain at the centre swallows the tails, and the eye spins three times as fast
-// as the comets. Sparkles ride the flow inward.
-const comet = (phase, i) => {
+// goes. The comets circle points 1.5 pixels either side of the centre and the pull breathes once a loop, so the spiral
+// tightens and opens instead of turning rigidly. A drain at the centre swallows the tails; the round eye rolls twice
+// as fast as the comets. Sparkles ride the flow inward.
+const comet = (phase, i, at) => {
   const orbit = { radius: 15, period: 24, ...(phase && { phase }) };
-  return [{ name: `comet-${i}`, at: [24, 24], radius: 3, rate: 1, temperature: 1.05, orbit },
-    { name: `glint-${i}`, at: [24, 24], radius: 1.5, rate: 1, temperature: 1.45, orbit },
-    { name: `halo-${i}`, at: [24, 24], radius: 2.4, rate: 1, density: 0.22, orbit },
-    { name: `tail-${i}`, at: [24, 24], radius: 1.35, rate: 1, density: 1.7, pulse: { amplitude: 0.5, period: 6 }, orbit,
+  return [{ name: `comet-${i}`, at, radius: 3, rate: 1, temperature: 1.05, orbit },
+    { name: `glint-${i}`, at, radius: 1.5, rate: 1, temperature: 1.45, orbit },
+    { name: `halo-${i}`, at, radius: 2.4, rate: 1, density: 0.22, orbit },
+    { name: `tail-${i}`, at, radius: 1.35, rate: 1, density: 1.7, pulse: { amplitude: 0.5, period: 6 }, orbit,
       sparks: { count: 0.7, life: [12, 20], colors: ['W', 'c', 'c', 'm'], angle: [0, 360], speed: [0.1, 0.3], follow: 1, drag: 0.08 } }];
 };
 const magicSwirl = fluidSource('magic-swirl', 48, 48, { v: '#3d2a6b', p: '#7a44c9', m: '#c06cf0', c: '#6fe3f2', W: '#f4f0ff' }, {
   frames: 24, duration: 60, loop: true, seed: 9, substeps: 1, buoyancy: 0, vorticity: 0.2, dissipation: 0.08, cooling: 0.35, drag: 0.05,
-  emitters: [{ name: 'swirl', at: [24, 24], radius: 21, rate: 1, vortex: 0.7, expand: -1.15, pulse: { amplitude: 0.25, period: 24 } },
-    ...comet(0, 1), ...comet(180, 2),
-    { name: 'drain', at: [24, 24], radius: 5, rate: 1, density: -0.25 }, { name: 'core', at: [24, 24], radius: 1.5, rate: 1, density: 0.3, temperature: 1.1 },
-    ...[0, 180].map((phase, i) => ({ name: `eye-${i + 1}`, at: [24, 24], radius: 1, rate: 1, density: 0.6, temperature: 1.3, orbit: { radius: 2, period: 8, ...(phase && { phase }) } }))],
+  emitters: [{ name: 'swirl', at: [24, 24], radius: 21, rate: 1, vortex: 0.7, expand: -1.15, pulse: { amplitude: 0.4, period: 24 } },
+    ...comet(0, 1, [25.5, 24]), ...comet(180, 2, [22.5, 24]),
+    { name: 'drain', at: [24, 24], radius: 5, rate: 1, density: -0.25 }, { name: 'core', at: [24, 24], radius: 2, rate: 1, density: 0.3, temperature: 1.1 },
+    { name: 'eye', at: [24, 24], radius: 1, rate: 1, density: 0.5, temperature: 1.3, orbit: { radius: 1.5, period: 12 } }],
   look: [{ field: 'density', colors: ['v', 'p', 'm'], thresholds: [0.12, 0.3, 0.65], dither: 0.5, pattern: 'value' }, fireRamp(['c', 'W'], [0.5, 0.9], 0.25)]
 });
 const torch = fluidSource('torch', 16, 32, { r: '#c23b2e', o: '#f57f2a', y: '#ffd257', W: '#fff7d6', b: '#5c3a24', B: '#8c5a32', g: '#8a8f99', G: '#c4c8cf', k: '#221a1c' }, {
@@ -217,29 +226,31 @@ const water = { B: '#1d3f7a', b: '#2f6fc0', c: '#5fb4e8', w: '#dff6ff' }, stone 
 const waterLook = (deep, band = 4) => [{ field: 'density', colors: ['b'], thresholds: [0.5], dither: 0 }, { field: 'depth', colors: ['w', 'c', 'b', 'B'], thresholds: [1, 2, band, deep], dither: 0 }];
 // Spray thrown up where water lands; in a liquid it ends where it falls back into the water.
 const spray = (name, at, start, count, angle, extra = {}) => ({ name, at, area: [2, 1], burst: 1, start, density: 0, sparks: { count, life: [12, 20], colors: ['w', 'w', 'c'], angle, speed: [2.8, 4], gravity: [0, 0.55], drag: 0.02, follow: 0, ...extra } });
-// A round drop falls from near rest, so it visibly speeds up, and lands with a crown of spray streaks and drops either
-// side of it. A low flip share and drag calm the waves, and a slow drain at the bottom takes back the drop's water, so
-// the pool settles flat at its old level instead of a fraction of a pixel higher.
+// A round drop falls and speeds up, and lands with a crown of spray streaks and drops either side of it; the crater it
+// opens springs back as a hump in the middle. A low flip share and drag calm the waves, and a slow drain at the bottom
+// takes back the drop's water, so the pool settles flat at its old level instead of a fraction of a pixel higher.
 const splash = fluidSource('splash', 48, 40, water, {
-  kind: 'liquid', frames: 40, duration: 60, seed: 3, walls: ['left', 'right', 'bottom'], flip: 0.2, drag: 0.12, tension: 1.2,
-  fill: [{ x: 0, y: 28, w: 48, h: 12 }, { at: [24, 7], radius: 3, velocity: [0, 1] }],
-  emitters: [spray('crown-left', [19.5, 26.5], 10, 3, [228, 256], { trail: true }), spray('crown-right', [28.5, 26.5], 10, 3, [284, 312], { trail: true }),
-    spray('drop-left', [19.5, 26.5], 10, 1, [240, 256], { size: 2, speed: [3.4, 4.2] }), spray('drop-right', [28.5, 26.5], 10, 1, [284, 300], { size: 2, speed: [3.4, 4.2] }),
-    { name: 'settle', at: [24, 38], area: [48, 2], rate: 1, start: 12, end: 29, density: -0.016 }],
+  kind: 'liquid', frames: 40, duration: 60, seed: 3, walls: ['left', 'right', 'bottom'], gravity: [0, 0.6], flip: 0.2, drag: 0.08, tension: 1.2,
+  fill: [{ x: 0, y: 28, w: 48, h: 12 }, { at: [24, 5], radius: 3, velocity: [0, 0.5] }],
+  emitters: [spray('crown-left', [19.5, 26.5], 9, 3, [228, 256], { trail: true }), spray('crown-right', [28.5, 26.5], 9, 3, [284, 312], { trail: true }),
+    spray('drop-left', [19.5, 26.5], 9, 1, [240, 256], { size: 2, speed: [3.4, 4.2] }), spray('drop-right', [28.5, 26.5], 9, 1, [284, 300], { size: 2, speed: [3.4, 4.2] }),
+    { name: 'settle', at: [24, 38], area: [48, 2], rate: 1, start: 12, end: 29, density: -0.015 },
+    { name: 'rebound', at: [24, 31], area: [4, 3], rate: 1, start: 15, end: 17, density: 0, velocity: [0, -2] }],
   look: waterLook(9, 5), cleanup: { strays: true }
 });
-// Water pours over a mossy lip and falls down the cliff face into a basin. The source pulses, so fuller and thinner
-// stretches run down the fall, and glints carried by the flow streak down it; the fall is drawn by its speed, darker
-// where it leaves the lip and lighter as it speeds up. Spray rises where it lands. A seep along the basin's surface takes
-// most of the inflow, so the level stays just above the right lip and a thin stream spills over it through the open edge.
+// A shallow stream runs along the cliff top, pours over the mossy lip and falls down the cliff face into a basin. The
+// source pulses, so fuller and thinner stretches run down the fall, and glints carried by the flow streak down it; the
+// fall is drawn by its speed, darker where it leaves the lip with lighter flecks as it speeds up. Spray rises where it
+// lands. A seep along the basin's surface takes much of the inflow, so the level stays just above the right lip and a
+// steady stream spills over it through the open edge.
 const waterfall = fluidSource('waterfall', 48, 64, { ...water, ...stone, L: '#7b7590', m: '#5f9a4a' }, {
   kind: 'liquid', frames: 24, duration: 60, loop: true, seed: 5, warmup: 4, substeps: 3, walls: ['left'], flip: 0.6, drag: 0.06,
   obstacles: [{ symbol: 'cliff', x: 0, y: 12 }, { symbol: 'basin', x: 0, y: 49 }], fill: [{ x: 18, y: 49, w: 22, h: 12 }],
-  emitters: [{ name: 'source', at: [12, 8.5], area: [8, 6], rate: 1, velocity: [0.5, 0.2], pulse: { amplitude: 0.5, period: 6 } },
+  emitters: [{ name: 'source', at: [7.5, 10.5], area: [15, 3], rate: 1, velocity: [1.2, 0], pulse: { amplitude: 0.5, period: 6 } },
     { name: 'spray', at: [22, 48], radius: 2, rate: 1, density: 0, sparks: { count: 0.8, life: [6, 12], colors: ['w', 'c'], angle: [220, 320], speed: [0.8, 2], gravity: [0, 0.2], follow: 0 } },
-    { name: 'seep', at: [27, 48.5], area: [18, 3], rate: 1, density: -0.1 },
-    { name: 'glints', at: [16, 10], radius: 1.5, rate: 1, density: 0, sparks: { count: 1, life: [16, 22], colors: ['w', 'w', 'w', 'c'], trail: true, follow: 1, speed: 0, drag: 0 } }],
-  look: [...waterLook(8), { field: 'speed', colors: ['b', 'c'], thresholds: [1.6, 3], dither: 0 }], cleanup: { strays: true }
+    { name: 'seep', at: [27, 48.5], area: [18, 3], rate: 1, density: -0.05 },
+    { name: 'glints', at: [16, 10], radius: 1.5, rate: 1, density: 0, sparks: { count: 1, life: [18, 26], colors: ['w', 'w', 'w', 'c'], trail: true, follow: 1, speed: 0, drag: 0 } }],
+  look: [...waterLook(8), { field: 'speed', colors: ['b', 'c'], thresholds: [1.6, 3.4], dither: 0 }], cleanup: { strays: true }
 }, {
   // Rock in strata: a dark seam every five rows, a lit edge along the face.
   cliff: shapeRows(19, 52, (x, y) => {
@@ -251,20 +262,22 @@ const waterfall = fluidSource('waterfall', 48, 64, { ...water, ...stone, L: '#7b
 });
 // A drop gathers under the stalactite, falls and splashes; a slow soak drains as much as each drop adds.
 const drip = fluidSource('drip', 16, 32, { ...water, ...stone }, {
-  kind: 'liquid', frames: 24, duration: 70, loop: true, seed: 2, warmup: 3, walls: ['left', 'right', 'bottom'], flip: 0, drag: 0.08, tension: 1.6,
+  kind: 'liquid', frames: 24, duration: 70, loop: true, seed: 2, warmup: 3, walls: ['left', 'right', 'bottom'], gravity: [0, 0.4], flip: 0, drag: 0.04, tension: 2,
   obstacles: [{ symbol: 'rock', x: 0, y: 0 }, { symbol: 'ground', x: 0, y: 29 }], fill: [{ x: 1, y: 25, w: 14, h: 4 }],
   // A bead hangs at the tip, held still by velocity [0, 0], and swells when the wider emitter joins; when both stop,
-  // the drop falls as one compact two-pixel-wide drop with a highlight on top. The soak drains the row above the pool's
-  // level, so each drop's water runs off and the surface settles flat between drops.
+  // the drop falls, speeding up, as one compact two-pixel-wide drop with a highlight on top (strong cohesion and little
+  // drag keep it whole). A pair of droplets flies out either side where it lands. The soak drains the row above the
+  // pool's level, so each drop's water runs off and the surface settles flat between drops.
   emitters: [{ name: 'bead', at: [8, 7.5], radius: 1.4, rate: 1, end: 8, velocity: [0, 0] }, { name: 'swell', at: [8, 8], radius: 1.5, rate: 1, start: 4, end: 8, velocity: [0, 0] },
-    spray('spray', [8, 25], 20, 3, [225, 315], { life: [8, 14], speed: [1.2, 1.8], gravity: [0, 0.5] }),
-    { name: 'soak', at: [8, 26], area: [14, 2], rate: 1, density: -0.1 }],
+    spray('spray-left', [6.5, 25.5], 18, 2, [220, 250], { life: [8, 14], speed: [1.3, 2], gravity: [0, 0.5] }),
+    { name: 'soak', at: [8, 26], area: [14, 2], rate: 1, density: -0.1 },
+    spray('spray-right', [9.5, 25.5], 18, 2, [290, 320], { life: [8, 14], speed: [1.3, 2], gravity: [0, 0.5] })],
   look: [{ field: 'density', colors: ['b'], thresholds: [0.5], dither: 0 }, { field: 'depth', colors: ['w', 'c'], thresholds: [1, 2], dither: 0 }], cleanup: { strays: true }
 }, {
   rock: ['RrrrrRrrrrRrrrrR', 'rrrRrrrrRrrrrRrr', '...rrrRrrrrRr...', '....RrrrrRrr....', '.....rrRrrr.....', '......rrrr......', '.......rR.......'],
   ground: ['R..............R', 'R..............R', 'RRRRRRRRRRRRRRRR']
 });
-// A stoppered round-bottom flask: pulses from below heave the surface while bubbles rise and pop.
+// A stoppered round-bottom flask: the surface heaves and rocks while bubbles rise and pop.
 const flask = shapeRows(32, 40, (x, y) => {
   const dx = x - 15.5, d = Math.sqrt(dx * dx + (y - 26.5) * (y - 26.5)), side = Math.abs(dx);
   if (y >= 2 && y < 4 && side < 5) return y === 2 ? 'k' : 'h';
@@ -279,7 +292,9 @@ const potion = fluidSource('potion', 32, 40, { G: '#1f6a3f', g: '#3fa34d', l: '#
     { name: 'boil', at: [15.5, 24], area: [18, 4], rate: 1, density: 0, noise: 0.2 },
     // Bubbles start across the bottom and rise mostly under their own lift, so the stirring only sways them; where they
     // leave the liquid they pop, a ring and then two droplets above the surface. The boil only ruffles the surface.
-    { name: 'bubbles', at: [15.5, 33.5], area: [14, 3], rate: 1, density: 0, sparks: { count: 0.3, life: [24, 32], colors: ['w'], size: 2, angle: 270, speed: 0.8, gravity: [0, -0.1], drag: 0.05, follow: 0.2, pop: true } }],
+    { name: 'bubbles', at: [15.5, 33.5], area: [14, 3], rate: 1, density: 0, sparks: { count: 0.3, life: [24, 32], colors: ['w'], size: 2, angle: 270, speed: 0.8, gravity: [0, -0.1], drag: 0.05, follow: 0.2, pop: true } },
+    // Two pushes take turns over the loop, so the surface rocks from side to side.
+    ...[[10, 0.4, 0], [21, -0.4, 180]].map(([x, push, phase], i) => ({ name: `rock-${i + 1}`, at: [x, 26], area: [6, 6], rate: 1, density: 0, velocity: [push, -0.2], pulse: { amplitude: 1, period: 24, ...(phase && { phase }) } }))],
   look: [{ field: 'density', colors: ['g'], thresholds: [0.5], dither: 0 }, { field: 'depth', colors: ['w', 'l', 'g', 'G'], thresholds: [1, 2, 4, 9], dither: 0 }], cleanup: { strays: true }
 }, { flask });
 const fluids = { campfire, 'smoke-puff': smokePuff, explosion, 'steam-vent': steamVent, 'magic-swirl': magicSwirl, torch, splash, waterfall, drip, potion };

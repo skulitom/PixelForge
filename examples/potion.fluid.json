@@ -161,6 +161,49 @@
             "follow": 0.2,
             "pop": true
           }
+        },
+        {
+          "name": "rock-1",
+          "at": [
+            10,
+            26
+          ],
+          "area": [
+            6,
+            6
+          ],
+          "rate": 1,
+          "density": 0,
+          "velocity": [
+            0.4,
+            -0.2
+          ],
+          "pulse": {
+            "amplitude": 1,
+            "period": 24
+          }
+        },
+        {
+          "name": "rock-2",
+          "at": [
+            21,
+            26
+          ],
+          "area": [
+            6,
+            6
+          ],
+          "rate": 1,
+          "density": 0,
+          "velocity": [
+            -0.4,
+            -0.2
+          ],
+          "pulse": {
+            "amplitude": 1,
+            "period": 24,
+            "phase": 180
+          }
         }
       ],
       "look": [

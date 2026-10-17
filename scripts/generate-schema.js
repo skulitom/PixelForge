@@ -220,7 +220,7 @@ const fluidEmitter = object({
   }, ['count', 'colors']), description: 'One-pixel particles carried by the flow and drawn over it: embers, sparkles, debris, bubbles. In a loop they wrap round, so they loop exactly.' }
 }, ['at']);
 const fluidLook = object({
-  field: { enum: FLUID_FIELDS, description: 'density (smoke or water; water is 1 inside), temperature (gas heat), speed (pixels per frame; foam, fast flow), depth (pixels down from the liquid surface, 1 on the top row), light or shadow (0–1: how sharply density falls toward or away from the light; these only recolour pixels earlier layers drew).' },
+  field: { enum: FLUID_FIELDS, description: 'density (smoke or water; water is 1 inside), temperature (gas heat), speed (pixels per frame; foam, fast flow), depth (pixels down from the liquid surface, 1 on the top row; from the third row down it follows the shallowest surface within three pixels along the row), light or shadow (0–1: how sharply density falls toward or away from the light; these only recolour pixels earlier layers drew).' },
   colors: keys('Palette keys from the lowest level to the highest.'),
   thresholds: { ...array(num(0.001, 256), 16), minItems: 1, description: 'One rising value per colour: each colour is fully on from its threshold up.' },
   dither: num(0, 1, 'Feather each colour in below its threshold through the pattern, over this share of the gap to the previous threshold (to 0 for the first). 0 draws hard bands; default 0.5.'),

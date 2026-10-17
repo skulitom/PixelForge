@@ -18,15 +18,15 @@ const read = async file => JSON.parse(await readFile(path.join(root, file), 'utf
 // The same source must give the same recipe on every machine and engine: these hashes are checked on every CI system.
 const GOLDEN = {
   campfire: '1a789c44e352be9623801b345b444127ef948fccdefd8dd480aea752ff64d4c4',
-  explosion: 'f44b9b6cd64dd2734118dff2519a77ed163df46494abcf79402aa16c7f625b24',
+  explosion: 'cc5409a9598f810114ba3f51618802e08c280e46f9a0dd0758e331e74c7b941f',
   'smoke-puff': 'ff84249a92a18f11a778c4bc391d3c2adaac7d9e2d2389de8f9e5400a7218f65',
-  'steam-vent': 'a7e29384998ed631453e235a9593c4a5e64115def10a2e4c3efe60e65cab5ea6',
-  'magic-swirl': 'a2639e2d51a62c25df286eda8af7275d05f65e24c134ed8e9c0a3378b2120971',
+  'steam-vent': '00ff7b5fc9cb9a5afa1ec354d4da1d6995d57ca4bdf262503f397a0ade9c3757',
+  'magic-swirl': '2be991d3b94b474346ba7101d2283bdc2659394a65cb3e44dee0c9ca61766221',
   torch: '1653a23c933b250d5cc6aa8c0a5e1878e7438b11169ef85c52d733e019263828',
-  splash: 'df64bfbd55c0ae97f33b77b8de6b06fd453e7066c7529514e11a9f1ec1a51f13',
-  waterfall: '05f08a8ac507cd6653225b323076687df915de54dfad5193f17adefde5191752',
-  drip: '7c04b2978a49e62940bd4a19aedbffe592ba1d8a727b69678b7ccc6fe001c38b',
-  potion: 'e07d99bb26b540baacdff090b3e04545d4b516a89cc85c691637f3cc2a22e734'
+  splash: 'd3dd9b5c803e03aab0a23a5a0b69fa28782f873f97f4dd1356bb3d8732e2b730',
+  waterfall: '26622a804b4a189e17dce2334e518af94e954f6c3e4d30b955badb3a104036c3',
+  drip: '1147551d26b4945e65773fe243ebf0858779c20acf8200068866f247d63e5480',
+  potion: '11636b6972e45c5c7e65fb9b473cc20981133ed724650b17c491efac78d92d74'
 };
 const examples = new Map();
 const example = async name => {
@@ -139,6 +139,16 @@ test('in a liquid, spray ends where it falls back into the water and a bubble bu
   assert.deepEqual(bubble[burst].map(([i, j]) => [i - x, j - y]).sort(), [[-1, 0], [0, -1], [0, 1], [1, 0]]);
   assert.deepEqual(bubble[burst + 1].map(([i, j]) => [i - x, j - y]).sort(), [[-1, -1], [1, -1]]);
   assert.ok(bubble.slice(burst + 2).every(list => !list.length));
+});
+
+test('depth bands stay level under water standing on the surface', () => {
+  // A pool fills rows 10–15 and a 3 × 4 block of water stands on it, a mound by the first frame. Under the mound the
+  // bands below the highlight keep the pool's rows instead of starting again from the mound's top.
+  const { recipe } = compileFluid({ ...gas(null), effects: { pool: { kind: 'liquid', frames: 1, walls: ['left', 'right', 'bottom'], fill: [{ x: 0, y: 10, w: 16, h: 6 }, { x: 6, y: 6, w: 3, h: 4 }],
+    emitters: [], look: [{ field: 'density', colors: ['s'], thresholds: [0.5], dither: 0 }, { field: 'depth', colors: ['w', 's', 'r'], thresholds: [1, 2, 4], dither: 0 }] } } });
+  const grid = recipe.frames[0].ops[0], row = y => grid.rows[y - grid.y];
+  assert.equal(row(8).slice(6 - grid.x, 9 - grid.x), 'sss');
+  assert.deepEqual([row(11), row(12), row(13), row(15)], ['s'.repeat(16), 's'.repeat(16), 'r'.repeat(16), 'r'.repeat(16)]);
 });
 
 test('loops repeat their forcing, blend their seam and wrap sparks round', () => {
